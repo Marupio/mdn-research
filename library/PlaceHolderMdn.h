@@ -1,15 +1,15 @@
 // library/MultiDimensionalNumber.h
-#ifndef MULTIDIMENSIONALNUMBER_H
-#define MULTIDIMENSIONALNUMBER_H
+#ifndef PLACEHOLDERMDN_H
+#define PLACEHOLDERMDN_H
 
 #include <vector>
 #include <map>
 #include <string>
 #include <iostream>
 
-class MultiDimensionalNumber {
+class PlaceHolderMdn {
 public:
-    MultiDimensionalNumber(int base = 10);
+    PlaceHolderMdn(int base = 10);
 
     void addValueAt(int x, int y, int value);
     int getValueAt(int x, int y) const;
@@ -21,4 +21,4 @@ private:
     std::map<std::pair<int, int>, int> grid;
 };
 
-#endif // MULTIDIMENSIONALNUMBER_H
+#endif // PLACEHOLDERMDN_H

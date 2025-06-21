@@ -8,8 +8,13 @@
 #include <QVBoxLayout>
 #include <QWidget>
 #include <QMap>
+#include <QMenu>
+#include <QAction>
+#include <QInputDialog>
+#include <QMessageBox>
+#include <QMouseEvent>
 
-#include "../library/MultiDimensionalNumber.h"
+#include "../library/PlaceHolderMdn.h"
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -21,10 +26,15 @@ public:
 private slots:
     void addNewMDN();
     void addValueToCurrent();
+    void renameTab();
+    void duplicateTab();
+    void deleteTab();
+    void onTabBarDoubleClicked(int index);
+    void onTabContextMenuRequested(const QPoint &pos);
 
 private:
     QTabWidget* tabWidget;
-    QMap<int, MultiDimensionalNumber*> mdnMap;
+    QMap<int, PlaceHolderMdn*> mdnMap;
     int nextMDNId = 0;
 
     void createMDNTab(int id);
