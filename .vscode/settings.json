@@ -1,0 +1,8 @@
+{
+  "cmake.configureEnvironment": {
+    "Qt6_DIR": "C:/Qt/6.9.1/msvc2022_64/lib/cmake/Qt6"
+  },
+  "files.associations": {
+    "vector": "cpp"
+  }
+}
