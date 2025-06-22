@@ -52,3 +52,7 @@ compile_commands.json
 *creator.user*
 
 *_qmlcache.qrc
+
+# Exclude build and out folders
+**/build/
+**/out/

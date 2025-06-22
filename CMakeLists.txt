@@ -10,5 +10,11 @@ endif()
 
 set(CMAKE_CXX_STANDARD 17)
 
+# Add MDN_DEBUG define in Debug builds
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_definitions(MDN_DEBUG)
+    message(STATUS "Debug enabled, MDN_DEBUG is defined.")
+endif()
+
 add_subdirectory(library)
 add_subdirectory(gui)

@@ -7,6 +7,8 @@
 #include <string>
 #include <iostream>
 
+namespace mdn {
+
 class PlaceHolderMdn {
 public:
     PlaceHolderMdn(int base = 10);
@@ -21,4 +23,5 @@ private:
     std::map<std::pair<int, int>, int> grid;
 };
 
+} // end namespace mdn
 #endif // PLACEHOLDERMDN_H
