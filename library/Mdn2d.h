@@ -1,12 +1,14 @@
 #ifndef MDN2D_H
 #define MDN2D_H
 
-#include <unordered_map>
-#include <utility>
-#include <string>
+#include <functional>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <utility>
+
 #include "Digit.h"
 #include "Coord.h"
 
@@ -36,11 +38,11 @@ public:
 
             // Adds a value to the digit at coordinate (x, y).
             void addValueAt(int x, int y, int value);
-            void addValueAt(Coord xy, int value);
+            void addValueAt(const Coord& xy, int value);
 
             // Retrieves the value at coordinate (x, y), or 0 if not present.
             Digit getValueAt(int x, int y) const;
-            Digit getValueAt(Coord xy) const;
+            Digit getValueAt(const Coord& xy) const;
 
             // Clears all digits in the MDN.
             void clear();
@@ -57,18 +59,19 @@ public:
         // *** Low-level functionality
 
             // Perform a carry-over at coordinate (x, y)
-
+            void carryOver(int x, int y);
+            void carryOver(const Coord& xy);
 
 
     // *** Member Operators
 
         // Accessor to modifiable digit at coordinate (x, y).
         Digit& operator()(int x, int y);
-        Digit& operator()(Coord xy);
+        Digit& operator()(const Coord& xy);
 
         // Accessor to read-only digit at coordinate (x, y).
         Digit operator()(int x, int y) const;
-        Digit operator()(Coord xy) const;
+        Digit operator()(const Coord& xy) const;
 
         // Element-wise addition.
         Mdn2d& operator+=(const Mdn2d& rhs);
@@ -96,6 +99,9 @@ public:
 
 
 private:
+
+    // Returns pointer to existing digit entry, if it exists
+    Digit* getPtr(const Coord& xy);
 
     // Numeric base for digit calculations
     int m_base;

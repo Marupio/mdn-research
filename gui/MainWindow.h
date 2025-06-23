@@ -34,7 +34,7 @@ private slots:
 
 private:
     QTabWidget* tabWidget;
-    QMap<int, PlaceHolderMdn*> mdnMap;
+    QMap<int, mdn::PlaceHolderMdn*> mdnMap;
     int nextMDNId = 0;
 
     void createMDNTab(int id);

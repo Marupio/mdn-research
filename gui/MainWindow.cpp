@@ -34,7 +34,7 @@ void MainWindow::createMDNTab(int id) {
     QTextEdit* textView = new QTextEdit;
     textView->setReadOnly(true);
     tabWidget->addTab(textView, QString("MDN%1").arg(id));
-    mdnMap[id] = new PlaceHolderMdn(10);
+    mdnMap[id] = new mdn::PlaceHolderMdn(10);
     textView->setText(QString::fromStdString(mdnMap[id]->toString()));
 }
 
@@ -49,7 +49,7 @@ void MainWindow::addValueToCurrent() {
     QTextEdit* textView = qobject_cast<QTextEdit*>(tabWidget->currentWidget());
     if (!textView) return;
 
-    PlaceHolderMdn* mdn = mdnMap[index];
+    mdn::PlaceHolderMdn* mdn = mdnMap[index];
     mdn->addValueAt(0, 0, 1);
     textView->setText(QString::fromStdString(mdn->toString()));
 }
@@ -71,8 +71,8 @@ void MainWindow::duplicateTab() {
     QTextEdit* oldTextView = qobject_cast<QTextEdit*>(tabWidget->currentWidget());
     if (!oldTextView) return;
 
-    PlaceHolderMdn* original = mdnMap[index];
-    PlaceHolderMdn* copy = new PlaceHolderMdn(*original);
+    mdn::PlaceHolderMdn* original = mdnMap[index];
+    mdn::PlaceHolderMdn* copy = new mdn::PlaceHolderMdn(*original);
     QTextEdit* newTextView = new QTextEdit;
     newTextView->setReadOnly(true);
     newTextView->setText(QString::fromStdString(copy->toString()));

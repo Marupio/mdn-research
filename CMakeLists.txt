@@ -16,5 +16,9 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "Debug enabled, MDN_DEBUG is defined.")
 endif()
 
-add_subdirectory(library)
-add_subdirectory(gui)
+# Top-level CMakeLists.txt
+
+# Choose which one to include by commenting out the other
+add_subdirectory(library)   # Builds the MDN library
+add_subdirectory(gui)       # Builds the GUI application
+add_subdirectory(sandbox)   # Builds the sandbox tester

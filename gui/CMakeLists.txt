@@ -8,7 +8,7 @@ add_executable(mdn_gui
     MainWindow.h
 )
 
-target_link_libraries(mdn_gui PRIVATE Qt6::Widgets library)
+target_link_libraries(mdn_gui PRIVATE Qt6::Widgets mdn)
 
 include_directories("../library")
 

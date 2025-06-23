@@ -1,6 +1,8 @@
-#include "Mdn2d.h"
 #include <stdexcept>
 #include <sstream>
+#include "Logger.h"
+#include "Mdn2d.h"
+
 
 mdn::Mdn2d::Mdn2d(int base) : m_base(base) {}
 
@@ -10,7 +12,7 @@ void mdn::Mdn2d::addValueAt(int x, int y, int value) {
 }
 
 
-void mdn::Mdn2d::addValueAt(Coord xy, int value) {
+void mdn::Mdn2d::addValueAt(const Coord& xy, int value) {
     m_raw[xy] += static_cast<Digit>(value);
 }
 
@@ -21,7 +23,7 @@ mdn::Digit mdn::Mdn2d::getValueAt(int x, int y) const {
 }
 
 
-mdn::Digit mdn::Mdn2d::getValueAt(Coord xy) const {
+mdn::Digit mdn::Mdn2d::getValueAt(const Coord& xy) const {
     auto it = m_raw.find(xy);
     return it != m_raw.end() ? it->second : 0;
 }
@@ -52,12 +54,24 @@ void mdn::Mdn2d::purgeZeroes() {
 }
 
 
+void mdn::Mdn2d::carryOver(int x, int y)
+{
+    carryOver(Coord({x, y}));
+}
+
+
+void mdn::Mdn2d::carryOver(const Coord& xy)
+{
+    // auto& val = operator()
+}
+
+
 mdn::Digit& mdn::Mdn2d::operator()(int x, int y) {
     return operator()(Coord(x, y));
 }
 
 
-mdn::Digit& mdn::Mdn2d::operator()(Coord xy) {
+mdn::Digit& mdn::Mdn2d::operator()(const Coord& xy) {
     return m_raw[xy];
 }
 
@@ -67,7 +81,7 @@ mdn::Digit mdn::Mdn2d::operator()(int x, int y) const {
 }
 
 
-mdn::Digit mdn::Mdn2d::operator()(Coord xy) const {
+mdn::Digit mdn::Mdn2d::operator()(const Coord& xy) const {
     auto it = m_raw.find(xy);
     if (it == m_raw.end()) {
         return Digit(0);
@@ -127,4 +141,14 @@ bool mdn::Mdn2d::operator==(const Mdn2d& rhs) const {
 
 bool mdn::Mdn2d::operator!=(const Mdn2d& rhs) const {
     return !(*this == rhs);
+}
+
+
+mdn::Digit* mdn::Mdn2d::getPtr(const Coord& xy)
+{
+    auto iter = m_raw.find(xy);
+    if (iter == m_raw.end()) {
+        return nullptr;
+    }
+    return &(iter->second);
 }
