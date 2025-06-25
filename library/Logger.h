@@ -25,6 +25,7 @@ public:
     void setLevel(LogLevel level) { minLevel = level; }
 
     void log(LogLevel level, const std::string& msg) {
+        // TODO - add more capability to output function name, file name, line number of caller
         if (!enabled || level < minLevel) return;
         std::lock_guard<std::mutex> lock(logMutex);
         std::cerr << "[" << levelToString(level) << "] " << msg << std::endl;

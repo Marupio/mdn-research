@@ -3,14 +3,17 @@
 
 #include <functional>
 #include <iostream>
+#include <map>
+#include <shared_mutex>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <utility>
 
-#include "Digit.h"
 #include "Coord.h"
+#include "Digit.h"
+#include "Fraxis.h"
 
 namespace mdn {
 
@@ -18,6 +21,11 @@ namespace mdn {
 class Mdn2d {
 
 public:
+
+    // *** Typedefs
+
+    using WritableLock = std::unique_lock<std::shared_mutex>;
+    using ReadOnlyLock = std::shared_lock<std::shared_mutex>;
 
     // *** Constructors
 
@@ -29,20 +37,32 @@ public:
         Mdn2d(int base, int initVal);
 
         // Constructs an MDN with a floating point initial value.
-        Mdn2d(int base, float initVal, int fraxis);
+        Mdn2d(int base, double initVal, Fraxis fraxis);
 
 
     // *** Member Functions
 
         // *** Top-level API functionality
 
+            // Adds a real number, expanding the integer part symmetrically and the fractional part
+            // along the fraxis
+            void addReal(int x, int y, double realNum, Fraxis fraxis);
+            void addReal(const Coord& xy, double realNum, Fraxis fraxis);
+
             // Adds a value to the digit at coordinate (x, y).
-            void addValueAt(int x, int y, int value);
-            void addValueAt(const Coord& xy, int value);
+            void addInteger(int x, int y, int value);
+            void addInteger(const Coord& xy, int value);
+
+            // Adds a fractional value cascading along the fraxis
+            void addFraxis(const Coord& xy, double fraction, Fraxis fraxis);
 
             // Retrieves the value at coordinate (x, y), or 0 if not present.
-            Digit getValueAt(int x, int y) const;
-            Digit getValueAt(const Coord& xy) const;
+            Digit getValue(int x, int y) const;
+            Digit getValue(const Coord& xy) const;
+
+            // Changes the value at coordinate (x, y).
+            void setValue(int x, int y, int value);
+            void setValue(const Coord& xy, int value);
 
             // Clears all digits in the MDN.
             void clear();
@@ -51,23 +71,17 @@ public:
             std::string toString() const;
 
 
-            // Remove all zero digits from m_raw entries
-            // All stored values should be non-zero, but zeroes can be created via direct accessors
-            void purgeZeroes();
-
-
         // *** Low-level functionality
 
             // Perform a carry-over at coordinate (x, y)
             void carryOver(int x, int y);
             void carryOver(const Coord& xy);
 
+            // Bring metadata up-to-date
+            void rebuildMetadata() const;
+
 
     // *** Member Operators
-
-        // Accessor to modifiable digit at coordinate (x, y).
-        Digit& operator()(int x, int y);
-        Digit& operator()(const Coord& xy);
 
         // Accessor to read-only digit at coordinate (x, y).
         Digit operator()(int x, int y) const;
@@ -100,14 +114,97 @@ public:
 
 private:
 
-    // Returns pointer to existing digit entry, if it exists
-    Digit* getPtr(const Coord& xy);
+    // *** Private Member Functions
 
-    // Numeric base for digit calculations
-    int m_base;
+        // Lock m_mutex for writeable reasons (unique_lock)
+        WritableLock lockWriteable() const;
 
-    // Sparse coordinate-to-digit mapping
-    std::unordered_map<Coord, Digit> m_raw;
+        // Lock m_mutex for read-only reasons (shareable_lock)
+        ReadOnlyLock lockReadOnly() const;
+
+
+        // *** Lock functions
+        // All these functions require the mutex to be locked first before calling
+
+            void locked_clear();
+            void locked_clearMetadata() const;
+
+            // Check xy in terms of bounds, ensuring maxSpan is not exceeded
+            //  * if exceeded with smaller magnitude, returns false (i.e. do not set value)
+            //  * if exceeded with larger magnitude, drops low magnitude values until maxSpan is
+            //      respected.
+            // Returns:
+            //  * true  - xy is still valid to hold a value
+            //  * false - xy is too small for given numerical precision to hold any value
+            bool locked_checkBounds(const Coord& xy);
+
+            Digit locked_getValue(const Coord& xy) const;
+            void locked_setValue(const Coord& xy, int value);
+            void locked_addReal(const Coord& xy, double realNum, Fraxis fraxis);
+            void locked_addInteger(const Coord& xy, int value);
+            void locked_addFraxis(const Coord& xy, double fraction, Fraxis fraxis);
+            void locked_addFraxisX(const Coord& xy, double fraction);
+            void locked_addFraxisY(const Coord& xy, double fraction);
+
+        // Returns pointer to existing digit entry, if it exists
+        Digit* getPtr(const Coord& xy);
+
+        // Set the given coordinate to zero (i.e. delete), may already be zero
+        void setToZero(const Coord& xy);
+
+        // Remove all zero digits from m_raw entries
+        void purgeZeroes();
+
+        // Accessor to modifiable digit at coordinate (x, y) - non-const access to raw data is only for
+        // internal uses - such modifications require updating metadata
+        Digit& operator()(int x, int y);
+        Digit& operator()(const Coord& xy);
+
+
+    // *** Private Member Data
+
+        // Numeric base for digit calculations
+        const int m_base;
+
+        // Maximum distance from high magnitude to low magnitude, -1 for no limit
+        // A measure of numerical precision.
+        //
+        //  Digit values:   1 0|0 0 1  <-- span == 4
+        //  Digit indices: -2-1 0 1 2
+        // maxOrderX - minMagnitudeX
+        const int m_maxSpan;
+
+        // Sparse coordinate-to-digit mapping
+        std::unordered_map<Coord, Digit> m_raw;
+
+        // Thread safety
+        mutable std::shared_mutex m_mutex;
+// void setValueAt(const Coord& xy, int value, std::unique_lock<std::shared_mutex>&) {
+//     // assumes lock is already held
+// }
+// void addIntegerPart(const Coord& xy, int n) {
+//     std::unique_lock lock(m_mutex);
+//     setValueAt(xy, n, lock);
+// }
+// void setValueAt(const Coord& xy, int value) {
+//     std::unique_lock lock(m_mutex);
+//     setValueAt(xy, value, lock);  // delegates to the real one
+// }
+
+
+        // *** Metadata
+
+            // // Coord limits for sparse values
+            // Coord m_indicesMin;
+            // Coord m_indicesMax;
+
+            // Coord counts
+            mutable std::map<int, int> m_xCounts;
+            mutable std::map<int, int> m_yCounts;
+
+            // Bounding box for non-zero digits
+            mutable Coord m_boundsMin;
+            mutable Coord m_boundsMax;
 };
 
 // Arithmetic binary operators

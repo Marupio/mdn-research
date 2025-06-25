@@ -6,7 +6,7 @@ using namespace mdn;
 
 int main() {
     Mdn2d m(2);
-    m.addValueAt(1, 1, 1);
+    m.addInteger(1, 1, 1);
     cout << "m = " << m.toString() << endl;
     m.carryOver(1, 1); // assuming this exists
     return 0;
