@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 
 #include "Coord.h"
@@ -60,6 +61,18 @@ public:
             Digit getValue(int x, int y) const;
             Digit getValue(const Coord& xy) const;
 
+            // Assembles the row at the given y index value, spanning the x bounds of full MDN
+            std::vector<Digit> getRow(int y) const;
+
+            // Assembles the column at the given x index value, spanning the y bounds of full MDN
+            std::vector<Digit> getCol(int x) const;
+
+            // Assembles the row at the given y index value, spanning the x bounds of full MDN
+            void fillRow(int y, std::vector<Digit>& digits) const;
+
+            // Assembles the column at the given x index value, spanning the y bounds of full MDN
+            void fillCol(int x, std::vector<Digit>& digits) const;
+
             // Changes the value at coordinate (x, y).
             void setValue(int x, int y, int value);
             void setValue(const Coord& xy, int value);
@@ -69,6 +82,16 @@ public:
 
             // Converts the MDN to a human-readable string.
             std::string toString() const;
+
+            // Converts the MDN to an array of strings, representing rows (along x digit axis).
+            //  reverse - when true, result[0] is the highest magnitude row (greatest y digit).
+            //          - when false, result[0] is the lowest magnitude row (lowest y digit).
+            std::vector<std::string> toStringRows(bool reverse=true) const;
+
+            // Converts the MDN to an array of strings, representing columns (along y digit axis).
+            //  reverse - when true, result[0] is the highest magnitude col (greatest x digit).
+            //          - when false, result[0] is the lowest magnitude col (lowest x digit).
+            std::vector<std::string> toStringCols(bool reverse=true) const;
 
 
         // *** Low-level functionality
@@ -137,8 +160,16 @@ private:
             //  * true  - xy is still valid to hold a value
             //  * false - xy is too small for given numerical precision to hold any value
             bool locked_checkBounds(const Coord& xy);
+            void locked_updateBounds();
 
+            std::string locked_toString() const;
+            std::vector<std::string> locked_toStringRows(bool reverse=true) const;
+            std::vector<std::string> locked_toStringCols(bool reverse=true) const;
             Digit locked_getValue(const Coord& xy) const;
+            std::vector<Digit> locked_getRow(int y) const;
+            std::vector<Digit> locked_getCol(int x) const;
+            void locked_fillRow(int y, std::vector<Digit>& digits) const;
+            void locked_fillCol(int x, std::vector<Digit>& digits) const;
             void locked_setValue(const Coord& xy, int value);
             void locked_addReal(const Coord& xy, double realNum, Fraxis fraxis);
             void locked_addInteger(const Coord& xy, int value);
@@ -177,30 +208,15 @@ private:
         // Sparse coordinate-to-digit mapping
         std::unordered_map<Coord, Digit> m_raw;
 
+        // Addressing
+        mutable std::map<int, std::unordered_set<Coord>> m_xIndex;
+        mutable std::map<int, std::unordered_set<Coord>> m_yIndex;
+
         // Thread safety
         mutable std::shared_mutex m_mutex;
-// void setValueAt(const Coord& xy, int value, std::unique_lock<std::shared_mutex>&) {
-//     // assumes lock is already held
-// }
-// void addIntegerPart(const Coord& xy, int n) {
-//     std::unique_lock lock(m_mutex);
-//     setValueAt(xy, n, lock);
-// }
-// void setValueAt(const Coord& xy, int value) {
-//     std::unique_lock lock(m_mutex);
-//     setValueAt(xy, value, lock);  // delegates to the real one
-// }
 
 
         // *** Metadata
-
-            // // Coord limits for sparse values
-            // Coord m_indicesMin;
-            // Coord m_indicesMax;
-
-            // Coord counts
-            mutable std::map<int, int> m_xCounts;
-            mutable std::map<int, int> m_yCounts;
 
             // Bounding box for non-zero digits
             mutable Coord m_boundsMin;
