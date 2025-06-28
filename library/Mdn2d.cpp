@@ -1,5 +1,6 @@
 #include "Mdn2d.h"
 
+#include <cassert>
 #include <cmath>
 #include <stdexcept>
 #include <sstream>
@@ -327,7 +328,7 @@ void mdn::Mdn2d::locked_updateBounds() {
 
 std::string mdn::Mdn2d::locked_toString() const {
     std::vector<std::string> rows = locked_toStringRows(true);
-    return Tools::joinArray(rows, "\n");
+    return Tools::joinArray(rows, '\n');
 }
 
 
@@ -335,16 +336,58 @@ std::vector<std::string> mdn::Mdn2d::locked_toStringRows(bool reverse=true) cons
     int yStart, yEnd;
     if (reverse) {
         yStart = m_boundsMax.y();
-        yEnd = m_boundsMin.y();
+        yEnd = m_boundsMin.y()+1;
     } else {
         yStart = m_boundsMin.y();
-        yEnd = m_boundsMax.y();
+        yEnd = m_boundsMax.y()+1;
     }
+    int xStart = m_boundsMin.x();
+    int xEnd = m_boundsMax.x()+1;
+    int xCount = xEnd - xStart;
+
+    // xDigLine - digit line appears before what index in 'digits' array below
+    //  xDigLine  < 0 : off screen, stage left
+    //  xDigLine == 0 : digit line appears first, then the digits
+    //  xDigLine == digits.size() : digit line appears after last digit
+    //  digLne   > digits.size() : off scren, stage right
+    int xDigLine = -xStart;
+    int yDigLine = -m_boundsMin.y();
+    int yCount = yEnd - yStart;
+    std::vector<std::string> out;
+    out.reserve(yCount);
     std::vector<Digit> digits;
     for (int y = yStart; y < yEnd; ++y) {
+        // First, are we at the yDigit line?
+        if (y == yDigLine) {
+            int x;
+            std::ostringstream oss;
+            for (x = 0; x < xDigLine && x < xCount; ++x) {
+                oss << Tools::m_boxArt_h << Tools::m_boxArt_h;
+            }
+            if (x == xDigLine) {
+                oss << Tools::m_boxArt_x;
+            }
+            for (; x < xCount; ++x) {
+                oss << Tools::m_boxArt_h << Tools::m_boxArt_h;
+            }
+            out.push_back(oss.str());
+        }
         locked_fillRow(y, digits);
-        ////// WORKING HERE
-    }
+        assert(digits.size() == yCount && "Digits not the correct size");
+        // std::string rowStr;
+        std::ostringstream oss;
+        int x;
+        for (x = 0; x < xDigLine && x < xCount; ++x) {
+            oss << Tools::digitToAlpha(digits[x]);
+        }
+        if (x == xDigLine) {
+            oss << Tools::m_boxArt_v;
+        }
+        for (; x < xCount; ++x) {
+            oss << Tools::digitToAlpha(digits[x]);
+        }
+        out.push_back(oss.str());
+    } // end y loop
 
 
 
