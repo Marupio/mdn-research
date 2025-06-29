@@ -14,7 +14,7 @@ const std::string mdn::Tools::m_boxArt_v = u8"\u2502"; // │
 const std::string mdn::Tools::m_boxArt_x = u8"\u253C"; // ┼
 
 
-std::string mdn::Tools::digitToAlpha(Digit value, char pos, char neg) {
+std::string mdn::Tools::digitToAlpha(Digit value, std::string pos, std::string neg) {
     std::string ret;
     if (value < 0) {
         ret += neg;
@@ -39,39 +39,16 @@ std::string mdn::Tools::digitToAlpha(Digit value, char pos, char neg) {
 }
 
 
-std::string mdn::Tools::digitToAlpha(const std::vector<Digit>& array, char pos=' ', char neg='-') {
-    std::string ret;
-    for (Digit digit : array) {
-        ret += digitToAlpha(digit, pos, neg);
-    }
-    return ret;
-}
-
-
-std::string mdn::Tools::digitToAlpha(int value, char pos=' ', char neg='-') {
+std::string mdn::Tools::digitToAlpha(int value, std::string pos, std::string neg) {
     return digitToAlpha(Digit(value), pos, neg);
 }
 
 
-std::string mdn::Tools::digitToAlpha(long value, char pos=' ', char neg='-') {
+std::string mdn::Tools::digitToAlpha(long value, std::string pos, std::string neg) {
     return digitToAlpha(Digit(value), pos, neg);
 }
 
 
-std::string mdn::Tools::digitToAlpha(long long value, char pos=' ', char neg='-') {
+std::string mdn::Tools::digitToAlpha(long long value, std::string pos, std::string neg) {
     return digitToAlpha(Digit(value), pos, neg);
 }
-
-
-std::string mdn::Tools::digitToAlpha(const std::vector<int>& array, char pos=' ', char neg='-') {
-}
-
-
-std::string mdn::Tools::digitToAlpha(const std::vector<long>& array, char pos=' ', char neg='-') {
-}
-
-
-std::string mdn::Tools::digitToAlpha(const std::vector<long long>& array, char pos=' ', char neg='-') {
-}
-
-

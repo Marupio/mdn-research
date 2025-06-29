@@ -28,17 +28,20 @@ public:
     using WritableLock = std::unique_lock<std::shared_mutex>;
     using ReadOnlyLock = std::shared_lock<std::shared_mutex>;
 
+    static const int m_intMax;
+    static const int m_intMin;
+
     // *** Constructors
 
         // Constructs an empty MDN with a given base.
-        Mdn2d(int base = 10);
+        Mdn2d(int base = 10, int maxSpan = 16);
 
         // Constructs an MDN initialized with a single integer value added to the
         // digit origin.
-        Mdn2d(int base, int initVal);
+        Mdn2d(int base, int maxSpan, int initVal);
 
         // Constructs an MDN with a floating point initial value.
-        Mdn2d(int base, double initVal, Fraxis fraxis);
+        Mdn2d(int base, int maxSpan, double initVal, Fraxis fraxis);
 
 
     // *** Member Functions
@@ -64,14 +67,14 @@ public:
             // Assembles the row at the given y index value, spanning the x bounds of full MDN
             std::vector<Digit> getRow(int y) const;
 
+            // Assembles the row at the given y index value, spanning the x bounds of full MDN
+            void getRow(int y, std::vector<Digit>& digits) const;
+
             // Assembles the column at the given x index value, spanning the y bounds of full MDN
             std::vector<Digit> getCol(int x) const;
 
-            // Assembles the row at the given y index value, spanning the x bounds of full MDN
-            void fillRow(int y, std::vector<Digit>& digits) const;
-
             // Assembles the column at the given x index value, spanning the y bounds of full MDN
-            void fillCol(int x, std::vector<Digit>& digits) const;
+            void getCol(int x, std::vector<Digit>& digits) const;
 
             // Changes the value at coordinate (x, y).
             void setValue(int x, int y, int value);
@@ -84,14 +87,10 @@ public:
             std::string toString() const;
 
             // Converts the MDN to an array of strings, representing rows (along x digit axis).
-            //  reverse - when true, result[0] is the highest magnitude row (greatest y digit).
-            //          - when false, result[0] is the lowest magnitude row (lowest y digit).
-            std::vector<std::string> toStringRows(bool reverse=true) const;
+            std::vector<std::string> toStringRows() const;
 
             // Converts the MDN to an array of strings, representing columns (along y digit axis).
-            //  reverse - when true, result[0] is the highest magnitude col (greatest x digit).
-            //          - when false, result[0] is the lowest magnitude col (lowest x digit).
-            std::vector<std::string> toStringCols(bool reverse=true) const;
+            std::vector<std::string> toStringCols() const;
 
 
         // *** Low-level functionality
@@ -151,6 +150,8 @@ private:
 
             void locked_clear();
             void locked_clearMetadata() const;
+            void locked_rebuildMetadata() const;
+            void locked_insertAddress(const Coord& xy) const;
 
             // Check xy in terms of bounds, ensuring maxSpan is not exceeded
             //  * if exceeded with smaller magnitude, returns false (i.e. do not set value)
@@ -163,19 +164,24 @@ private:
             void locked_updateBounds();
 
             std::string locked_toString() const;
-            std::vector<std::string> locked_toStringRows(bool reverse=true) const;
-            std::vector<std::string> locked_toStringCols(bool reverse=true) const;
-            Digit locked_getValue(const Coord& xy) const;
+            std::vector<std::string> locked_toStringRows() const;
+            std::vector<std::string> locked_toStringCols() const;
             std::vector<Digit> locked_getRow(int y) const;
+            void locked_getRow(int y, std::vector<Digit>& digits) const;
+
             std::vector<Digit> locked_getCol(int x) const;
-            void locked_fillRow(int y, std::vector<Digit>& digits) const;
-            void locked_fillCol(int x, std::vector<Digit>& digits) const;
+            void locked_getCol(int x, std::vector<Digit>& digits) const;
+
+            Digit locked_getValue(const Coord& xy) const;
             void locked_setValue(const Coord& xy, int value);
+
             void locked_addReal(const Coord& xy, double realNum, Fraxis fraxis);
             void locked_addInteger(const Coord& xy, int value);
             void locked_addFraxis(const Coord& xy, double fraction, Fraxis fraxis);
             void locked_addFraxisX(const Coord& xy, double fraction);
             void locked_addFraxisY(const Coord& xy, double fraction);
+
+            void locked_carryOver(const Coord& xy);
 
         // Returns pointer to existing digit entry, if it exists
         Digit* getPtr(const Coord& xy);

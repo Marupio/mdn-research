@@ -8,9 +8,12 @@ using namespace std;
 // using namespace mdn;
 
 
-const std::string m_boxArt_h = "-"; // u8"\u2500"; // ─
-const std::string m_boxArt_v = "|"; // u8"\u2502"; // │
-const std::string m_boxArt_x = "+"; // u8"\u253C"; // ┼
+// const std::string m_boxArt_h = "-"; // u8"\u2500"; // ─
+// const std::string m_boxArt_v = "|"; // u8"\u2502"; // │
+// const std::string m_boxArt_x = "+"; // u8"\u253C"; // ┼
+const std::string m_boxArt_h = u8"\u2500"; // ─
+const std::string m_boxArt_v = u8"\u2502"; // │
+const std::string m_boxArt_x = u8"\u253C"; // ┼
 
 
 std::vector<string> write(int xx, int xn, int yx, int yn) {

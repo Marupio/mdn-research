@@ -17,7 +17,7 @@ public:
 class InvalidCarryOver : public MdnException {
 public:
     InvalidCarryOver(const Coord& xy)
-        : MdnException("Coordinate " + to_string(xy) + ": invalid carry over at zero digit.") {}
+        : MdnException("Coordinate " + xy.to_string() + ": invalid carry over at zero digit.") {}
 };
 
 // Attempt to assign out-of-range value to digit
@@ -25,8 +25,18 @@ class OutOfRange : public MdnException {
 public:
     OutOfRange(const Coord& xy, int value, int base)
         : MdnException(
-            "Coordinate " + to_string(xy) + ": out-of-range value " + std::to_string(value)
+            "Coordinate " + xy.to_string() + ": out-of-range value " + std::to_string(value)
             + ", expecting ±" + std::to_string(base)
+        ) {}
+};
+
+// Attempt to assign out-of-range value to digit
+class ZeroEncountered : public MdnException {
+public:
+    ZeroEncountered(const Coord& xy)
+        : MdnException(
+            "Coordinate " + xy.to_string() + ": has recorded value of 0.  Sparse storage should " +
+            "never contain a zero."
         ) {}
 };
 
@@ -36,8 +46,6 @@ public:
     MetaDataInvalid(const std::string& description)
         : MdnException("MDN MetaData invalid: " + description) {};
 };
-
-// Optionally, define other specific exceptions as needed
 
 // If using a non-throwing path is preferable:
 // enum class MdnStatus {

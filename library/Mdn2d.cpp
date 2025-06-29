@@ -9,23 +9,30 @@
 #include "Tools.h"
 
 
-mdn::Mdn2d::Mdn2d(int base)
+const int mdn::Mdn2d::m_intMin = std::numeric_limits<int>::min();
+const int mdn::Mdn2d::m_intMax = std::numeric_limits<int>::max();
+
+
+mdn::Mdn2d::Mdn2d(int base, int maxSpan)
 :
-    m_base(base)
+    m_base(base),
+    m_maxSpan(maxSpan)
 {}
 
 
-mdn::Mdn2d::Mdn2d(int base, int initVal)
+mdn::Mdn2d::Mdn2d(int base, int maxSpan, int initVal)
 :
-    m_base(base)
+    m_base(base),
+    m_maxSpan(maxSpan)
 {
     locked_addInteger(Coord({0, 0}), initVal);
 }
 
 
-mdn::Mdn2d::Mdn2d(int base, double initVal, Fraxis fraxis)
+mdn::Mdn2d::Mdn2d(int base, int maxSpan, double initVal, Fraxis fraxis)
 :
-    m_base(base)
+    m_base(base),
+    m_maxSpan(maxSpan)
 {
     locked_addReal(COORD_ORIGIN, initVal, fraxis);
 }
@@ -79,21 +86,21 @@ std::vector<mdn::Digit> mdn::Mdn2d::getRow(int y) const {
 }
 
 
+void mdn::Mdn2d::getRow(int y, std::vector<Digit>& digits) const {
+    auto lock = lockReadOnly();
+    locked_getRow(y, digits);
+}
+
+
 std::vector<mdn::Digit> mdn::Mdn2d::getCol(int x) const {
     auto lock = lockReadOnly();
     return locked_getCol(x);
 }
 
 
-void mdn::Mdn2d::fillRow(int y, std::vector<Digit>& digits) const {
+void mdn::Mdn2d::getCol(int x, std::vector<Digit>& digits) const {
     auto lock = lockReadOnly();
-    locked_fillRow(y, digits);
-}
-
-
-void mdn::Mdn2d::fillCol(int x, std::vector<Digit>& digits) const {
-    auto lock = lockReadOnly();
-    locked_fillCol(x, digits);
+    locked_getCol(x, digits);
 }
 
 
@@ -121,71 +128,46 @@ std::string mdn::Mdn2d::toString() const {
 }
 
 
-std::vector<std::string> mdn::Mdn2d::toStringRows(bool reverse) const {
+std::vector<std::string> mdn::Mdn2d::toStringRows() const {
     auto lock = lockReadOnly();
-    return locked_toStringRows(reverse);
+    return locked_toStringRows();
 }
 
 
-std::vector<std::string> mdn::Mdn2d::toStringCols(bool reverse) const {
+std::vector<std::string> mdn::Mdn2d::toStringCols() const {
     auto lock = lockReadOnly();
-    return locked_toStringCols(reverse);
+    return locked_toStringCols();
 }
 
 
 void mdn::Mdn2d::carryOver(int x, int y)
 {
-    carryOver(Coord({x, y}));
+    auto lock = lockWriteable();
+    locked_carryOver(Coord({x, y}));
 }
 
 
 void mdn::Mdn2d::carryOver(const Coord& xy)
 {
-    // auto& val = operator()
+    auto lock = lockWriteable();
+    locked_carryOver(xy);
 }
 
 
 void mdn::Mdn2d::rebuildMetadata() const {
-    std::unique_lock lock(m_mutex);
-    locked_clearMetadata();
-
-    for (const auto& [coord, digit] : m_raw) {
-        if (digit != 0) {
-            const int x = coord.first;
-            const int y = coord.second;
-            ++m_xCounts[x];
-            ++m_yCounts[y];
-        }
-    }
-
-    m_boundsMin = Coord({0, 0});
-    m_boundsMax = Coord({0, 0});
-    if (m_xCounts.size() == 0)
-    {
-        // No non-zeros
-        return;
-    }
-
-    auto itMinX = m_xCounts.cbegin();
-    auto itMaxX = m_xCounts.crbegin();
-    auto itMinY = m_yCounts.cbegin();
-    auto itMaxY = m_yCounts.crbegin();
-    m_boundsMin = {itMinX->first, itMinY->first};
-    m_boundsMax = {itMinX->second, itMinY->second};
+    auto lock = lockWriteable();
+    locked_rebuildMetadata();
 }
 
-
 mdn::Digit mdn::Mdn2d::operator()(int x, int y) const {
-    return operator()(Coord(x, y));
+    auto lock = lockReadOnly();
+    return locked_getValue(Coord(x, y));
 }
 
 
 mdn::Digit mdn::Mdn2d::operator()(const Coord& xy) const {
-    auto it = m_raw.find(xy);
-    if (it == m_raw.end()) {
-        return Digit(0);
-    }
-    return it->second;
+    auto lock = lockReadOnly();
+    return locked_getValue(xy);
 }
 
 
@@ -281,10 +263,63 @@ void mdn::Mdn2d::locked_clear() {
 
 
 void mdn::Mdn2d::locked_clearMetadata() const {
-    m_xCounts.clear();
-    m_yCounts.clear();
-    m_boundsMin = {0, 0}; // Find a better 'null' value for bounds
-    m_boundsMax = {0, 0}; // Find a better 'null' value for bounds
+    m_boundsMin = Coord({m_intMax, m_intMax});
+    m_boundsMax = Coord({m_intMin, m_intMin});
+
+    m_xIndex.clear();
+    m_yIndex.clear();
+}
+
+
+void mdn::Mdn2d::locked_rebuildMetadata() const {
+    locked_clearMetadata();
+
+    for (const auto& [xy, digit] : m_raw) {
+        if (digit == 0) {
+            throw ZeroEncountered(xy);
+        }
+        const int x = xy.x();
+        const int y = xy.y();
+        locked_insertAddress(xy);
+    }
+
+    // This updates bounds based on metadata
+    // auto itMinX = m_xIndex.cbegin();
+    // auto itMaxX = m_xIndex.crbegin();
+    // auto itMinY = m_yIndex.cbegin();
+    // auto itMaxY = m_yIndex.crbegin();
+    // m_boundsMin = {itMinX->first, itMinY->first};
+    // m_boundsMax = {itMaxX->first, itMaxY->first};
+}
+
+
+void mdn::Mdn2d::locked_insertAddress(const Coord& xy) const {
+    auto xit = m_xIndex.find(xy.x());
+    if (xit == m_xIndex.end()) {
+        m_xIndex.emplace(xy.x(), std::unordered_set<Coord>());
+        std::unordered_set<Coord> newX;
+        newX.insert(xy);
+        m_xIndex[xy.x()] = newX;
+    } else {
+        xit->second.insert(xy);
+    }
+    auto yit = m_yIndex.find(xy.y());
+    if (yit == m_yIndex.end()) {
+        m_yIndex.emplace(xy.y(), std::unordered_set<Coord>());
+        std::unordered_set<Coord> newy;
+        newy.insert(xy);
+        m_yIndex[xy.y()] = newy;
+    } else {
+        yit->second.insert(xy);
+    }
+    if (xy.x() < m_boundsMin.x())
+        m_boundsMin.x() = xy.x();
+    if (xy.x() > m_boundsMax.x())
+        m_boundsMax.x() = xy.x();
+    if (xy.y() < m_boundsMin.y())
+        m_boundsMin.y() = xy.y();
+    if (xy.y() > m_boundsMax.y())
+        m_boundsMax.y() = xy.y();
 }
 
 
@@ -327,38 +362,29 @@ void mdn::Mdn2d::locked_updateBounds() {
 
 
 std::string mdn::Mdn2d::locked_toString() const {
-    std::vector<std::string> rows = locked_toStringRows(true);
-    return Tools::joinArray(rows, '\n');
+    std::vector<std::string> rows = locked_toStringRows();
+    return Tools::joinArray(rows, "\n", true);
 }
 
 
-std::vector<std::string> mdn::Mdn2d::locked_toStringRows(bool reverse=true) const {
-    int yStart, yEnd;
-    if (reverse) {
-        yStart = m_boundsMax.y();
-        yEnd = m_boundsMin.y()+1;
-    } else {
-        yStart = m_boundsMin.y();
-        yEnd = m_boundsMax.y()+1;
-    }
+std::vector<std::string> mdn::Mdn2d::locked_toStringRows() const {
     int xStart = m_boundsMin.x();
     int xEnd = m_boundsMax.x()+1;
     int xCount = xEnd - xStart;
 
-    // xDigLine - digit line appears before what index in 'digits' array below
-    //  xDigLine  < 0 : off screen, stage left
-    //  xDigLine == 0 : digit line appears first, then the digits
-    //  xDigLine == digits.size() : digit line appears after last digit
-    //  digLne   > digits.size() : off scren, stage right
-    int xDigLine = -xStart;
-    int yDigLine = -m_boundsMin.y();
+    int yStart = m_boundsMin.y();
+    int yEnd = m_boundsMax.y()+1;
     int yCount = yEnd - yStart;
+
+    // DigLine - digit line appears before what index in 'digits' array below
+    int xDigLine = -xStart;
+
     std::vector<std::string> out;
-    out.reserve(yCount);
+    out.reserve(yCount+1);
     std::vector<Digit> digits;
     for (int y = yStart; y < yEnd; ++y) {
         // First, are we at the yDigit line?
-        if (y == yDigLine) {
+        if (y == 0) {
             int x;
             std::ostringstream oss;
             for (x = 0; x < xDigLine && x < xCount; ++x) {
@@ -372,7 +398,7 @@ std::vector<std::string> mdn::Mdn2d::locked_toStringRows(bool reverse=true) cons
             }
             out.push_back(oss.str());
         }
-        locked_fillRow(y, digits);
+        locked_getRow(y, digits);
         assert(digits.size() == yCount && "Digits not the correct size");
         // std::string rowStr;
         std::ostringstream oss;
@@ -388,57 +414,17 @@ std::vector<std::string> mdn::Mdn2d::locked_toStringRows(bool reverse=true) cons
         }
         out.push_back(oss.str());
     } // end y loop
-
-
-
-
-    int xStart = m_boundsMin.x();
-    int xEnd = m_boundsMax.x() + 1; // one past the end, prevent fencepost
-    int xCount = xEnd - xStart;
-    int yStart, yEnd;
-    if (reverse) {
-        yStart = m_boundsMax.y();
-        yEnd = m_boundsMin.y();
-    } else {
-        yStart = m_boundsMin.y();
-        yEnd = m_boundsMax.y();
-    }
-
-    std::vector<Digit> digits(xCount);
-    for (int y = yStart; y < yEnd; ++y) {
-        // Init digits for this row
-        std::fill(digits.begin(), digits.end(), 0);
-        auto it = m_yIndex.find(y);
-        if (it != m_yIndex.end()) {
-            // There are non-zero entries on this row, fill them in
-            const std::unordered_set<Coord>& coords = it->second;
-            for (const Coord& coord : coords) {
-                digits[coord.x()-xStart] = m_raw.at(coord);
-            }
-        }
-    }
-
-// mutable Coord m_boundsMin;
-// mutable Coord m_boundsMax;
-// std::map<int, std::unordered_set<Coord>> m_xIndex
-// std::map<int, std::unordered_set<Coord>> m_yIndex
+    return out;
 }
-
 
 
 std::vector<mdn::Digit> mdn::Mdn2d::locked_getRow(int y) const {
     std::vector<Digit> digits;
-    locked_fillRow(y, digits);
+    locked_getRow(y, digits);
 }
 
 
-std::vector<mdn::Digit> mdn::Mdn2d::locked_getCol(int x) const {
-    std::vector<Digit> digits;
-    locked_fillCol(x, digits);
-}
-
-
-void mdn::Mdn2d::locked_fillRow(int y, std::vector<Digit>& digits) const {
+void mdn::Mdn2d::locked_getRow(int y, std::vector<Digit>& digits) const {
     int xStart = m_boundsMin.x();
     int xEnd = m_boundsMax.x() + 1; // one past the end, prevent fencepost
     int xCount = xEnd - xStart;
@@ -455,7 +441,13 @@ void mdn::Mdn2d::locked_fillRow(int y, std::vector<Digit>& digits) const {
 }
 
 
-void mdn::Mdn2d::locked_fillCol(int x, std::vector<Digit>& digits) const {
+std::vector<mdn::Digit> mdn::Mdn2d::locked_getCol(int x) const {
+    std::vector<Digit> digits;
+    locked_getCol(x, digits);
+}
+
+
+void mdn::Mdn2d::locked_getCol(int x, std::vector<Digit>& digits) const {
     int yStart = m_boundsMin.y();
     int yEnd = m_boundsMax.y() + 1; // one past the end, prevent fencepost
     int yCount = yEnd - yStart;
@@ -472,15 +464,16 @@ void mdn::Mdn2d::locked_fillCol(int x, std::vector<Digit>& digits) const {
 }
 
 
-
-
-std::vector<std::string> mdn::Mdn2d::locked_toStringCols(bool reverse=true) const {
+std::vector<std::string> mdn::Mdn2d::locked_toStringCols() const {
 }
 
 
 mdn::Digit mdn::Mdn2d::locked_getValue(const Coord& xy) const {
     auto it = m_raw.find(xy);
-    return it != m_raw.end() ? it->second : 0;
+    if (it == m_raw.end()) {
+        return Digit(0);
+    }
+    return it->second;
 }
 
 
@@ -581,6 +574,11 @@ void mdn::Mdn2d::locked_addFraxisX(const Coord& xy, double fraction) {
 
 
 void mdn::Mdn2d::locked_addFraxisY(const Coord& xy, double fraction) {
+    // TODO
+}
+
+
+void mdn::Mdn2d::locked_carryOver(const Coord& xy) {
     // TODO
 }
 
