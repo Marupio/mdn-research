@@ -78,6 +78,8 @@
     "xtr1common": "cpp",
     "xtree": "cpp",
     "xutility": "cpp",
-    "shared_mutex": "cpp"
+    "shared_mutex": "cpp",
+    "deque": "cpp",
+    "string_view": "cpp"
   }
 }

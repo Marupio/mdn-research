@@ -47,6 +47,13 @@ public:
         : MdnException("MDN MetaData invalid: " + description) {};
 };
 
+// Argument cannot be self
+class IllegalSelfReference : public MdnException {
+public:
+    IllegalSelfReference(const std::string& description)
+        : MdnException("Supplied argument must not be the exact same object: " + description) {};
+};
+
 // If using a non-throwing path is preferable:
 // enum class MdnStatus {
 //     OK,
