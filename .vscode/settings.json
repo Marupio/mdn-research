@@ -80,6 +80,13 @@
     "xutility": "cpp",
     "shared_mutex": "cpp",
     "deque": "cpp",
-    "string_view": "cpp"
+    "string_view": "cpp",
+    "cstdarg": "cpp",
+    "cwctype": "cpp",
+    "memory_resource": "cpp",
+    "random": "cpp",
+    "numbers": "cpp",
+    "semaphore": "cpp",
+    "cinttypes": "cpp"
   }
 }

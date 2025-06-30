@@ -116,9 +116,24 @@ mdn::Digit mdn::Mdn2d::getValue(const Coord& xy) const {
 }
 
 
+mdn::Digit mdn::Mdn2d::locked_getValue(const Coord& xy) const {
+    auto it = m_raw.find(xy);
+    if (it == m_raw.end()) {
+        return Digit(0);
+    }
+    return it->second;
+}
+
+
 std::vector<mdn::Digit> mdn::Mdn2d::getRow(int y) const {
     auto lock = lockReadOnly();
     return locked_getRow(y);
+}
+
+
+std::vector<mdn::Digit> mdn::Mdn2d::locked_getRow(int y) const {
+    std::vector<Digit> digits;
+    locked_getRow(y, digits);
 }
 
 
@@ -128,9 +143,32 @@ void mdn::Mdn2d::getRow(int y, std::vector<Digit>& digits) const {
 }
 
 
+void mdn::Mdn2d::locked_getRow(int y, std::vector<Digit>& digits) const {
+    int xStart = m_boundsMin.x();
+    int xEnd = m_boundsMax.x() + 1; // one past the end, prevent fencepost
+    int xCount = xEnd - xStart;
+    digits.resize(xCount);
+    std::fill(digits.begin(), digits.end(), 0);
+    auto it = m_yIndex.find(y);
+    if (it != m_yIndex.end()) {
+        // There are non-zero entries on this row, fill them in
+        const std::unordered_set<Coord>& coords = it->second;
+        for (const Coord& coord : coords) {
+            digits[coord.x()-xStart] = m_raw.at(coord);
+        }
+    }
+}
+
+
 std::vector<mdn::Digit> mdn::Mdn2d::getCol(int x) const {
     auto lock = lockReadOnly();
     return locked_getCol(x);
+}
+
+
+std::vector<mdn::Digit> mdn::Mdn2d::locked_getCol(int x) const {
+    std::vector<Digit> digits;
+    locked_getCol(x, digits);
 }
 
 
@@ -140,9 +178,121 @@ void mdn::Mdn2d::getCol(int x, std::vector<Digit>& digits) const {
 }
 
 
+void mdn::Mdn2d::locked_getCol(int x, std::vector<Digit>& digits) const {
+    int yStart = m_boundsMin.y();
+    int yEnd = m_boundsMax.y() + 1; // one past the end, prevent fencepost
+    int yCount = yEnd - yStart;
+    digits.resize(yCount);
+    std::fill(digits.begin(), digits.end(), 0);
+    auto it = m_xIndex.find(x);
+    if (it != m_xIndex.end()) {
+        // There are non-zero entries on this row, fill them in
+        const std::unordered_set<Coord>& coords = it->second;
+        for (const Coord& coord : coords) {
+            digits[coord.x()-yStart] = m_raw.at(coord);
+        }
+    }
+}
+
+
 void mdn::Mdn2d::clear() {
     auto lock = lockWriteable();
     locked_clear();
+}
+
+
+void mdn::Mdn2d::locked_clear() {
+    m_raw.clear();
+    internal_clearMetadata();
+}
+
+
+void mdn::Mdn2d::setToZero(const Coord& xy) {
+    auto lock = lockWriteable();
+    locked_setToZero(xy);
+}
+
+
+void mdn::Mdn2d::locked_setToZero(const Coord& xy) {
+    auto it = m_raw.find(xy);
+    if (it == m_raw.end()) {
+        // Already zero
+        return;
+    }
+    // There is currently a non-zero value - erase it
+    auto xit(m_xIndex.find(xy.x()));
+    auto yit(m_yIndex.find(xy.y()));
+    #ifdef MDN_DEBUG
+        // Debug mode - sanity check - metadata entries must be non-zero
+        if (xit == m_xIndex.end() || yit == m_yIndex.end()) {
+            std::ostringstream oss;
+            oss << "Internal error: addressing data invalid, discovered when zeroing ";
+            oss << "coord: " << xy << std::endl;
+            oss << "Rebuilding metadata." << std::endl;
+            Logger::instance().warn(oss.str());
+            rebuildMetadata();
+            xit = m_xIndex.find(xy.x());
+            yit = m_yIndex.find(xy.y());
+        }
+    #endif // MDN_DEBUG
+    m_raw.erase(it);
+
+    std::unordered_set<Coord>& coordsAlongX(xit->second);
+    std::unordered_set<Coord>& coordsAlongY(yit->second);
+    coordsAlongX.erase(xy);
+    coordsAlongY.erase(xy);
+    bool checkBounds = false;
+    if (coordsAlongX.size() == 0) {
+        m_xIndex.erase(xit);
+    }
+
+    if (coordsAlongY.size() == 0) {
+        m_yIndex.erase(yit);
+    }
+    if (checkBounds) {
+        // Bounds may have changed
+        internal_updateBounds();
+    }
+}
+
+
+void mdn::Mdn2d::setToZero(const std::unordered_set<Coord>& coords) {
+    auto lock = lockWriteable();
+    locked_setToZero(coords);
+}
+
+
+void mdn::Mdn2d::locked_setToZero(const std::unordered_set<Coord>& purgeSet) {
+    // Step 1: Erase from m_raw
+    for (const Coord& coord : purgeSet) {
+        m_raw.erase(coord);
+    }
+
+    // Step 2: Clean up m_xIndex and m_yIndex
+    for (const Coord& coord : purgeSet) {
+        int x = coord.x();
+        int y = coord.y();
+
+        // Erase coord from x index
+        auto xIt = m_xIndex.find(x);
+        if (xIt != m_xIndex.end()) {
+            xIt->second.erase(coord);
+            if (xIt->second.empty()) {
+                m_xIndex.erase(xIt);
+            }
+        }
+
+        // Erase coord from y index
+        auto yIt = m_yIndex.find(y);
+        if (yIt != m_yIndex.end()) {
+            yIt->second.erase(coord);
+            if (yIt->second.empty()) {
+                m_yIndex.erase(yIt);
+            }
+        }
+    }
+    // Bounds may have changed
+    internal_updateBounds();
 }
 
 
@@ -170,11 +320,21 @@ void mdn::Mdn2d::setValue(const Coord& xy, long long value) {
 }
 
 
+void mdn::Mdn2d::locked_setValue(const Coord& xy, Digit value) {
+    // TODO
+}
+
+
 void mdn::Mdn2d::plus(const Mdn2d& rhs, Mdn2d& ans) const {
     assertNotSelf(ans, "plus operation");
     auto lockThis = lockReadOnly();
     auto lockAns = ans.lockReadOnly();
     locked_plus(rhs, ans);
+}
+
+
+void mdn::Mdn2d::locked_plus(const Mdn2d& rhs, Mdn2d& ans) const {
+    // TODO
 }
 
 
@@ -186,6 +346,10 @@ void mdn::Mdn2d::minus(const Mdn2d& rhs, Mdn2d& ans) const {
 }
 
 
+void mdn::Mdn2d::locked_minus(const Mdn2d& rhs, Mdn2d& ans) const {
+}
+
+
 void mdn::Mdn2d::multiply(const Mdn2d& rhs, Mdn2d& ans) const {
     assertNotSelf(ans, "multiply operation");
     auto lockThis = lockReadOnly();
@@ -194,11 +358,21 @@ void mdn::Mdn2d::multiply(const Mdn2d& rhs, Mdn2d& ans) const {
 }
 
 
+void mdn::Mdn2d::locked_multiply(const Mdn2d& rhs, Mdn2d& ans) const {
+    // TODO
+}
+
+
 void mdn::Mdn2d::divide(const Mdn2d& rhs, Mdn2d& ans) const {
     assertNotSelf(ans, "divide operation");
     auto lockThis = lockReadOnly();
     auto lockAns = ans.lockReadOnly();
     locked_divide(rhs, ans);
+}
+
+
+void mdn::Mdn2d::locked_divide(const Mdn2d& rhs, Mdn2d& ans) const {
+    // TODO
 }
 
 
@@ -214,6 +388,11 @@ void mdn::Mdn2d::add(const Coord& xy, double realNum, Fraxis fraxis) {
 }
 
 
+void mdn::Mdn2d::locked_add(const Coord& xy, double realNum, Fraxis fraxis) {
+    // TODO
+}
+
+
 void mdn::Mdn2d::subtract(const Coord& xy, float realNum, Fraxis fraxis) {
     auto lock = lockWriteable();
     locked_subtract(xy, double(realNum), fraxis);
@@ -226,9 +405,19 @@ void mdn::Mdn2d::subtract(const Coord& xy, double realNum, Fraxis fraxis) {
 }
 
 
+void mdn::Mdn2d::locked_subtract(const Coord& xy, double realNum, Fraxis fraxis) {
+    // TODO
+}
+
+
 void mdn::Mdn2d::add(const Coord& xy, Digit value, Fraxis unused) {
     auto lock = lockWriteable();
     locked_add(xy, value)
+}
+
+
+void mdn::Mdn2d::locked_add(const Coord& xy, Digit value) {
+    // TODO
 }
 
 
@@ -238,9 +427,19 @@ void mdn::Mdn2d::add(const Coord& xy, int value, Fraxis unused) {
 }
 
 
+void mdn::Mdn2d::locked_add(const Coord& xy, int value) {
+    // TODO
+}
+
+
 void mdn::Mdn2d::add(const Coord& xy, long value, Fraxis unused) {
     auto lock = lockWriteable();
     locked_add(xy, value);
+}
+
+
+void mdn::Mdn2d::locked_add(const Coord& xy, long value) {
+    // TODO
 }
 
 
@@ -250,9 +449,19 @@ void mdn::Mdn2d::add(const Coord& xy, long long value, Fraxis unused) {
 }
 
 
+void mdn::Mdn2d::locked_add(const Coord& xy, long long value) {
+    // TODO
+}
+
+
 void mdn::Mdn2d::subtract(const Coord& xy, Digit value, Fraxis unused) {
     auto lock = lockWriteable();
     locked_subtract(xy, value)
+}
+
+
+void mdn::Mdn2d::locked_subtract(const Coord& xy, Digit value) {
+    // TODO
 }
 
 
@@ -262,15 +471,30 @@ void mdn::Mdn2d::subtract(const Coord& xy, int value, Fraxis unused) {
 }
 
 
+void mdn::Mdn2d::locked_subtract(const Coord& xy, int value) {
+    // TODO
+}
+
+
 void mdn::Mdn2d::subtract(const Coord& xy, long value, Fraxis unused) {
     auto lock = lockWriteable();
     locked_subtract(xy, value);
 }
 
 
+void mdn::Mdn2d::locked_subtract(const Coord& xy, long value) {
+    // TODO
+}
+
+
 void mdn::Mdn2d::subtract(const Coord& xy, long long value, Fraxis unused) {
     auto lock = lockWriteable();
     locked_subtract(xy, value);
+}
+
+
+void mdn::Mdn2d::locked_subtract(const Coord& xy, long long value) {
+    // TODO
 }
 
 
@@ -286,6 +510,43 @@ void mdn::Mdn2d::addFraxis(const Coord& xy, double fraction, Fraxis fraxis) {
 }
 
 
+void mdn::Mdn2d::locked_addFraxis(const Coord& xy, double fraction, Fraxis fraxis) {
+    #ifdef MDN_DEBUG
+        if (fraction < -1.0 || fraction > 1.0)
+        {
+            std::ostringstream oss;
+            oss << "fraction out of range (-1.0 .. 1.0), got " << fraction;
+            Logger::instance().error(oss.str());
+        }
+    #endif
+
+    switch(fraxis)
+    {
+        case Fraxis::X:
+            locked_addFraxisX(xy, fraction);
+            break;
+        case Fraxis::Y:
+            locked_addFraxisY(xy, fraction);
+            break;
+        default:
+            std::ostringstream oss;
+            oss << "Fraxis not valid: " << FraxisToName(fraxis) << ", truncating " << fraction;
+            Logger::instance().error(oss.str());
+            break;
+    }
+}
+
+
+void mdn::Mdn2d::locked_addFraxisX(const Coord& xy, double fraction) {
+    // TODO
+}
+
+
+void mdn::Mdn2d::locked_addFraxisY(const Coord& xy, double fraction) {
+    // TODO
+}
+
+
 void mdn::Mdn2d::subtractFraxis(const Coord& xy, float fraction, Fraxis fraxis) {
     auto lock = lockWriteable();
     locked_subtractFraxis(xy, double(fraction), fraxis);
@@ -298,27 +559,47 @@ void mdn::Mdn2d::subtractFraxis(const Coord& xy, double fraction, Fraxis fraxis)
 }
 
 
-void mdn::Mdn2d::multiply(Digit value) {
-    auto lock = lockWriteable();
-    locked_multiply(int(value));
+void mdn::Mdn2d::locked_subtractFraxis(const Coord& xy, double fraction, Fraxis fraxis) {
+    // TODO
 }
 
 
-void mdn::Mdn2d::multiply(int value) {
+void mdn::Mdn2d::locked_subtractFraxisX(const Coord& xy, double fraction) {
+    // TODO
+}
+
+
+void mdn::Mdn2d::locked_subtractFraxisY(const Coord& xy, double fraction) {
+    // TODO
+}
+
+
+void mdn::Mdn2d::multiply(Digit value) {
     auto lock = lockWriteable();
     locked_multiply(value);
 }
 
 
+void mdn::Mdn2d::multiply(int value) {
+    auto lock = lockWriteable();
+    locked_multiply(Digit(value));
+}
+
+
 void mdn::Mdn2d::multiply(long value) {
     auto lock = lockWriteable();
-    locked_multiply(int(value));
+    locked_multiply(Digit(value));
 }
 
 
 void mdn::Mdn2d::multiply(long long value) {
     auto lock = lockWriteable();
-    locked_multiply(int(value));
+    locked_multiply(Digit(value));
+}
+
+
+void mdn::Mdn2d::locked_multiply(Digit value) {
+    // TODO
 }
 
 
@@ -328,15 +609,77 @@ std::string mdn::Mdn2d::toString() const {
 }
 
 
+std::string mdn::Mdn2d::locked_toString() const {
+    std::vector<std::string> rows = locked_toStringRows();
+    return Tools::joinArray(rows, "\n", true);
+}
+
+
 std::vector<std::string> mdn::Mdn2d::toStringRows() const {
     auto lock = lockReadOnly();
     return locked_toStringRows();
 }
 
 
+std::vector<std::string> mdn::Mdn2d::locked_toStringRows() const {
+    int xStart = m_boundsMin.x();
+    int xEnd = m_boundsMax.x()+1;
+    int xCount = xEnd - xStart;
+
+    int yStart = m_boundsMin.y();
+    int yEnd = m_boundsMax.y()+1;
+    int yCount = yEnd - yStart;
+
+    // DigLine - digit line appears before what index in 'digits' array below
+    int xDigLine = -xStart;
+
+    std::vector<std::string> out;
+    out.reserve(yCount+1);
+    std::vector<Digit> digits;
+    for (int y = yStart; y < yEnd; ++y) {
+        // First, are we at the yDigit line?
+        if (y == 0) {
+            int x;
+            std::ostringstream oss;
+            for (x = 0; x < xDigLine && x < xCount; ++x) {
+                oss << Tools::m_boxArt_h << Tools::m_boxArt_h;
+            }
+            if (x == xDigLine) {
+                oss << Tools::m_boxArt_x;
+            }
+            for (; x < xCount; ++x) {
+                oss << Tools::m_boxArt_h << Tools::m_boxArt_h;
+            }
+            out.push_back(oss.str());
+        }
+        locked_getRow(y, digits);
+        assert(digits.size() == yCount && "Digits not the correct size");
+        // std::string rowStr;
+        std::ostringstream oss;
+        int x;
+        for (x = 0; x < xDigLine && x < xCount; ++x) {
+            oss << Tools::digitToAlpha(digits[x]);
+        }
+        if (x == xDigLine) {
+            oss << Tools::m_boxArt_v;
+        }
+        for (; x < xCount; ++x) {
+            oss << Tools::digitToAlpha(digits[x]);
+        }
+        out.push_back(oss.str());
+    } // end y loop
+    return out;
+}
+
+
 std::vector<std::string> mdn::Mdn2d::toStringCols() const {
     auto lock = lockReadOnly();
     return locked_toStringCols();
+}
+
+
+std::vector<std::string> mdn::Mdn2d::locked_toStringCols() const {
+    // TODO
 }
 
 
@@ -347,9 +690,19 @@ void mdn::Mdn2d::carryOver(const Coord& xy)
 }
 
 
+void mdn::Mdn2d::locked_carryOver(const Coord& xy) {
+    // TODO
+}
+
+
 void mdn::Mdn2d::shiftRight(int nDigits) {
     auto lock = lockWriteable();
     locked_shiftRight(nDigits);
+}
+
+
+void mdn::Mdn2d::locked_shiftRight(int nDigits) {
+    // TODO
 }
 
 
@@ -359,9 +712,19 @@ void mdn::Mdn2d::shiftLeft(int nDigits) {
 }
 
 
+void mdn::Mdn2d::locked_shiftLeft(int nDigits) {
+    // TODO
+}
+
+
 void mdn::Mdn2d::shiftUp(int nDigits) {
     auto lock = lockWriteable();
     locked_shiftUp(nDigits);
+}
+
+
+void mdn::Mdn2d::locked_shiftUp(int nDigits) {
+    // TODO
 }
 
 
@@ -371,15 +734,47 @@ void mdn::Mdn2d::shiftDown(int nDigits) {
 }
 
 
+void mdn::Mdn2d::locked_shiftDown(int nDigits) {
+    // TODO
+}
+
+
 void mdn::Mdn2d::transpose() {
     auto lock = lockWriteable();
     locked_transpose();
 }
 
 
+void mdn::Mdn2d::locked_transpose() {
+    // TODO
+}
+
+
 void mdn::Mdn2d::rebuildMetadata() const {
     auto lock = lockWriteable();
     locked_rebuildMetadata();
+}
+
+
+void mdn::Mdn2d::locked_rebuildMetadata() const {
+    internal_clearMetadata();
+
+    for (const auto& [xy, digit] : m_raw) {
+        if (digit == 0) {
+            throw ZeroEncountered(xy);
+        }
+        const int x = xy.x();
+        const int y = xy.y();
+        internal_insertAddress(xy);
+    }
+
+    // This updates bounds based on metadata
+    // auto itMinX = m_xIndex.cbegin();
+    // auto itMaxX = m_xIndex.crbegin();
+    // auto itMinY = m_yIndex.cbegin();
+    // auto itMaxY = m_yIndex.crbegin();
+    // m_boundsMin = {itMinX->first, itMinY->first};
+    // m_boundsMax = {itMaxX->first, itMaxY->first};
 }
 
 
@@ -576,13 +971,7 @@ void mdn::Mdn2d::assertNotSelf(Mdn2d& that, const std::string& description) cons
 // }
 
 
-void mdn::Mdn2d::locked_clear() {
-    m_raw.clear();
-    locked_clearMetadata();
-}
-
-
-void mdn::Mdn2d::locked_clearMetadata() const {
+void mdn::Mdn2d::internal_clearMetadata() const {
     m_boundsMin = Coord({m_intMax, m_intMax});
     m_boundsMax = Coord({m_intMin, m_intMin});
 
@@ -591,29 +980,7 @@ void mdn::Mdn2d::locked_clearMetadata() const {
 }
 
 
-void mdn::Mdn2d::locked_rebuildMetadata() const {
-    locked_clearMetadata();
-
-    for (const auto& [xy, digit] : m_raw) {
-        if (digit == 0) {
-            throw ZeroEncountered(xy);
-        }
-        const int x = xy.x();
-        const int y = xy.y();
-        locked_insertAddress(xy);
-    }
-
-    // This updates bounds based on metadata
-    // auto itMinX = m_xIndex.cbegin();
-    // auto itMaxX = m_xIndex.crbegin();
-    // auto itMinY = m_yIndex.cbegin();
-    // auto itMaxY = m_yIndex.crbegin();
-    // m_boundsMin = {itMinX->first, itMinY->first};
-    // m_boundsMax = {itMaxX->first, itMaxY->first};
-}
-
-
-void mdn::Mdn2d::locked_insertAddress(const Coord& xy) const {
+void mdn::Mdn2d::internal_insertAddress(const Coord& xy) const {
     auto xit = m_xIndex.find(xy.x());
     if (xit == m_xIndex.end()) {
         m_xIndex.emplace(xy.x(), std::unordered_set<Coord>());
@@ -643,7 +1010,7 @@ void mdn::Mdn2d::locked_insertAddress(const Coord& xy) const {
 }
 
 
-bool mdn::Mdn2d::locked_checkBounds(const Coord& xy) {
+bool mdn::Mdn2d::internal_checkBounds(const Coord& xy) {
     // minLimit - below this and the new value should not be added
     Coord minLimit = m_boundsMax - m_maxSpan;
 
@@ -689,7 +1056,7 @@ bool mdn::Mdn2d::locked_checkBounds(const Coord& xy) {
 }
 
 
-void mdn::Mdn2d::locked_updateBounds() {
+void mdn::Mdn2d::internal_updateBounds() {
     if (m_xIndex.empty() || m_yIndex.empty()) {
         m_boundsMin = Coord({m_intMax, m_intMax});
         m_boundsMax = Coord({m_intMin, m_intMin});
@@ -704,230 +1071,6 @@ void mdn::Mdn2d::locked_updateBounds() {
 }
 
 
-std::string mdn::Mdn2d::locked_toString() const {
-    std::vector<std::string> rows = locked_toStringRows();
-    return Tools::joinArray(rows, "\n", true);
-}
-
-
-std::vector<std::string> mdn::Mdn2d::locked_toStringRows() const {
-    int xStart = m_boundsMin.x();
-    int xEnd = m_boundsMax.x()+1;
-    int xCount = xEnd - xStart;
-
-    int yStart = m_boundsMin.y();
-    int yEnd = m_boundsMax.y()+1;
-    int yCount = yEnd - yStart;
-
-    // DigLine - digit line appears before what index in 'digits' array below
-    int xDigLine = -xStart;
-
-    std::vector<std::string> out;
-    out.reserve(yCount+1);
-    std::vector<Digit> digits;
-    for (int y = yStart; y < yEnd; ++y) {
-        // First, are we at the yDigit line?
-        if (y == 0) {
-            int x;
-            std::ostringstream oss;
-            for (x = 0; x < xDigLine && x < xCount; ++x) {
-                oss << Tools::m_boxArt_h << Tools::m_boxArt_h;
-            }
-            if (x == xDigLine) {
-                oss << Tools::m_boxArt_x;
-            }
-            for (; x < xCount; ++x) {
-                oss << Tools::m_boxArt_h << Tools::m_boxArt_h;
-            }
-            out.push_back(oss.str());
-        }
-        locked_getRow(y, digits);
-        assert(digits.size() == yCount && "Digits not the correct size");
-        // std::string rowStr;
-        std::ostringstream oss;
-        int x;
-        for (x = 0; x < xDigLine && x < xCount; ++x) {
-            oss << Tools::digitToAlpha(digits[x]);
-        }
-        if (x == xDigLine) {
-            oss << Tools::m_boxArt_v;
-        }
-        for (; x < xCount; ++x) {
-            oss << Tools::digitToAlpha(digits[x]);
-        }
-        out.push_back(oss.str());
-    } // end y loop
-    return out;
-}
-
-
-std::vector<mdn::Digit> mdn::Mdn2d::locked_getRow(int y) const {
-    std::vector<Digit> digits;
-    locked_getRow(y, digits);
-}
-
-
-void mdn::Mdn2d::locked_getRow(int y, std::vector<Digit>& digits) const {
-    int xStart = m_boundsMin.x();
-    int xEnd = m_boundsMax.x() + 1; // one past the end, prevent fencepost
-    int xCount = xEnd - xStart;
-    digits.resize(xCount);
-    std::fill(digits.begin(), digits.end(), 0);
-    auto it = m_yIndex.find(y);
-    if (it != m_yIndex.end()) {
-        // There are non-zero entries on this row, fill them in
-        const std::unordered_set<Coord>& coords = it->second;
-        for (const Coord& coord : coords) {
-            digits[coord.x()-xStart] = m_raw.at(coord);
-        }
-    }
-}
-
-
-std::vector<mdn::Digit> mdn::Mdn2d::locked_getCol(int x) const {
-    std::vector<Digit> digits;
-    locked_getCol(x, digits);
-}
-
-
-void mdn::Mdn2d::locked_getCol(int x, std::vector<Digit>& digits) const {
-    int yStart = m_boundsMin.y();
-    int yEnd = m_boundsMax.y() + 1; // one past the end, prevent fencepost
-    int yCount = yEnd - yStart;
-    digits.resize(yCount);
-    std::fill(digits.begin(), digits.end(), 0);
-    auto it = m_xIndex.find(x);
-    if (it != m_xIndex.end()) {
-        // There are non-zero entries on this row, fill them in
-        const std::unordered_set<Coord>& coords = it->second;
-        for (const Coord& coord : coords) {
-            digits[coord.x()-yStart] = m_raw.at(coord);
-        }
-    }
-}
-
-
-std::vector<std::string> mdn::Mdn2d::locked_toStringCols() const {
-}
-
-
-mdn::Digit mdn::Mdn2d::locked_getValue(const Coord& xy) const {
-    auto it = m_raw.find(xy);
-    if (it == m_raw.end()) {
-        return Digit(0);
-    }
-    return it->second;
-}
-
-
-void mdn::Mdn2d::locked_setValue(const Coord& xy, int value) {
-    #ifdef MDN_DEBUG
-        if (value >= m_base || value <= -m_base) {
-            mdn::OutOfRange ex(xy, value, m_base);
-            Logger::instance().error(ex.what());
-            throw ex;
-        }
-    #endif
-
-    // Sparse storage does not store zeroes
-    if (value == 0)
-    {
-        locked_setToZero(xy);
-        return;
-    }
-
-    // Non-zero entry - set / overwrite
-    m_raw[xy] = value;
-}
-
-
-void mdn::Mdn2d::locked_addReal(const Coord& xy, double realNum, Fraxis fraxis) {
-    double fracPart, intPart;
-    fracPart = modf(realNum, &intPart);
-    locked_addInteger(xy, intPart);
-    locked_addFraxis(xy, fracPart, fraxis);
-}
-
-
-void mdn::Mdn2d::locked_addInteger(const Coord& xy, int value) {
-    int div;
-    if (value == 0) {
-        return;
-    }
-
-    // Grad current value, cast to int
-    auto it = m_raw.find(xy);
-    if (it == m_raw.end()) {
-        // xy has zero value
-        int sum = value;
-        div = sum / m_base;
-        int rem = sum % m_base;
-        if (rem != 0) {
-            // Check bounds, only insert value if valid
-            if (locked_checkBounds(xy)) {
-                locked_insertAddress(xy);
-                m_raw[xy] = rem;
-            }
-        }
-    } else {
-        // xy is non-zero
-        int curVal = it->second;
-        int sum = value + curVal;
-        div = sum / m_base;
-        int rem = sum % m_base;
-        if (rem != 0) {
-            m_raw[xy] = rem;
-        }
-    }
-    if (div != 0) {
-        locked_addInteger(Coord({xy.first+1, xy.second}), div);
-        locked_addInteger(Coord({xy.first, xy.second+1}), div);
-    }
-}
-
-
-void mdn::Mdn2d::locked_addFraxis(const Coord& xy, double fraction, Fraxis fraxis) {
-    #ifdef MDN_DEBUG
-        if (fraction < -1.0 || fraction > 1.0)
-        {
-            std::ostringstream oss;
-            oss << "fraction out of range (-1.0 .. 1.0), got " << fraction;
-            Logger::instance().error(oss.str());
-        }
-    #endif
-
-    switch(fraxis)
-    {
-        case Fraxis::X:
-            locked_addFraxisX(xy, fraction);
-            break;
-        case Fraxis::Y:
-            locked_addFraxisY(xy, fraction);
-            break;
-        default:
-            std::ostringstream oss;
-            oss << "Fraxis not valid: " << FraxisToName(fraxis) << ", truncating " << fraction;
-            Logger::instance().error(oss.str());
-            break;
-    }
-}
-
-
-void mdn::Mdn2d::locked_addFraxisX(const Coord& xy, double fraction) {
-    // TODO
-}
-
-
-void mdn::Mdn2d::locked_addFraxisY(const Coord& xy, double fraction) {
-    // TODO
-}
-
-
-void mdn::Mdn2d::locked_carryOver(const Coord& xy) {
-    // TODO
-}
-
-
 mdn::Digit* mdn::Mdn2d::getPtr(const Coord& xy)
 {
     auto iter = m_raw.find(xy);
@@ -935,81 +1078,4 @@ mdn::Digit* mdn::Mdn2d::getPtr(const Coord& xy)
         return nullptr;
     }
     return &(iter->second);
-}
-
-
-void mdn::Mdn2d::locked_setToZero(const Coord& xy) {
-    auto it = m_raw.find(xy);
-    if (it == m_raw.end()) {
-        // Already zero
-        return;
-    }
-    // There is currently a non-zero value - erase it
-    auto xit(m_xIndex.find(xy.x()));
-    auto yit(m_yIndex.find(xy.y()));
-    #ifdef MDN_DEBUG
-        // Debug mode - sanity check - metadata entries must be non-zero
-        if (xit == m_xIndex.end() || yit == m_yIndex.end()) {
-            std::ostringstream oss;
-            oss << "Internal error: addressing data invalid, discovered when zeroing ";
-            oss << "coord: " << xy << std::endl;
-            oss << "Rebuilding metadata." << std::endl;
-            Logger::instance().warn(oss.str());
-            rebuildMetadata();
-            xit = m_xIndex.find(xy.x());
-            yit = m_yIndex.find(xy.y());
-        }
-    #endif // MDN_DEBUG
-    m_raw.erase(it);
-
-    std::unordered_set<Coord>& coordsAlongX(xit->second);
-    std::unordered_set<Coord>& coordsAlongY(yit->second);
-    coordsAlongX.erase(xy);
-    coordsAlongY.erase(xy);
-    bool checkBounds = false;
-    if (coordsAlongX.size() == 0) {
-        m_xIndex.erase(xit);
-    }
-
-    if (coordsAlongY.size() == 0) {
-        m_yIndex.erase(yit);
-    }
-    if (checkBounds) {
-        // Bounds may have changed
-        locked_updateBounds();
-    }
-}
-
-
-void mdn::Mdn2d::locked_setToZero(const std::unordered_set<Coord>& purgeSet) {
-    // Step 1: Erase from m_raw
-    for (const Coord& coord : purgeSet) {
-        m_raw.erase(coord);
-    }
-
-    // Step 2: Clean up m_xIndex and m_yIndex
-    for (const Coord& coord : purgeSet) {
-        int x = coord.x();
-        int y = coord.y();
-
-        // Erase coord from x index
-        auto xIt = m_xIndex.find(x);
-        if (xIt != m_xIndex.end()) {
-            xIt->second.erase(coord);
-            if (xIt->second.empty()) {
-                m_xIndex.erase(xIt);
-            }
-        }
-
-        // Erase coord from y index
-        auto yIt = m_yIndex.find(y);
-        if (yIt != m_yIndex.end()) {
-            yIt->second.erase(coord);
-            if (yIt->second.empty()) {
-                m_yIndex.erase(yIt);
-            }
-        }
-    }
-    // Bounds may have changed
-    locked_updateBounds();
 }
