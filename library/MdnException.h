@@ -54,12 +54,15 @@ public:
         : MdnException("Supplied argument must not be the exact same object: " + description) {};
 };
 
-// If using a non-throwing path is preferable:
-// enum class MdnStatus {
-//     OK,
-//     InvalidCarry,
-//     OutOfBounds,
-//     InvalidDigitRange
-// };
+// Bases must match
+class BaseMismatch : public MdnException {
+public:
+    BaseMismatch(int baseA, int baseB)
+        : MdnException(
+            "Bases of interacting Mdn2d objects must match: (" + std::to_string(baseA) +
+            " != " + std::to_string(baseB) + ")"
+        ) {};
+};
+
 
 } // namespace mdn

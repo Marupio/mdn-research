@@ -1,6 +1,8 @@
+#include <cmath>
 #include <iostream>
 #include <sstream>
 #include <vector>
+
 
 // #include "Mdn2d.h"
 
@@ -91,56 +93,60 @@ std::vector<string> write(int xx, int xn, int yx, int yn) {
 int main() {
     // Mdn2d m(2);
     // m.addInteger(1, 1, 1);
-    cout << "Hello world" << endl;
-    {
-        vector<string> rows = write(5,-2,4,-2);
-        for (auto row : rows) {
-            cout << row << endl;
-        }
-        cout << "In reverse" << endl;
-        for (auto it = rows.rbegin(); it != rows.rend(); ++it) {
-            std::cout << *it << std::endl;
-        }
-    }
-    cout << "\nNEXT" << endl;
-    {
-        vector<string> rows = write(5,0,4,1);
-        for (auto row : rows) {
-            cout << row << endl;
-        }
-        cout << "In reverse" << endl;
-        for (auto it = rows.rbegin(); it != rows.rend(); ++it) {
-            std::cout << *it << std::endl;
-        }
-    }
-    cout << "\nNEXT" << endl;
-    {
-        vector<string> rows = write(10,1,6,0);
-        for (auto row : rows) {
-            cout << row << endl;
-        }
-        cout << "In reverse" << endl;
-        for (auto it = rows.rbegin(); it != rows.rend(); ++it) {
-            std::cout << *it << std::endl;
-        }
-    }
-    cout << "\nNEXT" << endl;
-    {
-        vector<string> rows = write(-10,-15,6,1);
-        for (auto row : rows) {
-            cout << row << endl;
-        }
-        cout << "In reverse" << endl;
-        for (auto it = rows.rbegin(); it != rows.rend(); ++it) {
-            std::cout << *it << std::endl;
-        }
-    }
+    // cout << "Hello world" << endl;
+    // {
+    //     vector<string> rows = write(5,-2,4,-2);
+    //     for (auto row : rows) {
+    //         cout << row << endl;
+    //     }
+    //     cout << "In reverse" << endl;
+    //     for (auto it = rows.rbegin(); it != rows.rend(); ++it) {
+    //         std::cout << *it << std::endl;
+    //     }
+    // }
+    // cout << "\nNEXT" << endl;
+    // {
+    //     vector<string> rows = write(5,0,4,1);
+    //     for (auto row : rows) {
+    //         cout << row << endl;
+    //     }
+    //     cout << "In reverse" << endl;
+    //     for (auto it = rows.rbegin(); it != rows.rend(); ++it) {
+    //         std::cout << *it << std::endl;
+    //     }
+    // }
+    // cout << "\nNEXT" << endl;
+    // {
+    //     vector<string> rows = write(10,1,6,0);
+    //     for (auto row : rows) {
+    //         cout << row << endl;
+    //     }
+    //     cout << "In reverse" << endl;
+    //     for (auto it = rows.rbegin(); it != rows.rend(); ++it) {
+    //         std::cout << *it << std::endl;
+    //     }
+    // }
+    // cout << "\nNEXT" << endl;
+    // {
+    //     vector<string> rows = write(-10,-15,6,1);
+    //     for (auto row : rows) {
+    //         cout << row << endl;
+    //     }
+    //     cout << "In reverse" << endl;
+    //     for (auto it = rows.rbegin(); it != rows.rend(); ++it) {
+    //         std::cout << *it << std::endl;
+    //     }
+    // }
 
     // cout << "In reverse again" << endl;
     // for (auto rit : std::views::reverse(rows)) {
     //     std::cout << rit << std::endl;
     // }
 
+    double val = 3.141592635;
+    double a, b;
+    a = modf(val, &b);
+    cout << "a = modf(val, &b), " << a << " = modf(" << val << ", " << b << ")" << endl;
 
 
     return 0;

@@ -321,14 +321,32 @@ void mdn::Mdn2d::setValue(const Coord& xy, long long value) {
 
 
 void mdn::Mdn2d::locked_setValue(const Coord& xy, Digit value) {
-    // TODO
+    if (value == 0) {
+        locked_setToZero(xy);
+        return;
+    }
+    internal_checkDigit(xy, value);
+
+    auto it = m_raw.find(xy);
+    if (it == m_raw.end()) {
+        // No entry exists
+        if (!internal_checkBounds(xy)) {
+            // Out of numerical precision range
+            return;
+        }
+        internal_insertAddress(xy);
+        m_raw[xy] = value;
+        return;
+    }
+    // xy is already non-zero
+    it->second = value;
 }
 
 
 void mdn::Mdn2d::plus(const Mdn2d& rhs, Mdn2d& ans) const {
     assertNotSelf(ans, "plus operation");
     auto lockThis = lockReadOnly();
-    auto lockAns = ans.lockReadOnly();
+    auto lockAns = ans.lockWriteable();
     locked_plus(rhs, ans);
 }
 
@@ -341,7 +359,7 @@ void mdn::Mdn2d::locked_plus(const Mdn2d& rhs, Mdn2d& ans) const {
 void mdn::Mdn2d::minus(const Mdn2d& rhs, Mdn2d& ans) const {
     assertNotSelf(ans, "minus operation");
     auto lockThis = lockReadOnly();
-    auto lockAns = ans.lockReadOnly();
+    auto lockAns = ans.lockWriteable();
     locked_minus(rhs, ans);
 }
 
@@ -353,7 +371,7 @@ void mdn::Mdn2d::locked_minus(const Mdn2d& rhs, Mdn2d& ans) const {
 void mdn::Mdn2d::multiply(const Mdn2d& rhs, Mdn2d& ans) const {
     assertNotSelf(ans, "multiply operation");
     auto lockThis = lockReadOnly();
-    auto lockAns = ans.lockReadOnly();
+    auto lockAns = ans.lockWriteable();
     locked_multiply(rhs, ans);
 }
 
@@ -366,7 +384,7 @@ void mdn::Mdn2d::locked_multiply(const Mdn2d& rhs, Mdn2d& ans) const {
 void mdn::Mdn2d::divide(const Mdn2d& rhs, Mdn2d& ans) const {
     assertNotSelf(ans, "divide operation");
     auto lockThis = lockReadOnly();
-    auto lockAns = ans.lockReadOnly();
+    auto lockAns = ans.lockWriteable();
     locked_divide(rhs, ans);
 }
 
@@ -389,24 +407,22 @@ void mdn::Mdn2d::add(const Coord& xy, double realNum, Fraxis fraxis) {
 
 
 void mdn::Mdn2d::locked_add(const Coord& xy, double realNum, Fraxis fraxis) {
-    // TODO
+    double fracPart, intPart;
+    fracPart = modf(realNum, &intPart);
+    locked_add(xy, long(intPart));
+    locked_addFraxis(xy, fracPart, fraxis);
 }
 
 
 void mdn::Mdn2d::subtract(const Coord& xy, float realNum, Fraxis fraxis) {
     auto lock = lockWriteable();
-    locked_subtract(xy, double(realNum), fraxis);
+    locked_add(xy, double(-realNum), fraxis);
 }
 
 
 void mdn::Mdn2d::subtract(const Coord& xy, double realNum, Fraxis fraxis) {
     auto lock = lockWriteable();
-    locked_subtract(xy, realNum, fraxis);
-}
-
-
-void mdn::Mdn2d::locked_subtract(const Coord& xy, double realNum, Fraxis fraxis) {
-    // TODO
+    locked_add(xy, -realNum, fraxis);
 }
 
 
@@ -417,7 +433,15 @@ void mdn::Mdn2d::add(const Coord& xy, Digit value, Fraxis unused) {
 
 
 void mdn::Mdn2d::locked_add(const Coord& xy, Digit value) {
-    // TODO
+    Digit val = locked_getValue(xy);
+    Digit sum = val + value;
+    Digit carry = sum / m_base;
+    Digit rem = sum % m_base;
+    locked_setValue(xy, rem);
+    if (carry != 0) {
+        locked_add(xy.copyTranslateX(1), carry);
+        locked_add(xy.copyTranslateY(1), carry);
+    }
 }
 
 
@@ -428,7 +452,15 @@ void mdn::Mdn2d::add(const Coord& xy, int value, Fraxis unused) {
 
 
 void mdn::Mdn2d::locked_add(const Coord& xy, int value) {
-    // TODO
+    int val = int(locked_getValue(xy));
+    int sum = val + value;
+    Digit carry = Digit(sum / m_base);
+    Digit rem = Digit(sum % m_base);
+    locked_setValue(xy, rem);
+    if (carry != 0) {
+        locked_add(xy.copyTranslateX(1), carry);
+        locked_add(xy.copyTranslateY(1), carry);
+    }
 }
 
 
@@ -439,7 +471,15 @@ void mdn::Mdn2d::add(const Coord& xy, long value, Fraxis unused) {
 
 
 void mdn::Mdn2d::locked_add(const Coord& xy, long value) {
-    // TODO
+    long val = long(locked_getValue(xy));
+    long sum = val + value;
+    Digit carry = Digit(sum / m_base);
+    Digit rem = Digit(sum % m_base);
+    locked_setValue(xy, rem);
+    if (carry != 0) {
+        locked_add(xy.copyTranslateX(1), carry);
+        locked_add(xy.copyTranslateY(1), carry);
+    }
 }
 
 
@@ -450,51 +490,39 @@ void mdn::Mdn2d::add(const Coord& xy, long long value, Fraxis unused) {
 
 
 void mdn::Mdn2d::locked_add(const Coord& xy, long long value) {
-    // TODO
+    long long val = static_cast<long long>(locked_getValue(xy));
+    long long sum = val + value;
+    Digit carry = Digit(sum / m_base);
+    Digit rem = Digit(sum % m_base);
+    locked_setValue(xy, rem);
+    if (carry != 0) {
+        locked_add(xy.copyTranslateX(1), carry);
+        locked_add(xy.copyTranslateY(1), carry);
+    }
 }
 
 
 void mdn::Mdn2d::subtract(const Coord& xy, Digit value, Fraxis unused) {
     auto lock = lockWriteable();
-    locked_subtract(xy, value)
-}
-
-
-void mdn::Mdn2d::locked_subtract(const Coord& xy, Digit value) {
-    // TODO
+    locked_add(xy, -value)
 }
 
 
 void mdn::Mdn2d::subtract(const Coord& xy, int value, Fraxis unused) {
     auto lock = lockWriteable();
-    locked_subtract(xy, value);
-}
-
-
-void mdn::Mdn2d::locked_subtract(const Coord& xy, int value) {
-    // TODO
+    locked_add(xy, -value);
 }
 
 
 void mdn::Mdn2d::subtract(const Coord& xy, long value, Fraxis unused) {
     auto lock = lockWriteable();
-    locked_subtract(xy, value);
-}
-
-
-void mdn::Mdn2d::locked_subtract(const Coord& xy, long value) {
-    // TODO
+    locked_add(xy, -value);
 }
 
 
 void mdn::Mdn2d::subtract(const Coord& xy, long long value, Fraxis unused) {
     auto lock = lockWriteable();
-    locked_subtract(xy, value);
-}
-
-
-void mdn::Mdn2d::locked_subtract(const Coord& xy, long long value) {
-    // TODO
+    locked_add(xy, -value);
 }
 
 
@@ -511,38 +539,69 @@ void mdn::Mdn2d::addFraxis(const Coord& xy, double fraction, Fraxis fraxis) {
 
 
 void mdn::Mdn2d::locked_addFraxis(const Coord& xy, double fraction, Fraxis fraxis) {
-    #ifdef MDN_DEBUG
-        if (fraction < -1.0 || fraction > 1.0)
-        {
-            std::ostringstream oss;
-            oss << "fraction out of range (-1.0 .. 1.0), got " << fraction;
-            Logger::instance().error(oss.str());
-        }
-    #endif
+    if (fraction < -1.0 || fraction > 1.0)
+    {
+        throw std::invalid_argument(
+            "Fractional part must be -1.0 < fraction < 1.0, got" + std::to_string(fraction) +
+            "."
+        );
+    }
 
     switch(fraxis)
     {
         case Fraxis::X:
-            locked_addFraxisX(xy, fraction);
+            locked_addFraxisX(xy.copyTranslateX(-1), fraction);
             break;
         case Fraxis::Y:
-            locked_addFraxisY(xy, fraction);
+            locked_addFraxisY(xy.copyTranslateY(-1), fraction);
             break;
         default:
             std::ostringstream oss;
             oss << "Fraxis not valid: " << FraxisToName(fraxis) << ", truncating " << fraction;
-            Logger::instance().error(oss.str());
+            throw std::invalid_argument(oss.str());
             break;
     }
 }
 
+/*
+    loop
+        digit d = fraction * m_base;
+        fraxisX(d, xy)
+        xy.translate(-1);
+        fraction = fraction - d
+*/
 
 void mdn::Mdn2d::locked_addFraxisX(const Coord& xy, double fraction) {
+    #ifdef MDN_DEBUG
+        if (fraction < -1.0 || fraction > 1.0)
+        {
+            throw std::invalid_argument(
+                "Fractional part must be -1.0 < fraction < 1.0, got" + std::to_string(fraction) +
+                "."
+            );
+        }
+    #endif
+    // Calculate next digit
+    Digit d = fraction*m_base;
+    locked_add(xy, d);
+
+
+    // Move
+    const Coord&
     // TODO
 }
 
 
 void mdn::Mdn2d::locked_addFraxisY(const Coord& xy, double fraction) {
+    #ifdef MDN_DEBUG
+        if (fraction < -1.0 || fraction > 1.0)
+        {
+            throw std::invalid_argument(
+                "Fractional part must be -1.0 < fraction < 1.0, got" + std::to_string(fraction) +
+                "."
+            );
+        }
+    #endif
     // TODO
 }
 
@@ -1007,6 +1066,14 @@ void mdn::Mdn2d::internal_insertAddress(const Coord& xy) const {
         m_boundsMin.y() = xy.y();
     if (xy.y() > m_boundsMax.y())
         m_boundsMax.y() = xy.y();
+}
+
+
+bool mdn::Mdn2d::internal_checkDigit(const Coord& xy, Digit value) const {
+    if (value < m_base and value > -m_base) {
+        return true;
+    }
+    throw OutOfRange(xy, value, m_base);
 }
 
 

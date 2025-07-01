@@ -135,7 +135,6 @@ public:
                 // Subtract the given number at xy, breaking into integer and fraxis operations
                 void subtract(const Coord& xy, float realNum, Fraxis fraxis);
                 void subtract(const Coord& xy, double realNum, Fraxis fraxis);
-                void locked_subtract(const Coord& xy, double realNum, Fraxis fraxis);
 
                 // Addition component: integer part, at xy with symmetric carryover
                 void add(const Coord& xy, Digit value, Fraxis unused=Fraxis::Unknown);
@@ -149,13 +148,9 @@ public:
 
                 // Subtraction component: integer part, at xy with symmetric carryover
                 void subtract(const Coord& xy, Digit value, Fraxis unused=Fraxis::Unknown);
-                void locked_subtract(const Coord& xy, Digit value);
                 void subtract(const Coord& xy, int value, Fraxis unused=Fraxis::Unknown);
-                void locked_subtract(const Coord& xy, int value);
                 void subtract(const Coord& xy, long value, Fraxis unused=Fraxis::Unknown);
-                void locked_subtract(const Coord& xy, long value);
                 void subtract(const Coord& xy, long long value, Fraxis unused=Fraxis::Unknown);
-                void locked_subtract(const Coord& xy, long long value);
 
                 // Addition component: fractional part, at xy with assymmetric cascade
                 void addFraxis(const Coord& xy, float fraction, Fraxis fraxis);
@@ -301,6 +296,9 @@ private:
             // * Has no public 'insertAddress() function
             void internal_insertAddress(const Coord& xy) const;
 
+            // Checks if value is within +/- (m_base-1).  If not, throws or returns false.
+            bool internal_checkDigit(const Coord& xy, Digit value) const;
+
             // Check xy in terms of bounds, ensuring maxSpan is not exceeded
             //  * if exceeded with smaller magnitude, returns false (i.e. do not set value)
             //  * if exceeded with larger magnitude, drops low magnitude values until maxSpan is
@@ -330,10 +328,6 @@ private:
             // Create an array of strings, each a display of a row of this Mdn2d
             std::vector<std::string> locked_toStringRows() const;
 
-// TODO - get rid of these, but their algorithm are important...
-void locked_addInteger(const Coord& xy, int value);
-void locked_addReal(const Coord& xy, double realNum, Fraxis fraxis);
-void locked_setValue(const Coord& xy, int value);
 
         // Returns pointer to existing digit entry, if it exists
         Digit* getPtr(const Coord& xy);

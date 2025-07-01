@@ -18,6 +18,26 @@ public:
     int y() const { return m_y; }
     int& y() { return m_y; }
 
+    Coord copyTranslate(int xIncr, int yIncr) const {
+        Coord ret(*this);
+        ret.m_x += xIncr;
+        ret.m_y += yIncr;
+        return ret;
+    }
+    Coord copyTranslateX(int xIncr) const {
+        Coord ret(*this);
+        ret.m_x += xIncr;
+        return ret;
+    }
+    Coord copyTranslateY(int yIncr) const {
+        Coord ret(*this);
+        ret.m_y += yIncr;
+        return ret;
+    }
+    void translate(int xIncr, int yIncr) { m_x += xIncr; m_y += yIncr; }
+    void translateX(int xIncr) { m_x += xIncr; }
+    void translateY(int yIncr) { m_y += yIncr; }
+
     // Compound operators
     Coord& operator+=(int val) {
         m_x += val;
