@@ -4,6 +4,7 @@
 #include <string>
 #include <sstream>
 
+#include "Constants.h"
 #include "Digit.h"
 
 namespace mdn {
@@ -58,6 +59,11 @@ public:
     static std::string digitToAlpha(
         long long value, std::string pos=" ", std::string neg=m_boxArt_h
     );
+
+    // Ensure div is not too close to zero
+    static void stabilise(float& div);
+    static void stabilise(double& div);
+
 };
 
 } // namespace mdn

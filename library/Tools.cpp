@@ -52,3 +52,26 @@ std::string mdn::Tools::digitToAlpha(long value, std::string pos, std::string ne
 std::string mdn::Tools::digitToAlpha(long long value, std::string pos, std::string neg) {
     return digitToAlpha(Digit(value), pos, neg);
 }
+
+
+void mdn::Tools::stabilise(float& div) {
+    if (div < 0) {
+        if (div > -constants::floatSmall) {
+            div = -constants::floatSmall;
+        }
+    } else if (div  < constants::floatSmall) {
+        div = constants::floatSmall;
+    }
+}
+
+
+void mdn::Tools::stabilise(double& div) {
+    if (div < 0) {
+        if (div > -constants::doubleSmall) {
+            div = -constants::doubleSmall;
+        }
+    } else if (div  < constants::doubleSmall) {
+        div = constants::doubleSmall;
+    }
+}
+

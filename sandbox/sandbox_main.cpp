@@ -1,7 +1,10 @@
 #include <cmath>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <unordered_map>
+#include <limits>
 
 
 // #include "Mdn2d.h"
@@ -148,7 +151,78 @@ int main() {
     a = modf(val, &b);
     cout << "a = modf(val, &b), " << a << " = modf(" << val << ", " << b << ")" << endl;
 
+    unordered_map<int, int> mrmap;
+    mrmap[0] = 1;
+    mrmap[1] = 2;
+    mrmap[2] = 3;
+    mrmap[10] = 5;
 
+    int result = mrmap.erase(9);
+    cout << "result = " << result;
+    result = mrmap.erase(2);
+    cout << "result = " << result;
+
+    cout << endl;
+
+    const int m_base = 8;
+    double pi = 3.1415926359;
+    int8_t d0(pi);
+    double pi0 = pi;
+    pi0 -= d0;
+    cout << "pi = " << pi << ", d0 = " << d0 << ", pi0 = " << pi0 << endl;
+    double pi1 = pi0;
+    pi1 *= m_base;
+    int8_t d1(pi1);
+    double pi2 = pi1;
+    pi2 -= d1;
+    cout << "pi1 = " << pi1 << ", d1 = " << d1 << ", pi2 = " << pi2 << endl;
+
+    cout << endl << endl;
+
+    cout << "Numeric limits:" << endl;
+    cout << "float" << endl;
+    cout << "   epsilon = " << numeric_limits<float>::epsilon() << endl;
+    cout << "   max = " << numeric_limits<float>::max() << endl;
+    cout << "   min = " << numeric_limits<float>::min() << endl;
+    cout << "   round_error = " << numeric_limits<float>::round_error() << endl;
+    cout << "double" << endl;
+    cout << "   epsilon = " << numeric_limits<double>::epsilon() << endl;
+    cout << "   max = " << numeric_limits<double>::max() << endl;
+    cout << "   min = " << numeric_limits<double>::min() << endl;
+    cout << "   round_error = " << numeric_limits<double>::round_error() << endl;
+    float ff = 0.123456789112345678921234567893;
+    double dd = 0.123456789112345678921234567893;
+    cout << std::fixed << std::setprecision(40);
+    cout << "ff = " << ff << endl;
+    cout << "dd = " << dd << endl;
+    {
+        float unity = 1.0;
+        for (int i = 0; i < 100; ++i){
+            float num = pow(10, -i);
+            cout << i << ":" << num << flush;
+            float inv = unity / num;
+            cout << " inv = " << inv << endl;
+        }
+    }
+    {
+        double unity = 1.0;
+        for (int i = 0; i < 400; ++i){
+            double num = pow(10, -i);
+            cout << i << ":" << num << flush;
+            double inv = unity / num;
+            cout << " inv = " << inv << endl;
+        }
+    }
+    {
+        double unity = 1.0;
+        double small = 1e-12;
+        for (int i = 0; i < 400; ++i){
+            double num = pow(10, i);
+            cout << i << ":" << num << flush;
+            double inv = num / small;
+            cout << " inv = " << inv << endl;
+        }
+    }
     return 0;
 
 }

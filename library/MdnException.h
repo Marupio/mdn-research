@@ -64,5 +64,20 @@ public:
         ) {};
 };
 
+// This operation breaks the governing laws of MDNs
+class IllegalOperation : public MdnException {
+public:
+    IllegalOperation(const std::string& description)
+        : MdnException("Illegal operation: " + description) {};
+};
+
+// This operation breaks the governing laws of MDNs
+class DivideByZero : public MdnException {
+public:
+    DivideByZero()
+        : MdnException("Division by zero") {};
+};
+
+
 
 } // namespace mdn

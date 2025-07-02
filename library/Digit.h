@@ -6,52 +6,61 @@
 #include <cstdint>
 
 namespace mdn {
-    using Digit = int8_t;
-}
+
+using Digit = int8_t;
+
+enum class PrecisionStatus {
+    Below,
+    Inside,
+    Above
+};
 
 
-// class Digit {
-//     int8_t raw;
-
-// public:
-//     Digit(int value = 0) { set(value); }
-
-//     void set(int value) {
-//         #ifdef MDN_DEBUG
-//         if (value < -32 || value > 32)
-//             std::ostringstream oss;
-//             oss << "Digit out of range: " << value
-//                 << " (expected between -32 and 32)";
-//             throw std::out_of_range(oss.str());
-//         #endif
-//         raw = static_cast<int8_t>(value);
-//     }
-
-//     int value() const { return static_cast<int>(raw); }
-
-//     // Implicit conversion to int
-//     operator int() const { return value(); }
-
-//     Digit& operator+=(int x) {
-//         set(value() + x);
-//         return *this;
-//     }
-
-//     Digit& operator-=(int x) {
-//         set(value() - x);
-//         return *this;
-//     }
-
-//     Digit& operator*=(int x) {
-//         set(value() * x);
-//         return *this;
-//     }
-
-//     Digit& operator/=(int x) {
-//         set(value() / x);
-//         return *this;
-//     }
-
+// enum class DigitClass {
+//     Unknown,
+//     NonZero,
+//     Zero,  // but within precision window
+//     BelowPrecisionWindow
 // };
+//
+// enum class SetValueResult {
+//     Unknown,
+//     AlreadyZero,
+//     BelowPrecision,
+//     AddressAdded,
+//     ExistingDigitChanged
+// };
+//
+// enum class AddressStatus {
+//     Unknown,
+//     AddedEntries,
+//     RemovedEntries
+// };
+//
+// enum class DigitStatus {
+//     Unknown,
+//     NonZero,
+//     Zero
+// };
+//
+// enum class PrecisionStatus {
+//     Unknown,
+//     Inside,
+//     Below,
+//     Above
+// };
+//
+// enum class CheckBoundsResult {
+//     Unknown,
+//     BelowWindow,
+//     InsideWindow,
+//     WindowShiftedUp
+// };
+//
+// // DigitStatus is pair<SomethingChanged?, DigitClass(above)>
+// using DigitStatus = std::pair<bool, DigitClass>;
+
+
+} // end namespace mdn
 
 #endif // DIGIT_H

@@ -12,6 +12,7 @@
 #include <unordered_set>
 #include <utility>
 
+#include "Carryover.h"
 #include "Coord.h"
 #include "Digit.h"
 #include "Fraxis.h"
@@ -21,15 +22,22 @@ namespace mdn {
 // Represents a 2D Multi-Dimensional Number (MDN).
 class Mdn2d {
 
+    // Calculate minimum fraction value to add to a digit, that it will appear as a non-zero digit
+    // within m_maxSpan (numerical precision)
+    static double static_calculateEpsilon(int m_maxSpan, int m_base);
+
+
 public:
+
+    // Check for the type of carryover, given the pivot digit and x and y axial digits
+    static Carryover static_checkCarryover(Digit p, Digit x, Digit y, Digit base);
+
 
     // *** Typedefs
 
     using WritableLock = std::unique_lock<std::shared_mutex>;
     using ReadOnlyLock = std::shared_lock<std::shared_mutex>;
 
-    static const int m_intMax;
-    static const int m_intMin;
 
     // *** Constructors
 
@@ -91,18 +99,20 @@ public:
                 void clear();
                 void locked_clear();
 
-                // Set the value at the given coords to zero
-                void setToZero(const Coord& xy);
-                void locked_setToZero(const Coord& xy);
-                void setToZero(const std::unordered_set<Coord>& coords);
-                void locked_setToZero(const std::unordered_set<Coord>& purgeSet);
+                // Set the value at xy to zero, returns false only if xy is below precision
+                bool setToZero(const Coord& xy);
+                bool locked_setToZero(const Coord& xy);
 
-                // Changes the value at coordinate (x, y).
-                void setValue(const Coord& xy, Digit value);
-                void setValue(const Coord& xy, int value);
-                void setValue(const Coord& xy, long value);
-                void setValue(const Coord& xy, long long value);
-                void locked_setValue(const Coord& xy, Digit value);
+                // Set the value at coords to zero, returns number of digits changed
+                int setToZero(const std::unordered_set<Coord>& coords);
+                int locked_setToZero(const std::unordered_set<Coord>& purgeSet);
+
+                // Changes the value at xy, returns false only if xy is confirmed below precision
+                bool setValue(const Coord& xy, Digit value);
+                bool setValue(const Coord& xy, int value);
+                bool setValue(const Coord& xy, long value);
+                bool setValue(const Coord& xy, long long value);
+                bool locked_setValue(const Coord& xy, Digit value);
 
 
             // *** Full Mdn2d mathematical operations
@@ -138,7 +148,6 @@ public:
 
                 // Addition component: integer part, at xy with symmetric carryover
                 void add(const Coord& xy, Digit value, Fraxis unused=Fraxis::Unknown);
-                void locked_add(const Coord& xy, Digit value);
                 void add(const Coord& xy, int value, Fraxis unused=Fraxis::Unknown);
                 void locked_add(const Coord& xy, int value);
                 void add(const Coord& xy, long value, Fraxis unused=Fraxis::Unknown);
@@ -156,34 +165,22 @@ public:
                 void addFraxis(const Coord& xy, float fraction, Fraxis fraxis);
                 void addFraxis(const Coord& xy, double fraction, Fraxis fraxis);
                 void locked_addFraxis(const Coord& xy, double fraction, Fraxis fraxis);
-                // Addition component: fractional part, at xy with assymmetric cascade along X
-                void locked_addFraxisX(const Coord& xy, double fraction);
-                // Addition component: fractional part, at xy with assymmetric cascade along Y
-                void locked_addFraxisY(const Coord& xy, double fraction);
 
                 // Subtract a fractional value cascading along the fraxis
                 void subtractFraxis(const Coord& xy, float fraction, Fraxis fraxis);
                 void subtractFraxis(const Coord& xy, double fraction, Fraxis fraxis);
-                // Subtraction component: fractional part, at xy with assymmetric cascade
-                void locked_subtractFraxis(const Coord& xy, double fraction, Fraxis fraxis);
-                // Subtraction component: fractional part, at xy with assymmetric cascade along X
-                void locked_subtractFraxisX(const Coord& xy, double fraction);
-                // Subtraction component: fractional part, at xy with assymmetric cascade along Y
-                void locked_subtractFraxisY(const Coord& xy, double fraction);
 
 
             // *** Multiplication / divide
-            // Remember, *this is a Mdn2d, and scalars (e.g. int, float) are 1D numbers.  In most
-            // cases, there is no valid multiplication / subtraction operation between 1D and 2D
-            // numbers.  Just element-wise integer multiplication, which is a step in the multiply
-            // algorithm for Mdn2d x Mdn2d.
 
                 // Multiply the full Mdn2d by an integer
                 void multiply(Digit value);
                 void multiply(int value);
                 void multiply(long value);
                 void multiply(long long value);
-                void locked_multiply(Digit value);
+                void locked_multiply(int value);
+                void locked_multiply(long value);
+                void locked_multiply(long long value);
 
 
             // *** Conversion / display
@@ -200,9 +197,13 @@ public:
 
         // *** Transformations
 
-            // Perform a carry-over at coordinate (x, y)
-            void carryOver(const Coord& xy);
-            void locked_carryOver(const Coord& xy);
+            // Return the Carryover type (enumareation) of xy
+            Carryover checkCarryover(const Coord& xy) const;
+            Carryover locked_checkCarryover(const Coord& xy) const;
+
+            // Perform a manual carry-over at coordinate (x, y)
+            void carryover(const Coord& xy);
+            void locked_carryover(const Coord& xy);
 
             // Shift all digits in a direction (R=+X, L=-X, U=+Y, D=-Y)
             void shiftRight(int nDigits);
@@ -234,10 +235,17 @@ public:
             int getPrecision() const;
             int locked_getPrecision() const;
 
-            // Change the setting for m_maxSpan
-            void setPrecision(int newMaxSpan);
-            void locked_setPrecision(int newMaxSpan);
+            // Change the setting for m_maxSpan, returns the number of dropped digits
+            int setPrecision(int newMaxSpan);
+            int locked_setPrecision(int newMaxSpan);
 
+            // Query the precision status of xy to ensure maxSpan is not exceeded
+            // Returns:
+            //  * PrecisionStatus::Below  - above precision window
+            //  * PrecisionStatus::Inside - within precision window
+            //  * PrecisionStatus::Above  - below precision window
+            PrecisionStatus checkPrecisionWindow(const Coord& xy) const;
+            PrecisionStatus locked_checkPrecisionWindow(const Coord& xy) const;
 
 
     // *** Member Operators
@@ -261,8 +269,11 @@ public:
         // Scalar multiplication.
         Mdn2d& operator*=(int scalar);
 
-        // Scalar division.
-        Mdn2d& operator/=(int scalar);
+        // Scalar multiplication.
+        Mdn2d& operator*=(long scalar);
+
+        // Scalar multiplication.
+        Mdn2d& operator*=(long long scalar);
 
         // Equality comparison.
         bool operator==(const Mdn2d& rhs) const;
@@ -285,7 +296,7 @@ private:
         void assertNotSelf(Mdn2d& that, const std::string& description) const;
 
 
-        // *** Lock functions
+        // *** Internal functions
         // All these functions require the mutex to be locked first before calling
 
             // Clears all addressing and bounds data
@@ -299,17 +310,28 @@ private:
             // Checks if value is within +/- (m_base-1).  If not, throws or returns false.
             bool internal_checkDigit(const Coord& xy, Digit value) const;
 
-            // Check xy in terms of bounds, ensuring maxSpan is not exceeded
-            //  * if exceeded with smaller magnitude, returns false (i.e. do not set value)
-            //  * if exceeded with larger magnitude, drops low magnitude values until maxSpan is
-            //      respected.
-            // Returns:
-            //  * true  - xy is still valid to hold a value
-            //  * false - xy is too small for given numerical precision to hold any value
-            bool internal_checkBounds(const Coord& xy);
+            // Purge any digits that exceed the precision window, return the number of purged digits
+            int internal_purgeExcessDigits();
 
             // Update the m_boundsMin and m_boundsMax variables based on the current values
             void internal_updateBounds();
+
+            // Execute the fraxis propagation algorithm
+            //  dX, dY, c - constants to guide propagation:
+            //      x Direction: -1, 0, -1
+            //      y Direction: 0, -1, 1
+            void internal_fraxis(const Coord& xy, double f, int dX, int dY, int c);
+            void internal_fraxisCascade(const Coord& xy, Digit d, int c);
+
+            // Scan for carryovers, perform all 'Required' carryovers, return list of optional c/o
+            std::unordered_set<Coord> internal_scanCarryovers();
+
+            // Perform a blind single carryover at xy without any checks
+            void internal_oneCarryover(const Coord& xy);
+
+            // Perform a carryover during math operations (xy magnitude must exceed base)
+            void internal_ncarryover(const Coord& xy);
+
 
 // TODO
 //            // Given another Mdn2d, copy the contents of *this into other.  Requires other's lock.
@@ -343,6 +365,7 @@ private:
 
         // Numeric base for digit calculations
         const int m_base;
+        const Digit m_dbase;
 
         // Maximum distance from high magnitude to low magnitude, -1 for no limit
         // A measure of numerical precision.
@@ -351,6 +374,10 @@ private:
         //  Digit indices: -2-1 0 1 2
         // maxOrderX - minMagnitudeX
         int m_maxSpan;
+
+        // Smallest value added to a digit that can cascade to a non-zero value within the precision
+        //  window
+        mutable double m_epsilon;
 
         // Sparse coordinate-to-digit mapping
         std::unordered_map<Coord, Digit> m_raw;
