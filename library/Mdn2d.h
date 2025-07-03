@@ -51,6 +51,7 @@ public:
         // Constructs an MDN with a floating point initial value.
         Mdn2d(int base, int maxSpan, double initVal, Fraxis fraxis);
 
+
         // *** Rule of five
 
             // Copy constructor
@@ -74,65 +75,64 @@ public:
 
                 // Retrieves the value at coordinate (x, y), or 0 if not present.
                 Digit getValue(const Coord& xy) const;
-                Digit locked_getValue(const Coord& xy) const;
+                private: Digit locked_getValue(const Coord& xy) const; public:
 
                 // Assembles the row at the given y index value, spanning the x bounds of full MDN
                 std::vector<Digit> getRow(int y) const;
-                std::vector<Digit> locked_getRow(int y) const;
+                private: std::vector<Digit> locked_getRow(int y) const; public:
 
                 // Assembles the row at the given y index value, spanning the x bounds of full MDN
                 void getRow(int y, std::vector<Digit>& digits) const;
-                void locked_getRow(int y, std::vector<Digit>& digits) const;
+                private: void locked_getRow(int y, std::vector<Digit>& digits) const; public:
 
-                // Assembles the column at the given x index value, spanning the y bounds of full MDN
+                // Assembles the col at the given x index value, spanning the y bounds of full MDN
                 std::vector<Digit> getCol(int x) const;
-                std::vector<Digit> locked_getCol(int x) const;
+                private: std::vector<Digit> locked_getCol(int x) const; public:
 
-                // Assembles the column at the given x index value, spanning the y bounds of full MDN
+                // Assembles the col at the given x index value, spanning the y bounds of full MDN
                 void getCol(int x, std::vector<Digit>& digits) const;
-                void locked_getCol(int x, std::vector<Digit>& digits) const;
+                private: void locked_getCol(int x, std::vector<Digit>& digits) const; public:
 
 
             // *** Setters
 
                 // Clears all digits in the MDN.
                 void clear();
-                void locked_clear();
+                private: void locked_clear(); public:
 
                 // Set the value at xy to zero, returns false only if xy is below precision
                 bool setToZero(const Coord& xy);
-                bool locked_setToZero(const Coord& xy);
+                private: bool locked_setToZero(const Coord& xy); public:
 
                 // Set the value at coords to zero, returns number of digits changed
                 int setToZero(const std::unordered_set<Coord>& coords);
-                int locked_setToZero(const std::unordered_set<Coord>& purgeSet);
+                private: int locked_setToZero(const std::unordered_set<Coord>& purgeSet); public:
 
                 // Changes the value at xy, returns false only if xy is confirmed below precision
                 bool setValue(const Coord& xy, Digit value);
                 bool setValue(const Coord& xy, int value);
                 bool setValue(const Coord& xy, long value);
                 bool setValue(const Coord& xy, long long value);
-                bool locked_setValue(const Coord& xy, Digit value);
+                private: bool locked_setValue(const Coord& xy, Digit value); public:
 
 
             // *** Full Mdn2d mathematical operations
 
                 // Addition: *this + rhs = ans, overwrites ans
                 void plus(const Mdn2d& rhs, Mdn2d& ans) const;
-                void locked_plus(const Mdn2d& rhs, Mdn2d& ans) const;
+                private: void locked_plus(const Mdn2d& rhs, Mdn2d& ans) const; public:
 
                 // Subtraction: *this - rhs = ans, overwrites ans
                 void minus(const Mdn2d& rhs, Mdn2d& ans) const;
-                void locked_minus(const Mdn2d& rhs, Mdn2d& ans) const;
-
+                private: void locked_minus(const Mdn2d& rhs, Mdn2d& ans) const; public:
 
                 // Multiplication: *this x rhs = ans, overwrites ans
                 void multiply(const Mdn2d& rhs, Mdn2d& ans) const;
-                void locked_multiply(const Mdn2d& rhs, Mdn2d& ans) const;
+                private: void locked_multiply(const Mdn2d& rhs, Mdn2d& ans) const; public:
 
                 // Division: *this / rhs = ans, overwrites ans
                 void divide(const Mdn2d& rhs, Mdn2d& ans) const;
-                void locked_divide(const Mdn2d& rhs, Mdn2d& ans) const;
+                private: void locked_divide(const Mdn2d& rhs, Mdn2d& ans) const; public:
 
 
             // *** Addition / subtraction
@@ -140,7 +140,7 @@ public:
                 // Add the given number at xy, breaking into integer and fraxis operations
                 void add(const Coord& xy, float realNum, Fraxis fraxis);
                 void add(const Coord& xy, double realNum, Fraxis fraxis);
-                void locked_add(const Coord& xy, double realNum, Fraxis fraxis);
+                private: void locked_add(const Coord& xy, double realNum, Fraxis fraxis); public:
 
                 // Subtract the given number at xy, breaking into integer and fraxis operations
                 void subtract(const Coord& xy, float realNum, Fraxis fraxis);
@@ -149,11 +149,11 @@ public:
                 // Addition component: integer part, at xy with symmetric carryover
                 void add(const Coord& xy, Digit value, Fraxis unused=Fraxis::Unknown);
                 void add(const Coord& xy, int value, Fraxis unused=Fraxis::Unknown);
-                void locked_add(const Coord& xy, int value);
+                private: void locked_add(const Coord& xy, int value); public:
                 void add(const Coord& xy, long value, Fraxis unused=Fraxis::Unknown);
-                void locked_add(const Coord& xy, long value);
+                private: void locked_add(const Coord& xy, long value); public:
                 void add(const Coord& xy, long long value, Fraxis unused=Fraxis::Unknown);
-                void locked_add(const Coord& xy, long long value);
+                private: void locked_add(const Coord& xy, long long value); public:
 
                 // Subtraction component: integer part, at xy with symmetric carryover
                 void subtract(const Coord& xy, Digit value, Fraxis unused=Fraxis::Unknown);
@@ -164,7 +164,9 @@ public:
                 // Addition component: fractional part, at xy with assymmetric cascade
                 void addFraxis(const Coord& xy, float fraction, Fraxis fraxis);
                 void addFraxis(const Coord& xy, double fraction, Fraxis fraxis);
-                void locked_addFraxis(const Coord& xy, double fraction, Fraxis fraxis);
+                private: void locked_addFraxis(
+                    const Coord& xy, double fraction, Fraxis fraxis
+                ); public:
 
                 // Subtract a fractional value cascading along the fraxis
                 void subtractFraxis(const Coord& xy, float fraction, Fraxis fraxis);
@@ -178,9 +180,9 @@ public:
                 void multiply(int value);
                 void multiply(long value);
                 void multiply(long long value);
-                void locked_multiply(int value);
-                void locked_multiply(long value);
-                void locked_multiply(long long value);
+                private: void locked_multiply(int value); public:
+                private: void locked_multiply(long value); public:
+                private: void locked_multiply(long long value); public:
 
 
             // *** Conversion / display
@@ -188,10 +190,10 @@ public:
                 // Converts the MDN to a human-readable string.
                 std::string toString() const;
 
-                // Converts the MDN to an array of strings, representing rows (along x digit axis).
+                // Converts the MDN to an array of strings, representing rows
                 std::vector<std::string> toStringRows() const;
 
-                // Converts the MDN to an array of strings, representing columns (along y digit axis).
+                // Converts the MDN to an array of strings, representing columns
                 std::vector<std::string> toStringCols() const;
 
 
@@ -199,45 +201,65 @@ public:
 
             // Return the Carryover type (enumareation) of xy
             Carryover checkCarryover(const Coord& xy) const;
-            Carryover locked_checkCarryover(const Coord& xy) const;
+            private: Carryover locked_checkCarryover(const Coord& xy) const; public:
 
             // Perform a manual carry-over at coordinate (x, y)
             void carryover(const Coord& xy);
-            void locked_carryover(const Coord& xy);
+            private: void locked_carryover(const Coord& xy); public:
+
+            // General shift interface
+            void shift(int xDigits, int yDigits);
+            void shift(const Coord& xy);
+            private: void locked_shift(const Coord& xy); public:
+            private: void locked_shift(int xDigits, int yDigits); public:
 
             // Shift all digits in a direction (R=+X, L=-X, U=+Y, D=-Y)
             void shiftRight(int nDigits);
-            void locked_shiftRight(int nDigits);
+            private: void locked_shiftRight(int nDigits); public:
             void shiftLeft(int nDigits);
-            void locked_shiftLeft(int nDigits);
+            private: void locked_shiftLeft(int nDigits); public:
             void shiftUp(int nDigits);
-            void locked_shiftUp(int nDigits);
+            private: void locked_shiftUp(int nDigits); public:
             void shiftDown(int nDigits);
-            void locked_shiftDown(int nDigits);
+            private: void locked_shiftDown(int nDigits); public:
 
             // Swap X and Y
             void transpose();
-            void locked_transpose();
+            private: void locked_transpose(); public:
 
             // Clears all addressing and bounds data, and rebuilds it
             void rebuildMetadata() const;
-            void locked_rebuildMetadata() const;
+            private: void locked_rebuildMetadata() const; public:
 
             // Returns true if m_boundsMin and m_boundsMax are both valid, finite numbers
             bool hasBounds() const;
-            bool locked_hasBounds() const;
+            private: bool locked_hasBounds() const; public:
 
-            // // Remove all zero digits from m_raw entries
-            // void purgeZeroes();
+            // Retuns bounds of non zero entries in m_raw
+            std::pair<Coord, Coord> getBounds() const;
+            private: std::pair<Coord, Coord> locked_getBounds() const; public:
+
+            // Returns polymorphic nodes, demand driven
+            const std::unordered_set<Coord>& getPolymorphicNodes() const;
+            private: const std::unordered_set<Coord>& locked_getPolymorphicNodes() const; public:
+
+            // Take on polymorphism state x0 (all p-nodes are negative)
+            void polymorphism_x0();
+            private: void locked_polymorphism_x0(); public:
+
+            // Take on polymorphism state y0 (all p-nodes are positive)
+            void polymorphism_y0();
+            private: void locked_polymorphism_y0(); public:
+
 
         // *** Other functionality
 
             int getPrecision() const;
-            int locked_getPrecision() const;
+            private: int locked_getPrecision() const; public:
 
             // Change the setting for m_maxSpan, returns the number of dropped digits
             int setPrecision(int newMaxSpan);
-            int locked_setPrecision(int newMaxSpan);
+            private: int locked_setPrecision(int newMaxSpan); public:
 
             // Query the precision status of xy to ensure maxSpan is not exceeded
             // Returns:
@@ -245,7 +267,10 @@ public:
             //  * PrecisionStatus::Inside - within precision window
             //  * PrecisionStatus::Above  - below precision window
             PrecisionStatus checkPrecisionWindow(const Coord& xy) const;
-            PrecisionStatus locked_checkPrecisionWindow(const Coord& xy) const;
+            private: PrecisionStatus locked_checkPrecisionWindow(const Coord& xy) const; public:
+
+            // Clear all derived data, update event number
+            void modified();
 
 
     // *** Member Operators
@@ -254,14 +279,17 @@ public:
         Digit operator()(int x, int y) const;
         Digit operator()(const Coord& xy) const;
 
-        // Element-wise addition.
+        // Assignment addition, *this += rhs
         Mdn2d& operator+=(const Mdn2d& rhs);
+        private: Mdn2d& locked_plusEquals(const Mdn2d& rhs); public:
 
-        // Element-wise subtraction.
+        // Assignment subtraction, *this -= rhs
         Mdn2d& operator-=(const Mdn2d& rhs);
+        private: Mdn2d& locked_minusEquals(const Mdn2d& rhs); public:
 
-        // Placeholder for MDN multiplication.
+        // Assignment multiplication, *this *= rhs
         Mdn2d& operator*=(const Mdn2d& rhs);
+        private: Mdn2d& locked_timesEquals(const Mdn2d& rhs); public:
 
         // Placeholder for MDN division.
         Mdn2d& operator/=(const Mdn2d& rhs);
@@ -323,8 +351,18 @@ private:
             void internal_fraxis(const Coord& xy, double f, int dX, int dY, int c);
             void internal_fraxisCascade(const Coord& xy, Digit d, int c);
 
+            // // plusEquals variant: *this += rhs x scalar, used in mdn x mdn algorithm
+            // Mdn2d& internal_plusEquals(const Mdn2d& rhs, int scalar);
+
+            // Creates a copy of *this and performs a multiply and shift, used in mdn x mdn
+            //  return = (*this x value).shift(xy)
+            Mdn2d& internal_copyMultiplyAndShift(int value, const Coord& shiftXY) const;
+
             // Scan for carryovers, perform all 'Required' carryovers, return list of optional c/o
-            std::unordered_set<Coord> internal_scanCarryovers();
+            void internal_polymorphicScanAndFix();
+
+            // Find all the 'Optional' carryovers, create m_polymorphicNodes data
+            void internal_polymorphicScan() const;
 
             // Perform a blind single carryover at xy without any checks
             void internal_oneCarryover(const Coord& xy);
@@ -339,24 +377,20 @@ private:
 
 
             // Element-wise multiply by value - int only, intended for use in x and / algorithms
-            void locked_multiply(int value);
+            private: void locked_multiply(int value); public:
 
             // Create a multiline string representing this Mdn2d
-            std::string locked_toString() const;
+            private: std::string locked_toString() const; public:
 
             // Create an array of strings, each a display of a column of this Mdn2d
-            std::vector<std::string> locked_toStringCols() const;
+            private: std::vector<std::string> locked_toStringCols() const; public:
 
             // Create an array of strings, each a display of a row of this Mdn2d
-            std::vector<std::string> locked_toStringRows() const;
+            private: std::vector<std::string> locked_toStringRows() const; public:
 
 
-        // Returns pointer to existing digit entry, if it exists
-        Digit* getPtr(const Coord& xy);
-
-
-    //     // Accessor to modifiable digit at coordinate (x, y) - non-const access to raw data is only for
-    //     // internal uses - such modifications require updating metadata
+    //     // Accessor to modifiable digit at coordinate (x, y) - non-const access to raw data is
+    //      // only for internal uses - such modifications require updating metadata
     //     Digit& operator()(int x, int y);
     //     Digit& operator()(const Coord& xy);
 
@@ -413,6 +447,13 @@ private:
             // Bounding box for non-zero digits
             mutable Coord m_boundsMin;
             mutable Coord m_boundsMax;
+
+            // Polymorphic nodes and the last time it was calculated
+            mutable std::unordered_set<Coord> m_polymorphicNodes;
+            mutable long m_polymorphicNodes_event;
+
+            // Event number for tracking when something is out-of-date
+            long m_event;
 };
 
 // Arithmetic binary operators

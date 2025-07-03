@@ -49,7 +49,9 @@ mdn::Mdn2d::Mdn2d(int base, int maxSpan)
     m_base(base),
     m_dbase(m_base),
     m_maxSpan(maxSpan),
-    m_epsilon(static_calculateEpsilon(m_maxSpan, m_base))
+    m_epsilon(static_calculateEpsilon(m_maxSpan, m_base)),
+    m_polymorphicNodes_event(-1),
+    m_event(0)
 {}
 
 
@@ -58,7 +60,9 @@ mdn::Mdn2d::Mdn2d(int base, int maxSpan, int initVal)
     m_base(base),
     m_dbase(m_base),
     m_maxSpan(maxSpan),
-    m_epsilon(static_calculateEpsilon(m_maxSpan, m_base))
+    m_epsilon(static_calculateEpsilon(m_maxSpan, m_base)),
+    m_polymorphicNodes_event(-1),
+    m_event(0)
 {
     locked_add(Coord({0, 0}), initVal);
 }
@@ -69,7 +73,9 @@ mdn::Mdn2d::Mdn2d(int base, int maxSpan, double initVal, Fraxis fraxis)
     m_base(base),
     m_dbase(m_base),
     m_maxSpan(maxSpan),
-    m_epsilon(static_calculateEpsilon(m_maxSpan, m_base))
+    m_epsilon(static_calculateEpsilon(m_maxSpan, m_base)),
+    m_polymorphicNodes_event(-1),
+    m_event(0)
 {
     locked_add(COORD_ORIGIN, initVal, fraxis);
 }
@@ -80,6 +86,8 @@ mdn::Mdn2d::Mdn2d(const Mdn2d& other):
     m_dbase(other.m_dbase),
     m_maxSpan(other.m_maxSpan),
     m_epsilon(static_calculateEpsilon(m_maxSpan, m_base)),
+    m_polymorphicNodes_event(-1),
+    m_event(0)
 {
     auto lock = other.lockReadOnly();
 
@@ -88,6 +96,10 @@ mdn::Mdn2d::Mdn2d(const Mdn2d& other):
     m_yIndex = other.m_yIndex;
     m_boundsMin = other.m_boundsMin;
     m_boundsMax = other.m_boundsMax;
+    if (other.m_event == other.m_polymorphicNodes_event) {
+        m_polymorphicNodes = other.m_polymorphicNodes;
+        m_polymorphicNodes_event = m_event;
+    }
 }
 
 
@@ -106,6 +118,11 @@ mdn::Mdn2d& mdn::Mdn2d::operator=(const Mdn2d& other) {
         m_yIndex = other.m_yIndex;
         m_boundsMin = other.m_boundsMin;
         m_boundsMax = other.m_boundsMax;
+        modified();
+        if (other.m_event == other.m_polymorphicNodes_event) {
+            m_polymorphicNodes = other.m_polymorphicNodes;
+            m_polymorphicNodes_event = m_event;
+        }
     }
     return *this;
 }
@@ -115,7 +132,8 @@ mdn::Mdn2d::Mdn2d(Mdn2d&& other) noexcept :
     m_base(other.m_base),
     m_dbase(m_base),
     m_maxSpan(other.m_maxSpan),
-    m_epsilon(static_calculateEpsilon(m_maxSpan, m_base))
+    m_epsilon(static_calculateEpsilon(m_maxSpan, m_base)),
+    m_event(0)
 {
     auto lock = other.lockWriteable();
 
@@ -124,6 +142,10 @@ mdn::Mdn2d::Mdn2d(Mdn2d&& other) noexcept :
     m_yIndex = std::move(other.m_yIndex);
     m_boundsMin = other.m_boundsMin;
     m_boundsMax = other.m_boundsMax;
+    if (other.m_event == other.m_polymorphicNodes_event) {
+        m_polymorphicNodes = other.m_polymorphicNodes;
+        m_polymorphicNodes_event = m_event;
+    }
 }
 
 
@@ -142,6 +164,11 @@ mdn::Mdn2d& mdn::Mdn2d::operator=(Mdn2d&& other) noexcept {
         m_yIndex = std::move(other.m_yIndex);
         m_boundsMin = other.m_boundsMin;
         m_boundsMax = other.m_boundsMax;
+        if (other.m_event == other.m_polymorphicNodes_event) {
+            m_polymorphicNodes = std::move(other.m_polymorphicNodes);
+            m_polymorphicNodes_event = m_event;
+        }
+        modified();
     }
     return *this;
 }
@@ -235,6 +262,7 @@ void mdn::Mdn2d::locked_getCol(int x, std::vector<Digit>& digits) const {
 void mdn::Mdn2d::clear() {
     auto lock = lockWriteable();
     locked_clear();
+    modified();
 }
 
 
@@ -246,6 +274,7 @@ void mdn::Mdn2d::locked_clear() {
 
 bool mdn::Mdn2d::setToZero(const Coord& xy) {
     auto lock = lockWriteable();
+    modified();
     return locked_setToZero(xy);
 }
 
@@ -298,6 +327,7 @@ bool mdn::Mdn2d::locked_setToZero(const Coord& xy) {
 
 int mdn::Mdn2d::setToZero(const std::unordered_set<Coord>& coords) {
     auto lock = lockWriteable();
+    modified();
     return locked_setToZero(coords);
 }
 
@@ -341,24 +371,28 @@ int mdn::Mdn2d::locked_setToZero(const std::unordered_set<Coord>& purgeSet) {
 
 bool mdn::Mdn2d::setValue(const Coord& xy, Digit value) {
     auto lock = lockWriteable();
+    modified();
     return locked_setValue(xy, value);
 }
 
 
 bool mdn::Mdn2d::setValue(const Coord& xy, int value) {
     auto lock = lockWriteable();
+    modified();
     return locked_setValue(xy, static_cast<Digit>(value));
 }
 
 
 bool mdn::Mdn2d::setValue(const Coord& xy, long value) {
     auto lock = lockWriteable();
+    modified();
     return locked_setValue(xy, static_cast<Digit>(value));
 }
 
 
 bool mdn::Mdn2d::setValue(const Coord& xy, long long value) {
     auto lock = lockWriteable();
+    modified();
     return locked_setValue(xy, static_cast<Digit>(value));
 }
 
@@ -399,7 +433,10 @@ void mdn::Mdn2d::plus(const Mdn2d& rhs, Mdn2d& ans) const {
 
 
 void mdn::Mdn2d::locked_plus(const Mdn2d& rhs, Mdn2d& ans) const {
-    // TODO
+    ans = *this;
+    for (const auto& [xy, digit] : rhs.m_raw) {
+        ans.locked_add(xy, digit);
+    }
 }
 
 
@@ -412,7 +449,10 @@ void mdn::Mdn2d::minus(const Mdn2d& rhs, Mdn2d& ans) const {
 
 
 void mdn::Mdn2d::locked_minus(const Mdn2d& rhs, Mdn2d& ans) const {
-    // TODO
+    ans = *this;
+    for (const auto& [xy, digit] : rhs.m_raw) {
+        ans.locked_add(xy, -digit);
+    }
 }
 
 
@@ -425,7 +465,12 @@ void mdn::Mdn2d::multiply(const Mdn2d& rhs, Mdn2d& ans) const {
 
 
 void mdn::Mdn2d::locked_multiply(const Mdn2d& rhs, Mdn2d& ans) const {
-    // TODO
+    ans.locked_clear();
+    for (const auto& [xy, digit] : rhs.m_raw) {
+        int id = static_cast<int>(digit);
+        // ans += (this x rhs_id).shift(rhs_xy)
+        ans.locked_plusEquals(internal_copyMultiplyAndShift(id, xy));
+    }
 }
 
 
@@ -444,12 +489,14 @@ void mdn::Mdn2d::locked_divide(const Mdn2d& rhs, Mdn2d& ans) const {
 
 void mdn::Mdn2d::add(const Coord& xy, float realNum, Fraxis fraxis) {
     auto lock = lockWriteable();
+    modified();
     locked_add(xy, static_cast<double>(realNum), fraxis);
 }
 
 
 void mdn::Mdn2d::add(const Coord& xy, double realNum, Fraxis fraxis) {
     auto lock = lockWriteable();
+    modified();
     locked_add(xy, realNum, fraxis);
 }
 
@@ -457,6 +504,7 @@ void mdn::Mdn2d::add(const Coord& xy, double realNum, Fraxis fraxis) {
 void mdn::Mdn2d::locked_add(const Coord& xy, double realNum, Fraxis fraxis) {
     double fracPart, intPart;
     fracPart = modf(realNum, &intPart);
+    modified();
     locked_add(xy, static_cast<long>(intPart));
     locked_addFraxis(xy, fracPart, fraxis);
 }
@@ -464,12 +512,14 @@ void mdn::Mdn2d::locked_add(const Coord& xy, double realNum, Fraxis fraxis) {
 
 void mdn::Mdn2d::subtract(const Coord& xy, float realNum, Fraxis fraxis) {
     auto lock = lockWriteable();
+    modified();
     locked_add(xy, static_cast<double>(-realNum), fraxis);
 }
 
 
 void mdn::Mdn2d::subtract(const Coord& xy, double realNum, Fraxis fraxis) {
     auto lock = lockWriteable();
+    modified();
     locked_add(xy, -realNum, fraxis);
 }
 
@@ -477,12 +527,14 @@ void mdn::Mdn2d::subtract(const Coord& xy, double realNum, Fraxis fraxis) {
 void mdn::Mdn2d::add(const Coord& xy, Digit value, Fraxis unused) {
     auto lock = lockWriteable();
     int ivalue = static_cast<int>(value);
+    modified();
     locked_add(xy, ivalue);
 }
 
 
 void mdn::Mdn2d::add(const Coord& xy, int value, Fraxis unused) {
     auto lock = lockWriteable();
+    modified();
     locked_add(xy, value);
 }
 
@@ -521,6 +573,7 @@ void mdn::Mdn2d::locked_add(const Coord& xy, long value) {
 
 void mdn::Mdn2d::add(const Coord& xy, long long value, Fraxis unused) {
     auto lock = lockWriteable();
+    modified();
     locked_add(xy, value);
 }
 
@@ -540,51 +593,55 @@ void mdn::Mdn2d::locked_add(const Coord& xy, long long value) {
 
 void mdn::Mdn2d::subtract(const Coord& xy, Digit value, Fraxis unused) {
     auto lock = lockWriteable();
-    locked_add(xy, -static_cast<int>(value))
+    modified();
+    locked_add(xy, -static_cast<int>(value));
 }
 
 
 void mdn::Mdn2d::subtract(const Coord& xy, int value, Fraxis unused) {
     auto lock = lockWriteable();
+    modified();
     locked_add(xy, -value);
 }
 
 
 void mdn::Mdn2d::subtract(const Coord& xy, long value, Fraxis unused) {
     auto lock = lockWriteable();
+    modified();
     locked_add(xy, -value);
 }
 
 
 void mdn::Mdn2d::subtract(const Coord& xy, long long value, Fraxis unused) {
     auto lock = lockWriteable();
+    modified();
     locked_add(xy, -value);
 }
 
 
 void mdn::Mdn2d::addFraxis(const Coord& xy, float fraction, Fraxis fraxis) {
     auto lock = lockWriteable();
+    modified();
     locked_addFraxis(xy, static_cast<double>(fraction), fraxis);
 }
 
 
 void mdn::Mdn2d::addFraxis(const Coord& xy, double fraction, Fraxis fraxis) {
     auto lock = lockWriteable();
+    modified();
     locked_addFraxis(xy, fraction, fraxis);
 }
 
 
 void mdn::Mdn2d::locked_addFraxis(const Coord& xy, double fraction, Fraxis fraxis) {
-    if (fraction < -1.0 || fraction > 1.0)
-    {
+    if (fraction < -1.0 || fraction > 1.0) {
         throw std::invalid_argument(
             "Fractional part must be -1.0 < fraction < 1.0, got" + std::to_string(fraction) +
             "."
         );
     }
 
-    switch(fraxis)
-    {
+    switch(fraxis) {
         case Fraxis::X:
             internal_fraxis(xy.copyTranslateX(-1), fraction, -1, 0, -1);
             break;
@@ -602,43 +659,48 @@ void mdn::Mdn2d::locked_addFraxis(const Coord& xy, double fraction, Fraxis fraxi
 
 void mdn::Mdn2d::subtractFraxis(const Coord& xy, float fraction, Fraxis fraxis) {
     auto lock = lockWriteable();
+    modified();
     locked_addFraxis(xy, -static_cast<double>(fraction), fraxis);
 }
 
 
 void mdn::Mdn2d::subtractFraxis(const Coord& xy, double fraction, Fraxis fraxis) {
     auto lock = lockWriteable();
+    modified();
     locked_addFraxis(xy, -fraction, fraxis);
 }
 
 
 void mdn::Mdn2d::multiply(Digit value) {
     auto lock = lockWriteable();
+    modified();
     locked_multiply(static_cast<int>(value));
 }
 
 
 void mdn::Mdn2d::multiply(int value) {
     auto lock = lockWriteable();
+    modified();
     locked_multiply(value);
 }
 
 
 void mdn::Mdn2d::multiply(long value) {
     auto lock = lockWriteable();
+    modified();
     locked_multiply(value);
 }
 
 
 void mdn::Mdn2d::multiply(long long value) {
     auto lock = lockWriteable();
+    modified();
     locked_multiply(value);
 }
 
 
 void mdn::Mdn2d::locked_multiply(int value) {
     Mdn2d temp(m_base, m_maxSpan);
-    auto lock = lockWriteable();
     auto tempLock = temp.lockWriteable();
 
     for (const auto& [xy, digit] : m_raw) {
@@ -651,7 +713,6 @@ void mdn::Mdn2d::locked_multiply(int value) {
 
 void mdn::Mdn2d::locked_multiply(long value) {
     Mdn2d temp(m_base, m_maxSpan);
-    auto lock = lockWriteable();
     auto tempLock = temp.lockWriteable();
 
     for (const auto& [xy, digit] : m_raw) {
@@ -664,7 +725,6 @@ void mdn::Mdn2d::locked_multiply(long value) {
 
 void mdn::Mdn2d::locked_multiply(long long value) {
     Mdn2d temp(m_base, m_maxSpan);
-    auto lock = lockWriteable();
     auto tempLock = temp.lockWriteable();
 
     for (const auto& [xy, digit] : m_raw) {
@@ -704,13 +764,14 @@ std::vector<std::string> mdn::Mdn2d::locked_toStringRows() const {
 
     // DigLine - digit line appears before what index in 'digits' array below
     int xDigLine = -xStart;
+    int yDigLine = 0;
 
     std::vector<std::string> out;
     out.reserve(yCount+1);
     std::vector<Digit> digits;
     for (int y = yStart; y < yEnd; ++y) {
         // First, are we at the yDigit line?
-        if (y == 0) {
+        if (y == yDigLine) {
             int x;
             std::ostringstream oss;
             for (x = 0; x < xDigLine && x < xCount; ++x) {
@@ -751,7 +812,53 @@ std::vector<std::string> mdn::Mdn2d::toStringCols() const {
 
 
 std::vector<std::string> mdn::Mdn2d::locked_toStringCols() const {
-    // TODO
+    int xStart = m_boundsMin.x();
+    int xEnd = m_boundsMax.x()+1;
+    int xCount = xEnd - xStart;
+
+    int yStart = m_boundsMin.y();
+    int yEnd = m_boundsMax.y()+1;
+    int yCount = yEnd - yStart;
+
+    // DigLine - digit line appears before what index in 'digits' array below
+    int xDigLine = 0;
+    int yDigLine = -yStart;
+
+    std::vector<std::string> out;
+    out.reserve(xCount+1);
+    std::vector<Digit> digits;
+    for (int x = xStart; x < xEnd; ++y) {
+        // First, are we at the yDigit line?
+        if (x == xDigLine) {
+            int y;
+            std::ostringstream oss;
+            for (y = 0; y < yDigLine && y < yCount; ++y) {
+                oss << Tools::m_boxArt_h << Tools::m_boxArt_h;
+            }
+            if (y == yDigLine) {
+                oss << Tools::m_boxArt_x;
+            }
+            for (; y < yCount; ++y) {
+                oss << Tools::m_boxArt_h << Tools::m_boxArt_h;
+            }
+            out.push_back(oss.str());
+        }
+        locked_getCol(x, digits);
+        assert(digits.size() == xCount && "Digits not the correct size");
+        std::ostringstream oss;
+        int y;
+        for (y = 0; y < yDigLine && y < yCount; ++y) {
+            oss << Tools::digitToAlpha(digits[y]);
+        }
+        if (y == yDigLine) {
+            oss << Tools::m_boxArt_v;
+        }
+        for (; y < yCount; ++y) {
+            oss << Tools::digitToAlpha(digits[y]);
+        }
+        out.push_back(oss.str());
+    } // end y loop
+    return out;
 }
 
 
@@ -774,6 +881,7 @@ mdn::Carryover mdn::Mdn2d::locked_checkCarryover(const Coord& xy) const {
 void mdn::Mdn2d::carryover(const Coord& xy)
 {
     auto lock = lockWriteable();
+    modified();
     locked_carryover(xy);
 }
 
@@ -802,58 +910,153 @@ void mdn::Mdn2d::locked_carryover(const Coord& xy) {
 }
 
 
+void mdn::Mdn2d::shift(int xDigits, int yDigits) {
+    auto lock = lockWriteable();
+    modified();
+    locked_shift(xDigits, yDigits);
+}
+
+
+void mdn::Mdn2d::shift(const Coord& xy) {
+    auto lock = lockWriteable();
+    modified();
+    locked_shift(xy);
+}
+
+
+void mdn::Mdn2d::locked_shift(const Coord& xy) {
+    locked_shift(xy.x(), xy.y());
+}
+
+
+void mdn::Mdn2d::locked_shift(int xDigits, int yDigits) {
+    if (xDigits > 0) {
+        locked_shiftRight(xDigits);
+    } else if (xDigits < 0) {
+        locked_shiftLeft(-xDigits);
+    }
+    if (yDigits > 0) {
+        locked_shiftUp(yDigits);
+    } else if (yDigits < 0) {
+        locked_shiftDown(-yDigits);
+    }
+}
+
+
 void mdn::Mdn2d::shiftRight(int nDigits) {
     auto lock = lockWriteable();
+    modified();
     locked_shiftRight(nDigits);
 }
 
 
 void mdn::Mdn2d::locked_shiftRight(int nDigits) {
-    // TODO
+    #ifdef MDN_DEBUG
+        if (nDigits < 0) {
+            throw std::invalid_argument("cannot shift negative digits, use opposite direction");
+        }
+    #endif
+    for (auto it = m_xIndex.rbegin(); it != m_xIndex.rend(); ++it) {
+        const std::unordered_set<Coord>& coords = it->second;
+        for (const Coord& coord : coords) {
+            Digit d = m_raw[coord];
+            m_raw.erase(coord);
+            m_raw[coord.copyTranslateX(nDigits)] = d;
+        }
+    }
+    locked_rebuildMetadata();
 }
 
 
 void mdn::Mdn2d::shiftLeft(int nDigits) {
     auto lock = lockWriteable();
+    modified();
     locked_shiftLeft(nDigits);
 }
 
 
 void mdn::Mdn2d::locked_shiftLeft(int nDigits) {
-    // TODO
+    #ifdef MDN_DEBUG
+        if (nDigits < 0) {
+            throw std::invalid_argument("cannot shift negative digits, use opposite direction");
+        }
+    #endif
+    for (auto it = m_xIndex.begin(); it != m_xIndex.end(); ++it) {
+        const std::unordered_set<Coord>& coords = it->second;
+        for (const Coord& coord : coords) {
+            Digit d = m_raw[coord];
+            m_raw.erase(coord);
+            m_raw[coord.copyTranslateX(-nDigits)] = d;
+        }
+    }
+    locked_rebuildMetadata();
 }
 
 
 void mdn::Mdn2d::shiftUp(int nDigits) {
     auto lock = lockWriteable();
+    modified();
     locked_shiftUp(nDigits);
 }
 
 
 void mdn::Mdn2d::locked_shiftUp(int nDigits) {
-    // TODO
+    #ifdef MDN_DEBUG
+        if (nDigits < 0) {
+            throw std::invalid_argument("cannot shift negative digits, use opposite direction");
+        }
+    #endif
+    for (auto it = m_yIndex.rbegin(); it != m_yIndex.rend(); ++it) {
+        const std::unordered_set<Coord>& coords = it->second;
+        for (const Coord& coord : coords) {
+            Digit d = m_raw[coord];
+            m_raw.erase(coord);
+            m_raw[coord.copyTranslateY(nDigits)] = d;
+        }
+    }
+    locked_rebuildMetadata();
 }
 
 
 void mdn::Mdn2d::shiftDown(int nDigits) {
     auto lock = lockWriteable();
+    modified();
     locked_shiftDown(nDigits);
 }
 
 
 void mdn::Mdn2d::locked_shiftDown(int nDigits) {
-    // TODO
+    #ifdef MDN_DEBUG
+        if (nDigits < 0) {
+            throw std::invalid_argument("cannot shift negative digits, use opposite direction");
+        }
+    #endif
+    for (auto it = m_yIndex.begin(); it != m_yIndex.end(); ++it) {
+        const std::unordered_set<Coord>& coords = it->second;
+        for (const Coord& coord : coords) {
+            Digit d = m_raw[coord];
+            m_raw.erase(coord);
+            m_raw[coord.copyTranslateY(-nDigits)] = d;
+        }
+    }
+    locked_rebuildMetadata();
 }
 
 
 void mdn::Mdn2d::transpose() {
     auto lock = lockWriteable();
+    modified();
     locked_transpose();
 }
 
 
 void mdn::Mdn2d::locked_transpose() {
-    // TODO
+    Mdn2d temp(m_base, m_maxSpan);
+    auto tempLock = temp.lockWriteable();
+    for (const auto& [xy, digit] : m_raw) {
+        temp.locked_setValue(Coord(xy.y(), xy.x()), digit);
+    }
+    operator=(temp);
 }
 
 
@@ -903,6 +1106,65 @@ bool mdn::Mdn2d::locked_hasBounds() const {
 }
 
 
+std::pair<mdn::Coord, mdn::Coord> mdn::Mdn2d::getBounds() const {
+    auto lock = ReadOnlyLock();
+    return locked_getBounds();
+}
+
+
+std::pair<mdn::Coord, mdn::Coord> mdn::Mdn2d::locked_getBounds() const {
+    return std::pair<Coord, Coord>(m_boundsMin, m_boundsMax);
+}
+
+
+const std::unordered_set<mdn::Coord>& mdn::Mdn2d::getPolymorphicNodes() const {
+    auto lock = ReadOnlyLock();
+    return locked_getPolymorphicNodes();
+}
+
+
+const std::unordered_set<mdn::Coord>& mdn::Mdn2d::locked_getPolymorphicNodes() const {
+    if (m_polymorphicNodes_event != m_event) {
+        internal_polymorphicScan();
+    }
+    return m_polymorphicNodes;
+}
+
+
+void mdn::Mdn2d::polymorphism_x0() {
+    auto lock = lockWriteable();
+    locked_polymorphism_x0();
+}
+
+
+void mdn::Mdn2d::locked_polymorphism_x0() {
+    const std::unordered_set<Coord>& pn = locked_getPolymorphicNodes();
+    for (const Coord& xy : pn) {
+        Digit p = locked_getValue(xy);
+        if (p > 0) {
+            internal_oneCarryover(xy);
+        }
+    }
+}
+
+
+void mdn::Mdn2d::polymorphism_y0() {
+    auto lock = lockWriteable();
+    locked_polymorphism_y0();
+}
+
+
+void mdn::Mdn2d::locked_polymorphism_y0() {
+    const std::unordered_set<Coord>& pn = locked_getPolymorphicNodes();
+    for (const Coord& xy : pn) {
+        Digit p = locked_getValue(xy);
+        if (p < 0) {
+            internal_oneCarryover(xy);
+        }
+    }
+}
+
+
 int mdn::Mdn2d::getPrecision() const {
     auto lock = lockReadOnly();
     return locked_getPrecision();
@@ -916,6 +1178,7 @@ int mdn::Mdn2d::locked_getPrecision() const {
 
 int mdn::Mdn2d::setPrecision(int newMaxSpan) {
     auto lock = lockWriteable();
+    modified();
     return locked_setPrecision(newMaxSpan);
 }
 
@@ -972,6 +1235,11 @@ mdn::PrecisionStatus mdn::Mdn2d::locked_checkPrecisionWindow(const Coord& xy) co
 }
 
 
+void mdn::Mdn2d::modified(){
+    m_event++;
+}
+
+
 // *** Operators ***
 
 mdn::Digit mdn::Mdn2d::operator()(int x, int y) const {
@@ -985,32 +1253,51 @@ mdn::Digit mdn::Mdn2d::operator()(const Coord& xy) const {
     return locked_getValue(xy);
 }
 
+
 mdn::Mdn2d& mdn::Mdn2d::operator+=(const Mdn2d& rhs) {
-    Mdn2d temp(*this);
     auto lock = lockWriteable();
-    auto tempLock = temp.lockWriteable();
-    locked_plus(rhs, temp);
-    operator=(temp);
-    return *this;
+    auto lockRhs = rhs.lockReadOnly();
+    modified();
+    return locked_plusEquals(rhs);
+}
+
+
+mdn::Mdn2d& mdn::Mdn2d::locked_plusEquals(const Mdn2d& rhs) {
+    for (const auto& [xy, digit] : rhs.m_raw) {
+        locked_add(xy, digit);
+    }
 }
 
 
 mdn::Mdn2d& mdn::Mdn2d::operator-=(const Mdn2d& rhs) {
-    Mdn2d temp(*this);
     auto lock = lockWriteable();
-    auto tempLock = temp.lockWriteable();
-    locked_minus(rhs, temp);
-    operator=(temp);
-    return *this;
+    auto lockRhs = rhs.lockReadOnly();
+    modified();
+    return locked_minusEquals(rhs);
+}
+
+
+mdn::Mdn2d& mdn::Mdn2d::locked_minusEquals(const Mdn2d& rhs) {
+    for (const auto& [xy, digit] : rhs.m_raw) {
+        locked_add(xy, -digit);
+    }
 }
 
 
 mdn::Mdn2d& mdn::Mdn2d::operator*=(const Mdn2d& rhs) {
-    Mdn2d temp(*this);
     auto lock = lockWriteable();
+    auto lockRhs = rhs.lockReadOnly();
+    modified();
+    return locked_timesEquals(rhs);
+}
+
+
+mdn::Mdn2d& mdn::Mdn2d::locked_timesEquals(const Mdn2d& rhs) {
+    Mdn2d temp(m_base, m_maxSpan);
     auto tempLock = temp.lockWriteable();
     locked_multiply(rhs, temp);
     operator=(temp);
+    modified();
     return *this;
 }
 
@@ -1021,36 +1308,46 @@ mdn::Mdn2d& mdn::Mdn2d::operator/=(const Mdn2d& rhs) {
     auto tempLock = temp.lockWriteable();
     locked_divide(rhs, temp);
     operator=(temp);
+    modified();
     return *this;
 }
 
 
 mdn::Mdn2d& mdn::Mdn2d::operator*=(int scalar) {
+    auto lock = lockWriteable();
     locked_multiply(scalar);
     return *this;
 }
 
 
 mdn::Mdn2d& mdn::Mdn2d::operator*=(long scalar) {
+    auto lock = lockWriteable();
     locked_multiply(scalar);
+    modified();
     return *this;
 }
 
 
 mdn::Mdn2d& mdn::Mdn2d::operator*=(long long scalar) {
+    auto lock = lockWriteable();
     locked_multiply(scalar);
+    modified();
     return *this;
 }
 
 
 bool mdn::Mdn2d::operator==(const Mdn2d& rhs) const {
-    // TODO - Take into account polymorphic states
-    return m_raw == rhs.m_raw;
+    auto lock = lockReadOnly();
+    auto lockRhs = rhs.lockReadOnly();
+    Mdn2d lhsCopy(*this);
+    Mdn2d rhsCopy(rhs);
+    lhsCopy.locked_polymorphism_x0();
+    rhsCopy.locked_polymorphism_x0();
+    return lhsCopy.m_raw == rhsCopy.m_raw;
 }
 
 
 bool mdn::Mdn2d::operator!=(const Mdn2d& rhs) const {
-    // TODO - Take into account polymorphic states
     return !(*this == rhs);
 }
 
@@ -1090,6 +1387,8 @@ void mdn::Mdn2d::internal_clearMetadata() const {
 
     m_xIndex.clear();
     m_yIndex.clear();
+
+    m_polymorphicNodes.clear();
 }
 
 
@@ -1230,21 +1529,37 @@ void mdn::Mdn2d::internal_fraxisCascade(const Coord& xy, Digit d, int c)
 }
 
 
-std::unordered_set<mdn::Coord> mdn::Mdn2d::internal_scanCarryovers() {
+// mdn::Mdn2d& mdn::Mdn2d::internal_plusEquals(const Mdn2d& rhs, int scalar) {
+//     for (const auto& [xy, digit] : rhs.m_raw) {
+//         int id = static_cast<int>(digit);
+//         locked_add(xy, id*scalar);
+//     }
+// }
+
+
+mdn::Mdn2d& mdn::Mdn2d::internal_copyMultiplyAndShift(int value, const Coord& shiftXY) const {
+    Mdn2d temp(*this);
+    auto tempLock = temp.lockWriteable();
+    temp.locked_multiply(value);
+    temp.shift(shiftXY);
+    return temp;
+}
+
+
+void mdn::Mdn2d::internal_polymorphicScanAndFix() {
     std::vector<Coord> required;
-    std::unordered_set<Coord> optional;
     int maxCarryoverScans = 10;
     bool failed = true;
     for (int i = 0; i < maxCarryoverScans; ++i) {
         required.clear();
-        optional.clear();
+        m_polymorphicNodes.clear();
         for (const auto& [xy, digit] : m_raw) {
             switch(locked_checkCarryover(xy)) {
                 case Carryover::Required:
                     required.push_back(xy);
                     break;
                 case Carryover::Optional:
-                    optional.insert(xy);
+                    m_polymorphicNodes.insert(xy);
                     break;
                 default:
                     break;
@@ -1265,7 +1580,32 @@ std::unordered_set<mdn::Coord> mdn::Mdn2d::internal_scanCarryovers() {
         oss << " attempts." << std::endl;
         Logger::instance().warn(oss.str());
     }
-    return optional;
+    m_polymorphicNodes_event = m_event;
+}
+
+
+void mdn::Mdn2d::internal_polymorphicScan() const {
+    int nRequired = 0;
+    m_polymorphicNodes.clear();
+    for (const auto& [xy, digit] : m_raw) {
+        switch(locked_checkCarryover(xy)) {
+            case Carryover::Required:
+                ++nRequired;
+                break;
+            case Carryover::Optional:
+                m_polymorphicNodes.insert(xy);
+                break;
+            default:
+                break;
+        }
+    }
+    if (nRequired) {
+        std::ostringstream oss;
+        oss << "Internal error: found " << nRequired << " required carryovers during scan." << endl;
+        oss << "MDN is in an invalid state." << std::endl;
+        Logger::instance().warn(oss.str());
+    }
+    m_polymorphicNodes_event = m_event;
 }
 
 
@@ -1319,14 +1659,4 @@ void mdn::Mdn2d::internal_ncarryover(const Coord& xy) {
     locked_setValue(xy, ip);
     locked_setValue(xy_x, ix);
     locked_setValue(xy_y, iy);
-}
-
-
-mdn::Digit* mdn::Mdn2d::getPtr(const Coord& xy)
-{
-    auto iter = m_raw.find(xy);
-    if (iter == m_raw.end()) {
-        return nullptr;
-    }
-    return &(iter->second);
 }
