@@ -16,6 +16,7 @@
 #include "Coord.h"
 #include "Digit.h"
 #include "Fraxis.h"
+#include "Mdn2dConfig.h"
 
 namespace mdn {
 
@@ -23,8 +24,8 @@ namespace mdn {
 class Mdn2d {
 
     // Calculate minimum fraction value to add to a digit, that it will appear as a non-zero digit
-    // within m_maxSpan (numerical precision)
-    static double static_calculateEpsilon(int m_maxSpan, int m_base);
+    // within m_precision
+    static double static_calculateEpsilon(int m_precision, int m_base);
 
 
 public:
@@ -41,15 +42,17 @@ public:
 
     // *** Constructors
 
+        Mdn2d(Mdn2dConfig config);
+
         // Constructs an empty MDN with a given base.
-        Mdn2d(int base = 10, int maxSpan = 16);
+        Mdn2d(int base = 10, int precision = 16, Fraxis fraxis=Fraxis::X);
 
         // Constructs an MDN initialized with a single integer value added to the
         // digit origin.
-        Mdn2d(int base, int maxSpan, int initVal);
+        Mdn2d(int base, int precision, Fraxis fraxis, int initVal);
 
         // Constructs an MDN with a floating point initial value.
-        Mdn2d(int base, int maxSpan, double initVal, Fraxis fraxis);
+        Mdn2d(int base, int precision, double initVal, Fraxis fraxis);
 
 
         // *** Rule of five
@@ -131,46 +134,52 @@ public:
                 private: void locked_multiply(const Mdn2d& rhs, Mdn2d& ans) const; public:
 
                 // Division: *this / rhs = ans, overwrites ans
-                void divide(const Mdn2d& rhs, Mdn2d& ans) const;
-                private: void locked_divide(const Mdn2d& rhs, Mdn2d& ans) const; public:
+                void divide(const Mdn2d& rhs, Mdn2d& ans, Fraxis fraxis=Fraxis::Default) const;
+                private: void locked_divide(
+                    const Mdn2d& rhs, Mdn2d& ans, Fraxis fraxis=Fraxis::Default
+                ) const; public:
+                private: void locked_divideX(const Mdn2d& rhs, Mdn2d& ans) const; public:
+                private: void locked_divideY(const Mdn2d& rhs, Mdn2d& ans) const; public:
 
 
             // *** Addition / subtraction
 
                 // Add the given number at xy, breaking into integer and fraxis operations
-                void add(const Coord& xy, float realNum, Fraxis fraxis);
-                void add(const Coord& xy, double realNum, Fraxis fraxis);
-                private: void locked_add(const Coord& xy, double realNum, Fraxis fraxis); public:
+                void add(const Coord& xy, float realNum, Fraxis fraxis=Fraxis::Default);
+                void add(const Coord& xy, double realNum, Fraxis fraxis=Fraxis::Default);
+                private: void locked_add(
+                    const Coord& xy, double realNum, Fraxis fraxis=Fraxis::Default
+                ); public:
 
                 // Subtract the given number at xy, breaking into integer and fraxis operations
-                void subtract(const Coord& xy, float realNum, Fraxis fraxis);
-                void subtract(const Coord& xy, double realNum, Fraxis fraxis);
+                void subtract(const Coord& xy, float realNum, Fraxis fraxis=Fraxis::Default);
+                void subtract(const Coord& xy, double realNum, Fraxis fraxis=Fraxis::Default);
 
                 // Addition component: integer part, at xy with symmetric carryover
-                void add(const Coord& xy, Digit value, Fraxis unused=Fraxis::Unknown);
-                void add(const Coord& xy, int value, Fraxis unused=Fraxis::Unknown);
+                void add(const Coord& xy, Digit value, Fraxis unused=Fraxis::Default);
+                void add(const Coord& xy, int value, Fraxis unused=Fraxis::Default);
                 private: void locked_add(const Coord& xy, int value); public:
-                void add(const Coord& xy, long value, Fraxis unused=Fraxis::Unknown);
+                void add(const Coord& xy, long value, Fraxis unused=Fraxis::Default);
                 private: void locked_add(const Coord& xy, long value); public:
-                void add(const Coord& xy, long long value, Fraxis unused=Fraxis::Unknown);
+                void add(const Coord& xy, long long value, Fraxis unused=Fraxis::Default);
                 private: void locked_add(const Coord& xy, long long value); public:
 
                 // Subtraction component: integer part, at xy with symmetric carryover
-                void subtract(const Coord& xy, Digit value, Fraxis unused=Fraxis::Unknown);
-                void subtract(const Coord& xy, int value, Fraxis unused=Fraxis::Unknown);
-                void subtract(const Coord& xy, long value, Fraxis unused=Fraxis::Unknown);
-                void subtract(const Coord& xy, long long value, Fraxis unused=Fraxis::Unknown);
+                void subtract(const Coord& xy, Digit value, Fraxis unused=Fraxis::Default);
+                void subtract(const Coord& xy, int value, Fraxis unused=Fraxis::Default);
+                void subtract(const Coord& xy, long value, Fraxis unused=Fraxis::Default);
+                void subtract(const Coord& xy, long long value, Fraxis unused=Fraxis::Default);
 
                 // Addition component: fractional part, at xy with assymmetric cascade
-                void addFraxis(const Coord& xy, float fraction, Fraxis fraxis);
-                void addFraxis(const Coord& xy, double fraction, Fraxis fraxis);
+                void addFraxis(const Coord& xy, float fraction, Fraxis fraxis=Fraxis::Default);
+                void addFraxis(const Coord& xy, double fraction, Fraxis fraxis=Fraxis::Default);
                 private: void locked_addFraxis(
                     const Coord& xy, double fraction, Fraxis fraxis
                 ); public:
 
                 // Subtract a fractional value cascading along the fraxis
-                void subtractFraxis(const Coord& xy, float fraction, Fraxis fraxis);
-                void subtractFraxis(const Coord& xy, double fraction, Fraxis fraxis);
+                void subtractFraxis(const Coord& xy, float fraction, Fraxis fraxis=Fraxis::Default);
+                void subtractFraxis(const Coord& xy, double fraction, Fraxis fraxis=Fraxis::Default);
 
 
             // *** Multiplication / divide
@@ -257,11 +266,11 @@ public:
             int getPrecision() const;
             private: int locked_getPrecision() const; public:
 
-            // Change the setting for m_maxSpan, returns the number of dropped digits
+            // Change the setting for m_precision, returns the number of dropped digits
             int setPrecision(int newMaxSpan);
             private: int locked_setPrecision(int newMaxSpan); public:
 
-            // Query the precision status of xy to ensure maxSpan is not exceeded
+            // Query the precision status of xy to ensure precision is not exceeded
             // Returns:
             //  * PrecisionStatus::Below  - above precision window
             //  * PrecisionStatus::Inside - within precision window
@@ -344,6 +353,9 @@ private:
             // Update the m_boundsMin and m_boundsMax variables based on the current values
             void internal_updateBounds();
 
+            // Apply default to fraxis as required
+            void internal_checkFraxis(Fraxis& fraxis) const;
+
             // Execute the fraxis propagation algorithm
             //  dX, dY, c - constants to guide propagation:
             //      x Direction: -1, 0, -1
@@ -407,34 +419,19 @@ private:
         //  Digit values:   1 0|0 0 1  <-- span == 4
         //  Digit indices: -2-1 0 1 2
         // maxOrderX - minMagnitudeX
-        int m_maxSpan;
+        int m_precision;
 
         // Smallest value added to a digit that can cascade to a non-zero value within the precision
         //  window
         mutable double m_epsilon;
 
+        // Default fraxis (fractional axis, division direction)
+        Fraxis m_defaultFraxis;
+
         // Sparse coordinate-to-digit mapping
         std::unordered_map<Coord, Digit> m_raw;
 
         // Addressing
-        // Iterate with iterators:
-        // for (auto it = m_xIndex.begin(); it != m_xIndex.end(); ++it) {
-        //     int x = it->first;
-        //     const std::unordered_set<Coord>& coords = it->second;
-        //     // use x and coords
-        // }
-        //
-        // Iterate with a ranged for loop:
-        // for (const auto& pair : m_xIndex) {
-        //     int x = pair.first;
-        //     const std::unordered_set<Coord>& coords = pair.second;
-        //     // use x and coords
-        // }
-        // Iterate with structured bindings:
-        // for (const auto& [x, coords] : m_xIndex) {
-        //     // x is the key, coords is the value
-        //     // use x and coords directly
-        // }
         mutable std::map<int, std::unordered_set<Coord>> m_xIndex;
         mutable std::map<int, std::unordered_set<Coord>> m_yIndex;
 

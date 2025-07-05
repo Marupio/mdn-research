@@ -3,6 +3,8 @@
 #include <vector>
 #include <string>
 
+#include "Logger.h"
+
 // Fraxis - fraction axis
 //  The digit axis along which the fractional part of a real number expands in an MDN
 
@@ -10,7 +12,7 @@ namespace mdn {
 
 enum class Fraxis {
     Invalid,
-    Unknown,
+    Default,
     X,
     Y
 };
@@ -18,7 +20,7 @@ enum class Fraxis {
 const std::vector<std::string> FraxisNames(
     {
         "Invalid",
-        "Unknown",
+        "Default",
         "X",
         "Y"
     }
@@ -32,5 +34,23 @@ std::string FraxisToName(Fraxis fraxis) {
     // #endif
     return FraxisNames[fi];
 }
+
+Fraxis NameToFraxis(const std::string& name) {
+    for (int i = 0; i < FraxisNames.size(); ++i) {
+        if (FraxisNames[i] == name) {
+            return static_cast<Fraxis>(i);
+        }
+    }
+    std::ostringstream oss;
+    oss << "Invalid Fraxis type: " << name << " expecting:" << std::endl;
+    if (FraxisNames.size()) {
+        oss << FraxisNames[0];
+    }
+    for (auto iter = FraxisNames.cbegin() + 1; iter != FraxisNames.cend(); ++iter) {
+        oss << ", " << name;
+    }
+    throw std::invalid_argument(oss.str());
+}
+
 
 } // end namespace mdn

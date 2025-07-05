@@ -75,3 +75,23 @@ CarryOver pseudo_code(int p, int x, int y) {
     }
     return CarryOver::Invalid;
 }
+
+
+        // Iterate with iterators:
+        // for (auto it = m_xIndex.begin(); it != m_xIndex.end(); ++it) {
+        //     int x = it->first;
+        //     const std::unordered_set<Coord>& coords = it->second;
+        //     // use x and coords
+        // }
+        //
+        // Iterate with a ranged for loop:
+        // for (const auto& pair : m_xIndex) {
+        //     int x = pair.first;
+        //     const std::unordered_set<Coord>& coords = pair.second;
+        //     // use x and coords
+        // }
+        // Iterate with structured bindings:
+        // for (const auto& [x, coords] : m_xIndex) {
+        //     // x is the key, coords is the value
+        //     // use x and coords directly
+        // }

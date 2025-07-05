@@ -11,8 +11,8 @@
 #include "Tools.h"
 
 
-double mdn::Mdn2d::static_calculateEpsilon(int m_maxSpan, int m_base) {
-    return pow((1.0 / m_base), (m_maxSpan + 1));
+double mdn::Mdn2d::static_calculateEpsilon(int m_precision, int m_base) {
+    return pow((1.0 / m_base), (m_precision + 1));
 }
 
 
@@ -44,23 +44,23 @@ mdn::Carryover mdn::Mdn2d::static_checkCarryover(Digit p, Digit x, Digit y, Digi
 }
 
 
-mdn::Mdn2d::Mdn2d(int base, int maxSpan)
+mdn::Mdn2d::Mdn2d(int base, int precision)
 :
     m_base(base),
     m_dbase(m_base),
-    m_maxSpan(maxSpan),
-    m_epsilon(static_calculateEpsilon(m_maxSpan, m_base)),
+    m_precision(precision),
+    m_epsilon(static_calculateEpsilon(m_precision, m_base)),
     m_polymorphicNodes_event(-1),
     m_event(0)
 {}
 
 
-mdn::Mdn2d::Mdn2d(int base, int maxSpan, int initVal)
+mdn::Mdn2d::Mdn2d(int base, int precision, int initVal)
 :
     m_base(base),
     m_dbase(m_base),
-    m_maxSpan(maxSpan),
-    m_epsilon(static_calculateEpsilon(m_maxSpan, m_base)),
+    m_precision(precision),
+    m_epsilon(static_calculateEpsilon(m_precision, m_base)),
     m_polymorphicNodes_event(-1),
     m_event(0)
 {
@@ -68,12 +68,12 @@ mdn::Mdn2d::Mdn2d(int base, int maxSpan, int initVal)
 }
 
 
-mdn::Mdn2d::Mdn2d(int base, int maxSpan, double initVal, Fraxis fraxis)
+mdn::Mdn2d::Mdn2d(int base, int precision, double initVal, Fraxis fraxis)
 :
     m_base(base),
     m_dbase(m_base),
-    m_maxSpan(maxSpan),
-    m_epsilon(static_calculateEpsilon(m_maxSpan, m_base)),
+    m_precision(precision),
+    m_epsilon(static_calculateEpsilon(m_precision, m_base)),
     m_polymorphicNodes_event(-1),
     m_event(0)
 {
@@ -84,8 +84,8 @@ mdn::Mdn2d::Mdn2d(int base, int maxSpan, double initVal, Fraxis fraxis)
 mdn::Mdn2d::Mdn2d(const Mdn2d& other):
     m_base(other.m_base),
     m_dbase(other.m_dbase),
-    m_maxSpan(other.m_maxSpan),
-    m_epsilon(static_calculateEpsilon(m_maxSpan, m_base)),
+    m_precision(other.m_precision),
+    m_epsilon(static_calculateEpsilon(m_precision, m_base)),
     m_polymorphicNodes_event(-1),
     m_event(0)
 {
@@ -111,7 +111,7 @@ mdn::Mdn2d& mdn::Mdn2d::operator=(const Mdn2d& other) {
         if (m_base != other.m_base) {
             throw BaseMismatch(m_base, other.m_base);
         }
-        m_maxSpan = other.m_maxSpan;
+        m_precision = other.m_precision;
         m_epsilon = other.m_epsilon;
         m_raw = other.m_raw;
         m_xIndex = other.m_xIndex;
@@ -131,8 +131,8 @@ mdn::Mdn2d& mdn::Mdn2d::operator=(const Mdn2d& other) {
 mdn::Mdn2d::Mdn2d(Mdn2d&& other) noexcept :
     m_base(other.m_base),
     m_dbase(m_base),
-    m_maxSpan(other.m_maxSpan),
-    m_epsilon(static_calculateEpsilon(m_maxSpan, m_base)),
+    m_precision(other.m_precision),
+    m_epsilon(static_calculateEpsilon(m_precision, m_base)),
     m_event(0)
 {
     auto lock = other.lockWriteable();
@@ -157,7 +157,7 @@ mdn::Mdn2d& mdn::Mdn2d::operator=(Mdn2d&& other) noexcept {
         if (m_base != other.m_base) {
             throw BaseMismatch(m_base, other.m_base);
         }
-        m_maxSpan = other.m_maxSpan;
+        m_precision = other.m_precision;
         m_epsilon = other.m_epsilon;
         m_raw = std::move(other.m_raw);
         m_xIndex = std::move(other.m_xIndex);
@@ -483,11 +483,13 @@ void mdn::Mdn2d::divide(const Mdn2d& rhs, Mdn2d& ans) const {
 
 
 void mdn::Mdn2d::locked_divide(const Mdn2d& rhs, Mdn2d& ans) const {
+
     // TODO
 }
 
 
 void mdn::Mdn2d::add(const Coord& xy, float realNum, Fraxis fraxis) {
+    internal_checkFraxis(fraxis);
     auto lock = lockWriteable();
     modified();
     locked_add(xy, static_cast<double>(realNum), fraxis);
@@ -700,7 +702,7 @@ void mdn::Mdn2d::multiply(long long value) {
 
 
 void mdn::Mdn2d::locked_multiply(int value) {
-    Mdn2d temp(m_base, m_maxSpan);
+    Mdn2d temp(m_base, m_precision);
     auto tempLock = temp.lockWriteable();
 
     for (const auto& [xy, digit] : m_raw) {
@@ -712,7 +714,7 @@ void mdn::Mdn2d::locked_multiply(int value) {
 
 
 void mdn::Mdn2d::locked_multiply(long value) {
-    Mdn2d temp(m_base, m_maxSpan);
+    Mdn2d temp(m_base, m_precision);
     auto tempLock = temp.lockWriteable();
 
     for (const auto& [xy, digit] : m_raw) {
@@ -724,7 +726,7 @@ void mdn::Mdn2d::locked_multiply(long value) {
 
 
 void mdn::Mdn2d::locked_multiply(long long value) {
-    Mdn2d temp(m_base, m_maxSpan);
+    Mdn2d temp(m_base, m_precision);
     auto tempLock = temp.lockWriteable();
 
     for (const auto& [xy, digit] : m_raw) {
@@ -1051,7 +1053,7 @@ void mdn::Mdn2d::transpose() {
 
 
 void mdn::Mdn2d::locked_transpose() {
-    Mdn2d temp(m_base, m_maxSpan);
+    Mdn2d temp(m_base, m_precision);
     auto tempLock = temp.lockWriteable();
     for (const auto& [xy, digit] : m_raw) {
         temp.locked_setValue(Coord(xy.y(), xy.x()), digit);
@@ -1172,7 +1174,7 @@ int mdn::Mdn2d::getPrecision() const {
 
 
 int mdn::Mdn2d::locked_getPrecision() const {
-    return m_maxSpan;
+    return m_precision;
 }
 
 
@@ -1185,18 +1187,18 @@ int mdn::Mdn2d::setPrecision(int newMaxSpan) {
 
 int mdn::Mdn2d::locked_setPrecision(int newMaxSpan) {
     if (newMaxSpan < 1) {
-        throw std::invalid_argument("maxSpan, Mdn2d numerical precision, cannot be less than 1");
+        throw std::invalid_argument("precision, Mdn2d numerical precision, cannot be less than 1");
     }
-    else if (newMaxSpan >= m_maxSpan) {
-        m_maxSpan = newMaxSpan;
-        m_epsilon = static_calculateEpsilon(m_maxSpan, m_base);
+    else if (newMaxSpan >= m_precision) {
+        m_precision = newMaxSpan;
+        m_epsilon = static_calculateEpsilon(m_precision, m_base);
         return;
     }
 
     // New precision is *less* than the old one - may not be able to keep all our digits
-    int oldMaxSpan = m_maxSpan;
-    m_maxSpan = newMaxSpan;
-    m_epsilon = static_calculateEpsilon(m_maxSpan, m_base);
+    int oldMaxSpan = m_precision;
+    m_precision = newMaxSpan;
+    m_epsilon = static_calculateEpsilon(m_precision, m_base);
 
     return internal_purgeExcessDigits();
 }
@@ -1213,7 +1215,7 @@ mdn::PrecisionStatus mdn::Mdn2d::locked_checkPrecisionWindow(const Coord& xy) co
         return PrecisionStatus::Inside;
     }
     // minLimit - below this and the new value should not be added
-    Coord minLimit = m_boundsMax - m_maxSpan;
+    Coord minLimit = m_boundsMax - m_precision;
 
     // Check under limit
     if (xy.x() < minLimit.x() || xy.y() < minLimit.y()) {
@@ -1224,7 +1226,7 @@ mdn::PrecisionStatus mdn::Mdn2d::locked_checkPrecisionWindow(const Coord& xy) co
     // Check over limit
     std::unordered_set<Coord> purgeSet;
     // maxLimit - above this and we need to purge existing values
-    Coord maxLimit = m_boundsMin + m_maxSpan;
+    Coord maxLimit = m_boundsMin + m_precision;
     // Check over limit
     int purgeX = xy.x() - maxLimit.x();
     int purgeY = xy.y() - maxLimit.y();
@@ -1293,7 +1295,7 @@ mdn::Mdn2d& mdn::Mdn2d::operator*=(const Mdn2d& rhs) {
 
 
 mdn::Mdn2d& mdn::Mdn2d::locked_timesEquals(const Mdn2d& rhs) {
-    Mdn2d temp(m_base, m_maxSpan);
+    Mdn2d temp(m_base, m_precision);
     auto tempLock = temp.lockWriteable();
     locked_multiply(rhs, temp);
     operator=(temp);
@@ -1438,17 +1440,17 @@ int mdn::Mdn2d::internal_purgeExcessDigits() {
 
     Coord currentSpan = m_boundsMax - m_boundsMin;
     std::unordered_set<Coord> purgeSet;
-    int purgeX = currentSpan.x() - m_maxSpan;
+    int purgeX = currentSpan.x() - m_precision;
     if (purgeX > 0) {
-        int minX = m_boundsMax.x() - m_maxSpan;
+        int minX = m_boundsMax.x() - m_precision;
         for (const auto& [x, coords] : m_xIndex) {
             if (x >= minX) break;
             purgeSet.insert(coords.begin(), coords.end());
         }
     }
-    int purgeY = currentSpan.y() - m_maxSpan;
+    int purgeY = currentSpan.y() - m_precision;
     if (purgeY > 0) {
-        int minY = m_boundsMax.y() - m_maxSpan;
+        int minY = m_boundsMax.y() - m_precision;
         for (const auto& [y, coords] : m_yIndex) {
             if (y >= minY) break;
             purgeSet.insert(coords.begin(), coords.end());
@@ -1458,7 +1460,7 @@ int mdn::Mdn2d::internal_purgeExcessDigits() {
     if (!purgeSet.empty()) {
         std::ostringstream oss;
         oss << "Purging " << purgeSet.size() << " low digit values, below numerical precision ";
-        oss << m_maxSpan << std::endl;
+        oss << m_precision << std::endl;
         Logger::instance().debug(oss.str());
         locked_setToZero(purgeSet);
     }
@@ -1477,6 +1479,13 @@ void mdn::Mdn2d::internal_updateBounds() {
         auto itMaxY = m_yIndex.crbegin();
         m_boundsMin = {itMinX->first, itMinY->first};
         m_boundsMax = {itMaxX->first, itMaxY->first};
+    }
+}
+
+
+void mdn::Mdn2d::internal_checkFraxis(Fraxis& fraxis) const {
+    if (fraxis == Fraxis::Default) {
+        fraxis = m_defaultFraxis;
     }
 }
 

@@ -72,6 +72,13 @@ public:
 };
 
 // This operation breaks the governing laws of MDNs
+class InvalidState: public MdnException {
+public:
+    InvalidState(const std::string& description)
+        : MdnException("Invalid state detected: " + description) {};
+};
+
+// Division by zero is about to occur
 class DivideByZero : public MdnException {
 public:
     DivideByZero()
