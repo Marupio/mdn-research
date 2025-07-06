@@ -4,6 +4,7 @@
 #include <sstream>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <limits>
 
 
@@ -251,85 +252,204 @@ using namespace std;
 //     return 0;
 // }
 
-class MrBase {
-public:
-    virtual void VF() { cout << "MrBase::VF" << endl; }
-    virtual void VF1() { cout << "MrBase::VF1" << endl; }
-    virtual void VF2() { cout << "MrBase::VF2" << endl; }
-    virtual void VF3() { cout << "MrBase::VF3" << endl; }
+// class MrBase {
+// public:
+//     virtual void VF() { cout << "MrBase::VF" << endl; }
+//     virtual void VF1() { cout << "MrBase::VF1" << endl; }
+//     virtual void VF2() { cout << "MrBase::VF2" << endl; }
+//     virtual void VF3() { cout << "MrBase::VF3" << endl; }
 
-    void F() { cout << "MrBase::F" << endl; }
-    void F1() { cout << "MrBase::F1" << endl; }
-    void F2() { cout << "MrBase::F2" << endl; VF2();}
-    void F3() { cout << "MrBase::F3" << endl; }
-};
+//     void F() { cout << "MrBase::F" << endl; }
+//     void F1() { cout << "MrBase::F1" << endl; }
+//     void F2() { cout << "MrBase::F2" << endl; VF2();}
+//     void F3() { cout << "MrBase::F3" << endl; }
+// };
 
-class MrDerived : public MrBase {
-public:
-    virtual void VF() { cout << "MrDerived::VF" << endl; }
-    virtual void VF1() { cout << "MrDerived::VF1" << endl; MrBase::VF1(); }
-    virtual void VF2() { cout << "MrDerived::VF2" << endl; }
-    virtual void VF3() { cout << "MrDerived::VF3" << endl; }
+// class MrDerived : public MrBase {
+// public:
+//     virtual void VF() { cout << "MrDerived::VF" << endl; }
+//     virtual void VF1() { cout << "MrDerived::VF1" << endl; MrBase::VF1(); }
+//     virtual void VF2() { cout << "MrDerived::VF2" << endl; }
+//     virtual void VF3() { cout << "MrDerived::VF3" << endl; }
 
-    void F() { cout << "MrDerived::F" << endl; }
-    void F1() { cout << "MrDerived::F1" << endl; MrBase::F1(); }
-    void F2() { cout << "MrDerived::F2" << endl;  }
-    void F3() { cout << "MrDerived::F3" << endl; }
-};
+//     void F() { cout << "MrDerived::F" << endl; }
+//     void F1() { cout << "MrDerived::F1" << endl; MrBase::F1(); }
+//     void F2() { cout << "MrDerived::F2" << endl;  }
+//     void F3() { cout << "MrDerived::F3" << endl; }
+// };
 
 int main() {
-    MrBase b;
-    MrDerived d;
-    MrBase* b_ptrTo_d(&d);
-    MrDerived* d_ptrTo_d(&d);
+    // MrBase b;
+    // MrDerived d;
+    // MrBase* b_ptrTo_d(&d);
+    // MrDerived* d_ptrTo_d(&d);
 
-    cout << "\nb.F2():" << endl;
-    b.F2();
-    cout << "\nd.MrBase::F2():" << endl;
-    d.MrBase::F2();
+    // cout << "\nb.F2():" << endl;
+    // b.F2();
+    // cout << "\nd.MrBase::F2():" << endl;
+    // d.MrBase::F2();
 
-    cout << "\nb_ptrTo_d->F2():" << endl;
-    b_ptrTo_d->F2();
-    cout << "\nd_ptrTo_d->MrBase::F2():" << endl;
-    d_ptrTo_d->MrBase::F2();
+    // cout << "\nb_ptrTo_d->F2():" << endl;
+    // b_ptrTo_d->F2();
+    // cout << "\nd_ptrTo_d->MrBase::F2():" << endl;
+    // d_ptrTo_d->MrBase::F2();
 
-    cout << "-------------------------------" << endl;
+    // cout << "-------------------------------" << endl;
 
-    cout << "\nb.F():" << endl;
-    b.F();
-    cout << "\nb.F1():" << endl;
-    b.F1();
-    cout << "\nb.VF():" << endl;
-    b.VF();
-    cout << "\nb.VF1():" << endl;
-    b.VF1();
+    // cout << "\nb.F():" << endl;
+    // b.F();
+    // cout << "\nb.F1():" << endl;
+    // b.F1();
+    // cout << "\nb.VF():" << endl;
+    // b.VF();
+    // cout << "\nb.VF1():" << endl;
+    // b.VF1();
 
-    cout << "\nd.F():" << endl;
-    d.F();
-    cout << "\nd.F1():" << endl;
-    d.F1();
-    cout << "\nd.VF():" << endl;
-    d.VF();
-    cout << "\nd.VF1():" << endl;
-    d.VF1();
+    // cout << "\nd.F():" << endl;
+    // d.F();
+    // cout << "\nd.F1():" << endl;
+    // d.F1();
+    // cout << "\nd.VF():" << endl;
+    // d.VF();
+    // cout << "\nd.VF1():" << endl;
+    // d.VF1();
 
-    cout << "\nb_ptrTo_d->F():" << endl;
-    b_ptrTo_d->F();
-    cout << "\nb_ptrTo_d->F1():" << endl;
-    b_ptrTo_d->F1();
-    cout << "\nb_ptrTo_d->VF():" << endl;
-    b_ptrTo_d->VF();
-    cout << "\nb_ptrTo_d->VF1():" << endl;
-    b_ptrTo_d->VF1();
+    // cout << "\nb_ptrTo_d->F():" << endl;
+    // b_ptrTo_d->F();
+    // cout << "\nb_ptrTo_d->F1():" << endl;
+    // b_ptrTo_d->F1();
+    // cout << "\nb_ptrTo_d->VF():" << endl;
+    // b_ptrTo_d->VF();
+    // cout << "\nb_ptrTo_d->VF1():" << endl;
+    // b_ptrTo_d->VF1();
 
-    cout << "\nd_ptrTo_d->F():" << endl;
-    d_ptrTo_d->F();
-    cout << "\nd_ptrTo_d->F1():" << endl;
-    d_ptrTo_d->F1();
-    cout << "\nd_ptrTo_d->VF():" << endl;
-    d_ptrTo_d->VF();
-    cout << "\nd_ptrTo_d->VF1():" << endl;
-    d_ptrTo_d->VF1();
+    // cout << "\nd_ptrTo_d->F():" << endl;
+    // d_ptrTo_d->F();
+    // cout << "\nd_ptrTo_d->F1():" << endl;
+    // d_ptrTo_d->F1();
+    // cout << "\nd_ptrTo_d->VF():" << endl;
+    // d_ptrTo_d->VF();
+    // cout << "\nd_ptrTo_d->VF1():" << endl;
+    // d_ptrTo_d->VF1();
+
+    // unordered_set<int> mySet({1,2,3,4,6});
+    // unordered_set<int> aSet({1,2,8,9,10});
+    // // unordered_set<int> bSet({20,21,22});
+    // unordered_set<int> bSet = mySet;
+
+    // cout << "mySet:" << endl;
+    // cout << "size=" << mySet.size() << ", elems = ";
+    // for (int i : mySet) {
+    //     cout << i << ", ";
+    // }
+    // cout << "\naSet:" << endl;
+    // cout << "size=" << aSet.size() << ", elems = ";
+    // for (int i : aSet) {
+    //     cout << i << ", ";
+    // }
+    // cout << "\nbSet:" << endl;
+    // cout << "size=" << bSet.size() << ", elems = ";
+    // for (int i : bSet) {
+    //     cout << i << ", ";
+    // }
+    // cout << "\n" << endl;
+    // aSet.merge(mySet);
+    // mySet.clear();
+
+    // cout << "aSet.merge(mySet)" << endl;
+    // cout << "mySet.clear()" << endl;
+    // cout << endl;
+
+    // cout << "mySet:" << endl;
+    // cout << "size=" << mySet.size() << ", elems = ";
+    // for (int i : mySet) {
+    //     cout << i << ", ";
+    // }
+    // cout << "\naSet:" << endl;
+    // cout << "size=" << aSet.size() << ", elems = ";
+    // for (int i : aSet) {
+    //     cout << i << ", ";
+    // }
+    // cout << "\nbSet:" << endl;
+    // cout << "size=" << bSet.size() << ", elems = ";
+    // for (int i : bSet) {
+    //     cout << i << ", ";
+    // }
+
+        // workingSet = buffer;
+        // affectedCoords.merge(buffer);
+        // buffer.clear();
+        // if (!workingSet.size()) {
+        //     achievedGreatness = true;
+        // }
+
+    // cout << "mySet:" << endl;
+    // for (int i : mySet) {
+    //     cout << i << ", ";
+    // }
+    // cout << "\naSet:" << endl;
+    // cout << "size=" << aSet.size() << endl;
+    // for (int i : aSet) {
+    //     cout << i << ", ";
+    // }
+    // cout << "\nbSet:" << endl;
+    // cout << "size=" << bSet.size() << endl;
+    // for (int i : bSet) {
+    //     cout << i << ", ";
+    // }
+    // cout << endl;
+    // // mySet.insert(mySet.end(), aSet.begin(), aSet.end());
+    // mySet.merge(aSet);
+    // cout << "After merge setA into mySet\nmySet=" << endl;
+    // cout << "size=" << mySet.size() << endl;
+    // for (int i : mySet) {
+    //     cout << i << ", ";
+    // }
+    // cout << endl;
+    // mySet.merge(bSet);
+    // cout << "After merge setB into mySet\nmySet=" << endl;
+    // cout << "size=" << mySet.size() << endl;
+    // for (int i : mySet) {
+    //     cout << i << ", ";
+    // }
+    // cout << endl;
+    // cout << "Do the original aSet and bSet still have numbers?" << endl;
+    // cout << "\naSet:" << endl;
+    // cout << "size=" << aSet.size() << endl;
+    // for (int i : aSet) {
+    //     cout << i << ", ";
+    // }
+    // cout << "\nbSet:" << endl;
+    // cout << "size=" << bSet.size() << endl;
+    // for (int i : bSet) {
+    //     cout << i << ", ";
+    // }
+    // cout << endl;
+    // int a = 4;
+    // int b = 4;
+    // switch (a) {
+    //     case 0:
+    //         cout << "0" << endl;
+    //         break;
+    //     case 4:
+    //         cout << "4" << endl;
+    //         break;
+    //     case b:
+    //         cout << "b value" << endl;
+    //         break;
+    // }
+
+    std::string testStr;
+    char h = 'h';
+    char e = 'e';
+    char l = 'l';
+    char o = 'o';
+    testStr += h;
+    testStr += e;
+    testStr += l;
+    testStr += l;
+    testStr += o;
+    cout << "Test string = [" << testStr << "]" << endl;
     return 0;
 
 }

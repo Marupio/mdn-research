@@ -17,8 +17,6 @@ class Mdn2dRules : public Mdn2dBase {
     mutable std::unordered_set<Coord> m_polymorphicNodes;
     mutable long m_polymorphicNodes_event;
 
-    PolymorphicTree m_polymorphicTree;
-
 
 public:
 
@@ -28,7 +26,8 @@ public:
 
     // *** Constructors
 
-        Mdn2dRules(Mdn2dConfig config);
+        Mdn2dRules(Mdn2dConfig config=Mdn2dConfig::static_defaultConfig());
+
 
         // *** Rule of five
 
@@ -53,15 +52,34 @@ public:
             Carryover checkCarryover(const Coord& xy) const;
             private: Carryover locked_checkCarryover(const Coord& xy) const; public:
 
-            // Perform a manual carry-over at coordinate (x, y)
-            void carryover(const Coord& xy);
-            private: void locked_carryover(const Coord& xy, int carry = 0); public:
+            // Perform a manual carry-over at coordinate (x, y), returns affected coords as a set
+            std::unordered_set<Coord> carryover(const Coord& xy);
+            private:
+                // Internal function takes arg 'carry' to be added to root of carryover, xy
+                std::unordered_set<Coord> locked_carryover(const Coord& xy, int carry = 0);
+            public:
+
+            // Given set of suspicious coords, check if any need carryovers, and if so, do them
+            //  Returns set of coordinates that actually have changed
+            std::unordered_set<Coord> carryoverCleanup(const std::unordered_set<Coord>& coords);
+            private:
+                std::unordered_set<Coord> locked_carryoverCleanup(
+                    const std::unordered_set<Coord>& coords
+                );
+            public:
+
+            // Given all the non-zero coords, check if any need carryovers, and if so, do them
+            //  Returns set of coordinates that actually have changed
+            std::unordered_set<Coord> carryoverCleanupAll();
+            private: std::unordered_set<Coord> locked_carryoverCleanupAll(); public:
 
             // General shift interface
             void shift(int xDigits, int yDigits);
             void shift(const Coord& xy);
-            private: void locked_shift(const Coord& xy); public:
-            private: void locked_shift(int xDigits, int yDigits); public:
+            private:
+                void locked_shift(const Coord& xy);
+                void locked_shift(int xDigits, int yDigits);
+            public:
 
             // Shift all digits in a direction (R=+X, L=-X, U=+Y, D=-Y)
             void shiftRight(int nDigits);
@@ -81,19 +99,22 @@ public:
             const std::unordered_set<Coord>& getPolymorphicNodes() const;
             private: const std::unordered_set<Coord>& locked_getPolymorphicNodes() const; public:
 
-            // Take on polymorphism state x0 (all p-nodes are negative)
-            void polymorphism_x0();
-            private: void locked_polymorphism_x0(); public:
-
-            // Take on polymorphism state y0 (all p-nodes are positive)
-            void polymorphism_y0();
-            private: void locked_polymorphism_y0(); public:
+            // // Take on polymorphism state x0 (all p-nodes are negative)
+            // void polymorphism_x0();
+            // private: void locked_polymorphism_x0(); public:
+            //
+            // // Take on polymorphism state y0 (all p-nodes are positive)
+            // void polymorphism_y0();
+            // private: void locked_polymorphism_y0(); public:
 
 
         // *** Other functionality
 
 
-        // Equality comparison.
+        // Equality comparison
+        //  The rules layer brings carryovers, allowing us to find equivalence between different
+        //  states of polymorphism.  But for now, equivalence only works with a default sign
+        //  convention (Mdn2dConfig)
         bool operator==(const Mdn2dRules& rhs) const;
 
         // Inequality comparison.

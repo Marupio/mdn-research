@@ -39,6 +39,8 @@ mdn::Mdn2dBase::Mdn2dBase(const Mdn2dBase& other):
     m_raw = other.m_raw;
     m_xIndex = other.m_xIndex;
     m_yIndex = other.m_yIndex;
+    m_index = other.m_index;
+    m_index = other.m_index;
     m_boundsMin = other.m_boundsMin;
     m_boundsMax = other.m_boundsMax;
 }
@@ -56,6 +58,7 @@ mdn::Mdn2dBase& mdn::Mdn2dBase::operator=(const Mdn2dBase& other) {
         m_raw = other.m_raw;
         m_xIndex = other.m_xIndex;
         m_yIndex = other.m_yIndex;
+        m_index = other.m_index;
         m_boundsMin = other.m_boundsMin;
         m_boundsMax = other.m_boundsMax;
         modified();
@@ -72,6 +75,7 @@ mdn::Mdn2dBase::Mdn2dBase(Mdn2dBase&& other) noexcept :
     m_raw = std::move(other.m_raw);
     m_xIndex = std::move(other.m_xIndex);
     m_yIndex = std::move(other.m_yIndex);
+    m_index = std::move(other.m_index);
     m_boundsMin = other.m_boundsMin;
     m_boundsMax = other.m_boundsMax;
 }
@@ -89,6 +93,7 @@ mdn::Mdn2dBase& mdn::Mdn2dBase::operator=(Mdn2dBase&& other) noexcept {
         m_raw = std::move(other.m_raw);
         m_xIndex = std::move(other.m_xIndex);
         m_yIndex = std::move(other.m_yIndex);
+        m_index = std::move(other.m_index);
         m_boundsMin = other.m_boundsMin;
         m_boundsMax = other.m_boundsMax;
         modified();
@@ -230,6 +235,7 @@ bool mdn::Mdn2dBase::locked_setToZero(const Coord& xy) {
     std::unordered_set<Coord>& coordsAlongY(yit->second);
     coordsAlongX.erase(xy);
     coordsAlongY.erase(xy);
+    m_index.erase(xy);
     bool checkBounds = false;
     if (coordsAlongX.size() == 0) {
         m_xIndex.erase(xit);
@@ -267,6 +273,9 @@ int mdn::Mdn2dBase::locked_setToZero(const std::unordered_set<Coord>& purgeSet) 
     for (const Coord& coord : purgeSet) {
         int x = coord.x();
         int y = coord.y();
+
+        // Erase coord from index
+        m_index.erase(coord);
 
         // Erase coord from x index
         auto xIt = m_xIndex.find(x);
@@ -623,10 +632,12 @@ void mdn::Mdn2dBase::internal_clearMetadata() const {
 
     m_xIndex.clear();
     m_yIndex.clear();
+    m_index.clear();
 }
 
 
 void mdn::Mdn2dBase::internal_insertAddress(const Coord& xy) const {
+    m_index.insert(xy);
     auto xit = m_xIndex.find(xy.x());
     if (xit == m_xIndex.end()) {
         m_xIndex.emplace(xy.x(), std::unordered_set<Coord>());

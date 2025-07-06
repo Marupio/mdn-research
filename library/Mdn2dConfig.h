@@ -2,6 +2,7 @@
 
 #include <sstream>
 
+#include "Constants.h"
 #include "Digit.h"
 #include "Fraxis.h"
 #include "MdnException.h"
@@ -32,7 +33,12 @@ class Mdn2dConfig {
     int m_epsilon;
 
     // Default sign convention for polymorphic numbers
-    SignConvention m_defaultSignConvention;
+    SignConvention m_signConvention;
+
+    // Maximum number of outerloops allowed in attempting to reach polymorphic stability
+    //  That is, all required carryovers are done, and polymorphic carryovers meet the default sign
+    //  convention.  Use -1 for infinite loops allowed.
+    int m_maxCarryoverIters;
 
     // Affects 1) fractional addition, 2) divide direction
     Fraxis m_defaultFraxis;
@@ -50,13 +56,15 @@ public:
     Mdn2dConfig(
         int baseIn=10,
         int maxSpanIn=16,
-        SignConvention defaultSignConventionIn=SignConvention::Positive,
+        SignConvention signConventionIn=SignConvention::Positive,
+        int maxCarryoverItersIn = 20,
         Fraxis defaultFraxisIn=Fraxis::X
     ) :
         m_base(baseIn),
         m_precision(maxSpanIn),
         m_epsilon(static_calculateEpsilon(m_precision, m_base)),
-        m_defaultSignConvention(defaultSignConventionIn),
+        m_signConvention(signConventionIn),
+        m_maxCarryoverIters(maxCarryoverItersIn),
         m_defaultFraxis(defaultFraxisIn)
     {}
 
@@ -85,10 +93,10 @@ public:
     // Return the derived epsilon value
     int epsilon() const { return m_epsilon; }
 
-    SignConvention defaultSignConvention() const { return m_defaultSignConvention; }
-    void setDefaultSignConvention(int newVal) {
+    SignConvention signConvention() const { return m_signConvention; }
+    void setSignConvention(int newVal) {
         if (newVal >= 0 && newVal < SignConventionNames.size()) {
-            m_defaultSignConvention = static_cast<SignConvention>(newVal);
+            m_signConvention = static_cast<SignConvention>(newVal);
         } else {
             throw std::invalid_argument(
                 "SignConvention must be a value between 0 and " +
@@ -97,11 +105,20 @@ public:
             );
         }
     }
-    void setDefaultSignConvention(std::string newName) {
-        m_defaultSignConvention = NameToSignConvention(newName);
+    void setSignConvention(std::string newName) {
+        m_signConvention = NameToSignConvention(newName);
     }
-    void setDefaultSignConvention(SignConvention signConventionIn) {
-        m_defaultSignConvention = signConventionIn;
+    void setSignConvention(SignConvention signConventionIn) {
+        m_signConvention = signConventionIn;
+    }
+
+    int maxCarryoverIters() { return m_maxCarryoverIters; }
+    void setMaxCarryoverIters(int newVal) {
+        if (newVal < 0) {
+            newVal = constants::intMax;
+        }
+        m_maxCarryoverIters = newVal;
+
     }
 
     Fraxis defaultFraxis() const { return m_defaultFraxis; }
@@ -124,9 +141,9 @@ public:
             (m_base >= 2 && m_base <= 32) &&
             (m_precision > 0) &&
             (
-                (m_defaultSignConvention == SignConvention::Positive) ||
-                (m_defaultSignConvention == SignConvention::Negative) ||
-                (m_defaultSignConvention == SignConvention::Default)
+                (m_signConvention == SignConvention::Positive) ||
+                (m_signConvention == SignConvention::Negative) ||
+                (m_signConvention == SignConvention::Default)
             ) &&
             ((m_defaultFraxis == Fraxis::X) || (m_defaultFraxis == Fraxis::Y))
         );
@@ -139,6 +156,9 @@ public:
             oss << "Mdn2dConfig has an invalid setting:" << std::endl;
             oss << "    base = " << m_base << ", expecting be 2 .. 32" << std::endl;
             oss << "    maxSpan = " << m_precision << ", must be > 0" << std::endl;
+            oss << "    signConvention = " << SignConventionToName(m_signConvention);
+            oss << ", expecting: 'Default', 'Positive', or 'Negative'" << std::endl;
+            oss << "    maxCarryoverIters = " << m_maxCarryoverIters << std::endl;
             oss << "    defaultFraxis = " << FraxisToName(m_defaultFraxis)
                 << ", expecting 'X' or 'Y'";
             throw std::invalid_argument(oss.str());
@@ -151,17 +171,38 @@ public:
         return oss.str();
     }
 
-    // string format: (b:10, p:16, f:X)
+    // string format: (b:10, p:16, s:Positive, c:20, f:X)
     friend std::ostream& operator<<(std::ostream& os, const Mdn2dConfig& c) {
-        return os << "(b:" << c.m_base << ", p:" << c.m_precision << ", f:"
-            << FraxisToName(c.m_defaultFraxis) << ")";
+        return os
+            << "("
+                << "b:" << c.m_base
+                << ", p:" << c.m_precision
+                << ", s:" << SignConventionToName(c.m_signConvention)
+                << ", c:" << c.m_maxCarryoverIters
+                << ", f:" << FraxisToName(c.m_defaultFraxis)
+            << ")";
     }
+
+
 
     friend std::istream& operator>>(std::istream& is, Mdn2dConfig& c) {
         char lparen, letter, colon, comma, rparen;
         std::string fname;
+        std::string sname;
+        // (b:10, p:16, s:Positive, c:20, f:X)
+        // Reading [(b:10]
         is >> lparen >> letter >> colon >> c.m_base;
+        // Reading [, p:16]
         is >> comma >> letter >> colon >> c.m_precision;
+        // Reading [, s:Positive,]
+        while (letter != ',') {
+            is >> letter;
+            sname += letter;
+        }
+        c.m_signConvention = NameToSignConvention(sname);
+        //Reading [ c:20]
+        is >> letter >> colon >> c.m_maxCarryoverIters;
+        //Reading [, f:X])
         while (letter != ')') {
             is >> letter;
             fname += letter;
@@ -169,6 +210,25 @@ public:
         c.m_defaultFraxis = NameToFraxis(fname);
         return is;
     }
+
+    // SignConvention m_signConvention;
+    // int m_maxCarryoverIters;
+    // Fraxis m_defaultFraxis;
+
+        // From the perspective of an Mdn2d, look for compatibility.  The data that matters are:
+        //  base, precision, sign convention
+        bool operator==(const Mdn2dConfig& rhs) const {
+            return (
+                rhs.m_base == m_base &&
+                rhs.m_precision == m_precision &&
+                rhs.m_signConvention == m_signConvention
+            );
+        }
+
+        // Inequality comparison.
+        bool operator!=(const Mdn2dConfig& rhs) const {
+            return !(rhs == *this);
+        }
 
 };
 

@@ -1,4 +1,5 @@
 #pragma once
+
 #include <map>
 #include <shared_mutex>
 #include <string>
@@ -17,6 +18,8 @@ class Mdn2d;
 //  * bounds metadata
 class Mdn2dBase {
 
+protected:
+
     // Configuration settings for this Mdn2dBase
     Mdn2dConfig m_config;
 
@@ -33,6 +36,8 @@ class Mdn2dBase {
     mutable std::map<int, std::unordered_set<Coord>> m_xIndex;
     mutable std::map<int, std::unordered_set<Coord>> m_yIndex;
 
+    // Full index
+    mutable std::unordered_set<Coord> m_index;
 
     // *** Metadata
 
