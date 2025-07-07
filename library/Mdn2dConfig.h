@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <sstream>
 
 #include "Constants.h"
@@ -18,6 +19,11 @@ class Mdn2dConfig {
     static double static_calculateEpsilon(int precisionIn, int baseIn) {
         return pow((1.0 / baseIn), (precisionIn + 1));
     }
+
+    // If a message exists here, the associated Mdn2d is invalid for the reason contained in the
+    // string.  Purpose of this is to prevent throwing during move ctor, so normal operation can be
+    // optimised. Edge cases that invalid the number show up here.
+    mutable std::string m_invalidReason;
 
     // Numerical base, beyond which no digit's magnitude can go
     int m_base;
@@ -67,6 +73,19 @@ public:
         m_maxCarryoverIters(maxCarryoverItersIn),
         m_defaultFraxis(defaultFraxisIn)
     {}
+
+    // Returns true if the number became invalid during a noexcept function
+    bool valid() { return m_invalidReason.empty(); }
+
+    // Returns false if the number became invalid during a noexcept function
+    bool invalid() { return !valid(); }
+
+    // Returns the reason this number became invalid during a noexcept function
+    std::string invalidReason() { return m_invalidReason; }
+
+    // Set this number to invalid - required to preserve nexcept optimisations, but also handle edge
+    // cases that would have thrown
+    void setInvalid(const std::string& reason) { m_invalidReason = reason; }
 
     // Return the base
     int base() const { return m_base; }

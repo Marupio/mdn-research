@@ -67,6 +67,7 @@ mdn::Mdn2dRules& mdn::Mdn2dRules::operator=(const Mdn2dRules& other) {
             m_polymorphicNodes_event = m_event;
         }
     }
+    return *this;
 }
 
 
@@ -91,6 +92,7 @@ mdn::Mdn2dRules& mdn::Mdn2dRules::operator=(Mdn2dRules&& other) noexcept {
             m_polymorphicNodes_event = m_event;
         }
     }
+    return *this;
 }
 
 
@@ -165,10 +167,11 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryover(const Coord& xy, int carry) {
 
 mdn::CoordSet mdn::Mdn2dRules::carryoverCleanup(const CoordSet& coords) {
     auto lock = lockWriteable();
-    CoordSet ret = carryoverCleanup(coords);
+    CoordSet changed = carryoverCleanup(coords);
     if (coords.size()) {
         modified();
     }
+    return changed;
 }
 
 
@@ -449,10 +452,10 @@ void mdn::Mdn2dRules::internal_ncarryover(const Coord& xy) {
     Coord xy_y = xy.copyTranslateY(1);
     Digit p = locked_getValue(xy);
     #ifdef MDN_DEBUG
-        if (abs(p) < m_dbase) {
+        if (abs(p) < m_config.dbase()) {
             std::ostringstream oss;
             oss << "Invalid carryover requested at " << xy << ": value (" << p << ") must exceed "
-                << "base (" << m_dbase << ")";
+                << "base (" << m_config.dbase() << ")";
             throw IllegalOperation(oss.str());
         }
     #endif

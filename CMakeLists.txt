@@ -30,6 +30,6 @@ endif()
 # Top-level CMakeLists.txt
 
 # Choose which one to include by commenting out the other
-# add_subdirectory(library)   # Builds the MDN library
-# add_subdirectory(gui)       # Builds the GUI application
+add_subdirectory(library)   # Builds the MDN library
 add_subdirectory(sandbox)   # Builds the sandbox tester
+# add_subdirectory(gui)       # Builds the GUI application

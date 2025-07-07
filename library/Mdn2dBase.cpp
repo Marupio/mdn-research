@@ -96,7 +96,14 @@ mdn::Mdn2dBase& mdn::Mdn2dBase::operator=(Mdn2dBase&& other) noexcept {
         auto lockOther = other.lockReadOnly();
 
         if (m_config.base() != other.m_config.base()) {
-            throw BaseMismatch(m_config.base(), other.m_config.base());
+            m_config.setInvalid(
+                "Base mismatch during move ctor (" + std::to_string(m_config.base()) +
+            " != " + std::to_string(other.m_config.base()) + ")"
+            );
+            std::ostringstream oss;
+            oss << "Error: Base mismatch, cannot set these equal, (base " << m_config.base();
+            oss << " != " << other.m_config.base() << ")" << std::endl;
+            Logger::instance().error(oss.str());
         }
         m_config.setPrecision(other.m_config.precision());
         m_raw = std::move(other.m_raw);
@@ -135,6 +142,7 @@ std::vector<mdn::Digit> mdn::Mdn2dBase::getRow(int y) const {
 std::vector<mdn::Digit> mdn::Mdn2dBase::locked_getRow(int y) const {
     std::vector<Digit> digits;
     locked_getRow(y, digits);
+    return digits;
 }
 
 
@@ -170,6 +178,7 @@ std::vector<mdn::Digit> mdn::Mdn2dBase::getCol(int x) const {
 std::vector<mdn::Digit> mdn::Mdn2dBase::locked_getCol(int x) const {
     std::vector<Digit> digits;
     locked_getCol(x, digits);
+    return digits;
 }
 
 
@@ -576,6 +585,7 @@ int mdn::Mdn2dBase::locked_setPrecision(int newPrecision) {
     {
         return internal_purgeExcessDigits();
     }
+    return 0;
 }
 
 
@@ -714,7 +724,7 @@ void mdn::Mdn2dBase::internal_insertAddress(const Coord& xy) const {
 int mdn::Mdn2dBase::internal_purgeExcessDigits() {
     if (!locked_hasBounds()) {
         // No digits to bother keeping
-        return;
+        return 0;
     }
 
     int precision = m_config.precision();
