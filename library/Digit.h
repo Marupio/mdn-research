@@ -1,21 +1,16 @@
-#ifndef DIGIT_H
-#define DIGIT_H
+#pragma once
 
-// #include <stdexcept>
-// #include <sstream>
 #include <cstdint>
 
 namespace mdn {
 
 using Digit = int8_t;
 
-enum class PrecisionStatus {
-    Below,
-    Inside,
-    Above
-};
-
-
+// enum class PrecisionStatus {
+//     Below,
+//     Inside,
+//     Above
+// };
 // enum class DigitClass {
 //     Unknown,
 //     NonZero,
@@ -62,5 +57,3 @@ enum class PrecisionStatus {
 
 
 } // end namespace mdn
-
-#endif // DIGIT_H

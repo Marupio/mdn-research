@@ -6,7 +6,9 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "CoordSet.h"
 #include "Mdn2dConfig.h"
+#include "PrecisionStatus.h"
 
 namespace mdn {
 
@@ -33,11 +35,11 @@ protected:
     std::unordered_map<Coord, Digit> m_raw;
 
     // Addressing
-    mutable std::map<int, std::unordered_set<Coord>> m_xIndex;
-    mutable std::map<int, std::unordered_set<Coord>> m_yIndex;
+    mutable std::map<int, CoordSet> m_xIndex;
+    mutable std::map<int, CoordSet> m_yIndex;
 
     // Full index
-    mutable std::unordered_set<Coord> m_index;
+    mutable CoordSet m_index;
 
     // *** Metadata
 
@@ -62,11 +64,12 @@ public:
     static Mdn2d Duplicate(const Mdn2d& other);
 
 
-
     // *** Constructors
 
         // Construct from a configuration, or default
-        Mdn2dBase(Mdn2dConfig config=Mdn2dConfig::static_defaultConfig());
+        Mdn2dBase();
+
+        Mdn2dBase(Mdn2dConfig config);
 
 
         // *** Rule of five
@@ -118,20 +121,31 @@ public:
             void clear();
             protected: void locked_clear(); public:
 
-            // Set the value at xy to zero, returns false only if xy is below precision
+            // Set the value at xy to zero
+            //  Returns true if carryover status might change:
+            //      * Value goes from zero to non-zero
+            //      * Value changes sign
             bool setToZero(const Coord& xy);
             protected: bool locked_setToZero(const Coord& xy); public:
 
-            // Set the value at coords to zero, returns number of digits changed
-            int setToZero(const std::unordered_set<Coord>& coords);
-            protected: int locked_setToZero(const std::unordered_set<Coord>& purgeSet); public:
+            // Set the value at coords to zero, returns subset containing those whose values changed
+            CoordSet setToZero(const CoordSet& coords);
+            protected: CoordSet locked_setToZero(const CoordSet& purgeSet); public:
 
-            // Changes the value at xy, returns false only if xy is confirmed below precision
+            // Changes the value at xy
+            //  Returns true if carryover status might change:
+            //      * Value goes from zero to non-zero
+            //      * Value changes sign
             bool setValue(const Coord& xy, Digit value);
             bool setValue(const Coord& xy, int value);
             bool setValue(const Coord& xy, long value);
             bool setValue(const Coord& xy, long long value);
-            protected: bool locked_setValue(const Coord& xy, Digit value); public:
+            protected:
+                bool locked_setValue(const Coord& xy, Digit value);
+                bool locked_setValue(const Coord& xy, int value);
+                bool locked_setValue(const Coord& xy, long value);
+                bool locked_setValue(const Coord& xy, long long value);
+            public:
 
 
         // *** Conversion / display
@@ -205,11 +219,23 @@ protected:
             // Clears all addressing and bounds data
             virtual void internal_clearMetadata() const;
 
+            // Sets value at xy without checking in range of base
+            //  Returns true if carryover status might change:
+            //      * Value goes from zero to non-zero
+            //      * Value changes sign
+            bool internal_setValueRaw(const Coord& xy, Digit value);
+
             // Add xy as a non-zero number position to the metadata
             void internal_insertAddress(const Coord& xy) const;
 
             // Checks if value is within +/- (m_base-1).  If not, throws or returns false.
-            bool internal_checkDigit(const Coord& xy, Digit value) const;
+            template <class Type>
+            void internal_checkDigit(const Coord& xy, Type value) const {
+                Digit dbase = m_config.dbase();
+                if (value >= dbase || value <= -dbase) {
+                    throw OutOfRange(xy, static_cast<int>(value), dbase);
+                }
+            }
 
             // Purge any digits that exceed the precision window, return the number of purged digits
             int internal_purgeExcessDigits();

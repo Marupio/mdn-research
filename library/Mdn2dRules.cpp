@@ -41,7 +41,12 @@ mdn::Carryover mdn::Mdn2dRules::static_checkCarryover(Digit p, Digit x, Digit y,
 }
 
 
-mdn::Mdn2dRules::Mdn2dRules(Mdn2dConfig config=Mdn2dConfig::static_defaultConfig()) :
+mdn::Mdn2dRules::Mdn2dRules() :
+    Mdn2dBase()
+{}
+
+
+mdn::Mdn2dRules::Mdn2dRules(Mdn2dConfig config) :
     Mdn2dBase(config)
 {}
 
@@ -105,15 +110,14 @@ mdn::Carryover mdn::Mdn2dRules::locked_checkCarryover(const Coord& xy) const {
 }
 
 
-std::unordered_set<mdn::Coord> mdn::Mdn2dRules::carryover(const Coord& xy)
-{
+mdn::CoordSet mdn::Mdn2dRules::carryover(const Coord& xy) {
     auto lock = lockWriteable();
     modified();
     return locked_carryover(xy);
 }
 
 
-std::unordered_set<mdn::Coord> mdn::Mdn2dRules::locked_carryover(const Coord& xy, int carry) {
+mdn::CoordSet mdn::Mdn2dRules::locked_carryover(const Coord& xy, int carry) {
     Coord xy_x = xy.copyTranslateX(1);
     Coord xy_y = xy.copyTranslateY(1);
     Digit p = locked_getValue(xy);
@@ -140,7 +144,7 @@ std::unordered_set<mdn::Coord> mdn::Mdn2dRules::locked_carryover(const Coord& xy
     ix += nCarry;
 
     int base(m_config.base());
-    std::unordered_set<Coord> affectedCoords({xy, xy_x, xy_y});
+    CoordSet affectedCoords({xy, xy_x, xy_y});
     locked_setValue(xy, ip);
 
     // Check for additional carryovers
@@ -159,22 +163,21 @@ std::unordered_set<mdn::Coord> mdn::Mdn2dRules::locked_carryover(const Coord& xy
 }
 
 
-std::unordered_set<mdn::Coord> mdn::Mdn2dRules::carryoverCleanup(
-    const std::unordered_set<Coord>& coords
-) {
+mdn::CoordSet mdn::Mdn2dRules::carryoverCleanup(const CoordSet& coords) {
     auto lock = lockWriteable();
-    std::unordered_set<Coord> ret = carryoverCleanup(coords);
+    CoordSet ret = carryoverCleanup(coords);
     if (coords.size()) {
         modified();
     }
 }
 
 
-std::unordered_set<mdn::Coord> mdn::Mdn2dRules::locked_carryoverCleanup(
-    const std::unordered_set<mdn::Coord>& coords
-) {
-    std::unordered_set<Coord> affectedCoords;
-    std::unordered_set<Coord> buffer;
+mdn::CoordSet mdn::Mdn2dRules::locked_carryoverCleanup(const CoordSet& coords) {
+    CoordSet affectedCoords;
+    if (coords.empty()) {
+        return affectedCoords;
+    }
+    CoordSet buffer;
 
     Carryover wrongSign = Carryover::Required;
     if (m_config.signConvention() == SignConvention::Positive) {
@@ -183,7 +186,7 @@ std::unordered_set<mdn::Coord> mdn::Mdn2dRules::locked_carryoverCleanup(
         wrongSign = Carryover::OptionalPositive;
     }
 
-    std::unordered_set<Coord> workingSet(coords);
+    CoordSet workingSet(coords);
 
     bool achievedGreatness = false;
     for (int i = 0; i < m_config.maxCarryoverIters(); ++i) {
@@ -213,13 +216,13 @@ std::unordered_set<mdn::Coord> mdn::Mdn2dRules::locked_carryoverCleanup(
 }
 
 
-std::unordered_set<mdn::Coord> mdn::Mdn2dRules::carryoverCleanupAll() {
+mdn::CoordSet mdn::Mdn2dRules::carryoverCleanupAll() {
     auto lock = lockWriteable();
     return locked_carryoverCleanupAll();
 }
 
 
-std::unordered_set<mdn::Coord> mdn::Mdn2dRules::locked_carryoverCleanupAll() {
+mdn::CoordSet mdn::Mdn2dRules::locked_carryoverCleanupAll() {
     return locked_carryoverCleanup(m_index);
 }
 
@@ -272,7 +275,7 @@ void mdn::Mdn2dRules::locked_shiftRight(int nDigits) {
         }
     #endif
     for (auto it = m_xIndex.rbegin(); it != m_xIndex.rend(); ++it) {
-        const std::unordered_set<Coord>& coords = it->second;
+        const CoordSet& coords = it->second;
         for (const Coord& coord : coords) {
             Digit d = m_raw[coord];
             m_raw.erase(coord);
@@ -297,7 +300,7 @@ void mdn::Mdn2dRules::locked_shiftLeft(int nDigits) {
         }
     #endif
     for (auto it = m_xIndex.begin(); it != m_xIndex.end(); ++it) {
-        const std::unordered_set<Coord>& coords = it->second;
+        const CoordSet& coords = it->second;
         for (const Coord& coord : coords) {
             Digit d = m_raw[coord];
             m_raw.erase(coord);
@@ -322,7 +325,7 @@ void mdn::Mdn2dRules::locked_shiftUp(int nDigits) {
         }
     #endif
     for (auto it = m_yIndex.rbegin(); it != m_yIndex.rend(); ++it) {
-        const std::unordered_set<Coord>& coords = it->second;
+        const CoordSet& coords = it->second;
         for (const Coord& coord : coords) {
             Digit d = m_raw[coord];
             m_raw.erase(coord);
@@ -347,7 +350,7 @@ void mdn::Mdn2dRules::locked_shiftDown(int nDigits) {
         }
     #endif
     for (auto it = m_yIndex.begin(); it != m_yIndex.end(); ++it) {
-        const std::unordered_set<Coord>& coords = it->second;
+        const CoordSet& coords = it->second;
         for (const Coord& coord : coords) {
             Digit d = m_raw[coord];
             m_raw.erase(coord);
@@ -375,140 +378,17 @@ void mdn::Mdn2dRules::locked_transpose() {
 }
 
 
-const std::unordered_set<mdn::Coord>& mdn::Mdn2dRules::getPolymorphicNodes() const {
+const mdn::CoordSet& mdn::Mdn2dRules::getPolymorphicNodes() const {
     auto lock = ReadOnlyLock();
     return locked_getPolymorphicNodes();
 }
 
 
-const std::unordered_set<mdn::Coord>& mdn::Mdn2dRules::locked_getPolymorphicNodes() const {
+const mdn::CoordSet& mdn::Mdn2dRules::locked_getPolymorphicNodes() const {
     if (m_polymorphicNodes_event != m_event) {
         internal_polymorphicScan();
     }
     return m_polymorphicNodes;
-}
-
-
-// void mdn::Mdn2dRules::polymorphism_x0() {
-//     auto lock = lockWriteable();
-//     locked_polymorphism_x0();
-// }
-
-
-// void mdn::Mdn2dRules::locked_polymorphism_x0() {
-//     const std::unordered_set<Coord>& pn = locked_getPolymorphicNodes();
-//     for (const Coord& xy : pn) {
-//         Digit p = locked_getValue(xy);
-//         if (p > 0) {
-//             internal_oneCarryover(xy);
-//         }
-//     }
-// }
-
-
-// void mdn::Mdn2dRules::polymorphism_y0() {
-//     auto lock = lockWriteable();
-//     locked_polymorphism_y0();
-// }
-
-
-// void mdn::Mdn2dRules::locked_polymorphism_y0() {
-//     const std::unordered_set<Coord>& pn = locked_getPolymorphicNodes();
-//     for (const Coord& xy : pn) {
-//         Digit p = locked_getValue(xy);
-//         if (p < 0) {
-//             internal_oneCarryover(xy);
-//         }
-//     }
-// }
-
-
-bool mdn::Mdn2dRules::operator==(const Mdn2dRules& rhs) const {
-    auto lock = lockReadOnly();
-    auto lockRhs = rhs.lockReadOnly();
-    if (rhs.m_config != m_config) {
-        return false;
-    }
-    if (m_raw == rhs.m_raw) {
-        return true;
-    }
-    if (
-        m_config.signConvention == SignConvention::Positive ||
-        m_config.signConvention == SignConvention::Negative
-    ) {
-        return false;
-    }
-    Mdn2d dlhs = Duplicate(*this);
-    Mdn2d drhs = Duplicate(rhs);
-    auto dlhsLock = dlhs.lockWriteable();
-    auto drhsLock = drhs.lockWriteable();
-    dlhs.m_config.setSignConvention(SignConvention::Positive);
-    drhs.m_config.setSignConvention(SignConvention::Positive);
-    dlhs.locked_carryoverCleanupAll();
-    drhs.locked_carryoverCleanupAll();
-    return dlhs.m_raw == drhs.m_raw;
-}
-
-
-bool mdn::Mdn2dRules::operator!=(const Mdn2dRules& rhs) const {
-    return !(*this == rhs);
-}
-
-
-void mdn::Mdn2dRules::internal_updatePolymorphism() {
-    m_polymorphicNodes.clear();
-    m_polymorphicNodes_event = -1;
-    for (const auto& [seedXy, digit] : m_raw) {
-        switch(locked_checkCarryover(seedXy) {
-            case Carryover::Required:
-                locked_carryover(seedXy);
-                required.push_back(seedXy);
-                break;
-            case Carryover::Optional:
-                m_polymorphicNodes.insert(seedXy);
-                break;
-            default:
-                break;
-        }
-    }
-}
-
-
-void mdn::Mdn2dRules::internal_polymorphicScanAndFix() {
-    std::vector<Coord> required;
-    int maxCarryoverScans = 10;
-    bool failed = true;
-    for (int i = 0; i < maxCarryoverScans; ++i) {
-        required.clear();
-        m_polymorphicNodes.clear();
-        for (const auto& [xy, digit] : m_raw) {
-            switch(locked_checkCarryover(xy)) {
-                case Carryover::Required:
-                    required.push_back(xy);
-                    break;
-                case Carryover::Optional:
-                    m_polymorphicNodes.insert(xy);
-                    break;
-                default:
-                    break;
-            }
-        }
-        if (required.size()) {
-            for (const Coord& xy : required) {
-                internal_oneCarryover(xy);
-            }
-        } else {
-            failed = false;
-            break;
-        }
-    }
-    if (failed) {
-        std::ostringstream oss;
-        oss << "Internal error: carryover scans did not stabilise after " << maxCarryoverScans;
-        oss << " attempts." << std::endl;
-        Logger::instance().warn(oss.str());
-    }
-    m_polymorphicNodes_event = m_event;
 }
 
 
@@ -520,7 +400,8 @@ void mdn::Mdn2dRules::internal_polymorphicScan() const {
             case Carryover::Required:
                 ++nRequired;
                 break;
-            case Carryover::Optional:
+            case Carryover::OptionalPositive:
+            case Carryover::OptionalNegative:
                 m_polymorphicNodes.insert(xy);
                 break;
             default:
@@ -529,30 +410,8 @@ void mdn::Mdn2dRules::internal_polymorphicScan() const {
     }
     if (nRequired) {
         std::ostringstream oss;
-        oss << "Internal error: found " << nRequired << " required carryovers during scan." << endl;
-        oss << "MDN is in an invalid state." << std::endl;
-        Logger::instance().warn(oss.str());
-    }
-    m_polymorphicNodes_event = m_event;
-}
-
-
-void mdn::Mdn2dRules::internal_makePolymorphicTree() {
-    m_polymorphicTree.clear();
-    for (const auto& [xy, digit] : m_raw) {
-        switch(locked_checkCarryover(xy)) {
-            case Carryover::Required:
-                throw InvalidState("Found required carryover at " +  xy.to_string());
-            case Carryover::Optional:
-                m_polymorphicNodes.insert(xy);
-                break;
-            default:
-                break;
-        }
-    }
-    if (nRequired) {
-        std::ostringstream oss;
-        oss << "Internal error: found " << nRequired << " required carryovers during scan." << endl;
+        oss << "Internal error: found " << nRequired << " required carryovers during scan."
+            << std::endl;
         oss << "MDN is in an invalid state." << std::endl;
         Logger::instance().warn(oss.str());
     }
@@ -569,13 +428,13 @@ void mdn::Mdn2dRules::internal_oneCarryover(const Coord& xy) {
     int ip = static_cast<int>(p);
     int ix = static_cast<int>(x);
     int iy = static_cast<int>(y);
-    int nCarry = ip/m_base;
+    int nCarry = ip/m_config.base();
     if (ip > 0) {
-        ip -= m_base;
+        ip -= m_config.base();
         iy += 1;
         ix += 1;
     } else {
-        ip += m_base;
+        ip += m_config.base();
         iy -= 1;
         ix -= 1;
     }
@@ -602,8 +461,8 @@ void mdn::Mdn2dRules::internal_ncarryover(const Coord& xy) {
     int ip = static_cast<int>(p);
     int ix = static_cast<int>(x);
     int iy = static_cast<int>(y);
-    int nCarry = ip/m_base;
-    ip -= nCarry * m_base;
+    int nCarry = ip/m_config.base();
+    ip -= nCarry * m_config.base();
     iy += nCarry;
     ix += nCarry;
 
@@ -613,7 +472,7 @@ void mdn::Mdn2dRules::internal_ncarryover(const Coord& xy) {
 }
 
 
-void mdn::Mdn2dRules::internal_clearMetadata() const override {
+void mdn::Mdn2dRules::internal_clearMetadata() const {
     m_polymorphicNodes.clear();
     m_polymorphicNodes_event = -1;
     Mdn2dBase::internal_clearMetadata();

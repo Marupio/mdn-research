@@ -1,4 +1,3 @@
-#include "Mdn2d.h"
 #include "Mdn2dBase.h"
 
 #include <cassert>
@@ -8,6 +7,7 @@
 
 #include "Constants.h"
 #include "Logger.h"
+#include "Mdn2d.h"
 #include "MdnException.h"
 #include "Tools.h"
 
@@ -20,6 +20,15 @@ mdn::Mdn2d mdn::Mdn2dBase::NewInstance(Mdn2dConfig config) {
 mdn::Mdn2d mdn::Mdn2dBase::Duplicate(const Mdn2d& other) {
     return Mdn2d(other);
 }
+
+
+mdn::Mdn2dBase::Mdn2dBase()
+:
+    m_config(Mdn2dConfig::static_defaultConfig()),
+    m_boundsMin({constants::intMax, constants::intMax}),
+    m_boundsMax({constants::intMin, constants::intMin}),
+    m_event(0)
+{}
 
 
 mdn::Mdn2dBase::Mdn2dBase(Mdn2dConfig config)
@@ -144,7 +153,7 @@ void mdn::Mdn2dBase::locked_getRow(int y, std::vector<Digit>& digits) const {
     auto it = m_yIndex.find(y);
     if (it != m_yIndex.end()) {
         // There are non-zero entries on this row, fill them in
-        const std::unordered_set<Coord>& coords = it->second;
+        const CoordSet& coords = it->second;
         for (const Coord& coord : coords) {
             digits[coord.x()-xStart] = m_raw.at(coord);
         }
@@ -179,7 +188,7 @@ void mdn::Mdn2dBase::locked_getCol(int x, std::vector<Digit>& digits) const {
     auto it = m_xIndex.find(x);
     if (it != m_xIndex.end()) {
         // There are non-zero entries on this row, fill them in
-        const std::unordered_set<Coord>& coords = it->second;
+        const CoordSet& coords = it->second;
         for (const Coord& coord : coords) {
             digits[coord.x()-yStart] = m_raw.at(coord);
         }
@@ -231,8 +240,8 @@ bool mdn::Mdn2dBase::locked_setToZero(const Coord& xy) {
     #endif // MDN_DEBUG
     m_raw.erase(it);
 
-    std::unordered_set<Coord>& coordsAlongX(xit->second);
-    std::unordered_set<Coord>& coordsAlongY(yit->second);
+    CoordSet& coordsAlongX(xit->second);
+    CoordSet& coordsAlongY(yit->second);
     coordsAlongX.erase(xy);
     coordsAlongY.erase(xy);
     m_index.erase(xy);
@@ -254,19 +263,20 @@ bool mdn::Mdn2dBase::locked_setToZero(const Coord& xy) {
 }
 
 
-int mdn::Mdn2dBase::setToZero(const std::unordered_set<Coord>& coords) {
+mdn::CoordSet mdn::Mdn2dBase::setToZero(const CoordSet& coords) {
     auto lock = lockWriteable();
     modified();
     return locked_setToZero(coords);
 }
 
 
-int mdn::Mdn2dBase::locked_setToZero(const std::unordered_set<Coord>& purgeSet) {
-    int nZeroed = 0;
-
+mdn::CoordSet mdn::Mdn2dBase::locked_setToZero(const CoordSet& purgeSet) {
+    CoordSet changed;
     // Step 1: Erase from m_raw
     for (const Coord& coord : purgeSet) {
-        nZeroed += m_raw.erase(coord);
+        if (m_raw.erase(coord)) {
+            changed.insert(coord);
+        }
     }
 
     // Step 2: Clean up m_xIndex and m_yIndex
@@ -297,7 +307,7 @@ int mdn::Mdn2dBase::locked_setToZero(const std::unordered_set<Coord>& purgeSet) 
     }
     // Bounds may have changed
     internal_updateBounds();
-    return nZeroed;
+    return changed;
 }
 
 
@@ -330,29 +340,29 @@ bool mdn::Mdn2dBase::setValue(const Coord& xy, long long value) {
 
 
 bool mdn::Mdn2dBase::locked_setValue(const Coord& xy, Digit value) {
-    if (value == 0) {
-        return locked_setToZero(xy);
-    }
     internal_checkDigit(xy, value);
+    return internal_setValueRaw(xy, value);
+}
 
-    auto it = m_raw.find(xy);
-    if (it == m_raw.end()) {
-        // No entry exists
-        PrecisionStatus ps = locked_checkPrecisionWindow(xy);
-        if (ps == PrecisionStatus::Below) {
-            // Out of numerical precision range
-            return false;
-        }
-        internal_insertAddress(xy);
-        m_raw[xy] = value;
-        if (ps == PrecisionStatus::Above) {
-            internal_purgeExcessDigits();
-        }
-        return true;
-    }
-    // xy is already non-zero
-    it->second = value;
-    return true;
+
+bool mdn::Mdn2dBase::locked_setValue(const Coord& xy, int value) {
+    internal_checkDigit(xy, value);
+    Digit dval = static_cast<Digit>(value);
+    return internal_setValueRaw(xy, dval);
+}
+
+
+bool mdn::Mdn2dBase::locked_setValue(const Coord& xy, long value) {
+    internal_checkDigit(xy, value);
+    Digit dval = static_cast<Digit>(value);
+    return internal_setValueRaw(xy, dval);
+}
+
+
+bool mdn::Mdn2dBase::locked_setValue(const Coord& xy, long long value) {
+    internal_checkDigit(xy, value);
+    Digit dval = static_cast<Digit>(value);
+    return internal_setValueRaw(xy, dval);
 }
 
 
@@ -591,7 +601,7 @@ mdn::PrecisionStatus mdn::Mdn2dBase::locked_checkPrecisionWindow(const Coord& xy
     }
 
     // Check over limit
-    std::unordered_set<Coord> purgeSet;
+    CoordSet purgeSet;
     // maxLimit - above this and we need to purge existing values
     Coord maxLimit = m_boundsMin + precision;
     // Check over limit
@@ -636,12 +646,46 @@ void mdn::Mdn2dBase::internal_clearMetadata() const {
 }
 
 
+bool mdn::Mdn2dBase::internal_setValueRaw(const Coord& xy, Digit value) {
+    if (value == 0) {
+        locked_setToZero(xy);
+        return false;
+    }
+
+    auto it = m_raw.find(xy);
+    if (it == m_raw.end()) {
+        // No entry exists
+        PrecisionStatus ps = locked_checkPrecisionWindow(xy);
+        if (ps == PrecisionStatus::Below) {
+            // Out of numerical precision range
+            return false;
+        }
+        internal_insertAddress(xy);
+        m_raw[xy] = value;
+        if (ps == PrecisionStatus::Above) {
+            internal_purgeExcessDigits();
+        }
+        return true;
+    }
+    // xy is already non-zero
+    Digit oldVal = it->second;
+    it->second = value;
+
+    // check for sign change
+    return (
+        (oldVal < 0 && value > 0) || (oldVal > 0 && value < 0)
+    );
+    // Possibly faster
+    // return (static_cast<int>(oldVal) * static_cast<int>(value)) < 0;
+}
+
+
 void mdn::Mdn2dBase::internal_insertAddress(const Coord& xy) const {
     m_index.insert(xy);
     auto xit = m_xIndex.find(xy.x());
     if (xit == m_xIndex.end()) {
-        m_xIndex.emplace(xy.x(), std::unordered_set<Coord>());
-        std::unordered_set<Coord> newX;
+        m_xIndex.emplace(xy.x(), CoordSet());
+        CoordSet newX;
         newX.insert(xy);
         m_xIndex[xy.x()] = newX;
     } else {
@@ -649,8 +693,8 @@ void mdn::Mdn2dBase::internal_insertAddress(const Coord& xy) const {
     }
     auto yit = m_yIndex.find(xy.y());
     if (yit == m_yIndex.end()) {
-        m_yIndex.emplace(xy.y(), std::unordered_set<Coord>());
-        std::unordered_set<Coord> newy;
+        m_yIndex.emplace(xy.y(), CoordSet());
+        CoordSet newy;
         newy.insert(xy);
         m_yIndex[xy.y()] = newy;
     } else {
@@ -667,15 +711,6 @@ void mdn::Mdn2dBase::internal_insertAddress(const Coord& xy) const {
 }
 
 
-bool mdn::Mdn2dBase::internal_checkDigit(const Coord& xy, Digit value) const {
-    Digit dbase = m_config.dbase();
-    if (value < dbase and value > -dbase) {
-        return true;
-    }
-    throw OutOfRange(xy, value, dbase);
-}
-
-
 int mdn::Mdn2dBase::internal_purgeExcessDigits() {
     if (!locked_hasBounds()) {
         // No digits to bother keeping
@@ -684,7 +719,7 @@ int mdn::Mdn2dBase::internal_purgeExcessDigits() {
 
     int precision = m_config.precision();
     Coord currentSpan = m_boundsMax - m_boundsMin;
-    std::unordered_set<Coord> purgeSet;
+    CoordSet purgeSet;
     int purgeX = currentSpan.x() - precision;
     if (purgeX > 0) {
         int minX = m_boundsMax.x() - precision;

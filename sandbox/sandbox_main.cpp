@@ -10,6 +10,23 @@
 
 // #include "Mdn2d.h"
 
+namespace mdn {
+
+using Digit = int8_t;
+
+namespace constants {
+
+constexpr int intMin = std::numeric_limits<int>::min();
+constexpr int intMax = std::numeric_limits<int>::max();
+constexpr Digit DigitMin = std::numeric_limits<Digit>::min();
+constexpr Digit DigitMax = std::numeric_limits<Digit>::max();
+
+constexpr float floatSmall = 1e-6;
+constexpr double doubleSmall = 1e-12;
+
+} // end namspace constants
+} // end namespace mdn
+
 using namespace std;
 // using namespace mdn;
 
@@ -439,17 +456,33 @@ int main() {
     //         break;
     // }
 
-    std::string testStr;
-    char h = 'h';
-    char e = 'e';
-    char l = 'l';
-    char o = 'o';
-    testStr += h;
-    testStr += e;
-    testStr += l;
-    testStr += l;
-    testStr += o;
-    cout << "Test string = [" << testStr << "]" << endl;
+    // std::string testStr;
+    // char h = 'h';
+    // char e = 'e';
+    // char l = 'l';
+    // char o = 'o';
+    // testStr += h;
+    // testStr += e;
+    // testStr += l;
+    // testStr += l;
+    // testStr += o;
+    // cout << "Test string = [" << testStr << "]" << endl;
+
+    mdn::Digit dA = 127;
+    int iA = 130;
+    cout << "dA = " << dA << endl;
+    cout << "mdn::constants::intMin = " << mdn::constants::intMin << endl;
+    cout << "mdn::constants::intMax = " << mdn::constants::intMax << endl;
+    cout << "mdn::constants::DigitMin = " << int(mdn::constants::DigitMin) << endl;
+    cout << "mdn::constants::DigitMax = " << int(mdn::constants::DigitMax) << endl;
+    if (iA > mdn::constants::DigitMax) {
+        cout << "It bigger" << endl;
+    } else {
+        cout << "It not" << endl;
+    }
+    mdn::Digit dB = static_cast<mdn::Digit>(iA);
+    cout << "dB = " << int(dB) << endl;
+
     return 0;
 
 }
