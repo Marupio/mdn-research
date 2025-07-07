@@ -142,7 +142,11 @@ public:
 
         // Assignment multiplication, *this *= rhs
         Mdn2d& operator*=(const Mdn2d& rhs);
-        protected: Mdn2d& locked_timesEquals(const Mdn2d& rhs); public:
+        protected:
+            // I'm different from unlocked: I return the changed set, but the standard -= return is
+            //  just *this
+            CoordSet locked_timesEquals(const Mdn2d& rhs);
+        public:
 
         // Placeholder for MDN division.
         Mdn2d& operator/=(const Mdn2d& rhs);
@@ -178,9 +182,6 @@ protected:
             // Creates a copy of *this and performs a multiply and shift, used in mdn x mdn
             //  return = (*this x value).shift(xy)
             Mdn2d& internal_copyMultiplyAndShift(int value, const Coord& shiftXY) const;
-
-            // Element-wise multiply by value - int only, intended for use in x and / algorithms
-            protected: CoordSet locked_multiply(int value); public:
 
 };
 

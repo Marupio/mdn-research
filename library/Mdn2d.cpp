@@ -460,22 +460,23 @@ mdn::CoordSet mdn::Mdn2d::locked_minusEquals(const Mdn2d& rhs) {
     return changed;
 }
 
-////////////&&&&& WORKING HERE TODOTODOTODOTODO TODO &&&&&//////////////////////
+
 mdn::Mdn2d& mdn::Mdn2d::operator*=(const Mdn2d& rhs) {
     auto lock = lockWriteable();
     auto lockRhs = rhs.lockReadOnly();
     modified();
-    return locked_timesEquals(rhs);
+    locked_carryoverCleanup(locked_timesEquals(rhs));
+    return *this;
 }
 
 
-mdn::Mdn2d& mdn::Mdn2d::locked_timesEquals(const Mdn2d& rhs) {
+mdn::CoordSet mdn::Mdn2d::locked_timesEquals(const Mdn2d& rhs) {
     Mdn2d temp = NewInstance(m_config);
     auto tempLock = temp.lockWriteable();
-    locked_multiply(rhs, temp);
+    CoordSet changed = locked_multiply(rhs, temp);
     operator=(temp);
     modified();
-    return *this;
+    return changed;
 }
 
 
@@ -483,23 +484,24 @@ mdn::Mdn2d& mdn::Mdn2d::operator/=(const Mdn2d& rhs) {
     Mdn2d temp = Duplicate(*this);
     auto lock = lockWriteable();
     auto tempLock = temp.lockWriteable();
-    locked_divide(rhs, temp);
+    CoordSet changed = locked_divide(rhs, temp);
     operator=(temp);
     modified();
+    locked_carryoverCleanup(changed);
     return *this;
 }
 
 
 mdn::Mdn2d& mdn::Mdn2d::operator*=(int scalar) {
     auto lock = lockWriteable();
-    locked_multiply(scalar);
+    locked_carryoverCleanup(locked_multiply(scalar));
     return *this;
 }
 
 
 mdn::Mdn2d& mdn::Mdn2d::operator*=(long scalar) {
     auto lock = lockWriteable();
-    locked_multiply(scalar);
+    locked_carryoverCleanup(locked_multiply(scalar));
     modified();
     return *this;
 }
@@ -507,7 +509,7 @@ mdn::Mdn2d& mdn::Mdn2d::operator*=(long scalar) {
 
 mdn::Mdn2d& mdn::Mdn2d::operator*=(long long scalar) {
     auto lock = lockWriteable();
-    locked_multiply(scalar);
+    locked_carryoverCleanup(locked_multiply(scalar));
     modified();
     return *this;
 }
@@ -520,7 +522,7 @@ void mdn::Mdn2d::internal_checkFraxis(Fraxis& fraxis) const {
 }
 
 
-void mdn::Mdn2d::internal_fraxis(const Coord& xy, double f, int dX, int dY, int c) {
+mdn::CoordSet mdn::Mdn2d::internal_fraxis(const Coord& xy, double f, int dX, int dY, int c) {
     #ifdef MDN_DEBUG
         if (fraction < -1.0 || fraction > 1.0)
         {
@@ -530,6 +532,8 @@ void mdn::Mdn2d::internal_fraxis(const Coord& xy, double f, int dX, int dY, int 
             );
         }
     #endif
+
+    CoordSet changed;
 
     // Debug
     int count = 0;
@@ -546,34 +550,29 @@ void mdn::Mdn2d::internal_fraxis(const Coord& xy, double f, int dX, int dY, int 
         f *= static_cast<double>(m_config.base());
         Digit d(f);
         if (d != 0) {
-            locked_add(xyWorking, d);
-            internal_fraxisCascade(xyWorking, d, c);
+            changed.merge(locked_add(xyWorking, d));
+            changed.merge(internal_fraxisCascade(xyWorking, d, c));
         }
         f -= d;
         xyWorking.translate(dX, dY);
     }
+    return changed;
 }
 
 
-void mdn::Mdn2d::internal_fraxisCascade(const Coord& xy, Digit d, int c)
+mdn::CoordSet mdn::Mdn2d::internal_fraxisCascade(const Coord& xy, Digit d, int c)
 {
+    CoordSet changed;
     Coord xyNext = xy.copyTranslate(c, -c);
     d *= -1;
     if (locked_checkPrecisionWindow(xyNext) == PrecisionStatus::Below) {
         // Cascade done
         return;
     }
-    locked_add(xyNext, d);
-    internal_fraxisCascade(xyNext, d, c);
+    changed.merge(locked_add(xyNext, d));
+    changed.merge(internal_fraxisCascade(xyNext, d, c));
+    return changed;
 }
-
-
-// mdn::Mdn2d& mdn::Mdn2d::internal_plusEquals(const Mdn2d& rhs, int scalar) {
-//     for (const auto& [xy, digit] : rhs.m_raw) {
-//         int id = static_cast<int>(digit);
-//         locked_add(xy, id*scalar);
-//     }
-// }
 
 
 mdn::Mdn2d& mdn::Mdn2d::internal_copyMultiplyAndShift(int value, const Coord& shiftXY) const {
