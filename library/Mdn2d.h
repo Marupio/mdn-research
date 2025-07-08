@@ -181,7 +181,7 @@ protected:
 
             // Creates a copy of *this and performs a multiply and shift, used in mdn x mdn
             //  return = (*this x value).shift(xy)
-            Mdn2d& internal_copyMultiplyAndShift(int value, const Coord& shiftXY) const;
+            Mdn2d internal_copyMultiplyAndShift(int value, const Coord& shiftXY) const;
 
 };
 

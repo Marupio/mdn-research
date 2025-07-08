@@ -25,7 +25,7 @@ const std::vector<std::string> SignConventionNames(
     }
 );
 
-std::string SignConventionToName(SignConvention SignConvention) {
+inline std::string SignConventionToName(SignConvention SignConvention) {
     int fi = int(SignConvention);
     // #ifdef MDN_DEBUG
     //     if (fi < 0 || fi >= SignConventionNames.size())
@@ -34,7 +34,7 @@ std::string SignConventionToName(SignConvention SignConvention) {
     return SignConventionNames[fi];
 }
 
-SignConvention NameToSignConvention(const std::string& name) {
+inline SignConvention NameToSignConvention(const std::string& name) {
     for (int i = 0; i < SignConventionNames.size(); ++i) {
         if (SignConventionNames[i] == name) {
             return static_cast<SignConvention>(i);

@@ -28,6 +28,7 @@ mdn::Mdn2d::Mdn2d(const Mdn2d& other):
 
 mdn::Mdn2d& mdn::Mdn2d::operator=(const Mdn2d& other) {
     Mdn2dRules::operator=(other);
+    return *this;
 }
 
 
@@ -38,6 +39,7 @@ mdn::Mdn2d::Mdn2d(Mdn2d&& other) noexcept :
 
 mdn::Mdn2d& mdn::Mdn2d::operator=(Mdn2d&& other) noexcept {
     Mdn2dRules::operator=(std::move(other));
+    return *this;
 }
 
 
@@ -524,10 +526,10 @@ void mdn::Mdn2d::internal_checkFraxis(Fraxis& fraxis) const {
 
 mdn::CoordSet mdn::Mdn2d::internal_fraxis(const Coord& xy, double f, int dX, int dY, int c) {
     #ifdef MDN_DEBUG
-        if (fraction < -1.0 || fraction > 1.0)
+        if (f < -1.0 || f > 1.0)
         {
             throw std::invalid_argument(
-                "Fractional part must be -1.0 < fraction < 1.0, got" + std::to_string(fraction) +
+                "Fractional part must be -1.0 < f < 1.0, got" + std::to_string(f) +
                 "."
             );
         }
@@ -567,7 +569,7 @@ mdn::CoordSet mdn::Mdn2d::internal_fraxisCascade(const Coord& xy, Digit d, int c
     d *= -1;
     if (locked_checkPrecisionWindow(xyNext) == PrecisionStatus::Below) {
         // Cascade done
-        return;
+        return changed;
     }
     changed.merge(locked_add(xyNext, d));
     changed.merge(internal_fraxisCascade(xyNext, d, c));
@@ -575,7 +577,7 @@ mdn::CoordSet mdn::Mdn2d::internal_fraxisCascade(const Coord& xy, Digit d, int c
 }
 
 
-mdn::Mdn2d& mdn::Mdn2d::internal_copyMultiplyAndShift(int value, const Coord& shiftXY) const {
+mdn::Mdn2d mdn::Mdn2d::internal_copyMultiplyAndShift(int value, const Coord& shiftXY) const {
     Mdn2d temp = Duplicate(*this);
     auto tempLock = temp.lockWriteable();
     temp.locked_multiply(value);

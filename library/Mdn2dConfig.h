@@ -67,12 +67,15 @@ public:
         Fraxis defaultFraxisIn=Fraxis::X
     ) :
         m_base(baseIn),
+        m_dbase(static_cast<Digit>(baseIn)),
         m_precision(maxSpanIn),
         m_epsilon(static_calculateEpsilon(m_precision, m_base)),
         m_signConvention(signConventionIn),
         m_maxCarryoverIters(maxCarryoverItersIn),
         m_defaultFraxis(defaultFraxisIn)
-    {}
+    {
+        validateConfig();
+    }
 
     // Returns true if the number became invalid during a noexcept function
     bool valid() { return m_invalidReason.empty(); }

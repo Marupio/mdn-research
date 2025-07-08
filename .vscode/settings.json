@@ -87,6 +87,7 @@
     "random": "cpp",
     "numbers": "cpp",
     "semaphore": "cpp",
-    "cinttypes": "cpp"
+    "cinttypes": "cpp",
+    "csignal": "cpp"
   }
 }

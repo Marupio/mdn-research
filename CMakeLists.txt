@@ -24,6 +24,7 @@ endif()
 # Add MDN_DEBUG define in Debug builds
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_definitions(MDN_DEBUG)
+    set(CMAKE_CXX_FLAGS_DEBUG "-g")
     message(STATUS "Debug enabled, MDN_DEBUG is defined.")
 endif()
 

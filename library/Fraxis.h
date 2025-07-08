@@ -26,7 +26,7 @@ const std::vector<std::string> FraxisNames(
     }
 );
 
-std::string FraxisToName(Fraxis fraxis) {
+inline std::string FraxisToName(Fraxis fraxis) {
     int fi = int(fraxis);
     // #ifdef MDN_DEBUG
     //     if (fi < 0 || fi >= FraxisNames.size())
@@ -35,7 +35,7 @@ std::string FraxisToName(Fraxis fraxis) {
     return FraxisNames[fi];
 }
 
-Fraxis NameToFraxis(const std::string& name) {
+inline Fraxis NameToFraxis(const std::string& name) {
     for (int i = 0; i < FraxisNames.size(); ++i) {
         if (FraxisNames[i] == name) {
             return static_cast<Fraxis>(i);
