@@ -1,11 +1,12 @@
 #pragma once
 
+#include "GlobalConfig.h"
 #include "Mdn2dRules.h"
 
 namespace mdn {
 
 // Represents a 2D Multi-Dimensional Number (MDN).
-class Mdn2d : public Mdn2dRules {
+class MDN_API Mdn2d : public Mdn2dRules {
 
 protected:
 

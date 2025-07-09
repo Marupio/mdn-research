@@ -6,13 +6,14 @@
 #include "Constants.h"
 #include "Digit.h"
 #include "Fraxis.h"
+#include "GlobalConfig.h"
 #include "MdnException.h"
 #include "SignConvention.h"
 
 namespace mdn {
 
 // Contains all settings governing behaviour of an Mdn2d
-class Mdn2dConfig {
+class MDN_API Mdn2dConfig {
 
     // Calculate minimum fraction value to add to a digit, that it will appear as a non-zero
     // digit within m_precision

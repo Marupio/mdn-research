@@ -7,6 +7,7 @@
 #include <unordered_set>
 
 #include "CoordSet.h"
+#include "GlobalConfig.h"
 #include "Mdn2dConfig.h"
 #include "PrecisionStatus.h"
 
@@ -18,7 +19,7 @@ class Mdn2d;
 //  * 2-dimensional digit representation
 //  * sparse storage and addressing
 //  * bounds metadata
-class Mdn2dBase {
+class MDN_API Mdn2dBase {
 
 protected:
 

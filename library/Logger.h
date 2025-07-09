@@ -5,6 +5,8 @@
 #include <string>
 #include <mutex>
 
+#include "GlobalConfig.h"
+
 namespace mdn {
 
 enum class LogLevel {
@@ -14,7 +16,7 @@ enum class LogLevel {
     Error
 };
 
-class Logger {
+class MDN_API Logger {
 public:
     static Logger& instance() {
         static Logger inst;

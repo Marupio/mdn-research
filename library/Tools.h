@@ -6,10 +6,11 @@
 
 #include "Constants.h"
 #include "Digit.h"
+#include "GlobalConfig.h"
 
 namespace mdn {
 
-class Tools {
+class MDN_API Tools {
 
 public:
     static const std::vector<char> m_digToAlpha;

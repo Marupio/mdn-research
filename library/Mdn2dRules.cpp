@@ -8,7 +8,6 @@
 #include "Constants.h"
 #include "Logger.h"
 #include "Mdn2d.h"
-#include "Mdn2dRules.h"
 #include "MdnException.h"
 #include "Tools.h"
 
@@ -167,7 +166,7 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryover(const Coord& xy, int carry) {
 
 mdn::CoordSet mdn::Mdn2dRules::carryoverCleanup(const CoordSet& coords) {
     auto lock = lockWriteable();
-    CoordSet changed = carryoverCleanup(coords);
+    CoordSet changed = locked_carryoverCleanup(coords);
     if (coords.size()) {
         modified();
     }

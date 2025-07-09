@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Carryover.h"
+#include "GlobalConfig.h"
 #include "Mdn2dBase.h"
 
 namespace mdn {
@@ -11,7 +12,7 @@ namespace mdn {
 //  * equality operator, now available with polymorphism
 //  * digit shifting
 //  * transposing, because why not?
-class Mdn2dRules : public Mdn2dBase {
+class MDN_API Mdn2dRules : public Mdn2dBase {
 
 protected:
 

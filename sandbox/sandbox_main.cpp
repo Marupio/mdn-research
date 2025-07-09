@@ -7,8 +7,11 @@
 #include <unordered_set>
 #include <limits>
 
-#include "ErrorHandling.h"
 #include "Mdn2d.h"
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 using namespace std;
 using namespace mdn;
@@ -28,13 +31,18 @@ int execute() {
 
 
 int main() {
+#ifdef _WIN32
+    SetConsoleOutputCP(CP_UTF8); // Switch Windows console to UTF-8
+#endif
     int returnValue = -1;
     try {
         returnValue = execute();
     } catch (const std::exception& ex) {
-        std::cerr << "Unhandled exception: " << ex.what() << '\n';
-        ErrorHandling::PrintStackTrace();
-            std::exit(EXIT_FAILURE);
+        std::ostringstream oss;
+        oss << "Unhandled exception: " << ex.what() << '\n';
+        Logger::instance().error(oss.str());
+        std::cerr << oss.str() << std::endl;
+        std::exit(EXIT_FAILURE);
     }
     return returnValue;
 }

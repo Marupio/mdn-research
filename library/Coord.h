@@ -6,9 +6,11 @@
 #include <functional>
 #include <tuple>
 
+#include "GlobalConfig.h"
+
 namespace mdn {
 
-class Coord {
+class MDN_API Coord {
 public:
     constexpr Coord(int x = 0, int y = 0) : m_x(x), m_y(y) {}
 
