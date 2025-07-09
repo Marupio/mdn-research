@@ -233,8 +233,14 @@ protected:
             template <class Type>
             void internal_checkDigit(const Coord& xy, Type value) const {
                 Digit dbase = m_config.dbase();
+
+                if (Log_Showing_Debug3) {
+                    Log_Debug3("Checking value " << value << " against base " << int(dbase));
+                }
                 if (value >= dbase || value <= -dbase) {
-                    throw OutOfRange(xy, static_cast<int>(value), dbase);
+                    OutOfRange err(xy, static_cast<int>(value), dbase);
+                    Log_Error(err.what());
+                    throw err;
                 }
             }
 

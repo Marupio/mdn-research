@@ -1,3 +1,5 @@
+#include <filesystem>
+
 #include "Tools.h"
 
 const std::vector<char> mdn::Tools::m_digToAlpha(
@@ -54,6 +56,26 @@ std::string mdn::Tools::digitToAlpha(long long value, std::string pos, std::stri
 }
 
 
+std::string mdn::Tools::digitArrayToString(
+    const std::vector<Digit>& array,
+    char delim,
+    char open,
+    char close
+) {
+    std::ostringstream oss;
+    if (array.size()) {
+        oss << open << array[0];
+        for (auto citer = array.cbegin()+1; citer != array.cend(); ++citer) {
+            oss << ", " << *citer;
+        }
+        oss << close;
+    } else {
+        oss << open << close;
+    }
+    return oss.str();
+}
+
+
 void mdn::Tools::stabilise(float& div) {
     if (div < 0) {
         if (div > -constants::floatSmall) {
@@ -75,3 +97,7 @@ void mdn::Tools::stabilise(double& div) {
     }
 }
 
+
+std::string mdn::Tools::removePath(const char* fullpath) {
+    return std::filesystem::path(fullpath).filename().string();
+}

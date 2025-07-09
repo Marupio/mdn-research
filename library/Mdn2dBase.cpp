@@ -4,8 +4,10 @@
 #include <cmath>
 #include <stdexcept>
 #include <sstream>
+#include <filesystem>
 
 #include "Constants.h"
+#include "GlobalConfig.h"
 #include "Logger.h"
 #include "Mdn2d.h"
 #include "MdnException.h"
@@ -28,7 +30,9 @@ mdn::Mdn2dBase::Mdn2dBase()
     m_boundsMin({constants::intMax, constants::intMax}),
     m_boundsMax({constants::intMin, constants::intMin}),
     m_event(0)
-{}
+{
+    Log_Debug3("Constructing null Mdn2d");
+}
 
 
 mdn::Mdn2dBase::Mdn2dBase(Mdn2dConfig config)
@@ -37,13 +41,16 @@ mdn::Mdn2dBase::Mdn2dBase(Mdn2dConfig config)
     m_boundsMin({constants::intMax, constants::intMax}),
     m_boundsMax({constants::intMin, constants::intMin}),
     m_event(0)
-{}
+{
+    Log_Debug3("Constructing Mdn2d with config " << config);
+}
 
 
 mdn::Mdn2dBase::Mdn2dBase(const Mdn2dBase& other):
     m_config(other.m_config),
     m_event(0)
 {
+    Log_Debug3("Constructing Mdn2d as copy");
     auto lock = other.lockReadOnly();
     m_raw = other.m_raw;
     m_xIndex = other.m_xIndex;
@@ -57,6 +64,7 @@ mdn::Mdn2dBase::Mdn2dBase(const Mdn2dBase& other):
 
 mdn::Mdn2dBase& mdn::Mdn2dBase::operator=(const Mdn2dBase& other) {
     if (this != &other) {
+        Log_Debug3("Setting Mdn2d equal to other");
         auto lockThis = lockWriteable();
         auto lockOther = other.lockReadOnly();
 
@@ -71,6 +79,8 @@ mdn::Mdn2dBase& mdn::Mdn2dBase::operator=(const Mdn2dBase& other) {
         m_boundsMin = other.m_boundsMin;
         m_boundsMax = other.m_boundsMax;
         modified();
+    } else {
+        Log_Warn("Attempting to set Mdn2d equal to itself");
     }
     return *this;
 }
@@ -80,6 +90,7 @@ mdn::Mdn2dBase::Mdn2dBase(Mdn2dBase&& other) noexcept :
     m_config(other.m_config),
     m_event(0)
 {
+    Log_Debug3("Move-copying Mdn2d");
     auto lock = other.lockWriteable();
     m_raw = std::move(other.m_raw);
     m_xIndex = std::move(other.m_xIndex);
@@ -92,6 +103,7 @@ mdn::Mdn2dBase::Mdn2dBase(Mdn2dBase&& other) noexcept :
 
 mdn::Mdn2dBase& mdn::Mdn2dBase::operator=(Mdn2dBase&& other) noexcept {
     if (this != &other) {
+        Log_Debug3("Setting Mdn2d equal to other, move-copy");
         auto lockThis = lockWriteable();
         auto lockOther = other.lockReadOnly();
 
@@ -113,12 +125,15 @@ mdn::Mdn2dBase& mdn::Mdn2dBase::operator=(Mdn2dBase&& other) noexcept {
         m_boundsMin = other.m_boundsMin;
         m_boundsMax = other.m_boundsMax;
         modified();
+    } else {
+        Log_Warn("Attempting to set Mdn2d equal to itself, move copying");
     }
     return *this;
 }
 
 
 mdn::Digit mdn::Mdn2dBase::getValue(const Coord& xy) const {
+    Log_Debug2("Getting value at " << xy);
     auto lock = lockReadOnly();
     return locked_getValue(xy);
 }
@@ -127,7 +142,11 @@ mdn::Digit mdn::Mdn2dBase::getValue(const Coord& xy) const {
 mdn::Digit mdn::Mdn2dBase::locked_getValue(const Coord& xy) const {
     auto it = m_raw.find(xy);
     if (it == m_raw.end()) {
+        Log_Debug3("Get value at " << xy << ": no entry, returning 0");
         return static_cast<Digit>(0);
+    }
+    if (Log_Showing_Debug3) {
+        Log_Debug3("Get value at " << xy << ": returning " << int(it->second));
     }
     return it->second;
 }
@@ -135,12 +154,18 @@ mdn::Digit mdn::Mdn2dBase::locked_getValue(const Coord& xy) const {
 
 std::vector<mdn::Digit> mdn::Mdn2dBase::getRow(int y) const {
     auto lock = lockReadOnly();
-    return locked_getRow(y);
+    std::vector<Digit> result = locked_getRow(y);
+    if (Log_Showing_Debug2) {
+        Log_Debug2("Getting row " << y << ": " << Tools::digitArrayToString(result));
+    }
+    return result;
 }
+
 
 
 std::vector<mdn::Digit> mdn::Mdn2dBase::locked_getRow(int y) const {
     std::vector<Digit> digits;
+    Log_Debug3("Getting row " << y);
     locked_getRow(y, digits);
     return digits;
 }
@@ -149,6 +174,9 @@ std::vector<mdn::Digit> mdn::Mdn2dBase::locked_getRow(int y) const {
 void mdn::Mdn2dBase::getRow(int y, std::vector<Digit>& digits) const {
     auto lock = lockReadOnly();
     locked_getRow(y, digits);
+    if (Log_Showing_Debug2) {
+        Log_Debug2("Getting row " << y << ": inplace" << Tools::digitArrayToString(digits));
+    }
 }
 
 
@@ -156,6 +184,9 @@ void mdn::Mdn2dBase::locked_getRow(int y, std::vector<Digit>& digits) const {
     int xStart = m_boundsMin.x();
     int xEnd = m_boundsMax.x() + 1; // one past the end, prevent fencepost
     int xCount = xEnd - xStart;
+    Log_Debug3(
+        "Getting row from x (" << xStart << " .. " << xEnd << "), " << xCount << " elements"
+    );
     digits.resize(xCount);
     std::fill(digits.begin(), digits.end(), 0);
     auto it = m_yIndex.find(y);
@@ -171,13 +202,18 @@ void mdn::Mdn2dBase::locked_getRow(int y, std::vector<Digit>& digits) const {
 
 std::vector<mdn::Digit> mdn::Mdn2dBase::getCol(int x) const {
     auto lock = lockReadOnly();
-    return locked_getCol(x);
+    std::vector<Digit> result = locked_getCol(x);
+    if (Log_Showing_Debug2) {
+        Log_Debug2("Getting col " << x << ": " << Tools::digitArrayToString(result));
+    }
+    return result;
 }
 
 
 std::vector<mdn::Digit> mdn::Mdn2dBase::locked_getCol(int x) const {
     std::vector<Digit> digits;
     locked_getCol(x, digits);
+    Log_Debug3("Getting col " << x);
     return digits;
 }
 
@@ -185,6 +221,9 @@ std::vector<mdn::Digit> mdn::Mdn2dBase::locked_getCol(int x) const {
 void mdn::Mdn2dBase::getCol(int x, std::vector<Digit>& digits) const {
     auto lock = lockReadOnly();
     locked_getCol(x, digits);
+    if (Log_Showing_Debug2) {
+        Log_Debug2("Getting col " << x << ": inplace" << Tools::digitArrayToString(digits));
+    }
 }
 
 
@@ -192,6 +231,9 @@ void mdn::Mdn2dBase::locked_getCol(int x, std::vector<Digit>& digits) const {
     int yStart = m_boundsMin.y();
     int yEnd = m_boundsMax.y() + 1; // one past the end, prevent fencepost
     int yCount = yEnd - yStart;
+    Log_Debug3(
+        "Getting col from x (" << yStart << " .. " << yEnd << "), " << yCount << " elements"
+    );
     digits.resize(yCount);
     std::fill(digits.begin(), digits.end(), 0);
     auto it = m_xIndex.find(x);
@@ -207,12 +249,14 @@ void mdn::Mdn2dBase::locked_getCol(int x, std::vector<Digit>& digits) const {
 
 void mdn::Mdn2dBase::clear() {
     auto lock = lockWriteable();
+    Log_Debug2("clear Mdn2d");
     locked_clear();
     modified();
 }
 
 
 void mdn::Mdn2dBase::locked_clear() {
+    Log_Debug3("clear Mdn2d");
     m_raw.clear();
     internal_clearMetadata();
 }
@@ -220,6 +264,7 @@ void mdn::Mdn2dBase::locked_clear() {
 
 bool mdn::Mdn2dBase::setToZero(const Coord& xy) {
     auto lock = lockWriteable();
+    Log_Debug2("Setting " << xy << " to zero");
     modified();
     return locked_setToZero(xy);
 }
@@ -426,8 +471,15 @@ std::vector<std::string> mdn::Mdn2dBase::locked_toStringRows() const {
             out.push_back(oss.str());
         }
         locked_getRow(y, digits);
-        assert(digits.size() == yCount && "Digits not the correct size");
-        // std::string rowStr;
+
+        // {
+        //     std::ostringstream oss;
+        //     oss << "digits.size() = " << digits.size() << ", counts = ";
+        //     oss << xCount << "," << yCount << std::endl;
+        //     Logger::instance().debug(oss.str());
+        // }
+
+        assert(digits.size() == xCount && "Rows are not the expected size");
         std::ostringstream oss;
         int x;
         for (x = 0; x < xDigLine && x < xCount; ++x) {
@@ -484,7 +536,7 @@ std::vector<std::string> mdn::Mdn2dBase::locked_toStringCols() const {
             out.push_back(oss.str());
         }
         locked_getCol(x, digits);
-        assert(digits.size() == xCount && "Digits not the correct size");
+        assert(digits.size() == yCount && "Columns are not the expected size");
         std::ostringstream oss;
         int y;
         for (y = 0; y < yDigLine && y < yCount; ++y) {
@@ -597,6 +649,7 @@ mdn::PrecisionStatus mdn::Mdn2dBase::checkPrecisionWindow(const Coord& xy) const
 
 mdn::PrecisionStatus mdn::Mdn2dBase::locked_checkPrecisionWindow(const Coord& xy) const {
     if (!locked_hasBounds()) {
+        Log_Debug2("Checking precision window for " << xy << ": Inside (no bounds)");
         return PrecisionStatus::Inside;
     }
     int precision = m_config.precision();
@@ -607,6 +660,7 @@ mdn::PrecisionStatus mdn::Mdn2dBase::locked_checkPrecisionWindow(const Coord& xy
     // Check under limit
     if (xy.x() < minLimit.x() || xy.y() < minLimit.y()) {
         // Value is under-limit, do not add
+        Log_Debug2("Checking precision window for " << xy << ": under limit " << minLimit);
         return PrecisionStatus::Below;
     }
 
@@ -641,12 +695,15 @@ mdn::Mdn2dBase::ReadOnlyLock mdn::Mdn2dBase::lockReadOnly() const {
 
 void mdn::Mdn2dBase::assertNotSelf(Mdn2dBase& that, const std::string& description) const {
     if (this == &that) {
-        throw IllegalSelfReference(description);
+        IllegalSelfReference err(description);
+        Log_Error(err.what());
+        throw err;
     }
 }
 
 
 void mdn::Mdn2dBase::internal_clearMetadata() const {
+    Log_Debug2("Clearing metadata");
     m_boundsMin = Coord({constants::intMax, constants::intMax});
     m_boundsMax = Coord({constants::intMin, constants::intMin});
 
@@ -657,6 +714,8 @@ void mdn::Mdn2dBase::internal_clearMetadata() const {
 
 
 bool mdn::Mdn2dBase::internal_setValueRaw(const Coord& xy, Digit value) {
+    Log_Debug3("Setting " << xy << " to " << int(value) << "");
+
     if (value == 0) {
         locked_setToZero(xy);
         return false;

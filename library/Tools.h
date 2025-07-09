@@ -61,9 +61,20 @@ public:
         long long value, std::string pos=" ", std::string neg=m_boxArt_h
     );
 
+    // Convert a std::vector<Digit> to a string
+    static std::string digitArrayToString(
+        const std::vector<Digit>& array,
+        char delim=',',
+        char open='(',
+        char close=')'
+    );
+
     // Ensure div is not too close to zero
     static void stabilise(float& div);
     static void stabilise(double& div);
+
+    // Get filename from full path
+    static std::string removePath(const char* fullpath);
 
 };
 

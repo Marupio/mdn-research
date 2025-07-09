@@ -10,6 +10,8 @@
 namespace mdn {
 
 enum class LogLevel {
+    Debug3,
+    Debug2,
     Debug,
     Info,
     Warning,
@@ -26,6 +28,10 @@ public:
     void setEnabled(bool enable) { enabled = enable; }
     void setLevel(LogLevel level) { minLevel = level; }
 
+    LogLevel getLevel() { return minLevel; }
+    bool isEnabled() { return enabled; }
+    bool isShowing(LogLevel level) { return enabled && level >= minLevel; }
+
     void log(LogLevel level, const std::string& msg) {
         // TODO - add more capability to output function name, file name, line number of caller
         if (!enabled || level < minLevel) return;
@@ -33,6 +39,8 @@ public:
         std::cerr << "[" << levelToString(level) << "] " << msg << std::endl;
     }
 
+    void debug3(const std::string& msg) { log(LogLevel::Debug3, msg); }
+    void debug2(const std::string& msg) { log(LogLevel::Debug2, msg); }
     void debug(const std::string& msg) { log(LogLevel::Debug, msg); }
     void info(const std::string& msg) { log(LogLevel::Info, msg); }
     void warn(const std::string& msg) { log(LogLevel::Warning, msg); }
@@ -46,6 +54,8 @@ private:
 
     std::string levelToString(LogLevel level) const {
         switch (level) {
+            case LogLevel::Debug3: return "Debug3";
+            case LogLevel::Debug2: return "Debug2";
             case LogLevel::Debug: return "Debug";
             case LogLevel::Info: return "Info";
             case LogLevel::Warning: return "Warning";
@@ -54,5 +64,48 @@ private:
         }
     }
 };
+
+
+
+
+#ifdef MDN_DEBUG
+    #define InternalLoggerMacro(message, level) \
+        std::ostringstream oss; \
+        std::string fileRef( \
+            "[" + Tools::removePath(__FILE__) + ":" + std::to_string(__LINE__) + "]" \
+        ); \
+        oss << fileRef << " " << message << std::endl; \
+        Logger::instance().level(oss.str());
+    #define InternalLoggerQuery(level) (Logger::instance().isShowing(level))
+
+    #define Log_Debug3(message) InternalLoggerMacro(message, debug3)
+    #define Log_Debug2(message) InternalLoggerMacro(message, debug2)
+    #define Log_Debug(message) InternalLoggerMacro(message, debug)
+    #define Log_Info(message) InternalLoggerMacro(message, info)
+    #define Log_Warn(message) InternalLoggerMacro(message, warn)
+    #define Log_Error(message) InternalLoggerMacro(message, error)
+
+    #define Log_Showing_Debug3 InternalLoggerQuery(LogLevel::Debug3)
+    #define Log_Showing_Debug2 InternalLoggerQuery(LogLevel::Debug2)
+    #define Log_Showing_Debug InternalLoggerQuery(LogLevel::Debug)
+    #define Log_Showing_Info InternalLoggerQuery(LogLevel::Info)
+    #define Log_Showing_Warn InternalLoggerQuery(LogLevel::Warn)
+    #define Log_Showing_Error InternalLoggerQuery(LogLevel::Error)
+#else
+    #define Log_Debug3(message)   do {} while (false);
+    #define Log_Debug2(message)   do {} while (false);
+    #define Log_Debug(message)    do {} while (false);
+    #define Log_Info(message)     do {} while (false);
+    #define Log_Warn(message)     do {} while (false);
+    #define Log_Error(message)    do {} while (false);
+    #define Log_Showing_Debug3    false
+    #define Log_Showing_Debug2    false
+    #define Log_Showing_Debug     false
+    #define Log_Showing_Info      false
+    #define Log_Showing_Warn      false
+    #define Log_Showing_Error     false
+#endif
+
+
 
 } // namespace mdn

@@ -88,6 +88,9 @@
     "numbers": "cpp",
     "semaphore": "cpp",
     "cinttypes": "cpp",
-    "csignal": "cpp"
+    "csignal": "cpp",
+    "source_location": "cpp",
+    "filesystem": "cpp",
+    "ranges": "cpp"
   }
 }
