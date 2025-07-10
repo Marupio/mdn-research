@@ -133,7 +133,7 @@ mdn::Mdn2dBase& mdn::Mdn2dBase::operator=(Mdn2dBase&& other) noexcept {
 
 
 mdn::Digit mdn::Mdn2dBase::getValue(const Coord& xy) const {
-    Log_Debug2("Getting value at " << xy);
+    Log_Debug2("At " << xy);
     auto lock = lockReadOnly();
     return locked_getValue(xy);
 }
@@ -142,11 +142,11 @@ mdn::Digit mdn::Mdn2dBase::getValue(const Coord& xy) const {
 mdn::Digit mdn::Mdn2dBase::locked_getValue(const Coord& xy) const {
     auto it = m_raw.find(xy);
     if (it == m_raw.end()) {
-        Log_Debug3("Get value at " << xy << ": no entry, returning 0");
+        Log_Debug3("At " << xy << ": no entry, returning 0");
         return static_cast<Digit>(0);
     }
     if (Log_Showing_Debug3) {
-        Log_Debug3("Get value at " << xy << ": returning " << int(it->second));
+        Log_Debug3("At " << xy << ": returning " << static_cast<int>(it->second));
     }
     return it->second;
 }
@@ -156,7 +156,7 @@ std::vector<mdn::Digit> mdn::Mdn2dBase::getRow(int y) const {
     auto lock = lockReadOnly();
     std::vector<Digit> result = locked_getRow(y);
     if (Log_Showing_Debug2) {
-        Log_Debug2("Getting row " << y << ": " << Tools::digitArrayToString(result));
+        Log_Debug2("Row " << y << ": " << Tools::digitArrayToString(result));
     }
     return result;
 }
@@ -165,7 +165,7 @@ std::vector<mdn::Digit> mdn::Mdn2dBase::getRow(int y) const {
 
 std::vector<mdn::Digit> mdn::Mdn2dBase::locked_getRow(int y) const {
     std::vector<Digit> digits;
-    Log_Debug3("Getting row " << y);
+    Log_Debug3("Row " << y);
     locked_getRow(y, digits);
     return digits;
 }
@@ -175,7 +175,7 @@ void mdn::Mdn2dBase::getRow(int y, std::vector<Digit>& digits) const {
     auto lock = lockReadOnly();
     locked_getRow(y, digits);
     if (Log_Showing_Debug2) {
-        Log_Debug2("Getting row " << y << ": inplace" << Tools::digitArrayToString(digits));
+        Log_Debug2("Row " << y << ": inplace" << Tools::digitArrayToString(digits));
     }
 }
 
@@ -185,7 +185,7 @@ void mdn::Mdn2dBase::locked_getRow(int y, std::vector<Digit>& digits) const {
     int xEnd = m_boundsMax.x() + 1; // one past the end, prevent fencepost
     int xCount = xEnd - xStart;
     Log_Debug3(
-        "Getting row from x (" << xStart << " .. " << xEnd << "), " << xCount << " elements"
+        "Row " << y << " from x (" << xStart << " .. " << xEnd << "), " << xCount << " elements"
     );
     digits.resize(xCount);
     std::fill(digits.begin(), digits.end(), 0);
@@ -204,7 +204,7 @@ std::vector<mdn::Digit> mdn::Mdn2dBase::getCol(int x) const {
     auto lock = lockReadOnly();
     std::vector<Digit> result = locked_getCol(x);
     if (Log_Showing_Debug2) {
-        Log_Debug2("Getting col " << x << ": " << Tools::digitArrayToString(result));
+        Log_Debug2("Column " << x << ": " << Tools::digitArrayToString(result));
     }
     return result;
 }
@@ -213,7 +213,7 @@ std::vector<mdn::Digit> mdn::Mdn2dBase::getCol(int x) const {
 std::vector<mdn::Digit> mdn::Mdn2dBase::locked_getCol(int x) const {
     std::vector<Digit> digits;
     locked_getCol(x, digits);
-    Log_Debug3("Getting col " << x);
+    Log_Debug3("Column " << x);
     return digits;
 }
 
@@ -222,7 +222,7 @@ void mdn::Mdn2dBase::getCol(int x, std::vector<Digit>& digits) const {
     auto lock = lockReadOnly();
     locked_getCol(x, digits);
     if (Log_Showing_Debug2) {
-        Log_Debug2("Getting col " << x << ": inplace" << Tools::digitArrayToString(digits));
+        Log_Debug2("Column " << x << ": inplace" << Tools::digitArrayToString(digits));
     }
 }
 
@@ -232,7 +232,7 @@ void mdn::Mdn2dBase::locked_getCol(int x, std::vector<Digit>& digits) const {
     int yEnd = m_boundsMax.y() + 1; // one past the end, prevent fencepost
     int yCount = yEnd - yStart;
     Log_Debug3(
-        "Getting col from x (" << yStart << " .. " << yEnd << "), " << yCount << " elements"
+        "Column " << x << " from y (" << yStart << " .. " << yEnd << "), " << yCount << " elements"
     );
     digits.resize(yCount);
     std::fill(digits.begin(), digits.end(), 0);
@@ -249,14 +249,14 @@ void mdn::Mdn2dBase::locked_getCol(int x, std::vector<Digit>& digits) const {
 
 void mdn::Mdn2dBase::clear() {
     auto lock = lockWriteable();
-    Log_Debug2("clear Mdn2d");
+    Log_Debug2("");
     locked_clear();
     modified();
 }
 
 
 void mdn::Mdn2dBase::locked_clear() {
-    Log_Debug3("clear Mdn2d");
+    Log_Debug3("");
     m_raw.clear();
     internal_clearMetadata();
 }
@@ -274,6 +274,7 @@ bool mdn::Mdn2dBase::locked_setToZero(const Coord& xy) {
     auto it = m_raw.find(xy);
     if (it == m_raw.end()) {
         // Already zero
+        Log_Debug3("Setting " << xy << " to zero: already zero");
         return locked_checkPrecisionWindow(xy) != PrecisionStatus::Below;
     }
     // There is currently a non-zero value - erase it
@@ -292,6 +293,9 @@ bool mdn::Mdn2dBase::locked_setToZero(const Coord& xy) {
             yit = m_yIndex.find(xy.y());
         }
     #endif // MDN_DEBUG
+    if (Log_Showing_Debug3) {
+        Log_Debug3("Setting " << xy << " to zero: original value " << it->second);
+    }
     m_raw.erase(it);
 
     CoordSet& coordsAlongX(xit->second);
@@ -301,16 +305,19 @@ bool mdn::Mdn2dBase::locked_setToZero(const Coord& xy) {
     m_index.erase(xy);
     bool checkBounds = false;
     if (coordsAlongX.size() == 0) {
+        Log_Debug3("Erasing empty indexing column at " << xy.x());
         m_xIndex.erase(xit);
         checkBounds = true;
     }
 
     if (coordsAlongY.size() == 0) {
+        Log_Debug3("Erasing empty indexing row at " << xy.y());
         m_yIndex.erase(yit);
         checkBounds = true;
     }
     if (checkBounds) {
         // Bounds may have changed
+        Log_Debug3("Updating bounds");
         internal_updateBounds();
     }
     return true;
@@ -319,12 +326,20 @@ bool mdn::Mdn2dBase::locked_setToZero(const Coord& xy) {
 
 mdn::CoordSet mdn::Mdn2dBase::setToZero(const CoordSet& coords) {
     auto lock = lockWriteable();
+    if (Log_Showing_Debug3) {
+        std::string coordsList(Tools::setToString<Coord>(coords, ','));
+        Log_Debug3("Zeroing coord set: " << coordsList);
+    } else {
+        Log_Debug2("Zeroing set containing " << coords.size() << " coords");
+    }
     modified();
     return locked_setToZero(coords);
 }
 
 
 mdn::CoordSet mdn::Mdn2dBase::locked_setToZero(const CoordSet& purgeSet) {
+    Log_Debug3("Zeroing set containing " << purgeSet.size() << " coords");
+
     CoordSet changed;
     // Step 1: Erase from m_raw
     for (const Coord& coord : purgeSet) {
@@ -334,6 +349,8 @@ mdn::CoordSet mdn::Mdn2dBase::locked_setToZero(const CoordSet& purgeSet) {
     }
 
     // Step 2: Clean up m_xIndex and m_yIndex
+    int indexRowsRemoved = 0;
+    int indexColsRemoved = 0;
     for (const Coord& coord : purgeSet) {
         int x = coord.x();
         int y = coord.y();
@@ -347,6 +364,7 @@ mdn::CoordSet mdn::Mdn2dBase::locked_setToZero(const CoordSet& purgeSet) {
             xIt->second.erase(coord);
             if (xIt->second.empty()) {
                 m_xIndex.erase(xIt);
+                ++indexColsRemoved;
             }
         }
 
@@ -356,9 +374,14 @@ mdn::CoordSet mdn::Mdn2dBase::locked_setToZero(const CoordSet& purgeSet) {
             yIt->second.erase(coord);
             if (yIt->second.empty()) {
                 m_yIndex.erase(yIt);
+                ++indexRowsRemoved;
             }
         }
     }
+    Log_Debug3(
+        "Erased " << indexRowsRemoved << " index rows and " << indexColsRemoved << " index cols"
+    );
+
     // Bounds may have changed
     internal_updateBounds();
     return changed;
@@ -367,6 +390,9 @@ mdn::CoordSet mdn::Mdn2dBase::locked_setToZero(const CoordSet& purgeSet) {
 
 bool mdn::Mdn2dBase::setValue(const Coord& xy, Digit value) {
     auto lock = lockWriteable();
+    if (Log_Showing_Debug2) {
+        Log_Debug2("Setting " << xy << " to " << static_cast<int>(value));
+    }
     modified();
     return locked_setValue(xy, value);
 }
@@ -374,6 +400,7 @@ bool mdn::Mdn2dBase::setValue(const Coord& xy, Digit value) {
 
 bool mdn::Mdn2dBase::setValue(const Coord& xy, int value) {
     auto lock = lockWriteable();
+    Log_Debug2("Setting " << xy << " to " << value);
     modified();
     return locked_setValue(xy, static_cast<Digit>(value));
 }
@@ -381,6 +408,7 @@ bool mdn::Mdn2dBase::setValue(const Coord& xy, int value) {
 
 bool mdn::Mdn2dBase::setValue(const Coord& xy, long value) {
     auto lock = lockWriteable();
+    Log_Debug2("Setting " << xy << " to " << value);
     modified();
     return locked_setValue(xy, static_cast<Digit>(value));
 }
@@ -388,18 +416,21 @@ bool mdn::Mdn2dBase::setValue(const Coord& xy, long value) {
 
 bool mdn::Mdn2dBase::setValue(const Coord& xy, long long value) {
     auto lock = lockWriteable();
+    Log_Debug2("Setting " << xy << " to " << value);
     modified();
     return locked_setValue(xy, static_cast<Digit>(value));
 }
 
 
 bool mdn::Mdn2dBase::locked_setValue(const Coord& xy, Digit value) {
+    Log_Debug3("Setting " << xy << " to " << static_cast<int>(value));
     internal_checkDigit(xy, value);
     return internal_setValueRaw(xy, value);
 }
 
 
 bool mdn::Mdn2dBase::locked_setValue(const Coord& xy, int value) {
+    Log_Debug3("Setting " << xy << " to " << value);
     internal_checkDigit(xy, value);
     Digit dval = static_cast<Digit>(value);
     return internal_setValueRaw(xy, dval);
@@ -407,6 +438,7 @@ bool mdn::Mdn2dBase::locked_setValue(const Coord& xy, int value) {
 
 
 bool mdn::Mdn2dBase::locked_setValue(const Coord& xy, long value) {
+    Log_Debug3("Setting " << xy << " to " << value);
     internal_checkDigit(xy, value);
     Digit dval = static_cast<Digit>(value);
     return internal_setValueRaw(xy, dval);
@@ -414,6 +446,7 @@ bool mdn::Mdn2dBase::locked_setValue(const Coord& xy, long value) {
 
 
 bool mdn::Mdn2dBase::locked_setValue(const Coord& xy, long long value) {
+    Log_Debug3("Setting " << xy << " to " << value);
     internal_checkDigit(xy, value);
     Digit dval = static_cast<Digit>(value);
     return internal_setValueRaw(xy, dval);
@@ -421,19 +454,22 @@ bool mdn::Mdn2dBase::locked_setValue(const Coord& xy, long long value) {
 
 
 std::string mdn::Mdn2dBase::toString() const {
+    Log_Debug2("Converting to string");
     auto lock = lockReadOnly();
     return locked_toString();
 }
 
 
 std::string mdn::Mdn2dBase::locked_toString() const {
+    Log_Debug3("Converting to string");
     std::vector<std::string> rows = locked_toStringRows();
-    return Tools::joinArray(rows, "\n", true);
+    return Tools::vectorToString(rows, "\n", true);
 }
 
 
 std::vector<std::string> mdn::Mdn2dBase::toStringRows() const {
     auto lock = lockReadOnly();
+    Log_Debug2("Converting rows to string array");
     return locked_toStringRows();
 }
 
@@ -446,6 +482,12 @@ std::vector<std::string> mdn::Mdn2dBase::locked_toStringRows() const {
     int yStart = m_boundsMin.y();
     int yEnd = m_boundsMax.y()+1;
     int yCount = yEnd - yStart;
+
+    Log_Debug3(
+        "Converting rows to an array of strings:\n"
+        << "    xRange = (" << xStart << " .. " << xEnd << "), " << xCount << " elements,"
+        << "    yRange = (" << yStart << " .. " << yEnd << "), " << yCount << " rows,"
+    );
 
     // DigLine - digit line appears before what index in 'digits' array below
     int xDigLine = -xStart;
@@ -472,13 +514,6 @@ std::vector<std::string> mdn::Mdn2dBase::locked_toStringRows() const {
         }
         locked_getRow(y, digits);
 
-        // {
-        //     std::ostringstream oss;
-        //     oss << "digits.size() = " << digits.size() << ", counts = ";
-        //     oss << xCount << "," << yCount << std::endl;
-        //     Logger::instance().debug(oss.str());
-        // }
-
         assert(digits.size() == xCount && "Rows are not the expected size");
         std::ostringstream oss;
         int x;
@@ -499,6 +534,7 @@ std::vector<std::string> mdn::Mdn2dBase::locked_toStringRows() const {
 
 std::vector<std::string> mdn::Mdn2dBase::toStringCols() const {
     auto lock = lockReadOnly();
+    Log_Debug2("Converting columns to string array");
     return locked_toStringCols();
 }
 
@@ -511,6 +547,12 @@ std::vector<std::string> mdn::Mdn2dBase::locked_toStringCols() const {
     int yStart = m_boundsMin.y();
     int yEnd = m_boundsMax.y()+1;
     int yCount = yEnd - yStart;
+
+    Log_Debug3(
+        "Converting columns to an array of strings:\n"
+        << "    xRange = (" << xStart << " .. " << xEnd << "), " << xCount << " columns,"
+        << "    yRange = (" << yStart << " .. " << yEnd << "), " << yCount << " elements"
+    );
 
     // DigLine - digit line appears before what index in 'digits' array below
     int xDigLine = 0;
@@ -556,11 +598,13 @@ std::vector<std::string> mdn::Mdn2dBase::locked_toStringCols() const {
 
 void mdn::Mdn2dBase::rebuildMetadata() const {
     auto lock = lockWriteable();
+    Log_Debug2("");
     locked_rebuildMetadata();
 }
 
 
 void mdn::Mdn2dBase::locked_rebuildMetadata() const {
+    Log_Debug3("");
     internal_clearMetadata();
 
     for (const auto& [xy, digit] : m_raw) {
@@ -584,7 +628,9 @@ void mdn::Mdn2dBase::locked_rebuildMetadata() const {
 
 bool mdn::Mdn2dBase::hasBounds() const {
     auto lock = lockReadOnly();
-    return locked_hasBounds();
+    bool result = locked_hasBounds();
+    Log_Debug2("Result: " << result);
+    return result;
 }
 
 
@@ -596,34 +642,48 @@ bool mdn::Mdn2dBase::locked_hasBounds() const {
         m_boundsMax.y() == constants::intMin
     );
 
+    Log_Debug3(
+        "Bounds:\n    min: " << m_boundsMin << "\n    max: " << m_boundsMax << "\n"
+        << "    result: " << (!invalid)
+    );
     return !invalid;
 }
 
 
 std::pair<mdn::Coord, mdn::Coord> mdn::Mdn2dBase::getBounds() const {
     auto lock = ReadOnlyLock();
-    return locked_getBounds();
+    std::pair<Coord, Coord> bounds = locked_getBounds();
+    if (Log_Showing_Debug2) {
+        Log_Debug2("Result: " << bounds.first << ", " << bounds.second);
+    }
+    return bounds;
 }
 
 
 std::pair<mdn::Coord, mdn::Coord> mdn::Mdn2dBase::locked_getBounds() const {
-    return std::pair<Coord, Coord>(m_boundsMin, m_boundsMax);
+    std::pair<Coord, Coord> bounds(m_boundsMin, m_boundsMax);
+    Log_Debug3("Result: " << bounds.first << ", " << bounds.second);
+    return bounds;
 }
 
 
 int mdn::Mdn2dBase::getPrecision() const {
     auto lock = lockReadOnly();
+    Log_Debug2("");
     return locked_getPrecision();
 }
 
 
 int mdn::Mdn2dBase::locked_getPrecision() const {
-    return m_config.precision();
+    int result = m_config.precision();
+    Log_Debug3("Result: " << result);
+    return result;
 }
 
 
 int mdn::Mdn2dBase::setPrecision(int newPrecision) {
     auto lock = lockWriteable();
+    Log_Debug2("New precision: " << newPrecision);
     modified();
     return locked_setPrecision(newPrecision);
 }
@@ -632,6 +692,7 @@ int mdn::Mdn2dBase::setPrecision(int newPrecision) {
 int mdn::Mdn2dBase::locked_setPrecision(int newPrecision) {
     int oldPrecision = m_config.precision();
     m_config.setPrecision(newPrecision);
+    Log_Debug3("Precision was: " << oldPrecision << ", new value: " << newPrecision);
 
     if (oldPrecision < newPrecision)
     {
@@ -643,13 +704,14 @@ int mdn::Mdn2dBase::locked_setPrecision(int newPrecision) {
 
 mdn::PrecisionStatus mdn::Mdn2dBase::checkPrecisionWindow(const Coord& xy) const {
     auto lock = ReadOnlyLock();
+    Log_Debug2("At: " << xy);
     return locked_checkPrecisionWindow(xy);
 }
 
 
 mdn::PrecisionStatus mdn::Mdn2dBase::locked_checkPrecisionWindow(const Coord& xy) const {
     if (!locked_hasBounds()) {
-        Log_Debug2("Checking precision window for " << xy << ": Inside (no bounds)");
+        Log_Debug2("At: " << xy << ", result: Inside (no bounds)");
         return PrecisionStatus::Inside;
     }
     int precision = m_config.precision();
@@ -660,7 +722,7 @@ mdn::PrecisionStatus mdn::Mdn2dBase::locked_checkPrecisionWindow(const Coord& xy
     // Check under limit
     if (xy.x() < minLimit.x() || xy.y() < minLimit.y()) {
         // Value is under-limit, do not add
-        Log_Debug2("Checking precision window for " << xy << ": under limit " << minLimit);
+        Log_Debug2("At: " << xy << ", result: under limit " << minLimit);
         return PrecisionStatus::Below;
     }
 
@@ -672,23 +734,28 @@ mdn::PrecisionStatus mdn::Mdn2dBase::locked_checkPrecisionWindow(const Coord& xy
     int purgeX = xy.x() - maxLimit.x();
     int purgeY = xy.y() - maxLimit.y();
     if (purgeX > 0 || purgeY > 0) {
+        Log_Debug2("At: " << xy << ", result: Above (digits need to be purged)");
         return PrecisionStatus::Above;
     }
+    Log_Debug2("At: " << xy << ", result: Inside");
     return PrecisionStatus::Inside;
 }
 
 
 void mdn::Mdn2dBase::modified(){
+    Log_Debug4("Incrementing m_event from " << m_event);
     m_event++;
 }
 
 
 mdn::Mdn2dBase::WritableLock mdn::Mdn2dBase::lockWriteable() const {
+    Log_Debug4("Waiting for WRITE lock");
     return std::unique_lock(m_mutex);
 }
 
 
 mdn::Mdn2dBase::ReadOnlyLock mdn::Mdn2dBase::lockReadOnly() const {
+    Log_Debug4("Waiting for READ lock");
     return std::shared_lock(m_mutex);
 }
 
@@ -699,11 +766,12 @@ void mdn::Mdn2dBase::assertNotSelf(Mdn2dBase& that, const std::string& descripti
         Log_Error(err.what());
         throw err;
     }
+    Log_Debug4("Operation okay, not self");
 }
 
 
 void mdn::Mdn2dBase::internal_clearMetadata() const {
-    Log_Debug2("Clearing metadata");
+    Log_Debug3("");
     m_boundsMin = Coord({constants::intMax, constants::intMax});
     m_boundsMax = Coord({constants::intMin, constants::intMin});
 
@@ -714,9 +782,13 @@ void mdn::Mdn2dBase::internal_clearMetadata() const {
 
 
 bool mdn::Mdn2dBase::internal_setValueRaw(const Coord& xy, Digit value) {
-    Log_Debug3("Setting " << xy << " to " << int(value) << "");
 
     if (value == 0) {
+        if (Log_Showing_Debug4) {
+            Log_Debug4(
+                "Setting " << xy << " to " << static_cast<int>(value) << ": setting to zero"
+            );
+        }
         locked_setToZero(xy);
         return false;
     }
@@ -727,12 +799,31 @@ bool mdn::Mdn2dBase::internal_setValueRaw(const Coord& xy, Digit value) {
         PrecisionStatus ps = locked_checkPrecisionWindow(xy);
         if (ps == PrecisionStatus::Below) {
             // Out of numerical precision range
+            if (Log_Showing_Debug4) {
+                Log_Debug4(
+                    "Setting " << xy << " to " << static_cast<int>(value)
+                    << ": new value, below precision range"
+                );
+            }
             return false;
         }
         internal_insertAddress(xy);
         m_raw[xy] = value;
         if (ps == PrecisionStatus::Above) {
+            if (Log_Showing_Debug4) {
+                Log_Debug4(
+                    "Setting " << xy << " to " << static_cast<int>(value)
+                    << ": new value, above precision range, purging low digits"
+                );
+            }
             internal_purgeExcessDigits();
+            return true;
+        }
+        if (Log_Showing_Debug4) {
+            Log_Debug4(
+                "Setting " << xy << " to " << static_cast<int>(value)
+                << ": new value, within precision range"
+            );
         }
         return true;
     }
@@ -740,6 +831,12 @@ bool mdn::Mdn2dBase::internal_setValueRaw(const Coord& xy, Digit value) {
     Digit oldVal = it->second;
     it->second = value;
 
+    if (Log_Showing_Debug4) {
+        Log_Debug4(
+            "Setting " << xy << " to " << static_cast<int>(value)
+            << ": overwriting existing value: " << static_cast<int>(oldVal)
+        );
+    }
     // check for sign change
     return (
         (oldVal < 0 && value > 0) || (oldVal > 0 && value < 0)
@@ -750,6 +847,7 @@ bool mdn::Mdn2dBase::internal_setValueRaw(const Coord& xy, Digit value) {
 
 
 void mdn::Mdn2dBase::internal_insertAddress(const Coord& xy) const {
+    Log_Debug4("At: " << xy);
     m_index.insert(xy);
     auto xit = m_xIndex.find(xy.x());
     if (xit == m_xIndex.end()) {
@@ -783,6 +881,7 @@ void mdn::Mdn2dBase::internal_insertAddress(const Coord& xy) const {
 int mdn::Mdn2dBase::internal_purgeExcessDigits() {
     if (!locked_hasBounds()) {
         // No digits to bother keeping
+        Log_Debug3("No digits to consider");
         return 0;
     }
 
@@ -805,12 +904,14 @@ int mdn::Mdn2dBase::internal_purgeExcessDigits() {
             purgeSet.insert(coords.begin(), coords.end());
         }
     }
-
+&&&&&&&&&&&&&&&&&&&&&&&
     if (!purgeSet.empty()) {
-        std::ostringstream oss;
-        oss << "Purging " << purgeSet.size() << " low digit values, below numerical precision ";
-        oss << precision << std::endl;
-        Logger::instance().debug(oss.str());
+        Log_Debug(
+            "Purging " << purgeSet.size() << " digits, now below numerical precision window:\n"
+            << "    minimum: " << m_boundsMin << "\n"
+            << "    miximum: " << m_boundsMax << "\n"
+            << "    precision: " << m_config.precision()
+        );
         locked_setToZero(purgeSet);
     }
     return purgeSet.size();

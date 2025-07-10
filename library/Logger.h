@@ -10,6 +10,7 @@
 namespace mdn {
 
 enum class LogLevel {
+    Debug4,
     Debug3,
     Debug2,
     Debug,
@@ -39,6 +40,7 @@ public:
         std::cerr << "[" << levelToString(level) << "] " << msg << std::endl;
     }
 
+    void debug4(const std::string& msg) { log(LogLevel::Debug4, msg); }
     void debug3(const std::string& msg) { log(LogLevel::Debug3, msg); }
     void debug2(const std::string& msg) { log(LogLevel::Debug2, msg); }
     void debug(const std::string& msg) { log(LogLevel::Debug, msg); }
@@ -54,6 +56,7 @@ private:
 
     std::string levelToString(LogLevel level) const {
         switch (level) {
+            case LogLevel::Debug4: return "Debug4";
             case LogLevel::Debug3: return "Debug3";
             case LogLevel::Debug2: return "Debug2";
             case LogLevel::Debug: return "Debug";
@@ -66,18 +69,28 @@ private:
 };
 
 
-
+//  Logger macros:
+//    Messaging macros, for adding __FILE__ and __LINE__ to the output message, syntax:
+//      Log_Debug2("message and " << variable << " stream operotars okay");
+//    Conditional macros, for protecting resource-intensive messages, syntax:
+//      if (Log_Showing_Debug2) {
+//          // Resource-intensive operations to produce the message
+//          Log_Debug2("output message");
+//      }
 
 #ifdef MDN_DEBUG
-    #define InternalLoggerMacro(message, level) \
+    #define InternalLoggerMacro(message, level) { \
         std::ostringstream oss; \
         std::string fileRef( \
-            "[" + Tools::removePath(__FILE__) + ":" + std::to_string(__LINE__) + "]" \
+            "[" + Tools::removePath(__FILE__) + ":" + std::to_string(__LINE__) + "," + \
+            __func__ + "] " \
         ); \
-        oss << fileRef << " " << message << std::endl; \
-        Logger::instance().level(oss.str());
+        oss << fileRef << message << std::endl; \
+        Logger::instance().level(oss.str()); \
+    }
     #define InternalLoggerQuery(level) (Logger::instance().isShowing(level))
 
+    #define Log_Debug4(message) InternalLoggerMacro(message, debug4)
     #define Log_Debug3(message) InternalLoggerMacro(message, debug3)
     #define Log_Debug2(message) InternalLoggerMacro(message, debug2)
     #define Log_Debug(message) InternalLoggerMacro(message, debug)
@@ -85,6 +98,7 @@ private:
     #define Log_Warn(message) InternalLoggerMacro(message, warn)
     #define Log_Error(message) InternalLoggerMacro(message, error)
 
+    #define Log_Showing_Debug4 InternalLoggerQuery(LogLevel::Debug4)
     #define Log_Showing_Debug3 InternalLoggerQuery(LogLevel::Debug3)
     #define Log_Showing_Debug2 InternalLoggerQuery(LogLevel::Debug2)
     #define Log_Showing_Debug InternalLoggerQuery(LogLevel::Debug)
@@ -92,12 +106,14 @@ private:
     #define Log_Showing_Warn InternalLoggerQuery(LogLevel::Warn)
     #define Log_Showing_Error InternalLoggerQuery(LogLevel::Error)
 #else
+    #define Log_Debug4(message)   do {} while (false);
     #define Log_Debug3(message)   do {} while (false);
     #define Log_Debug2(message)   do {} while (false);
     #define Log_Debug(message)    do {} while (false);
     #define Log_Info(message)     do {} while (false);
     #define Log_Warn(message)     do {} while (false);
     #define Log_Error(message)    do {} while (false);
+    #define Log_Showing_Debug4    false
     #define Log_Showing_Debug3    false
     #define Log_Showing_Debug2    false
     #define Log_Showing_Debug     false
