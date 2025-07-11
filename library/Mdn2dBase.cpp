@@ -15,11 +15,13 @@
 
 
 mdn::Mdn2d mdn::Mdn2dBase::NewInstance(Mdn2dConfig config) {
+    Log_Debug("Creating a NewInstance of Mdn2d");
     return Mdn2d(config);
 }
 
 
 mdn::Mdn2d mdn::Mdn2dBase::Duplicate(const Mdn2d& other) {
+    Log_Debug("Duplicating Mdn2d");
     return Mdn2d(other);
 }
 
@@ -31,7 +33,7 @@ mdn::Mdn2dBase::Mdn2dBase()
     m_boundsMax({constants::intMin, constants::intMin}),
     m_event(0)
 {
-    Log_Debug3("Constructing null Mdn2d");
+    Log_Debug3("Constructing null Mdn2dBase");
 }
 
 
@@ -42,7 +44,7 @@ mdn::Mdn2dBase::Mdn2dBase(Mdn2dConfig config)
     m_boundsMax({constants::intMin, constants::intMin}),
     m_event(0)
 {
-    Log_Debug3("Constructing Mdn2d with config " << config);
+    Log_Debug3("Constructing Mdn2dBase with config " << config);
 }
 
 
@@ -50,7 +52,7 @@ mdn::Mdn2dBase::Mdn2dBase(const Mdn2dBase& other):
     m_config(other.m_config),
     m_event(0)
 {
-    Log_Debug3("Constructing Mdn2d as copy");
+    Log_Debug3("Constructing Mdn2dBase as copy");
     auto lock = other.lockReadOnly();
     m_raw = other.m_raw;
     m_xIndex = other.m_xIndex;
@@ -64,7 +66,7 @@ mdn::Mdn2dBase::Mdn2dBase(const Mdn2dBase& other):
 
 mdn::Mdn2dBase& mdn::Mdn2dBase::operator=(const Mdn2dBase& other) {
     if (this != &other) {
-        Log_Debug3("Setting Mdn2d equal to other");
+        Log_Debug3("Setting Mdn2dBase equal to other");
         auto lockThis = lockWriteable();
         auto lockOther = other.lockReadOnly();
 
@@ -90,8 +92,8 @@ mdn::Mdn2dBase::Mdn2dBase(Mdn2dBase&& other) noexcept :
     m_config(other.m_config),
     m_event(0)
 {
-    Log_Debug3("Move-copying Mdn2d");
     auto lock = other.lockWriteable();
+    Log_Debug3("Move-copying Mdn2dBase");
     m_raw = std::move(other.m_raw);
     m_xIndex = std::move(other.m_xIndex);
     m_yIndex = std::move(other.m_yIndex);
@@ -103,9 +105,9 @@ mdn::Mdn2dBase::Mdn2dBase(Mdn2dBase&& other) noexcept :
 
 mdn::Mdn2dBase& mdn::Mdn2dBase::operator=(Mdn2dBase&& other) noexcept {
     if (this != &other) {
-        Log_Debug3("Setting Mdn2d equal to other, move-copy");
         auto lockThis = lockWriteable();
         auto lockOther = other.lockReadOnly();
+        Log_Debug3("Setting Mdn2dBase equal to other, move-copy");
 
         if (m_config.base() != other.m_config.base()) {
             m_config.setInvalid(
@@ -904,14 +906,15 @@ int mdn::Mdn2dBase::internal_purgeExcessDigits() {
             purgeSet.insert(coords.begin(), coords.end());
         }
     }
-&&&&&&&&&&&&&&&&&&&&&&&
     if (!purgeSet.empty()) {
-        Log_Debug(
-            "Purging " << purgeSet.size() << " digits, now below numerical precision window:\n"
-            << "    minimum: " << m_boundsMin << "\n"
-            << "    miximum: " << m_boundsMax << "\n"
-            << "    precision: " << m_config.precision()
-        );
+        if (Log_Showing_Debug) {
+            Log_Debug(
+                "Purging " << purgeSet.size() << " digits, now below numerical precision window:\n"
+                << "    minimum: " << m_boundsMin << "\n"
+                << "    miximum: " << m_boundsMax << "\n"
+                << "    precision: " << m_config.precision()
+            );
+        }
         locked_setToZero(purgeSet);
     }
     return purgeSet.size();
@@ -922,6 +925,7 @@ void mdn::Mdn2dBase::internal_updateBounds() {
     if (m_xIndex.empty() || m_yIndex.empty()) {
         m_boundsMin = Coord({constants::intMax, constants::intMax});
         m_boundsMax = Coord({constants::intMin, constants::intMin});
+        Log_Debug3("Updating bounds: no non-zero digits exist, there are no bounds");
     } else {
         auto itMinX = m_xIndex.cbegin();
         auto itMaxX = m_xIndex.crbegin();
@@ -929,5 +933,10 @@ void mdn::Mdn2dBase::internal_updateBounds() {
         auto itMaxY = m_yIndex.crbegin();
         m_boundsMin = {itMinX->first, itMinY->first};
         m_boundsMax = {itMaxX->first, itMaxY->first};
+        Log_Debug3(
+            "Updating bounds, new bounds:\n"
+            << "    minimum: " << m_boundsMin << "\n"
+            << "    miximum: " << m_boundsMax"
+        );
     }
 }

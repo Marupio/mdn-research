@@ -234,8 +234,8 @@ protected:
             void internal_checkDigit(const Coord& xy, Type value) const {
                 Digit dbase = m_config.dbase();
 
-                if (Log_Showing_Debug3) {
-                    Log_Debug3("Checking value " << value << " against base " << int(dbase));
+                if (Log_Showing_Debug4) {
+                    Log_Debug4("Checking value " << value << " against base " << int(dbase));
                 }
                 if (value >= dbase || value <= -dbase) {
                     OutOfRange err(xy, static_cast<int>(value), dbase);

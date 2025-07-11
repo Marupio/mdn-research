@@ -75,7 +75,13 @@
 // Further testing shows that a carryover can alter the neighbouring digit's carryover status, at
 // any time.
 
-#include "Coord.h"
+#include <vector>
+#include <string>
+
+#include "Logger.h"
+
+// Carryover
+//  Type of carryover, depending on the root digit and the axial digits
 
 namespace mdn {
 
@@ -86,4 +92,40 @@ enum class Carryover {
     Required            // Invalid MDN --> carryover --> Valid MDN
 };
 
-} // end namespace
+const std::vector<std::string> CarryoverNames(
+    {
+        "Invalid",
+        "OptionalPositive",
+        "OptionalNegative",
+        "Required"
+    }
+);
+
+inline std::string CarryoverToName(Carryover carryover) {
+    int fi = int(carryover);
+    // #ifdef MDN_DEBUG
+    //     if (fi < 0 || fi >= CarryoverNames.size())
+    //         Logger::instance().error("Carryover out of range: " + std::to_string(fi));
+    // #endif
+    return CarryoverNames[fi];
+}
+
+inline Carryover NameToCarryover(const std::string& name) {
+    for (int i = 0; i < CarryoverNames.size(); ++i) {
+        if (CarryoverNames[i] == name) {
+            return static_cast<Carryover>(i);
+        }
+    }
+    std::ostringstream oss;
+    oss << "Invalid Carryover type: " << name << " expecting:" << std::endl;
+    if (CarryoverNames.size()) {
+        oss << CarryoverNames[0];
+    }
+    for (auto iter = CarryoverNames.cbegin() + 1; iter != CarryoverNames.cend(); ++iter) {
+        oss << ", " << name;
+    }
+    throw std::invalid_argument(oss.str());
+}
+
+
+} // end namespace mdn
