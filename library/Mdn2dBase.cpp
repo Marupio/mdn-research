@@ -936,7 +936,7 @@ void mdn::Mdn2dBase::internal_updateBounds() {
         Log_Debug3(
             "Updating bounds, new bounds:\n"
             << "    minimum: " << m_boundsMin << "\n"
-            << "    miximum: " << m_boundsMax"
+            << "    miximum: " << m_boundsMax
         );
     }
 }

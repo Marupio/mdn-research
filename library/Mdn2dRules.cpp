@@ -13,38 +13,6 @@
 
 
 mdn::Carryover mdn::Mdn2dRules::static_checkCarryover(Digit p, Digit x, Digit y, Digit base) {
-    if (abs(p) > base) {
-        return Carryover::Required;
-    }
-
-    auto pos = [](Digit t) { return t > 0; };
-    auto neg = [](Digit t) { return t < 0; };
-
-    if (pos(p)) {
-        if (neg(x) && neg(y)) {
-            return Carryover::Required;
-        }
-        else if (neg(x) || neg(y)) {
-            return Carryover::OptionalPositive;
-        }
-    }
-    else if (neg(p)) {
-        if (pos(x) && pos(y)) {
-            return Carryover::Required;
-        }
-        else if (pos(x) || pos(y)) {
-            return Carryover::OptionalNegative;
-        }
-    }
-    // return Carryover::Invalid;
-
-
-
-
-
-
-
-
     Carryover result = Carryover::Invalid;
     if (abs(p) > base) {
         result = Carryover::Required;
@@ -178,7 +146,7 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryover(const Coord& xy, int carry) {
     Carryover co = static_checkCarryover(p, x, y, m_config.dbase());
     if (co == Carryover::Invalid) {
         IllegalOperation err("Invalid carryover requested at " + xy.to_string());
-        Log_Error(err);
+        Log_Error(err.what());
         throw err;
     }
     int ip = static_cast<int>(p) + carry;
@@ -278,9 +246,9 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryoverCleanup(const CoordSet& coords) {
     if (!achievedGreatness) {
         Log_Warn(
             "Failed to finish all required carryovers and carryover sign " << "conventions.\n"
-            "\tMax iterations: " << m_config.maxCarryoverIters() << '\n'
-            "\tDigits remaining to check: " << workingSet.size() << '\n'
-            "\tTotal digits affected: " << affectedCoords.size() << '\n'
+            << "\tMax iterations: " << m_config.maxCarryoverIters() << '\n'
+            << "\tDigits remaining to check: " << workingSet.size() << '\n'
+            << "\tTotal digits affected: " << affectedCoords.size() << '\n'
         );
     } else {
         Log_Debug3("Carryover cleanup on " << coords.size() << " coords complete.");
@@ -572,7 +540,7 @@ void mdn::Mdn2dRules::internal_ncarryover(const Coord& xy) {
     iy += nCarry;
     ix += nCarry;
     if (Log_Showing_Debug4) {
-        Log_Debug4("Carryover with base " << static_cast<int>(base) << " ("
+        Log_Debug4("Carryover with base " << static_cast<int>(m_config.base()) << " ("
             << static_cast<int>(p) << ":"
             << static_cast<int>(x) << ","
             << static_cast<int>(y) << "): result = ("
