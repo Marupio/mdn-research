@@ -24,8 +24,17 @@ int execute() {
     slot0.setValue(Coord(1, 0), -2);
     slot0.setValue(Coord(1, 1), 1);
     slot0.setValue(Coord(20, 6), 9);
+
+    Mdn2d slot1 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));
+    slot1.add(COORD_ORIGIN, 3.141592635);
+
     std::vector<std::string> disp0 = slot0.toStringRows();
+    std::cout << "HELLO WORLD!!!" << std::endl;
     for (auto riter = disp0.rbegin(); riter != disp0.rend(); ++riter) {
+        std::cout << *riter << '\n';
+    }
+    std::vector<std::string> disp1 = slot1.toStringRows();
+    for (auto riter = disp1.rbegin(); riter != disp1.rend(); ++riter) {
         std::cout << *riter << '\n';
     }
     return 0;
@@ -36,7 +45,7 @@ int main() {
 #ifdef _WIN32
     SetConsoleOutputCP(CP_UTF8); // Switch Windows console to UTF-8
 #endif
-    Logger::instance().setLevel(LogLevel::Debug3);
+    Logger::instance().setLevel(LogLevel::Debug4);
 
     int returnValue = -1;
     try {

@@ -35,6 +35,9 @@ public:
 
     void log(LogLevel level, const std::string& msg) {
         // TODO - add more capability to output function name, file name, line number of caller
+        // int il = int(level);
+        // int ml = int(minLevel);
+        // std::cerr << "enabled=" << enabled << ", level=" << il << ", minLevel=" << ml << std::endl;
         if (!enabled || level < minLevel) return;
         std::lock_guard<std::mutex> lock(logMutex);
         std::cerr << "[" << levelToString(level) << "] " << msg << std::endl;
@@ -85,7 +88,7 @@ private:
             "[" + Tools::removePath(__FILE__) + ":" + std::to_string(__LINE__) + "," + \
             __func__ + "] " \
         ); \
-        oss << fileRef << message << std::endl; \
+        oss << fileRef << message; \
         Logger::instance().level(oss.str()); \
     }
     #define InternalLoggerQuery(level) (Logger::instance().isShowing(level))

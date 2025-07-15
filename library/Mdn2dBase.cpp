@@ -706,14 +706,14 @@ int mdn::Mdn2dBase::locked_setPrecision(int newPrecision) {
 
 mdn::PrecisionStatus mdn::Mdn2dBase::checkPrecisionWindow(const Coord& xy) const {
     auto lock = ReadOnlyLock();
-    Log_Debug2("At: " << xy);
+    Log_Debug3("At: " << xy);
     return locked_checkPrecisionWindow(xy);
 }
 
 
 mdn::PrecisionStatus mdn::Mdn2dBase::locked_checkPrecisionWindow(const Coord& xy) const {
     if (!locked_hasBounds()) {
-        Log_Debug2("At: " << xy << ", result: Inside (no bounds)");
+        Log_Debug4("At: " << xy << ", result: Inside (no bounds)");
         return PrecisionStatus::Inside;
     }
     int precision = m_config.precision();
@@ -724,7 +724,7 @@ mdn::PrecisionStatus mdn::Mdn2dBase::locked_checkPrecisionWindow(const Coord& xy
     // Check under limit
     if (xy.x() < minLimit.x() || xy.y() < minLimit.y()) {
         // Value is under-limit, do not add
-        Log_Debug2("At: " << xy << ", result: under limit " << minLimit);
+        Log_Debug4("At: " << xy << ", result: under limit " << minLimit);
         return PrecisionStatus::Below;
     }
 
@@ -736,10 +736,10 @@ mdn::PrecisionStatus mdn::Mdn2dBase::locked_checkPrecisionWindow(const Coord& xy
     int purgeX = xy.x() - maxLimit.x();
     int purgeY = xy.y() - maxLimit.y();
     if (purgeX > 0 || purgeY > 0) {
-        Log_Debug2("At: " << xy << ", result: Above (digits need to be purged)");
+        Log_Debug4("At: " << xy << ", result: Above (digits need to be purged)");
         return PrecisionStatus::Above;
     }
-    Log_Debug2("At: " << xy << ", result: Inside");
+    Log_Debug4("At: " << xy << ", result: Inside");
     return PrecisionStatus::Inside;
 }
 

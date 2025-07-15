@@ -177,11 +177,11 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryover(const Coord& xy, int carry) {
         std::string xStar = (ix > base || ix < -base) ? "*" : "";
         std::string yStar = (iy > base || iy < -base) ? "*" : "";
         Log_Debug3(
-            "Carrover: ("
+            "Carrover: " << nCarry << ":("
             << static_cast<int>(p) << ":"
             << static_cast<int>(x) << ","
             << static_cast<int>(y) << ") ==> "
-            << "(" << ip << ":" << ix << xStar << "," << iy << yStar
+            << "(" << ip << ":" << ix << xStar << "," << iy << yStar << ")"
         );
     }
 
