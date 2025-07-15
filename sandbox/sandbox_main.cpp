@@ -26,12 +26,15 @@ int execute() {
     slot0.setValue(Coord(20, 6), 9);
 
     Mdn2d slot1 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));
-    slot1.add(COORD_ORIGIN, 9);
+    slot1.add(COORD_ORIGIN, 5);
+    slot1.setValue(Coord(0, 1), 2);
+    slot1.setValue(Coord(1, 0), -2);
     std::cout << "Prepare for carryover!" << std::endl;
-    slot1.add(COORD_ORIGIN, 1000);
+    slot1.carryover(COORD_ORIGIN);
+
+    // slot1.add(COORD_ORIGIN, 1000);
 
     std::vector<std::string> disp0 = slot0.toStringRows();
-    std::cout << "HELLO WORLD!!!" << std::endl;
     for (auto riter = disp0.rbegin(); riter != disp0.rend(); ++riter) {
         std::cout << *riter << '\n';
     }

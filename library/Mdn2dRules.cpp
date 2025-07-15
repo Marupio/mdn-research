@@ -158,7 +158,7 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryover(const Coord& xy, int carry) {
             std::ostringstream oss;
             oss << "Internal warning: carryover at " << xy << ": magnitude should not exceed 1. ";
             oss << "Got " << nCarry << "." << std::endl;
-            Logger::instance().warn(oss.str());
+            Log_Warn(oss.str());
         }
     #endif
     ip -= nCarry * m_config.base();
