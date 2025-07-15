@@ -26,7 +26,9 @@ int execute() {
     slot0.setValue(Coord(20, 6), 9);
 
     Mdn2d slot1 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));
-    slot1.add(COORD_ORIGIN, 3.141592635);
+    slot1.add(COORD_ORIGIN, 9);
+    std::cout << "Prepare for carryover!" << std::endl;
+    slot1.add(COORD_ORIGIN, 1000);
 
     std::vector<std::string> disp0 = slot0.toStringRows();
     std::cout << "HELLO WORLD!!!" << std::endl;

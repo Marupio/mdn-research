@@ -235,7 +235,10 @@ protected:
                 Digit dbase = m_config.dbase();
 
                 if (Log_Showing_Debug4) {
-                    Log_Debug4("Checking value " << value << " against base " << int(dbase));
+                    Log_Debug4(
+                        "Checking value " << static_cast<int>(value) << " against base "
+                        << int(dbase)
+                    );
                 }
                 if (value >= dbase || value <= -dbase) {
                     OutOfRange err(xy, static_cast<int>(value), dbase);

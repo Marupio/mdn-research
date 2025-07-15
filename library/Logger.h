@@ -6,6 +6,7 @@
 #include <mutex>
 
 #include "GlobalConfig.h"
+#include "Tools.h"
 
 namespace mdn {
 
