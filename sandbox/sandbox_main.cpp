@@ -18,28 +18,41 @@ using namespace std;
 using namespace mdn;
 
 int execute() {
-    Mdn2d slot0 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));
-    slot0.setValue(COORD_ORIGIN, 3);
-    slot0.setValue(Coord(0, 1), 2);
-    slot0.setValue(Coord(1, 0), -2);
-    slot0.setValue(Coord(1, 1), 1);
-    slot0.setValue(Coord(20, 6), 9);
+    // Mdn2d slot0 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));
+    // slot0.setValue(COORD_ORIGIN, 3);
+    // slot0.setValue(Coord(0, 1), 2);
+    // slot0.setValue(Coord(1, 0), -2);
+    // slot0.setValue(Coord(1, 1), 1);
+    // slot0.setValue(Coord(20, 6), 9);
 
-    Mdn2d slot1 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));
-    slot1.add(COORD_ORIGIN, 5);
-    slot1.setValue(Coord(0, 1), 2);
-    slot1.setValue(Coord(1, 0), -2);
+    // std::vector<std::string> disp0 = slot0.toStringRows();
+    // for (auto riter = disp0.rbegin(); riter != disp0.rend(); ++riter) {
+    //     std::cout << *riter << '\n';
+    // }
+
+    // Mdn2d slot1 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));
+    // slot1.add(COORD_ORIGIN, -4);
+    // slot1.setValue(Coord(0, 1), 2);
+    // slot1.setValue(Coord(1, 0), -2);
+    // std::cout << "Prepare for carryover!" << std::endl;
+    // slot1.carryover(COORD_ORIGIN);
+
+    // // slot1.add(COORD_ORIGIN, 1000);
+    // std::vector<std::string> disp1 = slot1.toStringRows();
+    // for (auto riter = disp1.rbegin(); riter != disp1.rend(); ++riter) {
+    //     std::cout << *riter << '\n';
+    // }
+
+    Mdn2d slot2 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));
+    slot2.add(COORD_ORIGIN, 3.141592635, Fraxis::X);
+    slot2.setValue(Coord(0, 1), 2);
+    slot2.setValue(Coord(1, 0), -2);
     std::cout << "Prepare for carryover!" << std::endl;
-    slot1.carryover(COORD_ORIGIN);
+    slot2.carryover(COORD_ORIGIN);
 
-    // slot1.add(COORD_ORIGIN, 1000);
-
-    std::vector<std::string> disp0 = slot0.toStringRows();
-    for (auto riter = disp0.rbegin(); riter != disp0.rend(); ++riter) {
-        std::cout << *riter << '\n';
-    }
-    std::vector<std::string> disp1 = slot1.toStringRows();
-    for (auto riter = disp1.rbegin(); riter != disp1.rend(); ++riter) {
+    // slot2.add(COORD_ORIGIN, 1000);
+    std::vector<std::string> disp2 = slot2.toStringRows();
+    for (auto riter = disp2.rbegin(); riter != disp2.rend(); ++riter) {
         std::cout << *riter << '\n';
     }
     return 0;

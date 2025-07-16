@@ -149,10 +149,20 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryover(const Coord& xy, int carry) {
         Log_Error(err.what());
         throw err;
     }
-    int ip = static_cast<int>(p) + carry;
+    int ip = static_cast<int>(p);
     int ix = static_cast<int>(x);
     int iy = static_cast<int>(y);
-    int nCarry = ip/m_config.base();
+    int nCarry;
+    if (carry == 0) {
+        // The first carryover, an optional carry
+        if (ip < 0) {
+            nCarry = -1;
+        } else {
+            nCarry = 1;
+        }
+    } else {
+        nCarry = ip/m_config.base();
+    }
     #ifdef MDN_DEBUG
         if (nCarry > 1 || nCarry < -1) {
             std::ostringstream oss;
@@ -177,7 +187,7 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryover(const Coord& xy, int carry) {
         std::string xStar = (ix > base || ix < -base) ? "*" : "";
         std::string yStar = (iy > base || iy < -base) ? "*" : "";
         Log_Debug3(
-            "Carrover: " << nCarry << ":("
+            "Carrover: " << nCarry << "(+" << carry << "):("
             << static_cast<int>(p) << ":"
             << static_cast<int>(x) << ","
             << static_cast<int>(y) << ") ==> "
