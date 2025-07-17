@@ -1,5 +1,7 @@
 #pragma once
 
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -27,21 +29,24 @@ public:
         return inst;
     }
 
-    void setEnabled(bool enable) { enabled = enable; }
-    void setLevel(LogLevel level) { minLevel = level; }
+    void setEnabled(bool enable) { m_enabled = enable; }
+    void setLevel(LogLevel level) { m_minLevel = level; }
 
-    LogLevel getLevel() { return minLevel; }
-    bool isEnabled() { return enabled; }
-    bool isShowing(LogLevel level) { return enabled && level >= minLevel; }
+    // Echo output messages to log file 'debugFile', leave blank for default log file location
+    void setOutputToFile(std::filesystem::path debugFile="");
+
+    LogLevel getLevel() { return m_minLevel; }
+    bool isEnabled() { return m_enabled; }
+    bool isShowing(LogLevel level) { return m_enabled && level >= m_minLevel; }
 
     void log(LogLevel level, const std::string& msg) {
-        // TODO - add more capability to output function name, file name, line number of caller
-        // int il = int(level);
-        // int ml = int(minLevel);
-        // std::cerr << "enabled=" << enabled << ", level=" << il << ", minLevel=" << ml << std::endl;
-        if (!enabled || level < minLevel) return;
-        std::lock_guard<std::mutex> lock(logMutex);
-        std::cerr << "[" << levelToString(level) << "] " << msg << std::endl;
+        if (!m_enabled || level < m_minLevel) return;
+        std::lock_guard<std::mutex> lock(m_logMutex);
+        std::string levelStr = "[" + levelToString(level) + "] ";
+        std::cerr << levelStr << msg << std::endl;
+        if (m_ossPtr) {
+            (*m_ossPtr) << levelStr << msg << std::endl;
+        }
     }
 
     void debug4(const std::string& msg) { log(LogLevel::Debug4, msg); }
@@ -54,9 +59,20 @@ public:
 
 private:
     Logger() = default;
-    bool enabled = true;
-    LogLevel minLevel = LogLevel::Info;
-    std::mutex logMutex;
+    ~Logger() {
+        if (m_ossPtr) {
+            m_ossPtr->close();
+        }
+    }
+    bool m_enabled = true;
+    LogLevel m_minLevel = LogLevel::Info;
+    std::mutex m_logMutex;
+    static std::ofstream* m_ossPtr;
+
+    // Return the default path for the log file - not a member variable due to library linkage
+    //  issues
+    static const std::filesystem::path& defaultPath();
+    static std::filesystem::path m_debugLog;
 
     std::string levelToString(LogLevel level) const {
         switch (level) {
@@ -75,7 +91,7 @@ private:
 
 //  Logger macros:
 //    Messaging macros, for adding __FILE__ and __LINE__ to the output message, syntax:
-//      Log_Debug2("message and " << variable << " stream operotars okay");
+//      Log_Debug2("message and " << variable << " stream operators okay");
 //    Conditional macros, for protecting resource-intensive messages, syntax:
 //      if (Log_Showing_Debug2) {
 //          // Resource-intensive operations to produce the message

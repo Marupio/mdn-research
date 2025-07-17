@@ -44,10 +44,10 @@ int execute() {
     // }
 
     Mdn2d slot2 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));
+    std::cerr << "Prepare for carryover!" << std::endl;
     slot2.add(COORD_ORIGIN, 3.141592635, Fraxis::X);
     slot2.setValue(Coord(0, 1), 2);
     slot2.setValue(Coord(1, 0), -2);
-    std::cout << "Prepare for carryover!" << std::endl;
     slot2.carryover(COORD_ORIGIN);
 
     // slot2.add(COORD_ORIGIN, 1000);
@@ -63,7 +63,9 @@ int main() {
 #ifdef _WIN32
     SetConsoleOutputCP(CP_UTF8); // Switch Windows console to UTF-8
 #endif
-    Logger::instance().setLevel(LogLevel::Debug4);
+    Logger& sirTalksALot = Logger::instance();
+    sirTalksALot.setLevel(LogLevel::Debug4);
+    sirTalksALot.setOutputToFile();
 
     int returnValue = -1;
     try {

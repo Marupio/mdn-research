@@ -1,4 +1,5 @@
 add_library(mdn SHARED
+    Logger.cpp
     Mdn2dBase.cpp
     Mdn2dRules.cpp
     Mdn2d.cpp
