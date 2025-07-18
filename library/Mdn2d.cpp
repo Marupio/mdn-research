@@ -146,6 +146,7 @@ void mdn::Mdn2d::add(const Coord& xy, float realNum, Fraxis fraxis) {
     }
     internal_checkFraxis(fraxis);
     locked_carryoverCleanup(locked_add(xy, static_cast<double>(realNum), fraxis));
+    internal_operationComplete();
 }
 
 
@@ -156,6 +157,7 @@ void mdn::Mdn2d::add(const Coord& xy, double realNum, Fraxis fraxis) {
         Log_Debug2("add " << realNum << ", fraxis: " << FraxisToName(fraxis));
     }
     locked_carryoverCleanup(locked_add(xy, realNum, fraxis));
+    internal_operationComplete();
 }
 
 
@@ -167,6 +169,7 @@ mdn::CoordSet mdn::Mdn2d::locked_add(const Coord& xy, double realNum, Fraxis fra
     fracPart = modf(realNum, &intPart);
     CoordSet changed = locked_add(xy, static_cast<long>(intPart));
     changed.merge(locked_addFraxis(xy, fracPart, fraxis));
+    internal_operationComplete();
     return changed;
 }
 
@@ -178,6 +181,7 @@ void mdn::Mdn2d::subtract(const Coord& xy, float realNum, Fraxis fraxis) {
         Log_Debug2("subtract " << realNum << ", fraxis: " << FraxisToName(fraxis));
     }
     locked_carryoverCleanup(locked_add(xy, static_cast<double>(-realNum), fraxis));
+    internal_operationComplete();
 }
 
 
@@ -188,6 +192,7 @@ void mdn::Mdn2d::subtract(const Coord& xy, double realNum, Fraxis fraxis) {
         Log_Debug2("subtract " << realNum << ", fraxis: " << FraxisToName(fraxis));
     }
     locked_carryoverCleanup(locked_add(xy, -realNum, fraxis));
+    internal_operationComplete();
 }
 
 
@@ -198,6 +203,7 @@ void mdn::Mdn2d::add(const Coord& xy, Digit value, Fraxis unused) {
     }
     int ivalue = static_cast<int>(value);
     locked_carryoverCleanup(locked_add(xy, ivalue));
+    internal_operationComplete();
 }
 
 
@@ -213,6 +219,7 @@ void mdn::Mdn2d::add(const Coord& xy, int value, Fraxis unused) {
     auto lock = lockWriteable();
     Log_Debug2("add " << value << ", no fraxis");
     locked_carryoverCleanup(locked_add(xy, value));
+    internal_operationComplete();
 }
 
 
@@ -235,6 +242,7 @@ mdn::CoordSet mdn::Mdn2d::locked_add(const Coord& xy, int value) {
         changed.merge(locked_add(xy.copyTranslateY(1), carry));
     }
     return changed;
+    internal_operationComplete();
 }
 
 
@@ -242,6 +250,7 @@ void mdn::Mdn2d::add(const Coord& xy, long value, Fraxis unused) {
     auto lock = lockWriteable();
     Log_Debug2("add " << value << ", no fraxis");
     locked_carryoverCleanup(locked_add(xy, value));
+    internal_operationComplete();
 }
 
 
@@ -270,6 +279,7 @@ void mdn::Mdn2d::add(const Coord& xy, long long value, Fraxis unused) {
     auto lock = lockWriteable();
     Log_Debug2("at " << xy << ", add " << value << ", no fraxis");
     locked_carryoverCleanup(locked_add(xy, value));
+    internal_operationComplete();
 }
 
 
@@ -300,6 +310,7 @@ void mdn::Mdn2d::subtract(const Coord& xy, Digit value, Fraxis unused) {
         Log_Debug2("at " << xy << ", add " << static_cast<int>(value) << ", no fraxis");
     }
     locked_carryoverCleanup(locked_add(xy, -static_cast<int>(value)));
+    internal_operationComplete();
 }
 
 
@@ -307,6 +318,7 @@ void mdn::Mdn2d::subtract(const Coord& xy, int value, Fraxis unused) {
     auto lock = lockWriteable();
     Log_Debug2("at " << xy << ", subtract " << value << ", no fraxis");
     locked_carryoverCleanup(locked_add(xy, -value));
+    internal_operationComplete();
 }
 
 
@@ -314,6 +326,7 @@ void mdn::Mdn2d::subtract(const Coord& xy, long value, Fraxis unused) {
     auto lock = lockWriteable();
     Log_Debug2("at " << xy << ", subtract " << value << ", no fraxis");
     locked_carryoverCleanup(locked_add(xy, -value));
+    internal_operationComplete();
 }
 
 
@@ -321,6 +334,7 @@ void mdn::Mdn2d::subtract(const Coord& xy, long long value, Fraxis unused) {
     auto lock = lockWriteable();
     Log_Debug2("at " << xy << ", subtract " << value << ", no fraxis");
     locked_carryoverCleanup(locked_add(xy, -value));
+    internal_operationComplete();
 }
 
 
@@ -332,6 +346,7 @@ void mdn::Mdn2d::addFraxis(const Coord& xy, float fraction, Fraxis fraxis) {
         );
     }
     locked_carryoverCleanup(locked_addFraxis(xy, static_cast<double>(fraction), fraxis));
+    internal_operationComplete();
 }
 
 
@@ -343,6 +358,7 @@ void mdn::Mdn2d::addFraxis(const Coord& xy, double fraction, Fraxis fraxis) {
         );
     }
     locked_carryoverCleanup(locked_addFraxis(xy, fraction, fraxis));
+    internal_operationComplete();
 }
 
 
@@ -390,6 +406,7 @@ void mdn::Mdn2d::subtractFraxis(const Coord& xy, float fraction, Fraxis fraxis) 
         );
     }
     locked_carryoverCleanup(locked_addFraxis(xy, -static_cast<double>(fraction), fraxis));
+    internal_operationComplete();
 }
 
 
@@ -402,6 +419,7 @@ void mdn::Mdn2d::subtractFraxis(const Coord& xy, double fraction, Fraxis fraxis)
         );
     }
     locked_carryoverCleanup(locked_addFraxis(xy, -fraction, fraxis));
+    internal_operationComplete();
 }
 
 
@@ -411,6 +429,7 @@ void mdn::Mdn2d::multiply(Digit value) {
         Log_Debug2("scalar multiply " << static_cast<int>(value));
     }
     locked_carryoverCleanup(locked_multiply(static_cast<int>(value)));
+    internal_operationComplete();
 }
 
 
@@ -418,6 +437,7 @@ void mdn::Mdn2d::multiply(int value) {
     auto lock = lockWriteable();
     Log_Debug2("scalar multiply " << value);
     locked_carryoverCleanup(locked_multiply(value));
+    internal_operationComplete();
 }
 
 
@@ -425,6 +445,7 @@ void mdn::Mdn2d::multiply(long value) {
     auto lock = lockWriteable();
     Log_Debug2("scalar multiply " << value);
     locked_carryoverCleanup(locked_multiply(value));
+    internal_operationComplete();
 }
 
 
@@ -432,6 +453,7 @@ void mdn::Mdn2d::multiply(long long value) {
     auto lock = lockWriteable();
     Log_Debug2("scalar multiply " << value);
     locked_carryoverCleanup(locked_multiply(value));
+    internal_operationComplete();
 }
 
 
@@ -529,6 +551,7 @@ mdn::Mdn2d& mdn::Mdn2d::operator+=(const Mdn2d& rhs) {
     Log_Debug2("plus equals");
     CoordSet changed = locked_plusEquals(rhs);
     locked_carryoverCleanup(changed);
+    internal_operationComplete();
     return *this;
 }
 
@@ -549,6 +572,7 @@ mdn::Mdn2d& mdn::Mdn2d::operator-=(const Mdn2d& rhs) {
     Log_Debug2("minus equals");
     CoordSet changed = locked_minusEquals(rhs);
     locked_carryoverCleanup(changed);
+    internal_operationComplete();
     return *this;
 }
 
@@ -568,6 +592,7 @@ mdn::Mdn2d& mdn::Mdn2d::operator*=(const Mdn2d& rhs) {
     auto lockRhs = rhs.lockReadOnly();
     Log_Debug2("times equals (Mdn2d)");
     locked_carryoverCleanup(locked_timesEquals(rhs));
+    internal_operationComplete();
     return *this;
 }
 
@@ -590,6 +615,7 @@ mdn::Mdn2d& mdn::Mdn2d::operator/=(const Mdn2d& rhs) {
     CoordSet changed = locked_divide(rhs, temp);
     operator=(temp);
     locked_carryoverCleanup(changed);
+    internal_operationComplete();
     return *this;
 }
 
@@ -598,6 +624,7 @@ mdn::Mdn2d& mdn::Mdn2d::operator*=(int scalar) {
     auto lock = lockWriteable();
     Log_Debug3("times equals (int scalar)");
     locked_carryoverCleanup(locked_multiply(scalar));
+    internal_operationComplete();
     return *this;
 }
 
@@ -606,6 +633,7 @@ mdn::Mdn2d& mdn::Mdn2d::operator*=(long scalar) {
     auto lock = lockWriteable();
     Log_Debug3("times equals (long scalar)");
     locked_carryoverCleanup(locked_multiply(scalar));
+    internal_operationComplete();
     return *this;
 }
 
@@ -614,6 +642,7 @@ mdn::Mdn2d& mdn::Mdn2d::operator*=(long long scalar) {
     auto lock = lockWriteable();
     Log_Debug3("times equals (long long scalar)");
     locked_carryoverCleanup(locked_multiply(scalar));
+    internal_operationComplete();
     return *this;
 }
 
@@ -665,6 +694,9 @@ mdn::CoordSet mdn::Mdn2d::internal_fraxis(const Coord& xy, double f, int dX, int
         }
         f -= d;
         xyWorking.translate(dX, dY);
+    }
+    if (changed.size()) {
+        internal_modified();
     }
     return changed;
 }

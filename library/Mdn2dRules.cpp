@@ -132,7 +132,9 @@ mdn::Carryover mdn::Mdn2dRules::locked_checkCarryover(const Coord& xy) const {
 mdn::CoordSet mdn::Mdn2dRules::carryover(const Coord& xy) {
     auto lock = lockWriteable();
     Log_Debug2("At: " << xy);
-    return locked_carryover(xy);
+    CoordSet changed = locked_carryover(xy);
+    internal_operationComplete();
+    return changed;
 }
 
 
@@ -214,8 +216,9 @@ mdn::CoordSet mdn::Mdn2dRules::carryoverCleanup(const CoordSet& coords) {
     auto lock = lockWriteable();
     Log_Debug2("Carryover clean up on " << coords.size() << " coords");
     CoordSet changed = locked_carryoverCleanup(coords);
-    if (coords.size()) {
-    }
+    // if (coords.size()) {
+    // }
+    internal_operationComplete();
     return changed;
 }
 
@@ -268,13 +271,17 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryoverCleanup(const CoordSet& coords) {
 mdn::CoordSet mdn::Mdn2dRules::carryoverCleanupAll() {
     auto lock = lockWriteable();
     Log_Debug2("");
-    return locked_carryoverCleanupAll();
+    CoordSet changed = locked_carryoverCleanupAll();
+    internal_operationComplete();
+    return changed;
 }
 
 
 mdn::CoordSet mdn::Mdn2dRules::locked_carryoverCleanupAll() {
     Log_Debug4("");
-    return locked_carryoverCleanup(m_index);
+    CoordSet changed = locked_carryoverCleanup(m_index);
+    internal_operationComplete();
+    return changed;
 }
 
 
@@ -282,6 +289,7 @@ void mdn::Mdn2dRules::shift(int xDigits, int yDigits) {
     auto lock = lockWriteable();
     Log_Debug2("shifting (" << xDigits << "," << yDigits << ")");
     locked_shift(xDigits, yDigits);
+    internal_operationComplete();
 }
 
 
@@ -291,6 +299,7 @@ void mdn::Mdn2dRules::shift(const Coord& xy) {
         Log_Debug2("shifting (" << xy.x() << "," << xy.y() << ")");
     }
     locked_shift(xy);
+    internal_operationComplete();
 }
 
 
@@ -307,16 +316,20 @@ void mdn::Mdn2dRules::locked_shift(int xDigits, int yDigits) {
     if (xDigits > 0) {
         Log_Debug3("shifting right (" << xDigits << ")");
         locked_shiftRight(xDigits);
+        internal_modified();
     } else if (xDigits < 0) {
         Log_Debug3("shifting left (" << -xDigits << ")");
         locked_shiftLeft(-xDigits);
+        internal_modified();
     }
     if (yDigits > 0) {
         Log_Debug3("shifting up (" << yDigits << ")");
         locked_shiftUp(yDigits);
+        internal_modified();
     } else if (yDigits < 0) {
         Log_Debug3("shifting down (" << -yDigits << ")");
         locked_shiftDown(-yDigits);
+        internal_modified();
     }
 }
 
@@ -325,6 +338,7 @@ void mdn::Mdn2dRules::shiftRight(int nDigits) {
     auto lock = lockWriteable();
     Log_Debug2("shifting right (" << nDigits << ")");
     locked_shiftRight(nDigits);
+    internal_operationComplete();
 }
 
 
@@ -343,6 +357,7 @@ void mdn::Mdn2dRules::locked_shiftRight(int nDigits) {
             m_raw[coord.copyTranslateX(nDigits)] = d;
         }
     }
+    internal_modified();
     locked_rebuildMetadata();
 }
 
@@ -351,6 +366,7 @@ void mdn::Mdn2dRules::shiftLeft(int nDigits) {
     auto lock = lockWriteable();
     Log_Debug2("shifting left (" << nDigits << ")");
     locked_shiftLeft(nDigits);
+    internal_operationComplete();
 }
 
 
@@ -369,6 +385,7 @@ void mdn::Mdn2dRules::locked_shiftLeft(int nDigits) {
             m_raw[coord.copyTranslateX(-nDigits)] = d;
         }
     }
+    internal_modified();
     locked_rebuildMetadata();
 }
 
@@ -377,6 +394,7 @@ void mdn::Mdn2dRules::shiftUp(int nDigits) {
     auto lock = lockWriteable();
     Log_Debug2("shifting up (" << nDigits << ")");
     locked_shiftUp(nDigits);
+    internal_operationComplete();
 }
 
 
@@ -395,6 +413,7 @@ void mdn::Mdn2dRules::locked_shiftUp(int nDigits) {
             m_raw[coord.copyTranslateY(nDigits)] = d;
         }
     }
+    internal_modified();
     locked_rebuildMetadata();
 }
 
@@ -403,6 +422,7 @@ void mdn::Mdn2dRules::shiftDown(int nDigits) {
     auto lock = lockWriteable();
     Log_Debug2("shifting down (" << nDigits << ")");
     locked_shiftDown(nDigits);
+    internal_operationComplete();
 }
 
 
@@ -421,6 +441,7 @@ void mdn::Mdn2dRules::locked_shiftDown(int nDigits) {
             m_raw[coord.copyTranslateY(-nDigits)] = d;
         }
     }
+    internal_modified();
     locked_rebuildMetadata();
 }
 
@@ -429,6 +450,7 @@ void mdn::Mdn2dRules::transpose() {
     auto lock = lockWriteable();
     Log_Debug2("");
     locked_transpose();
+    internal_operationComplete();
 }
 
 
@@ -440,6 +462,9 @@ void mdn::Mdn2dRules::locked_transpose() {
         temp.locked_setValue(Coord(xy.y(), xy.x()), digit);
     }
     operator=(temp);
+    if (m_raw.size()) {
+        internal_modified();
+    }
 }
 
 

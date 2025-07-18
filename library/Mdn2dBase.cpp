@@ -705,7 +705,7 @@ int mdn::Mdn2dBase::setPrecision(int newPrecision) {
     internal_operationComplete();
     return nDropped;
 }
-&&&&&
+
 
 int mdn::Mdn2dBase::locked_setPrecision(int newPrecision) {
     int oldPrecision = m_config.precision();
@@ -818,7 +818,6 @@ void mdn::Mdn2dBase::internal_clearMetadata() const {
 
 
 bool mdn::Mdn2dBase::internal_setValueRaw(const Coord& xy, Digit value) {
-
     if (value == 0) {
         if (Log_Showing_Debug4) {
             Log_Debug4(
