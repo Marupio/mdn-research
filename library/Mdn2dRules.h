@@ -18,7 +18,7 @@ protected:
 
     // Polymorphic nodes and the last time it was calculated
     mutable CoordSet m_polymorphicNodes;
-    mutable long m_polymorphicNodes_event;
+    mutable long long m_polymorphicNodes_event;
 
 
 public:

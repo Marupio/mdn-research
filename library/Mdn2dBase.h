@@ -48,8 +48,11 @@ protected:
         mutable Coord m_boundsMin;
         mutable Coord m_boundsMax;
 
+        // When true, increment m_event once operation is complete
+        bool m_modified;
+
         // Event number for tracking derived, demand-driven data
-        long m_event;
+        long long m_event;
 
 
 public:
@@ -196,8 +199,19 @@ public:
             PrecisionStatus checkPrecisionWindow(const Coord& xy) const;
             protected: PrecisionStatus locked_checkPrecisionWindow(const Coord& xy) const; public:
 
-            // Clear all derived data, update event number
-            void modified();
+            // Set the m_modified flag to trigger housekeeping with derived data when operations are
+            // complete
+
+            // Use when the data has changed, but operation may not yet be complete
+            void internal_modified();
+
+            // Use when the operation is complete, but the data may not have changed
+            void internal_operationComplete();
+
+            // Use when the data has changed AND the operation is complete, performs housekeeping:
+            //  * clear derived data
+            //  * increment m_event flag
+            void internal_modifiedAndComplete();
 
 
 protected:

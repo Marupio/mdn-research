@@ -132,7 +132,6 @@ mdn::Carryover mdn::Mdn2dRules::locked_checkCarryover(const Coord& xy) const {
 mdn::CoordSet mdn::Mdn2dRules::carryover(const Coord& xy) {
     auto lock = lockWriteable();
     Log_Debug2("At: " << xy);
-    modified();
     return locked_carryover(xy);
 }
 
@@ -216,7 +215,6 @@ mdn::CoordSet mdn::Mdn2dRules::carryoverCleanup(const CoordSet& coords) {
     Log_Debug2("Carryover clean up on " << coords.size() << " coords");
     CoordSet changed = locked_carryoverCleanup(coords);
     if (coords.size()) {
-        modified();
     }
     return changed;
 }
@@ -283,7 +281,6 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryoverCleanupAll() {
 void mdn::Mdn2dRules::shift(int xDigits, int yDigits) {
     auto lock = lockWriteable();
     Log_Debug2("shifting (" << xDigits << "," << yDigits << ")");
-    modified();
     locked_shift(xDigits, yDigits);
 }
 
@@ -293,7 +290,6 @@ void mdn::Mdn2dRules::shift(const Coord& xy) {
     if (Log_Showing_Debug3) {
         Log_Debug2("shifting (" << xy.x() << "," << xy.y() << ")");
     }
-    modified();
     locked_shift(xy);
 }
 
@@ -328,7 +324,6 @@ void mdn::Mdn2dRules::locked_shift(int xDigits, int yDigits) {
 void mdn::Mdn2dRules::shiftRight(int nDigits) {
     auto lock = lockWriteable();
     Log_Debug2("shifting right (" << nDigits << ")");
-    modified();
     locked_shiftRight(nDigits);
 }
 
@@ -355,7 +350,6 @@ void mdn::Mdn2dRules::locked_shiftRight(int nDigits) {
 void mdn::Mdn2dRules::shiftLeft(int nDigits) {
     auto lock = lockWriteable();
     Log_Debug2("shifting left (" << nDigits << ")");
-    modified();
     locked_shiftLeft(nDigits);
 }
 
@@ -382,7 +376,6 @@ void mdn::Mdn2dRules::locked_shiftLeft(int nDigits) {
 void mdn::Mdn2dRules::shiftUp(int nDigits) {
     auto lock = lockWriteable();
     Log_Debug2("shifting up (" << nDigits << ")");
-    modified();
     locked_shiftUp(nDigits);
 }
 
@@ -409,7 +402,6 @@ void mdn::Mdn2dRules::locked_shiftUp(int nDigits) {
 void mdn::Mdn2dRules::shiftDown(int nDigits) {
     auto lock = lockWriteable();
     Log_Debug2("shifting down (" << nDigits << ")");
-    modified();
     locked_shiftDown(nDigits);
 }
 
@@ -436,7 +428,6 @@ void mdn::Mdn2dRules::locked_shiftDown(int nDigits) {
 void mdn::Mdn2dRules::transpose() {
     auto lock = lockWriteable();
     Log_Debug2("");
-    modified();
     locked_transpose();
 }
 

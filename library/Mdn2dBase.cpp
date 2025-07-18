@@ -31,6 +31,7 @@ mdn::Mdn2dBase::Mdn2dBase()
     m_config(Mdn2dConfig::static_defaultConfig()),
     m_boundsMin({constants::intMax, constants::intMax}),
     m_boundsMax({constants::intMin, constants::intMin}),
+    m_modified(false),
     m_event(0)
 {
     Log_Debug3("Constructing null Mdn2dBase");
@@ -42,6 +43,7 @@ mdn::Mdn2dBase::Mdn2dBase(Mdn2dConfig config)
     m_config(config),
     m_boundsMin({constants::intMax, constants::intMax}),
     m_boundsMax({constants::intMin, constants::intMin}),
+    m_modified(false),
     m_event(0)
 {
     Log_Debug3("Constructing Mdn2dBase with config " << config);
@@ -50,6 +52,7 @@ mdn::Mdn2dBase::Mdn2dBase(Mdn2dConfig config)
 
 mdn::Mdn2dBase::Mdn2dBase(const Mdn2dBase& other):
     m_config(other.m_config),
+    m_modified(false),
     m_event(0)
 {
     Log_Debug3("Constructing Mdn2dBase as copy");
@@ -80,7 +83,7 @@ mdn::Mdn2dBase& mdn::Mdn2dBase::operator=(const Mdn2dBase& other) {
         m_index = other.m_index;
         m_boundsMin = other.m_boundsMin;
         m_boundsMax = other.m_boundsMax;
-        modified();
+        internal_modified();
     } else {
         Log_Warn("Attempting to set Mdn2d equal to itself");
     }
@@ -90,6 +93,7 @@ mdn::Mdn2dBase& mdn::Mdn2dBase::operator=(const Mdn2dBase& other) {
 
 mdn::Mdn2dBase::Mdn2dBase(Mdn2dBase&& other) noexcept :
     m_config(other.m_config),
+    m_modified(false),
     m_event(0)
 {
     auto lock = other.lockWriteable();
@@ -126,7 +130,7 @@ mdn::Mdn2dBase& mdn::Mdn2dBase::operator=(Mdn2dBase&& other) noexcept {
         m_index = std::move(other.m_index);
         m_boundsMin = other.m_boundsMin;
         m_boundsMax = other.m_boundsMax;
-        modified();
+        internal_modified();
     } else {
         Log_Warn("Attempting to set Mdn2d equal to itself, move copying");
     }
@@ -253,7 +257,7 @@ void mdn::Mdn2dBase::clear() {
     auto lock = lockWriteable();
     Log_Debug2("");
     locked_clear();
-    modified();
+    internal_operationComplete();
 }
 
 
@@ -267,8 +271,9 @@ void mdn::Mdn2dBase::locked_clear() {
 bool mdn::Mdn2dBase::setToZero(const Coord& xy) {
     auto lock = lockWriteable();
     Log_Debug2("Setting " << xy << " to zero");
-    modified();
-    return locked_setToZero(xy);
+    bool possibleCarryOver = locked_setToZero(xy);
+    internal_operationComplete();
+    return possibleCarryOver;
 }
 
 
@@ -299,6 +304,7 @@ bool mdn::Mdn2dBase::locked_setToZero(const Coord& xy) {
         Log_Debug3("Setting " << xy << " to zero: original value " << it->second);
     }
     m_raw.erase(it);
+    internal_modified();
 
     CoordSet& coordsAlongX(xit->second);
     CoordSet& coordsAlongY(yit->second);
@@ -334,8 +340,9 @@ mdn::CoordSet mdn::Mdn2dBase::setToZero(const CoordSet& coords) {
     } else {
         Log_Debug2("Zeroing set containing " << coords.size() << " coords");
     }
-    modified();
-    return locked_setToZero(coords);
+    CoordSet changed = locked_setToZero(coords);
+    internal_operationComplete();
+    return changed;
 }
 
 
@@ -380,12 +387,16 @@ mdn::CoordSet mdn::Mdn2dBase::locked_setToZero(const CoordSet& purgeSet) {
             }
         }
     }
+    if (indexRowsRemoved + indexColsRemoved > 0) {
+        internal_modified();
+
+        // Bounds may have changed
+        internal_updateBounds();
+    }
     Log_Debug3(
         "Erased " << indexRowsRemoved << " index rows and " << indexColsRemoved << " index cols"
     );
 
-    // Bounds may have changed
-    internal_updateBounds();
     return changed;
 }
 
@@ -395,32 +406,36 @@ bool mdn::Mdn2dBase::setValue(const Coord& xy, Digit value) {
     if (Log_Showing_Debug2) {
         Log_Debug2("Setting " << xy << " to " << static_cast<int>(value));
     }
-    modified();
-    return locked_setValue(xy, value);
+    bool possibleCarryOver = locked_setValue(xy, value);
+    internal_modifiedAndComplete();
+    return possibleCarryOver;
 }
 
 
 bool mdn::Mdn2dBase::setValue(const Coord& xy, int value) {
     auto lock = lockWriteable();
     Log_Debug2("Setting " << xy << " to " << value);
-    modified();
-    return locked_setValue(xy, static_cast<Digit>(value));
+    bool possibleCarryOver = locked_setValue(xy, static_cast<Digit>(value));
+    internal_modifiedAndComplete();
+    return possibleCarryOver;
 }
 
 
 bool mdn::Mdn2dBase::setValue(const Coord& xy, long value) {
     auto lock = lockWriteable();
     Log_Debug2("Setting " << xy << " to " << value);
-    modified();
-    return locked_setValue(xy, static_cast<Digit>(value));
+    bool possibleCarryOver = locked_setValue(xy, static_cast<Digit>(value));
+    internal_modifiedAndComplete();
+    return possibleCarryOver;
 }
 
 
 bool mdn::Mdn2dBase::setValue(const Coord& xy, long long value) {
     auto lock = lockWriteable();
     Log_Debug2("Setting " << xy << " to " << value);
-    modified();
-    return locked_setValue(xy, static_cast<Digit>(value));
+    bool possibleCarryOver = locked_setValue(xy, static_cast<Digit>(value));
+    internal_modifiedAndComplete();
+    return possibleCarryOver;
 }
 
 
@@ -686,10 +701,11 @@ int mdn::Mdn2dBase::locked_getPrecision() const {
 int mdn::Mdn2dBase::setPrecision(int newPrecision) {
     auto lock = lockWriteable();
     Log_Debug2("New precision: " << newPrecision);
-    modified();
-    return locked_setPrecision(newPrecision);
+    int nDropped = locked_setPrecision(newPrecision);
+    internal_operationComplete();
+    return nDropped;
 }
-
+&&&&&
 
 int mdn::Mdn2dBase::locked_setPrecision(int newPrecision) {
     int oldPrecision = m_config.precision();
@@ -744,9 +760,27 @@ mdn::PrecisionStatus mdn::Mdn2dBase::locked_checkPrecisionWindow(const Coord& xy
 }
 
 
-void mdn::Mdn2dBase::modified(){
-    Log_Debug4("Incrementing m_event from " << m_event);
-    m_event++;
+void mdn::Mdn2dBase::internal_modified() {
+    Log_Debug4("Modified flag set");
+    m_modified = true;
+}
+
+
+void mdn::Mdn2dBase::internal_operationComplete() {
+    if (m_modified) {
+        Log_Debug4("Operation complete, incrementing m_event from " << m_event);
+        ++m_event;
+        m_modified = false;
+    } else {
+        Log_Debug4("Operation complete, no modifications");
+    }
+}
+
+
+void mdn::Mdn2dBase::internal_modifiedAndComplete() {
+    Log_Debug4("Operation complete and modified, incrementing m_event from " << m_event);
+    ++m_event;
+    m_modified = false;
 }
 
 
@@ -809,6 +843,7 @@ bool mdn::Mdn2dBase::internal_setValueRaw(const Coord& xy, Digit value) {
             }
             return false;
         }
+        internal_modified();
         internal_insertAddress(xy);
         m_raw[xy] = value;
         if (ps == PrecisionStatus::Above) {
@@ -832,6 +867,9 @@ bool mdn::Mdn2dBase::internal_setValueRaw(const Coord& xy, Digit value) {
     // xy is already non-zero
     Digit oldVal = it->second;
     it->second = value;
+    if (oldVal != value) {
+        internal_modified();
+    }
 
     if (Log_Showing_Debug4) {
         Log_Debug4(
