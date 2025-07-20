@@ -1,0 +1,2 @@
+Windows path = out/build/default
+Linux path = build/

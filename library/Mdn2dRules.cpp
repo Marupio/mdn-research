@@ -130,6 +130,7 @@ mdn::Carryover mdn::Mdn2dRules::locked_checkCarryover(const Coord& xy) const {
     if (Log_Showing_Debug3) {
         Log_Debug3_T("result=" << CarryoverToName(result));
     }
+    return result;
 }
 
 
@@ -286,59 +287,67 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryoverCleanup(const CoordSet& coords) {
             << "\tDigits remaining to check: " << workingSet.size() << '\n'
             << "\tTotal digits affected: " << affectedCoords.size() << '\n'
         );
-        Log_Debug3_T("Carryover cleanup on " << coords.size() << "coords failed.");
+        Log_Debug3_T("Carryover cleanup on " << coords.size() << " coords failed.");
     } else {
         Log_Debug3_T("Carryover cleanup on " << coords.size() << " coords complete.");
     }
     return affectedCoords;
 }
 
-&&&&&&&&&&
+
 mdn::CoordSet mdn::Mdn2dRules::carryoverCleanupAll() {
     auto lock = lockWriteable();
-    Log_Debug2("");
+    Log_Debug2_H("");
     CoordSet changed = locked_carryoverCleanupAll();
     internal_operationComplete();
+    Log_Debug2_T("result=[set of coords with " << changed.size() << " elements]");
     return changed;
 }
 
 
 mdn::CoordSet mdn::Mdn2dRules::locked_carryoverCleanupAll() {
-    Log_Debug4("");
+    Log_Debug4_H("");
     CoordSet changed = locked_carryoverCleanup(m_index);
-    internal_operationComplete();
+    if (Log_Showing_Debug4) {
+        std::string coordsList(Tools::setToString<Coord>(changed, ','));
+        Log_Debug4("changed=" << coordsList);
+    }
     return changed;
 }
 
 
 void mdn::Mdn2dRules::shift(int xDigits, int yDigits) {
     auto lock = lockWriteable();
-    Log_Debug2("shifting (" << xDigits << "," << yDigits << ")");
+    Log_Debug2_H("shifting (" << xDigits << "," << yDigits << ")");
     locked_shift(xDigits, yDigits);
     internal_operationComplete();
+    Log_Debug2_T("")
 }
 
 
 void mdn::Mdn2dRules::shift(const Coord& xy) {
     auto lock = lockWriteable();
     if (Log_Showing_Debug3) {
-        Log_Debug2("shifting (" << xy.x() << "," << xy.y() << ")");
+        Log_Debug3_H("shifting (" << xy.x() << "," << xy.y() << ")");
     }
     locked_shift(xy);
     internal_operationComplete();
+    Log_Debug3_T("");
 }
 
 
 void mdn::Mdn2dRules::locked_shift(const Coord& xy) {
     if (Log_Showing_Debug3) {
-        Log_Debug3("shifting (" << xy.x() << "," << xy.y() << ")");
+        Log_Debug3_H("shifting (" << xy.x() << "," << xy.y() << ")");
     }
     locked_shift(xy.x(), xy.y());
+    Log_Debug3_T("");
 }
 //TODO - Do we update metadata with shifts?  e.g. polymorphic coords?  Maybe we don't track
 // keep track of polymorphic carryovers.
 
 void mdn::Mdn2dRules::locked_shift(int xDigits, int yDigits) {
+    Log_Debug3_H("shift (" << xDigits << "," << yDigits << ")");
     if (xDigits > 0) {
         Log_Debug3("shifting right (" << xDigits << ")");
         locked_shiftRight(xDigits);
@@ -357,24 +366,26 @@ void mdn::Mdn2dRules::locked_shift(int xDigits, int yDigits) {
         locked_shiftDown(-yDigits);
         internal_modified();
     }
+    Log_Debug3_T("");
 }
 
 
 void mdn::Mdn2dRules::shiftRight(int nDigits) {
     auto lock = lockWriteable();
-    Log_Debug2("shifting right (" << nDigits << ")");
+    Log_Debug2_H("shifting right (" << nDigits << ")");
     locked_shiftRight(nDigits);
     internal_operationComplete();
+    Log_Debug2_T("");
 }
 
 
 void mdn::Mdn2dRules::locked_shiftRight(int nDigits) {
+    Log_Debug3_H("shifting right " << nDigits);
     #ifdef MDN_DEBUG
         if (nDigits < 0) {
             throw std::invalid_argument("cannot shift negative digits, use opposite direction");
         }
     #endif
-    Log_Debug3("shifting right " << nDigits);
     for (auto it = m_xIndex.rbegin(); it != m_xIndex.rend(); ++it) {
         const CoordSet& coords = it->second;
         for (const Coord& coord : coords) {
@@ -385,24 +396,26 @@ void mdn::Mdn2dRules::locked_shiftRight(int nDigits) {
     }
     internal_modified();
     locked_rebuildMetadata();
+    Log_Debug3_T("");
 }
 
 
 void mdn::Mdn2dRules::shiftLeft(int nDigits) {
     auto lock = lockWriteable();
-    Log_Debug2("shifting left (" << nDigits << ")");
+    Log_Debug2_H("shifting left (" << nDigits << ")");
     locked_shiftLeft(nDigits);
     internal_operationComplete();
+    Log_Debug2_T("");
 }
 
 
 void mdn::Mdn2dRules::locked_shiftLeft(int nDigits) {
+    Log_Debug3_H("shifting left (" << nDigits << ")");
     #ifdef MDN_DEBUG
         if (nDigits < 0) {
             throw std::invalid_argument("cannot shift negative digits, use opposite direction");
         }
     #endif
-    Log_Debug3("shifting left (" << nDigits << ")");
     for (auto it = m_xIndex.begin(); it != m_xIndex.end(); ++it) {
         const CoordSet& coords = it->second;
         for (const Coord& coord : coords) {
@@ -413,24 +426,26 @@ void mdn::Mdn2dRules::locked_shiftLeft(int nDigits) {
     }
     internal_modified();
     locked_rebuildMetadata();
+    Log_Debug3_T("");
 }
 
 
 void mdn::Mdn2dRules::shiftUp(int nDigits) {
     auto lock = lockWriteable();
-    Log_Debug2("shifting up (" << nDigits << ")");
+    Log_Debug2_H("shifting up (" << nDigits << ")");
     locked_shiftUp(nDigits);
     internal_operationComplete();
+    Log_Debug2_T("");
 }
 
 
 void mdn::Mdn2dRules::locked_shiftUp(int nDigits) {
+    Log_Debug3_H("shifting right (" << nDigits << ")");
     #ifdef MDN_DEBUG
         if (nDigits < 0) {
             throw std::invalid_argument("cannot shift negative digits, use opposite direction");
         }
     #endif
-    Log_Debug3("shifting right (" << nDigits << ")");
     for (auto it = m_yIndex.rbegin(); it != m_yIndex.rend(); ++it) {
         const CoordSet& coords = it->second;
         for (const Coord& coord : coords) {
@@ -441,24 +456,26 @@ void mdn::Mdn2dRules::locked_shiftUp(int nDigits) {
     }
     internal_modified();
     locked_rebuildMetadata();
+    Log_Debug3_T("");
 }
 
 
 void mdn::Mdn2dRules::shiftDown(int nDigits) {
     auto lock = lockWriteable();
-    Log_Debug2("shifting down (" << nDigits << ")");
+    Log_Debug2_H("shifting down (" << nDigits << ")");
     locked_shiftDown(nDigits);
     internal_operationComplete();
+    Log_Debug2_T("");
 }
 
 
 void mdn::Mdn2dRules::locked_shiftDown(int nDigits) {
+    Log_Debug3_H("shifting down (" << nDigits << ")");
     #ifdef MDN_DEBUG
         if (nDigits < 0) {
             throw std::invalid_argument("cannot shift negative digits, use opposite direction");
         }
     #endif
-    Log_Debug3("shifting down (" << nDigits << ")");
     for (auto it = m_yIndex.begin(); it != m_yIndex.end(); ++it) {
         const CoordSet& coords = it->second;
         for (const Coord& coord : coords) {
@@ -469,19 +486,21 @@ void mdn::Mdn2dRules::locked_shiftDown(int nDigits) {
     }
     internal_modified();
     locked_rebuildMetadata();
+    Log_Debug3_T("");
 }
 
 
 void mdn::Mdn2dRules::transpose() {
     auto lock = lockWriteable();
-    Log_Debug2("");
+    Log_Debug2_H("");
     locked_transpose();
     internal_operationComplete();
+    Log_Debug2_T("");
 }
 
 
 void mdn::Mdn2dRules::locked_transpose() {
-    Log_Debug3("");
+    Log_Debug3_H("");
     Mdn2d temp(NewInstance(m_config));
     auto tempLock = temp.lockWriteable();
     for (const auto& [xy, digit] : m_raw) {
@@ -491,17 +510,21 @@ void mdn::Mdn2dRules::locked_transpose() {
     if (m_raw.size()) {
         internal_modified();
     }
+    Log_Debug3_T("");
 }
 
 
 const mdn::CoordSet& mdn::Mdn2dRules::getPolymorphicNodes() const {
     auto lock = ReadOnlyLock();
-    Log_Debug2("");
-    return locked_getPolymorphicNodes();
+    Log_Debug2_H("");
+    const mdn::CoordSet& coords = locked_getPolymorphicNodes();
+    Log_Debug2_T("");
+    return coords;
 }
 
 
 const mdn::CoordSet& mdn::Mdn2dRules::locked_getPolymorphicNodes() const {
+    Log_Debug3_H("");
     if (m_polymorphicNodes_event != m_event) {
         Log_Debug3(
             "polymorphicNodes out-of-date: (data: " << m_polymorphicNodes_event
@@ -511,12 +534,13 @@ const mdn::CoordSet& mdn::Mdn2dRules::locked_getPolymorphicNodes() const {
     } else {
             Log_Debug3("already up-to-date, returning");
     }
+    Log_Debug3_T("");
     return m_polymorphicNodes;
 }
 
 
 void mdn::Mdn2dRules::internal_polymorphicScan() const {
-    Log_Debug3("");
+    Log_Debug3_H("");
     int nRequired = 0;
     m_polymorphicNodes.clear();
     for (const auto& [xy, digit] : m_raw) {
@@ -540,11 +564,12 @@ void mdn::Mdn2dRules::internal_polymorphicScan() const {
         Logger::instance().warn(oss.str());
     }
     m_polymorphicNodes_event = m_event;
+    Log_Debug3_T("");
 }
 
 
 void mdn::Mdn2dRules::internal_oneCarryover(const Coord& xy) {
-    Log_Debug4("");
+    Log_Debug4_H("At " << xy);
     Coord xy_x = xy.copyTranslateX(1);
     Coord xy_y = xy.copyTranslateY(1);
     Digit p = locked_getValue(xy);
@@ -554,6 +579,7 @@ void mdn::Mdn2dRules::internal_oneCarryover(const Coord& xy) {
     int ix = static_cast<int>(x);
     int iy = static_cast<int>(y);
     int nCarry = ip/m_config.base();
+    Log_Debug4("Before carry (" << ip << ":" << ix << "," << iy << "): carry=" << nCarry);
     if (ip > 0) {
         ip -= m_config.base();
         iy += 1;
@@ -566,11 +592,12 @@ void mdn::Mdn2dRules::internal_oneCarryover(const Coord& xy) {
     locked_setValue(xy, ip);
     locked_setValue(xy_x, ix);
     locked_setValue(xy_y, iy);
+    Log_Debug4_T("After carry (" << ip << ":" << ix << "," << iy << ")");
 }
 
 
 void mdn::Mdn2dRules::internal_ncarryover(const Coord& xy) {
-    Log_Debug3("");
+    Log_Debug3_H("");
     Coord xy_x = xy.copyTranslateX(1);
     Coord xy_y = xy.copyTranslateY(1);
     Digit p = locked_getValue(xy);
@@ -602,12 +629,14 @@ void mdn::Mdn2dRules::internal_ncarryover(const Coord& xy) {
     locked_setValue(xy, ip);
     locked_setValue(xy_x, ix);
     locked_setValue(xy_y, iy);
+    Log_Debug3_T("");
 }
 
 
 void mdn::Mdn2dRules::internal_clearMetadata() const {
-    Log_Debug3("");
+    Log_Debug3_H("");
     m_polymorphicNodes.clear();
     m_polymorphicNodes_event = -1;
     Mdn2dBase::internal_clearMetadata();
+    Log_Debug3_T("");
 }

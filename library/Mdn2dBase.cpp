@@ -925,6 +925,7 @@ bool mdn::Mdn2dBase::internal_setValueRaw(const Coord& xy, Digit value) {
         (oldVal < 0 && value > 0) || (oldVal > 0 && value < 0)
     );
     Log_Debug4_T("result=" << result);
+    return result;
     // Possibly faster
     // return (static_cast<int>(oldVal) * static_cast<int>(value)) < 0;
 }
