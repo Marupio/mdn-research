@@ -114,8 +114,12 @@ mdn::Mdn2dRules& mdn::Mdn2dRules::operator=(Mdn2dRules&& other) noexcept {
 
 mdn::Carryover mdn::Mdn2dRules::checkCarryover(const Coord& xy) const {
     auto lock = lockReadOnly();
-    Log_Debug2("At: " << xy);
-    return locked_checkCarryover(xy);
+    Log_Debug2_H("At: " << xy);
+    Carryover result = locked_checkCarryover(xy);
+    if (Log_Showing_Debug2) {
+        Log_Debug2_T("result=" << CarryoverToName(result));
+    }
+    return result;
 }
 
 
@@ -125,7 +129,7 @@ mdn::Carryover mdn::Mdn2dRules::locked_checkCarryover(const Coord& xy) const {
         locked_getValue(xy),
         locked_getValue(xy.copyTranslateX(1)),
         locked_getValue(xy.copyTranslateY(1)),
-        m_config.dbase()
+        m_config.baseDigit()
     );
     if (Log_Showing_Debug3) {
         Log_Debug3_T("result=" << CarryoverToName(result));
@@ -155,7 +159,7 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryover(const Coord& xy, int carry) {
     Digit p = locked_getValue(xy);
     Digit x = locked_getValue(xy_x);
     Digit y = locked_getValue(xy_y);
-    Carryover co = static_checkCarryover(p, x, y, m_config.dbase());
+    Carryover co = static_checkCarryover(p, x, y, m_config.baseDigit());
     if (co == Carryover::Invalid) {
         IllegalOperation err("Invalid carryover requested at " + xy.to_string());
         Log_Error(err.what());
@@ -173,7 +177,7 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryover(const Coord& xy, int carry) {
             nCarry = 1;
         }
     } else {
-        nCarry = ip/m_config.base();
+        nCarry = (ip + carry)/m_config.base();
     }
     #ifdef MDN_DEBUG
         if (nCarry > 1 || nCarry < -1) {
@@ -196,8 +200,8 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryover(const Coord& xy, int carry) {
         //  * Carryover: (-4:3,-2) ==> (6:2,-3)
         //  * Carryover: (6:9,0) ==> (-4:10*,-2)
         //  * Carryover: (-2:9,-9) ==> (8:8,-10*)
-        std::string xStar = (ix > base || ix < -base) ? "*" : "";
-        std::string yStar = (iy > base || iy < -base) ? "*" : "";
+        std::string xStar = (ix >= base || ix <= -base) ? "*" : "";
+        std::string yStar = (iy >= base || iy <= -base) ? "*" : "";
         Log_Debug3(
             "Carrover: " << nCarry << "(+" << carry << "):("
             << static_cast<int>(p) << ":"
@@ -208,15 +212,19 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryover(const Coord& xy, int carry) {
     }
 
     // Check for additional carryovers
-    if (iy > base || iy < -base) {
+    if (iy >= base || iy <= -base) {
+        Log_Debug4("cascading carryover to " << xy_y << " adding " << nCarry);
         affectedCoords.merge(locked_carryover(xy_y, nCarry));
     } else {
-        locked_setValue(xy_x, ix);
+        Log_Debug4("no further carryovers in y, at " << xy_y << " setting to " << iy);
+        locked_setValue(xy_y, iy);
     }
-    if (ix > base || ix < -base) {
+    if (ix >= base || ix <= -base) {
+        Log_Debug4("cascading carryover to " << xy_x << " adding " << nCarry);
         affectedCoords.merge(locked_carryover(xy_x, nCarry));
     } else {
-        locked_setValue(xy_y, iy);
+        Log_Debug4("no further carryovers in y, at " << xy_x << " setting to " << iy);
+        locked_setValue(xy_x, ix);
     }
     affectedCoords.merge(locked_carryoverCleanup(affectedCoords));
     if (Log_Showing_Debug4) {
@@ -254,8 +262,8 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryoverCleanup(const CoordSet& coords) {
 
     Log_Debug3_H("Input set of " << coords.size() << " elements for carryoverCleanup");
     if (Log_Showing_Debug4) {
-        std::string coordsList(Tools::setToString<Coord>(affectedCoords, ','));
-        Log_Debug4("affectedCoords=" << coordsList);
+        std::string coordsList(Tools::setToString<Coord>(coords, ','));
+        Log_Debug4("coords=" << coordsList);
     }
     Carryover wrongSign = Carryover::Required;
     if (m_config.signConvention() == SignConvention::Positive) {
@@ -557,11 +565,10 @@ void mdn::Mdn2dRules::internal_polymorphicScan() const {
         }
     }
     if (nRequired) {
-        std::ostringstream oss;
-        oss << "Internal error: found " << nRequired << " required carryovers during scan."
-            << std::endl;
-        oss << "MDN is in an invalid state." << std::endl;
-        Logger::instance().warn(oss.str());
+        Log_Warn(
+            "Internal error: found " << nRequired << " required carryovers during scan.\n"
+            << "MDN is in an invalid state."
+        );
     }
     m_polymorphicNodes_event = m_event;
     Log_Debug3_T("");
@@ -602,10 +609,10 @@ void mdn::Mdn2dRules::internal_ncarryover(const Coord& xy) {
     Coord xy_y = xy.copyTranslateY(1);
     Digit p = locked_getValue(xy);
     #ifdef MDN_DEBUG
-        if (abs(p) < m_config.dbase()) {
+        if (abs(p) < m_config.baseDigit()) {
             std::ostringstream oss;
             oss << "Invalid carryover requested at " << xy << ": value (" << p << ") must exceed "
-                << "base (" << m_config.dbase() << ")";
+                << "base (" << m_config.baseDigit() << ")";
             throw IllegalOperation(oss.str());
         }
     #endif

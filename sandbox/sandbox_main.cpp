@@ -43,16 +43,46 @@ int execute() {
     //     std::cout << *riter << '\n';
     // }
 
+    Log_Info("Mdn2d slot2 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));");
     Mdn2d slot2 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));
-    std::cerr << "Prepare for carryover!" << std::endl;
+    Log_Info("slot2.add(COORD_ORIGIN, 3.141592635, Fraxis::X);");
     slot2.add(COORD_ORIGIN, 3.141592635, Fraxis::X);
+    Log_Info("slot2.setValue(Coord(0, 1), 2);");
     slot2.setValue(Coord(0, 1), 2);
+    Log_Info("slot2.setValue(Coord(1, 0), -2);");
     slot2.setValue(Coord(1, 0), -2);
+    Log_Info("slot2.carryover(COORD_ORIGIN);");
     slot2.carryover(COORD_ORIGIN);
 
     // slot2.add(COORD_ORIGIN, 1000);
+    Log_Info("slot2 --> write");
     std::vector<std::string> disp2 = slot2.toStringRows();
     for (auto riter = disp2.rbegin(); riter != disp2.rend(); ++riter) {
+        std::cout << *riter << '\n';
+    }
+
+    Log_Info("Mdn2d slot3 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));");
+    Mdn2d slot3 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));
+    Log_Info("slot3.add(Coord(-1,0), 1.2, Fraxis::X);");
+    slot3.add(Coord(-1,0), 1.2, Fraxis::X);
+
+    // slot3.add(COORD_ORIGIN, 1000);
+    Log_Info("slot3 --> write");
+    std::vector<std::string> disp3 = slot3.toStringRows();
+    for (auto riter = disp3.rbegin(); riter != disp3.rend(); ++riter) {
+        std::cout << *riter << '\n';
+    }
+
+    Log_Info("Mdn2d slot4 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));");
+    Mdn2d slot4 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));
+    Log_Info("slot4.add(COORD_ORIGIN, 24601);");
+    slot4.add(COORD_ORIGIN, 1234);
+    Log_Info("slot4 += slot3;");
+    slot4 += slot3;
+
+    Log_Info("slot4 --> write");
+    std::vector<std::string> disp4 = slot4.toStringRows();
+    for (auto riter = disp4.rbegin(); riter != disp4.rend(); ++riter) {
         std::cout << *riter << '\n';
     }
     return 0;
@@ -63,6 +93,8 @@ int main() {
 #ifdef _WIN32
     SetConsoleOutputCP(CP_UTF8); // Switch Windows console to UTF-8
 #endif
+    std::cout <<  std::setprecision(19);
+    std::cerr <<  std::setprecision(19);
     Logger& sirTalksALot = Logger::instance();
     sirTalksALot.setLevel(LogLevel::Debug4);
     sirTalksALot.setOutputToFile();

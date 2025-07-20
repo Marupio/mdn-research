@@ -26,7 +26,7 @@ public:
     OutOfRange(const Coord& xy, int value, int base)
         : MdnException(
             "Coordinate " + xy.to_string() + ": out-of-range value " + std::to_string(value)
-            + ", expecting ±" + std::to_string(base)
+            + ", expecting ±" + std::to_string(base-1)
         ) {}
 };
 

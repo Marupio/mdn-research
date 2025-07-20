@@ -702,8 +702,7 @@ bool mdn::Mdn2dBase::locked_hasBounds() const {
     );
 
     Log_Debug3(
-        "Bounds:\n    min: " << m_boundsMin << "\n    max: " << m_boundsMax << "\n"
-        << "    result: " << (!invalid)
+        "Bounds:  min: " << m_boundsMin << "  max: " << m_boundsMax << "  result: " << (!invalid)
     );
     return !invalid;
 }
@@ -728,8 +727,10 @@ std::pair<mdn::Coord, mdn::Coord> mdn::Mdn2dBase::locked_getBounds() const {
 
 int mdn::Mdn2dBase::getPrecision() const {
     auto lock = lockReadOnly();
-    Log_Debug2("");
-    return locked_getPrecision();
+    Log_Debug2_H("");
+    int result = locked_getPrecision();
+    Log_Debug2_T("result=" << result);
+    return result;
 }
 
 
@@ -742,9 +743,10 @@ int mdn::Mdn2dBase::locked_getPrecision() const {
 
 int mdn::Mdn2dBase::setPrecision(int newPrecision) {
     auto lock = lockWriteable();
-    Log_Debug2("New precision: " << newPrecision);
+    Log_Debug2_H("New precision: " << newPrecision);
     int nDropped = locked_setPrecision(newPrecision);
     internal_operationComplete();
+    Log_Debug2_T("result=" << nDropped);
     return nDropped;
 }
 
@@ -764,8 +766,12 @@ int mdn::Mdn2dBase::locked_setPrecision(int newPrecision) {
 
 mdn::PrecisionStatus mdn::Mdn2dBase::checkPrecisionWindow(const Coord& xy) const {
     auto lock = ReadOnlyLock();
-    Log_Debug3("At: " << xy);
-    return locked_checkPrecisionWindow(xy);
+    Log_Debug3_H("At: " << xy);
+    PrecisionStatus result = locked_checkPrecisionWindow(xy);
+    if (Log_Showing_Debug3) {
+        Log_Debug3_T("result=" << PrecisionStatusToName(result));
+    }
+    return result;
 }
 
 

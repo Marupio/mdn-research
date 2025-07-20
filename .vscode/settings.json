@@ -92,6 +92,7 @@
     "source_location": "cpp",
     "filesystem": "cpp",
     "ranges": "cpp",
-    "fstream": "cpp"
+    "fstream": "cpp",
+    "codecvt": "cpp"
   }
 }

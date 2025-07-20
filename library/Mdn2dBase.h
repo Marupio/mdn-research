@@ -246,16 +246,16 @@ protected:
             // Checks if value is within +/- (m_base-1).  If not, throws or returns false.
             template <class Type>
             void internal_checkDigit(const Coord& xy, Type value) const {
-                Digit dbase = m_config.dbase();
+                Digit baseDigit = m_config.baseDigit();
 
                 if (Log_Showing_Debug4) {
                     Log_Debug4(
                         "Checking value " << static_cast<int>(value) << " against base "
-                        << int(dbase)
+                        << int(baseDigit)
                     );
                 }
-                if (value >= dbase || value <= -dbase) {
-                    OutOfRange err(xy, static_cast<int>(value), dbase);
+                if (value >= baseDigit || value <= -baseDigit) {
+                    OutOfRange err(xy, static_cast<int>(value), baseDigit);
                     Log_Error(err.what());
                     throw err;
                 }

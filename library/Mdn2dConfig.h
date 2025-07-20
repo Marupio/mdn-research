@@ -30,14 +30,17 @@ class MDN_API Mdn2dConfig {
     int m_base;
 
     // Convenience - base expressed as a Digit type
-    Digit m_dbase;
+    Digit m_baseDigit;
+
+    // Convenience - base expressed as a double type
+    double m_baseDouble;
 
     // Maximum number of digits from lowest magnitude to maximum magnitude
     int m_precision;
 
     // Smallest value added to a digit that can cascade to a non-zero value within the precision
     //  window
-    int m_epsilon;
+    double m_epsilon;
 
     // Default sign convention for polymorphic numbers
     SignConvention m_signConvention;
@@ -68,13 +71,15 @@ public:
         Fraxis defaultFraxisIn=Fraxis::X
     ) :
         m_base(baseIn),
-        m_dbase(static_cast<Digit>(baseIn)),
+        m_baseDigit(static_cast<Digit>(baseIn)),
+        m_baseDouble(static_cast<double>(baseIn)),
         m_precision(maxSpanIn),
         m_epsilon(static_calculateEpsilon(m_precision, m_base)),
         m_signConvention(signConventionIn),
         m_maxCarryoverIters(maxCarryoverItersIn),
         m_defaultFraxis(defaultFraxisIn)
     {
+
         validateConfig();
     }
 
@@ -95,7 +100,10 @@ public:
     int base() const { return m_base; }
 
     // Return the base as a Digit type
-    Digit dbase() const { return m_dbase; }
+    Digit baseDigit() const { return m_baseDigit; }
+
+    // Return the base as a double type
+    double baseDouble() const { return m_baseDouble; }
 
     // Return the numeric precision
     int precision() const { return m_precision; }
@@ -114,7 +122,7 @@ public:
     }
 
     // Return the derived epsilon value
-    int epsilon() const { return m_epsilon; }
+    double epsilon() const { return m_epsilon; }
 
     SignConvention signConvention() const { return m_signConvention; }
     void setSignConvention(int newVal) {
@@ -200,6 +208,7 @@ public:
             << "("
                 << "b:" << c.m_base
                 << ", p:" << c.m_precision
+                << ", e:" << c.m_epsilon
                 << ", s:" << SignConventionToName(c.m_signConvention)
                 << ", c:" << c.m_maxCarryoverIters
                 << ", f:" << FraxisToName(c.m_defaultFraxis)
@@ -212,11 +221,13 @@ public:
         char lparen, letter, colon, comma, rparen;
         std::string fname;
         std::string sname;
-        // (b:10, p:16, s:Positive, c:20, f:X)
+        // (b:10, p:16, e:0.0000024, s:Positive, c:20, f:X)
         // Reading [(b:10]
         is >> lparen >> letter >> colon >> c.m_base;
         // Reading [, p:16]
         is >> comma >> letter >> colon >> c.m_precision;
+        // Reading [, e:2.4e-6]
+        is >> comma >> letter >> colon >> c.m_epsilon;
         // Reading [, s:Positive,]
         while (letter != ',') {
             is >> letter;

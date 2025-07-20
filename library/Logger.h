@@ -70,6 +70,9 @@ public:
         }
     }
 
+    // Return the indent, in integer form
+    int getIndent() const { return m_indent; }
+
     // Return the indent, in string form
     const std::string& indent() const { return m_indentStr; }
 
@@ -123,7 +126,7 @@ private:
     #define InternalLoggerMacro(message, level) { \
         std::ostringstream oss; \
         std::string fileRef( \
-            "[" + Tools::removePath(__FILE__) + ":" + std::to_string(__LINE__) + "," + \
+            "[" + std::to_string(Logger::instance().getIndent()) + "|" + Tools::removePath(__FILE__) + ":" + std::to_string(__LINE__) + "," + \
             __func__ + "] " \
         ); \
         Logger& loginst = Logger::instance(); \
@@ -132,8 +135,20 @@ private:
     }
 
     #define InternalLoggerHead(message, level) { \
-        Logger::instance().increaseIndent(); \
-        InternalLoggerMacro(message, level); \
+        std::string msgStr; \
+        { \
+            std::ostringstream oss; \
+            oss << message; \
+            msgStr = oss.str(); \
+        } \
+        if (msgStr.empty()) { \
+            Logger::instance().increaseIndent(); \
+            InternalLoggerMacro(msgStr, level); \
+        } else { \
+            InternalLoggerMacro("", level); \
+            Logger::instance().increaseIndent(); \
+            InternalLoggerMacro(msgStr, level); \
+        } \
     }
 
     #define InternalLoggerTail(message, level) { \
