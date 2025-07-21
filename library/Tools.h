@@ -4,6 +4,7 @@
 #include <string>
 #include <sstream>
 #include <unordered_set>
+#include <utility>
 
 #include "Constants.h"
 #include "Digit.h"
@@ -20,7 +21,7 @@ public:
     static const std::string m_boxArt_x; // ┼
 
     // Convert a vector of anything to a string delimiter
-    template <typename T>
+    template<typename T>
     static std::string vectorToString(
         const std::vector<T>& array, const std::string& delimiter, bool reverse
     ) {
@@ -43,13 +44,26 @@ public:
     }
 
     // Optional overload for char delimiter
-    template <typename T>
+    template<typename T>
     static std::string vectorToString(const std::vector<T>& array, char delimiter, bool reverse) {
         return vectorToString(array, std::string(1, delimiter), reverse);
     }
 
+    template<typename S, typename T>
+    static std::string pairToString(const std::pair<S, T>& pair, const std::string& delimiter) {
+        std::ostringstream oss;
+        oss << pair.first << delimiter << pair.second;
+        return oss.str();
+    }
+
+    // Optional overload for char delimiter
+    template<typename S, typename T>
+    static std::string pairToString(const std::pair<S, T>& pair, char delimiter) {
+        return pairToString(pair, std::string(1, delimiter));
+    }
+
     // Convert a set of anything to a string delimiter
-    template <typename T>
+    template<typename T>
     static std::string setToString(const std::unordered_set<T>& set, const std::string& delimiter) {
         if (set.empty()) return "";
 
@@ -67,7 +81,7 @@ public:
     }
 
     // Optional overload for char delimiter
-    template <typename T>
+    template<typename T>
     static std::string setToString(const std::unordered_set<T>& set, char delimiter) {
         return setToString(set, std::string(1, delimiter));
     }

@@ -1,0 +1,59 @@
+
+// Mdn2d interface
+
+        Mdn2d(Mdn2dConfig config);
+        // Create a new Mdn2d
+        // Opens a window with settings, including all Mdn2dConfig parameters:
+
+            Mdn2dConfig(
+                int baseIn=10,
+                int maxSpanIn=16,
+                SignConvention signConventionIn=SignConvention::Positive,
+                int maxCarryoverItersIn = 20,
+                Fraxis defaultFraxisIn=Fraxis::X
+            )
+        // Base can be an int from 2 .. 32, inclusive
+        // MaxSpan is how many digits can be stored, in a box shape, i.e. maxSpan squared
+        //  maxSpan is a Mdn2d equivalent of normal numbers' "precision"
+        // SignConvention convention can be any of:
+            const std::vector<std::string> SignConventionNames(
+                {
+                    "Default",
+                    "Positive",
+                    "Negative"
+                }
+            );
+        // Max carryOverIters - I'm not sure where that's used, but offer it up to the user as a
+        //  positive, non-zero integer
+        // Fraxis can be:
+            const std::vector<std::string> FraxisNames(
+                {
+                    "Default",
+                    "X",
+                    "Y"
+                }
+            );
+
+        // Mdn2d also have Copy constructors (and move constructors)
+        //  So on an existing number, users can choose to 'duplicate' it
+        //
+        // Full Mdn2d and Mdn2d binary operations
+        // When selecting Mdn2d slots (or tabs, I believe we are using), users should also be able
+        // to perform these actions, somehow:
+        // Mdn2d_A + Mdn2d_B = new Mdn2d ; Mdn2d_A + Mdn2d_B = Mdn2d_A ; Mdn2d_A + Mdn2d_B = Mdn2d_B
+        //  Same for -, * and /. i.e. addition, subtraction, multiplication, division
+        // Equality tests as well.
+
+        // Scalar multiplication is possible also, but I don't think we want to let the users have
+        // access to that, as it's really only meant for internal algorithms.
+
+        // Element operations (operation occurs at the cursor location: x, y)
+        //  add / subtract integer
+        //  add / subtract float/double, requires user select a fraxis: X or Y
+
+
+
+        // In the interface there is a window of, say, 32 x 32 digits, by default centered around
+        // 0,0, but as the number grows, the window moves with the numer's bounds.
+        // The user can move a cursor around within the number, highlighting a specific digit.
+        // The user can perform many operations centred of the digit.

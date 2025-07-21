@@ -298,6 +298,7 @@ bool mdn::Mdn2dBase::locked_setToZero(const Coord& xy) {
         Log_Debug3_H("Setting " << xy << " to zero: already zero");
         bool result = locked_checkPrecisionWindow(xy) != PrecisionStatus::Below;
         Log_Debug3_T("result=" << result);
+        return result;
     }
     // There is currently a non-zero value - erase it
     if (Log_Showing_Debug3) {
