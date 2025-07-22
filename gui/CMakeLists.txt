@@ -1,6 +1,24 @@
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
+# Try Qt6 first
+find_package(Qt6 COMPONENTS Widgets Core Gui QUIET)
 
-qt_standard_project_setup()
+if(Qt6_FOUND)
+    set(QT_VERSION_MAJOR 6)
+    set(QT_LIBS Qt6::Widgets Qt6::Core Qt6::Gui)
+else()
+    # Fallback to Qt5
+    find_package(Qt5 REQUIRED COMPONENTS Widgets Core Gui)
+    set(QT_VERSION_MAJOR 5)
+    set(QT_LIBS Qt5::Widgets Qt5::Core Qt5::Gui)
+endif()
+
+# Enable Qt meta-object compiler (MOC), UI compiler (UIC), resource compiler (RCC)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
+
+# Choose your C++ standard
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(mdn_gui
     main.cpp
@@ -10,7 +28,7 @@ add_executable(mdn_gui
     NumberDisplayWidget.h
 )
 
-target_link_libraries(mdn_gui PRIVATE Qt6::Widgets mdn)
+target_link_libraries(mdn_gui PRIVATE ${QT_LIBS} mdn)
 
 include_directories("../library")
 
