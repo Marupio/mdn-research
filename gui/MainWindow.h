@@ -14,7 +14,7 @@
 #include <QMessageBox>
 #include <QMouseEvent>
 
-#include "../library/PlaceHolderMdn.h"
+#include "../library/Mdn2d.h"
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -34,7 +34,7 @@ private slots:
 
 private:
     QTabWidget* tabWidget;
-    QMap<int, mdn::PlaceHolderMdn*> mdnMap;
+    QMap<int, mdn::Mdn2d*> mdnMap;
     int nextMDNId = 0;
 
     void createMDNTab(int id);

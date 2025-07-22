@@ -1,6 +1,18 @@
 
 // Mdn2d interface
 
+
+        // In the interface there is a window of, say, 32 x 32 digits, by default centered around
+        // 0,0, but as the number grows, the window moves with the numer's bounds.
+        // The user can move a cursor around within the number, highlighting a specific digit.
+        // The user can perform many operations centred on the cursor digit.
+
+        // First, constructing a new Mdn2d, there's the NewInstance:
+        static Mdn2d NewInstance(Mdn2dConfig config=Mdn2dConfig::static_defaultConfig());
+        // The purpose of this was to give access to the full Mdn2d from within its sub-layers.
+
+    // Mdn2d functionality
+        // Or we could just use the standard constructor:
         Mdn2d(Mdn2dConfig config);
         // Create a new Mdn2d
         // Opens a window with settings, including all Mdn2dConfig parameters:
@@ -51,9 +63,225 @@
         //  add / subtract integer
         //  add / subtract float/double, requires user select a fraxis: X or Y
 
+    // Mdn2dRules functionality
+
+        // Carryover stuff
+        //  Since in Mdn2d structures, the concept of 'negative' and 'positive' is not always
+        //  attributed to the entire number, sometimes digits have different positive/negative value
+        //  in the same Mdn2d.  In fact, this gives rise to "optional carryovers", where the Mdn2d
+        //  is in a valid state before and after the carryover.  This means the Mdn2d is polymorphic
+        //  or has multiple states that are valid.  Equivalence tests have to take this into
+        //  account.  The lowest magnitude digit that participates in an optional carryover is
+        //  called a polymorphic node.  Optional carryovers / polymorphic nodes can be either
+        //  positive or negative.  The "SignConvention" assigned during construction, refers to
+        //  this.
+        //
+        //  Anyways, a user needs to be able to ask for the 'carryover type' at a digit, and ask for
+        //  the Mdn2d to perform this carryover.  Only the optional carryovers would be performed by
+        //  a user.
+        //
+        //  The "Carryover.h" file that contains the Carryover enum class also has a detailed
+        //  description of all this.  Here it is:
+        //
+        // Carryovers
+        //  Some carryovers are required, such as when a digit magnitude exceeds its base.  Other
+        //  times a carryover is optional - some MDNs have multiple valid states.  Switching between
+        //  these states is achieved using carryovers.  And some carryovers bring a number to an
+        //  invalid state and should not be performed.
+        //
+        //  In general, there are three types of carryovers:
+        //
+        //      * Invalid:    Valid MDN --> carryover --> Invalid MDN
+        //      * Optional:   Valid MDN --> carryover --> Valid MDN
+        //      * Required: Invalid MDN --> carryover --> Valid MDN
+        //
+        //  A  3    |   4
+        //     0 -3 | -10 -2
+        //
+        //  B  0    |   1
+        //     4 0  |  -6 1
+        //
+        //  C  0    |   1
+        //     4 3  |  -6 4
+        //
+        //  D  0    |   1
+        //     4 -3 |  -6 -2
+        //
+        //  E -2    |  -1
+        //     4  3 |  -6  4
+        //
+        //  F  2    |   3
+        //     4  3 |  -6  4
+        //
+        //  G -2    |  -1
+        //     4 -3 |  -6 -2
+        //
+        //    |  p  |  x  |  y  | comment
+        //    +-----+-----+-----+---------------------
+        // A  |  0  |  ?  |  ?  | not possible
+        //
+        // G  |  +  |  -  |  -  | required
+        // D  |  +  |  -  |  0  | optional
+        // E  |  +  |  +  |  -  | optional
+        // B  |  +  |  0  |  0  | invalid
+        // C  |  +  |  +  |  0  | invalid
+        // F  |  +  |  +  |  +  | invalid
+        //
+        // M  |  -  |  +  |  +  | required
+        // J  |  -  |  +  |  0  | optional
+        // K  |  -  |  -  |  +  | optional
+        // H  |  -  |  0  |  0  | invalid
+        // I  |  -  |  -  |  0  | invalid
+        // L  |  -  |  -  |  -  | invalid
+
+        // Interactions between polymorphic molecules
+        //
+        //  a  3    |   3      a'
+        //     0 -3 |   1 -3
+        //     2 -3 |  -8 -2
+        //
+        // In [a] above:
+        //  * the [2] is a polymorphic node, and
+        //  * the [0] is an invalid carryover
+        // However, in [a'] above:
+        //  * the [-8] is a polymorphic node (still), but
+        //  * the [1] is now a newly created polymorphic node
+        //
+        // Let's consider the [0] in [a] to be a dormant polymorphic node.  A polymorphic carryover
+        // can awaken a dormant polymorphic node.
+        //
+        //  b  3    |   3      b'
+        //     0 -3 |   1 -3
+        //     2 -3 |  -8 -2
+        //
+        // Further testing shows that a carryover can alter the neighbouring digit's carryover
+        // status, at any time.
+        //
+        // Finally, we arrive at the functionality required in the GUI.  The user needs to be able
+        // to query the type of carryover (invalid, optional positive/negative, required):
+            // Return the Carryover type (enumareation) of xy
+            Carryover checkCarryover(const Coord& xy) const;
+
+        // And they need to be able to request the carryover be performed:
+            // Perform a manual carry-over at coordinate (x, y), returns affected coords as a set
+            CoordSet carryover(const Coord& xy);
+
+        // That function throws if requested at an 'invalid' carryover location.
+
+        // There's also a carryoverCleanup, which scans all digits, looking for 'required' type of
+        // carryovers, and if there's a sign convention, it changes all 'optional' carryovers to the
+        // correct sign configuration:
+            // Given all the non-zero coords, check if any need carryovers, and if so, do them
+            //  Returns set of coordinates that actually have changed
+            CoordSet carryoverCleanupAll();
+
+        // The Mdn2dRules layer also handles 'shifting'.  The user can specify a number of digits
+        // left/right/up/down (or diagonal) to shift all digits in the Mdn2d:
+
+            // General shift interface
+            void shift(int xDigits, int yDigits);
+            void shift(const Coord& xy);
+
+            // Shift all digits in a direction (R=+X, L=-X, U=+Y, D=-Y)
+            void shiftRight(int nDigits);
+            void shiftLeft(int nDigits);
+            void shiftUp(int nDigits);
+            void shiftDown(int nDigits);
+
+        // And lastly, the Mdn2dRules layer can perform 'transposing', where X and Y are swapped:
+
+            // Swap X and Y
+            void transpose();
 
 
-        // In the interface there is a window of, say, 32 x 32 digits, by default centered around
-        // 0,0, but as the number grows, the window moves with the numer's bounds.
-        // The user can move a cursor around within the number, highlighting a specific digit.
-        // The user can perform many operations centred of the digit.
+        // I don't know what these would be used for in the future.
+
+    // Mdn2dBase
+        // The bottom layer, handles the digits, addressing.
+        // Basic functionality for the GUI includes getValue and setValue, and also getRow and
+        //  getCol.  These would not necessarily be user-facing, but they would be needed to fill in
+        //  the window space with the digits.
+
+            // Retrieves the value at coordinate (x, y), or 0 if not present.
+            Digit getValue(const Coord& xy) const;
+
+            // Assembles the row at the given y index value, spanning the x bounds of full MDN
+            std::vector<Digit> getRow(int y) const;
+
+            // Assembles the row at the given y index value, spanning the x bounds of full MDN
+            void getRow(int y, std::vector<Digit>& digits) const;
+
+            // Assembles the col at the given x index value, spanning the y bounds of full MDN
+            std::vector<Digit> getCol(int x) const;
+
+            // Assembles the col at the given x index value, spanning the y bounds of full MDN
+            void getCol(int x, std::vector<Digit>& digits) const;
+
+            // Changes the value at xy
+            //  Returns true if carryover status might change:
+            //      * Value goes from zero to non-zero
+            //      * Value changes sign
+            bool setValue(const Coord& xy, Digit value);
+            bool setValue(const Coord& xy, int value);
+            bool setValue(const Coord& xy, long value);
+            bool setValue(const Coord& xy, long long value);
+
+            // Converts the MDN to a human-readable string.
+            std::string toString() const;
+
+            // Converts the MDN to an array of strings, representing rows
+            std::vector<std::string> toStringRows() const;
+
+            // Converts the MDN to an array of strings, representing columns
+            std::vector<std::string> toStringCols() const;
+
+        // The last two: toString... might be useful in creating the representation.
+
+        // User-facing actions on the Base layer include:
+
+            // Clears all digits in the MDN.
+            void clear();
+
+            // Set the value at xy to zero
+            //  Returns true if carryover status might change:
+            //      * Value goes from zero to non-zero
+            //      * Value changes sign
+            bool setToZero(const Coord& xy);
+
+            // Set the value at coords to zero, returns subset containing those whose values changed
+            CoordSet setToZero(const CoordSet& coords);
+
+            // Changes the value at xy
+            //  Returns true if carryover status might change:
+            //      * Value goes from zero to non-zero
+            //      * Value changes sign
+            bool setValue(const Coord& xy, Digit value);
+            bool setValue(const Coord& xy, int value);
+            bool setValue(const Coord& xy, long value);
+            bool setValue(const Coord& xy, long long value);
+
+        // The Mdn2d knows its 'bounds', i.e. a rectangle in digit coordinates that defines the
+        // extent of non-zero digits.
+
+            // Returns true if m_boundsMin and m_boundsMax are both valid, finite numbers
+            bool hasBounds() const;
+
+            // Retuns bounds of non zero entries in m_raw
+            std::pair<Coord, Coord> getBounds() const;
+
+        // Other things user can do - some of these affect the Mdn2dConfig, an object within the
+        // Mdn2d, so these would be in a config window:
+
+            int getPrecision() const;
+
+            // Change the setting for m_precision, returns the number of dropped digits
+            int setPrecision(int newMaxSpan);
+
+            // Query the precision status of xy to ensure precision is not exceeded
+            // Returns:
+            //  * PrecisionStatus::Below  - above precision window
+            //  * PrecisionStatus::Inside - within precision window
+            //  * PrecisionStatus::Above  - below precision window
+            PrecisionStatus checkPrecisionWindow(const Coord& xy) const;
+
+    // That's all for Mdn2d interface.  Now let's make the GUI.

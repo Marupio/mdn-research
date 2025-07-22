@@ -5,7 +5,10 @@ project(MDNToolkit)
 string(FIND "${CMAKE_BINARY_DIR}" "/out/" IS_VSCODE_BUILD)
 set(IS_VSCODE_BUILD_BOOL FALSE)
 if(NOT IS_VSCODE_BUILD EQUAL -1)
+    message(STATUS "Detected VS Code build")
     set(IS_VSCODE_BUILD_BOOL TRUE)
+else(NOT IS_VSCODE_BUILD EQUAL -1)
+    message(STATUS "Did not detect VS Code build")
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
@@ -32,5 +35,5 @@ endif()
 
 # Choose which one to include by commenting out the other
 add_subdirectory(library)   # Builds the MDN library
-add_subdirectory(sandbox)   # Builds the sandbox tester
-# add_subdirectory(gui)       # Builds the GUI application
+# add_subdirectory(sandbox)   # Builds the sandbox tester
+add_subdirectory(gui)       # Builds the GUI application

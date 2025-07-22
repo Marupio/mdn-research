@@ -93,6 +93,7 @@
     "filesystem": "cpp",
     "ranges": "cpp",
     "fstream": "cpp",
-    "codecvt": "cpp"
+    "codecvt": "cpp",
+    "qvboxlayout": "cpp"
   }
 }
