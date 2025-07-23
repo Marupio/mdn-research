@@ -14,6 +14,8 @@
 #include <QMessageBox>
 #include <QMouseEvent>
 
+#include <QLabel>
+
 #include "../library/Mdn2d.h"
 
 class MainWindow : public QMainWindow {
@@ -33,9 +35,9 @@ private slots:
     void onTabContextMenuRequested(const QPoint &pos);
 
 private:
-    QTabWidget* tabWidget;
-    QMap<int, mdn::Mdn2d*> mdnMap;
-    int nextMDNId = 0;
+    QTabWidget* m_tabWidget;
+    QMap<int, mdn::Mdn2d*> m_mdnMap;
+    int m_nextMdnId = 0;
 
     void createMDNTab(int id);
 };

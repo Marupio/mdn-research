@@ -26,6 +26,7 @@ add_executable(mdn_gui
     MainWindow.h
     NumberDisplayWidget.cpp
     NumberDisplayWidget.h
+    MdnMainWindow.h MdnMainWindow.cpp MdnMainWindow.ui
 )
 
 target_link_libraries(mdn_gui PRIVATE ${QT_LIBS} mdn)
