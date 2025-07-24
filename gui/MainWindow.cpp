@@ -24,6 +24,8 @@ MainWindow::MainWindow(QWidget *parent)
     line->setFrameShape(QFrame::HLine);
     line->setFrameShadow(QFrame::Sunken);
 
+
+
     // 3. Create the tab widget and add your tabs
     m_tabWidget = new QTabWidget(this);
     QWidget *mainTab = new QWidget(this);
