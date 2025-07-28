@@ -123,18 +123,48 @@ private:
 //      }
 
 #ifdef MDN_DEBUG
-    #define InternalLoggerMacro(message, level) { \
+
+    // Internal use - this macro brings together the final logging code
+    #define InternalLoggerAssembleFunction(FILE_REF, message, level) { \
         std::ostringstream oss; \
         std::string fileRef( \
-            "[" + std::to_string(Logger::instance().getIndent()) + "|" + Tools::removePath(__FILE__) + ":" + std::to_string(__LINE__) + "," + \
-            __func__ + "] " \
+            FILE_REF \
         ); \
         Logger& loginst = Logger::instance(); \
         oss << loginst.indent() << fileRef << message; \
         loginst.level(oss.str()); \
     }
 
-    #define InternalLoggerHead(message, level) { \
+    // Internal use - the FileRef, intended to be wrapped by a string ctor, produces a nicely
+    //  formatted prefix to each log entry:
+    //      [        |Mdn2dBase.cpp:598,setValue]
+    #define InternalLoggerFileRef \
+            "[" + std::to_string(Logger::instance().getIndent()) + "|" \
+            + Tools::removePath(__FILE__) + ":" + std::to_string(__LINE__) + "," + \
+            __func__ + "] "
+
+    // Internal use - appends m_name, an object's member variable, to the end of the file ref:
+    //      [        |Mdn2dBase.cpp:598,setValue] Mdn2d_2_Copy_1:
+    //  Obviously only useful if the class has member variable:
+    //      std::string m_name;
+    #define InternalLoggerNamedFileRef InternalLoggerFileRef + m_name + ": "
+
+    // Standard log message:
+    //  No header / footer indent / unindent
+    //  File ref with object name
+    #define InternalLoggerNamed(message, level) \
+        InternalLoggerAssembleFunction( InternalLoggerNamedFileRef, message, level )
+
+
+    // Standard log message:
+    //  No header / footer indent / unindent
+    //  File ref with no object name
+    #define InternalLoggerAnonymous(message, level) \
+        InternalLoggerAssembleFunction( InternalLoggerFileRef, message, level )
+
+
+    // Internal use - Wrapper for producing a header message that increases the indentation level
+    #define InternalLoggerHeaderWrapper(LOGGER_MACRO, message, level) { \
         std::string msgStr; \
         { \
             std::ostringstream oss; \
@@ -143,21 +173,52 @@ private:
         } \
         if (msgStr.empty()) { \
             Logger::instance().increaseIndent(); \
-            InternalLoggerMacro(msgStr, level); \
+            LOGGER_MACRO(msgStr, level); \
         } else { \
-            InternalLoggerMacro("", level); \
+            LOGGER_MACRO("", level); \
             Logger::instance().increaseIndent(); \
-            InternalLoggerMacro(msgStr, level); \
+            LOGGER_MACRO(msgStr, level); \
         } \
     }
 
-    #define InternalLoggerTail(message, level) { \
-        InternalLoggerMacro(message, level); \
+    // Standard log message:
+    //  Header with an increase in indentation
+    //  File ref with no object name
+    #define InternalLoggerAnonymousHeader(message, level) \
+        InternalLoggerHeaderWrapper(InternalLoggerAnonymous, message, level)
+
+    // Standard log message:
+    //  Header with an increase in indentation
+    //  File ref with object name
+    #define InternalLoggerNamedHeader(message, level) \
+        InternalLoggerHeaderWrapper(InternalLoggerNamed, message, level)
+
+
+    // Internal use - Wrapper for producing a footer message that decreases the indentation level
+    #define InternalLoggerFooterWrapper(LOGGER_MACRO, message, level) { \
+        LOGGER_MACRO(message, level); \
         Logger::instance().decreaseIndent(); \
     }
 
+    // Standard log message:
+    //  Footer with a decrease in indentation
+    //  File ref with no object name
+    #define InternalLoggerAnonymousFooter(message, level) \
+        InternalLoggerFooterWrapper(InternalLoggerAnonymous, message, level)
+
+    // Standard log message:
+    //  Footer with a decrease in indentation
+    //  File ref with object name
+    #define InternalLoggerNamedFooter(message, level) \
+        InternalLoggerFooterWrapper(InternalLoggerNamed, message, level)
+
+
+    // Macro intended to be used within a conditional, returns true if level would be displayed
     #define InternalLoggerQuery(level) (Logger::instance().isShowing(level))
 
+    // *** Dev facing macros
+
+    // Queries
     #define Log_Showing_Debug4 InternalLoggerQuery(LogLevel::Debug4)
     #define Log_Showing_Debug3 InternalLoggerQuery(LogLevel::Debug3)
     #define Log_Showing_Debug2 InternalLoggerQuery(LogLevel::Debug2)
@@ -166,23 +227,47 @@ private:
     #define Log_Showing_Warn InternalLoggerQuery(LogLevel::Warn)
     #define Log_Showing_Error InternalLoggerQuery(LogLevel::Error)
 
-    #define Log_Debug4(message) InternalLoggerMacro(message, debug4)
-    #define Log_Debug3(message) InternalLoggerMacro(message, debug3)
-    #define Log_Debug2(message) InternalLoggerMacro(message, debug2)
-    #define Log_Debug(message) InternalLoggerMacro(message, debug)
-    #define Log_Info(message) InternalLoggerMacro(message, info)
-    #define Log_Warn(message) InternalLoggerMacro(message, warn)
-    #define Log_Error(message) InternalLoggerMacro(message, error)
+    // Anonymous, no changes in indentation
+    #define Log_Debug4(message) InternalLoggerAnonymous(message, debug4)
+    #define Log_Debug3(message) InternalLoggerAnonymous(message, debug3)
+    #define Log_Debug2(message) InternalLoggerAnonymous(message, debug2)
+    #define Log_Debug(message) InternalLoggerAnonymous(message, debug)
+    #define Log_Info(message) InternalLoggerAnonymous(message, info)
+    #define Log_Warn(message) InternalLoggerAnonymous(message, warn)
+    #define Log_Error(message) InternalLoggerAnonymous(message, error)
 
-    #define Log_Debug4_H(message) InternalLoggerHead(message, debug4)
-    #define Log_Debug3_H(message) InternalLoggerHead(message, debug3)
-    #define Log_Debug2_H(message) InternalLoggerHead(message, debug2)
-    #define Log_Debug_H(message) InternalLoggerHead(message, debug)
+    // Anonymous, headers - increase in indentation
+    #define Log_Debug4_H(message) InternalLoggerAnonymousHeader(message, debug4)
+    #define Log_Debug3_H(message) InternalLoggerAnonymousHeader(message, debug3)
+    #define Log_Debug2_H(message) InternalLoggerAnonymousHeader(message, debug2)
+    #define Log_Debug_H(message) InternalLoggerAnonymousHeader(message, debug)
 
-    #define Log_Debug4_T(message) InternalLoggerTail(message, debug4)
-    #define Log_Debug3_T(message) InternalLoggerTail(message, debug3)
-    #define Log_Debug2_T(message) InternalLoggerTail(message, debug2)
-    #define Log_Debug_T(message) InternalLoggerTail(message, debug)
+    // Anonymous, footers - decrease in indentation
+    #define Log_Debug4_T(message) InternalLoggerAnonymousFooter(message, debug4)
+    #define Log_Debug3_T(message) InternalLoggerAnonymousFooter(message, debug3)
+    #define Log_Debug2_T(message) InternalLoggerAnonymousFooter(message, debug2)
+    #define Log_Debug_T(message) InternalLoggerAnonymousFooter(message, debug)
+
+    // Named, no changes in indentation
+    #define Log_N_Debug4(message) InternalLoggerNamed(message, debug4)
+    #define Log_N_Debug3(message) InternalLoggerNamed(message, debug3)
+    #define Log_N_Debug2(message) InternalLoggerNamed(message, debug2)
+    #define Log_N_Debug(message) InternalLoggerNamed(message, debug)
+    #define Log_N_Info(message) InternalLoggerNamed(message, info)
+    #define Log_N_Warn(message) InternalLoggerNamed(message, warn)
+    #define Log_N_Error(message) InternalLoggerNamed(message, error)
+
+    // Named, headers - increase in indentation
+    #define Log_N_Debug4_H(message) InternalLoggerNamedHeader(message, debug4)
+    #define Log_N_Debug3_H(message) InternalLoggerNamedHeader(message, debug3)
+    #define Log_N_Debug2_H(message) InternalLoggerNamedHeader(message, debug2)
+    #define Log_N_Debug_H(message) InternalLoggerNamedHeader(message, debug)
+
+    // Named, footers - decrease in indentation
+    #define Log_N_Debug4_T(message) InternalLoggerNamedFooter(message, debug4)
+    #define Log_N_Debug3_T(message) InternalLoggerNamedFooter(message, debug3)
+    #define Log_N_Debug2_T(message) InternalLoggerNamedFooter(message, debug2)
+    #define Log_N_Debug_T(message) InternalLoggerNamedFooter(message, debug)
 
 #else
     #define Log_Debug4(message)   do {} while (false);
@@ -200,6 +285,21 @@ private:
     #define Log_Debug3_T(message) do {} while (false);
     #define Log_Debug2_T(message) do {} while (false);
     #define Log_Debug_T(message)  do {} while (false);
+    #define Log_N_Debug4(message)   do {} while (false);
+    #define Log_N_Debug3(message)   do {} while (false);
+    #define Log_N_Debug2(message)   do {} while (false);
+    #define Log_N_Debug(message)    do {} while (false);
+    #define Log_N_Info(message)     do {} while (false);
+    #define Log_N_Warn(message)     do {} while (false);
+    #define Log_N_Error(message)    do {} while (false);
+    #define Log_N_Debug4_H(message) do {} while (false);
+    #define Log_N_Debug3_H(message) do {} while (false);
+    #define Log_N_Debug2_H(message) do {} while (false);
+    #define Log_N_Debug_H(message)  do {} while (false);
+    #define Log_N_Debug4_T(message) do {} while (false);
+    #define Log_N_Debug3_T(message) do {} while (false);
+    #define Log_N_Debug2_T(message) do {} while (false);
+    #define Log_N_Debug_T(message)  do {} while (false);
     #define Log_Showing_Debug4    false
     #define Log_Showing_Debug3    false
     #define Log_Showing_Debug2    false

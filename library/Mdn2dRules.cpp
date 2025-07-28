@@ -48,24 +48,24 @@ mdn::Carryover mdn::Mdn2dRules::static_checkCarryover(Digit p, Digit x, Digit y,
 }
 
 
-mdn::Mdn2dRules::Mdn2dRules() :
-    Mdn2dBase()
+mdn::Mdn2dRules::Mdn2dRules(std::string nameIn) :
+    Mdn2dBase(nameIn)
 {
-    Log_Debug3("Constructing null Mdn2dRules");
+    Log_Debug3("");
 }
 
 
-mdn::Mdn2dRules::Mdn2dRules(Mdn2dConfig config) :
-    Mdn2dBase(config)
+mdn::Mdn2dRules::Mdn2dRules(Mdn2dConfig config, std::string nameIn) :
+    Mdn2dBase(config, nameIn)
 {
-    Log_Debug3("Constructing Mdn2dRules with config " << config);
+    Log_Debug3("Config=" << config);
 }
 
 
-mdn::Mdn2dRules::Mdn2dRules(const Mdn2dRules& other):
-    Mdn2dBase(other)
+mdn::Mdn2dRules::Mdn2dRules(const Mdn2dRules& other, std::string nameIn):
+    Mdn2dBase(other, nameIn)
 {
-    Log_Debug3("Constructing Mdn2dRules as copy");
+    Log_Debug3("");
 }
 
 
@@ -85,8 +85,8 @@ mdn::Mdn2dRules& mdn::Mdn2dRules::operator=(const Mdn2dRules& other) {
 }
 
 
-mdn::Mdn2dRules::Mdn2dRules(Mdn2dRules&& other) noexcept :
-    Mdn2dBase(std::move(other))
+mdn::Mdn2dRules::Mdn2dRules(Mdn2dRules&& other, std::string nameIn) noexcept :
+    Mdn2dBase(std::move(other), nameIn)
 {
     auto lockOther = other.lockReadOnly();
     Log_Debug3("Move-copying Mdn2dRules");

@@ -11,24 +11,24 @@
 #include "Tools.h"
 
 
-mdn::Mdn2d::Mdn2d() :
-    Mdn2dRules()
+mdn::Mdn2d::Mdn2d(std::string nameIn) :
+    Mdn2dRules(nameIn)
 {
-    Log_Debug2("Constructing Mdn2d null");
+    Log_Debug2("");
 }
 
 
-mdn::Mdn2d::Mdn2d(Mdn2dConfig config) :
-    Mdn2dRules(config)
+mdn::Mdn2d::Mdn2d(Mdn2dConfig config, std::string nameIn) :
+    Mdn2dRules(config, nameIn)
 {
-    Log_Debug2("Constructing Mdn2d with config " << config);
+    Log_Debug2("Config=" << config);
 }
 
 
-mdn::Mdn2d::Mdn2d(const Mdn2d& other):
-    Mdn2dRules(other)
+mdn::Mdn2d::Mdn2d(const Mdn2d& other, std::string nameIn):
+    Mdn2dRules(other, nameIn)
 {
-    Log_Debug2("Copy constructing");
+    Log_Debug2("");
 }
 
 
@@ -39,10 +39,10 @@ mdn::Mdn2d& mdn::Mdn2d::operator=(const Mdn2d& other) {
 }
 
 
-mdn::Mdn2d::Mdn2d(Mdn2d&& other) noexcept :
-    Mdn2dRules(std::move(other))
+mdn::Mdn2d::Mdn2d(Mdn2d&& other, std::string nameIn) noexcept :
+    Mdn2dRules(std::move(other), nameIn)
 {
-    Log_Debug2("Move constructor");
+    Log_Debug2("");
 }
 
 

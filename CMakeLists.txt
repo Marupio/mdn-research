@@ -29,11 +29,13 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_definitions(MDN_DEBUG)
     set(CMAKE_CXX_FLAGS_DEBUG "-g")
     message(STATUS "Debug enabled, MDN_DEBUG is defined.")
+else(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "Release build enabled, no debug defined and stuff")
 endif()
 
 # Top-level CMakeLists.txt
 
 # Choose which one to include by commenting out the other
 add_subdirectory(library)   # Builds the MDN library
-# add_subdirectory(sandbox)   # Builds the sandbox tester
-add_subdirectory(gui)       # Builds the GUI application
+add_subdirectory(sandbox)   # Builds the sandbox tester
+# add_subdirectory(gui)       # Builds the GUI application

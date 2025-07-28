@@ -23,6 +23,27 @@ class MDN_API Mdn2dBase {
 
 protected:
 
+    // Static name generation
+
+    // Thread safety at static layer
+    static std::shared_mutex m_static_mutex;
+
+    // Used to generate the next defaulted name
+    static int m_nextNameSeed;
+
+    // Creates a new Mdn2d name, acquires static lock first
+    static std::string static_generateNextName();
+
+    // Creates a new Mdn2d name, assumes lock already acquired
+    static std::string locked_generateNextName();
+
+    // Create a 'copy' name from given nameIn (e.g. nameIn_copy0), acquires static lock first
+    static std::string static_generateCopyName(const std::string& nameIn);
+
+    // Create a 'copy' name from given nameIn (e.g. nameIn_copy0), assumes lock already acquired
+    static std::string locked_generateCopyName(const std::string& nameIn);
+
+
     // Configuration settings for this Mdn2dBase
     Mdn2dConfig m_config;
 
@@ -31,6 +52,9 @@ protected:
 
 
     // *** Data & addressing
+
+    // Name of this number
+    std::string m_name;
 
     // Sparse coordinate-to-digit mapping
     std::unordered_map<Coord, Digit> m_raw;
@@ -63,29 +87,35 @@ public:
     using ReadOnlyLock = std::shared_lock<std::shared_mutex>;
 
 
-    // *** Create a fully-realised Mdn2d instance
-    static Mdn2d NewInstance(Mdn2dConfig config=Mdn2dConfig::static_defaultConfig());
-    static Mdn2d Duplicate(const Mdn2d& other);
+    // *** Static functions
+
+
+    // Create a fully-realised Mdn2d instance, accessible from downstream layers
+    static Mdn2d NewInstance(
+        Mdn2dConfig config=Mdn2dConfig::static_defaultConfig(),
+        std::string nameIn=""
+    );
+    static Mdn2d Duplicate(const Mdn2d& other, std::string nameIn="");
 
 
     // *** Constructors
 
         // Construct from a configuration, or default
-        Mdn2dBase();
+        Mdn2dBase(std::string nameIn="");
 
-        Mdn2dBase(Mdn2dConfig config);
+        Mdn2dBase(Mdn2dConfig config, std::string nameIn="");
 
 
         // *** Rule of five
 
             // Copy constructor
-            Mdn2dBase(const Mdn2dBase& other);
+            Mdn2dBase(const Mdn2dBase& other, std::string nameIn="");
 
             // Assignment operator
             Mdn2dBase& operator=(const Mdn2dBase& other);
 
             // Move operator
-            Mdn2dBase(Mdn2dBase&& other) noexcept;
+            Mdn2dBase(Mdn2dBase&& other, std::string nameIn="") noexcept;
 
             // Move assignment operator
             Mdn2dBase& operator=(Mdn2dBase&& other) noexcept;
@@ -95,6 +125,17 @@ public:
 
 
     // *** Member Functions
+
+        // *** Identity
+
+            // Return name
+            const std::string& getName() const;
+            protected: const std::string& locked_getName() const; public:
+
+            // Set this number's 'name'
+            void setName(const std::string& nameIn);
+            protected: void locked_setName(const std::string& nameIn); public:
+
 
         // *** Getters
 
@@ -249,14 +290,14 @@ protected:
                 Digit baseDigit = m_config.baseDigit();
 
                 if (Log_Showing_Debug4) {
-                    Log_Debug4(
+                    Log_N_Debug4(
                         "Checking value " << static_cast<int>(value) << " against base "
                         << int(baseDigit)
                     );
                 }
                 if (value >= baseDigit || value <= -baseDigit) {
                     OutOfRange err(xy, static_cast<int>(value), baseDigit);
-                    Log_Error(err.what());
+                    Log_N_Error(err.what());
                     throw err;
                 }
             }

@@ -15,25 +15,28 @@ public:
     // *** Constructors
 
         // Construct null
-        Mdn2d();
+        Mdn2d(std::string nameIn="");
 
         // Construct from a configuration
-        Mdn2d(Mdn2dConfig config);
+        Mdn2d(Mdn2dConfig config, std::string nameIn="");
 
 
         // *** Rule of five
 
             // Copy constructor
-            Mdn2d(const Mdn2d& other);
+            Mdn2d(const Mdn2d& other, std::string nameIn="");
 
             // Assignment operator
             Mdn2d& operator=(const Mdn2d& other);
 
             // Move operator
-            Mdn2d(Mdn2d&& other) noexcept;
+            Mdn2d(Mdn2d&& other, std::string nameIn="") noexcept;
 
             // Move assignment operator
             Mdn2d& operator=(Mdn2d&& other) noexcept;
+
+            // Virtual destructor
+            virtual ~Mdn2d() {}
 
 
     // *** Member Functions

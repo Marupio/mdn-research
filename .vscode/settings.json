@@ -94,6 +94,16 @@
     "ranges": "cpp",
     "fstream": "cpp",
     "codecvt": "cpp",
-    "qvboxlayout": "cpp"
+    "qvboxlayout": "cpp",
+    "csetjmp": "cpp",
+    "any": "cpp",
+    "strstream": "cpp",
+    "bitset": "cpp",
+    "cfenv": "cpp",
+    "complex": "cpp",
+    "regex": "cpp",
+    "slist": "cpp",
+    "typeindex": "cpp",
+    "valarray": "cpp"
   }
 }
