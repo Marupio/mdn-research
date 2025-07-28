@@ -57,14 +57,14 @@ std::string mdn::Mdn2dBase::locked_generateCopyName(const std::string& nameIn) {
         do {
             Log_Debug4("checking " << nCopy);
             candidate = base + std::to_string(nCopy++);
-        } while (Mdn2dConfig::master().mdn2dNameExists(candidate));
+        } while (Mdn2dConfig::master().mdnNameExists(candidate));
         Log_Debug4_T("returning " << candidate);
         return candidate;
     }
 
     candidate = nameIn + "_Copy_0";
     Log_Debug4("No '_Copy_#' suffix, checking ..._Copy_0 availability");
-    while (Mdn2dConfig::master().mdn2dNameExists(candidate)) {
+    while (Mdn2dConfig::master().mdnNameExists(candidate)) {
         Log_Debug4("'__Copy_0' not available");
         static std::regex baseRegex(R"((.*_Copy_))");
         std::smatch baseMatch;
@@ -73,7 +73,7 @@ std::string mdn::Mdn2dBase::locked_generateCopyName(const std::string& nameIn) {
             do {
                 Log_Debug4("Checking " << n);
                 candidate = baseMatch[1].str() + std::to_string(n++);
-            } while (Mdn2dConfig::master().mdn2dNameExists(candidate));
+            } while (Mdn2dConfig::master().mdnNameExists(candidate));
         } else {
             break;
         }
@@ -237,7 +237,8 @@ mdn::Mdn2dBase& mdn::Mdn2dBase::operator=(Mdn2dBase&& other) noexcept {
         if (m_config.base() != other.m_config.base()) {
             BaseMismatch err(m_config.base(), other.m_config.base());
             Log_Error(err.what());
-            throw err;
+            //throw err;
+            m_config.setInvalid(err.what());
         }
         m_config.setPrecision(other.m_config.precision());
         m_raw = std::move(other.m_raw);
@@ -276,8 +277,12 @@ void mdn::Mdn2dBase::setName(const std::string& nameIn) {
 
 
 void mdn::Mdn2dBase::locked_setName(const std::string& nameIn) {
-    Log_Debug3("Setting name from '" << m_name << "' to '" << nameIn << "'");
-    m_name = nameIn;
+    std::string fwName = m_config.master().requestMdnNameChange(m_name, nameIn);
+    Log_Debug3(
+        "Attempting to change name from '" << m_name << "' to '" << nameIn << "', with framework"
+        << " final approval as '" << fwName << "'"
+    );
+    m_name = fwName;
 }
 
 

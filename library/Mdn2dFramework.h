@@ -20,11 +20,20 @@ public:
     }
 
     // Returns true if an Mdn2d exists with the given name, false otherwise
-    virtual bool mdn2dNameExists(const std::string& nameIn) const {
+    virtual bool mdnNameExists(const std::string& nameIn) const {
         // default allows name collisions
         return false;
     }
 
+    // Gives framework final say over name changes - given a desired Mdn name change from origName
+    //  to newName, returns the allowed name
+    virtual std::string requestMdnNameChange(
+        const std::string& origName,
+        const std::string& newName
+    ) {
+        // Default always allows the name change
+        return newName;
+    }
 
 };
 
