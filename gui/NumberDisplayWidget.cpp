@@ -10,14 +10,16 @@ NumberDisplayWidget::NumberDisplayWidget(QWidget* parent)
     setFocusPolicy(Qt::StrongFocus);
 }
 
+
 void NumberDisplayWidget::setModel(const mdn::Mdn2d* mdn) {
     m_model = mdn;
     update();
 }
 
+
 void NumberDisplayWidget::setViewCenter(int x, int y) {
-    m_viewX = x;
-    m_viewY = y;
+    m_viewOriginX = x;
+    m_viewOriginY = y;
     update();
 }
 
@@ -27,26 +29,67 @@ void NumberDisplayWidget::moveCursor(int dx, int dy) {
     update();
 }
 
-void NumberDisplayWidget::paintEvent(QPaintEvent*) {
-    if (!m_model) return;
-    QPainter p(this);
-    for (int y = 0; y < viewSize; ++y) {
-        for (int x = 0; x < viewSize; ++x) {
-            int gx = m_viewX + x;
-            int gy = m_viewY + y;
-            mdn::Coord gxy(m_viewX + x, m_viewY + y);
-            mdn::Digit d = m_model->getValue(gxy);
-            QRect cell(x * cellSize, y * cellSize, cellSize, cellSize);
-            p.drawRect(cell);
-            if (gx == m_cursorX && gy == m_cursorY) {
-                p.fillRect(cell, Qt::yellow);
+
+void NumberDisplayWidget::paintEvent(QPaintEvent* event) {
+    QPainter painter(this);
+    QRect widgetRect = this->rect();  // Get the full widget rectangle
+    painter.setFont(QFont("Courier", 10)); // monospaced font
+    painter.setPen(m_defaultColors_gridLines);
+
+    for (int y = 0; y < m_rows; ++y) {
+        for (int x = 0; x < m_cols; ++x) {
+            int currentX = m_viewOriginX + x;
+            int currentY = m_viewOriginY + y;
+            const int digit = m_model ? m_model->getValue({currentX, currentY}) : 0;
+
+            QRect cell(x * m_cellSize, y * m_cellSize, m_cellSize, m_cellSize);
+            if (currentX == m_cursorX && currentY == m_cursorY) {
+                painter.fillRect(cell, Qt::yellow);
             }
-            if (d != 0) {
-                p.drawText(cell, Qt::AlignCenter, QString::number(d));
+            painter.drawRect(cell);
+
+            QString text = QString::number(digit);
+            painter.drawText(cell, Qt::AlignCenter, text);
+
+            // Highlight origin
+            if (currentX == 0 && currentY == 0) {
+                painter.setPen(Qt::red);
+                painter.drawRect(cell.adjusted(1, 1, -1, -1));
+                painter.setPen(m_defaultColors_gridLines);
             }
         }
     }
+
+    // Draw axes if origin is in view
+    if (m_viewOriginY <= 0 && 0 < m_viewOriginY + m_rows) {
+        int origWidth = painter.pen().width();
+        QPen axisPen(Qt::gray);
+        axisPen.setWidth(3);
+        painter.setPen(axisPen);
+
+        int yOriginPixel = -m_viewOriginY * m_cellSize;
+        painter.drawLine(0, yOriginPixel, widgetRect.width(), yOriginPixel); // Horizontal x-axis
+
+        axisPen.setWidth(origWidth);
+        axisPen.setColor(m_defaultColors_gridLines);
+        painter.setPen(axisPen);
+    }
+
+    if (m_viewOriginX <= 0 && 0 < m_viewOriginX + m_cols) {
+        int origWidth = painter.pen().width();
+        QPen axisPen(Qt::gray);
+        axisPen.setWidth(3);
+        painter.setPen(axisPen);
+
+        int xOriginPixel = -m_viewOriginX * m_cellSize;
+        painter.drawLine(xOriginPixel, 0, xOriginPixel, widgetRect.height()); // Vertical y-axis
+
+        axisPen.setWidth(origWidth);
+        axisPen.setColor(m_defaultColors_gridLines);
+        painter.setPen(axisPen);
+    }
 }
+
 
 void NumberDisplayWidget::keyPressEvent(QKeyEvent* event) {
     switch (event->key()) {

@@ -18,17 +18,17 @@ using namespace std;
 using namespace mdn;
 
 int execute() {
-    // Mdn2d slot0 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));
-    // slot0.setValue(COORD_ORIGIN, 3);
-    // slot0.setValue(Coord(0, 1), 2);
-    // slot0.setValue(Coord(1, 0), -2);
-    // slot0.setValue(Coord(1, 1), 1);
-    // slot0.setValue(Coord(20, 6), 9);
+    Mdn2d slot0 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));
+    slot0.setValue(COORD_ORIGIN, 3);
+    slot0.setValue(Coord(0, 1), 2);
+    slot0.setValue(Coord(1, 0), -2);
+    slot0.setValue(Coord(1, 1), 1);
+    slot0.setValue(Coord(20, 6), 9);
 
-    // std::vector<std::string> slot0Disp = slot0.toStringRows();
-    // for (auto riter = slot0Disp.rbegin(); riter != slot0Disp.rend(); ++riter) {
-    //     std::cout << *riter << '\n';
-    // }
+    std::vector<std::string> slot0Disp = slot0.toStringRows();
+    for (auto riter = slot0Disp.rbegin(); riter != slot0Disp.rend(); ++riter) {
+        std::cout << *riter << '\n';
+    }
 
     // Mdn2d slot1 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));
     // slot1.add(COORD_ORIGIN, -4);
@@ -100,7 +100,7 @@ int execute() {
     // }
 
     Log_Info("NewInstance slot5");
-    Mdn2d slot5 = Mdn2d::NewInstance(Mdn2dConfig(2, 32));
+    Mdn2d slot5 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));
     Log_Info("slot5.add(COORD_ORIGIN, 10);");
     slot5.add(COORD_ORIGIN, 500);
 
@@ -109,8 +109,19 @@ int execute() {
     for (auto riter = slot5Disp.rbegin(); riter != slot5Disp.rend(); ++riter) {
         std::cout << *riter << '\n';
     }
-    std::string boundsStr(Tools::pairToString(slot5.getBounds(), ","));
     Log_Info("slot5 bounds = " << slot5.getBounds().first << "," << slot5.getBounds().second);
+
+    Log_Info("NewInstance slot6");
+    Mdn2d slot6 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));
+    Log_Info("slot6.add(COORD_ORIGIN, 2.7183547112854335, Fraxis::X);");
+    slot6.add(COORD_ORIGIN, 2.7183547112854335, Fraxis::X);
+
+    Log_Info("slot6 --> write");
+    std::vector<std::string> slot6Disp = slot6.toStringRows();
+    for (auto riter = slot6Disp.rbegin(); riter != slot6Disp.rend(); ++riter) {
+        std::cout << *riter << '\n';
+    }
+    Log_Info("slot6 bounds = " << slot6.getBounds().first << "," << slot6.getBounds().second);
 
     return 0;
 }

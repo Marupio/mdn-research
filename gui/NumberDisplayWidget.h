@@ -1,7 +1,11 @@
 #pragma once
 
+#include <qnamespace.h>
 #include <QWidget>
-#include "Mdn2d.h"
+// #include <QtGui/qcolor.h>
+// #include <QColor>
+
+#include "../library/Mdn2d.h"
 
 class NumberDisplayWidget : public QWidget {
     Q_OBJECT
@@ -19,8 +23,29 @@ protected:
 
 private:
     const mdn::Mdn2d* m_model = nullptr;
-    int m_viewX = 0, m_viewY = 0;
-    int m_cursorX = 0, m_cursorY = 0;
-    static constexpr int cellSize = 20;
-    static constexpr int viewSize = 32;
+
+    Qt::GlobalColor m_defaultColors_gridLines = Qt::gray;
+
+    // X coordinate, in digit position, of top-left cell in view
+    int m_viewOriginX = -16;
+
+    // Y coordinate, in digit position, of top-left cell in view
+    int m_viewOriginY = -16;
+
+    // X digit coordinate of the cursor location
+    int m_cursorX = 0;
+
+    // Y digit coordinate of the cursor location
+    int m_cursorY = 0;
+
+    // Number of columns in view
+    int m_cols = 32;
+
+    // Number of rows in view
+    int m_rows = 32;
+
+    // Size of each cell in pixels
+    int m_cellSize = 20;
+
+
 };

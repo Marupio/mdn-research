@@ -1,4 +1,7 @@
-// DigitGridWidget.h
+#include "../library/Mdn2d.h"
+#include "../library/Coord.h"
+
+
 class DigitGridWidget : public QWidget {
     Q_OBJECT
 
@@ -6,7 +9,7 @@ public:
     DigitGridWidget(QWidget* parent = nullptr);
     void setMdn(std::shared_ptr<mdn::Mdn2d> mdn);
     void moveCursor(int dx, int dy);
-    Coord getCursor() const;
+    mdn::Coord getCursor() const;
 
 protected:
     void paintEvent(QPaintEvent* event) override;
@@ -15,6 +18,6 @@ protected:
 
 private:
     std::shared_ptr<mdn::Mdn2d> m_mdn;
-    Coord m_cursor = Coord(0, 0);
+    mdn::Coord m_cursor = mdn::Coord(0, 0);
     int m_cellSize = 20;
 };
