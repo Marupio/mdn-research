@@ -4,11 +4,13 @@
 
 #include "MainWindow.h"
 #include "Project.h"
+
+#include "../library/GlobalConfig.h"
 #include "../library/Mdn2d.h"
 
 namespace mdn {
 
-class GuiDriver {
+class MDN_API GuiDriver {
 
     MainWindow m_mainWindow;
     std::shared_ptr<Project>* m_projectPtr;

@@ -10,16 +10,22 @@
 #include "GlobalConfig.h"
 #include "Mdn2dConfig.h"
 #include "PrecisionStatus.h"
+#include "Rect.h"
 
 namespace mdn {
 
 class Mdn2d;
+class Project;
 
 // Digit layer of 2d multi dimensional numbers, establishes:
 //  * 2-dimensional digit representation
 //  * sparse storage and addressing
 //  * bounds metadata
 class MDN_API Mdn2dBase {
+
+    // *** Friends
+    friend class Project;
+
 
 protected:
 
@@ -69,8 +75,7 @@ protected:
     // *** Metadata
 
         // Bounding box for non-zero digits
-        mutable Coord m_boundsMin;
-        mutable Coord m_boundsMax;
+        mutable Rect m_bounds;
 
         // When true, increment m_event once operation is complete
         bool m_modified;
@@ -132,9 +137,10 @@ public:
             const std::string& getName() const;
             protected: const std::string& locked_getName() const; public:
 
-            // Set this number's 'name'
+            // Set this number's 'name', deferring to framework for approval
             void setName(const std::string& nameIn);
             protected: void locked_setName(const std::string& nameIn); public:
+
 
 
         // *** Getters
@@ -214,13 +220,13 @@ public:
             void rebuildMetadata() const;
             protected: void locked_rebuildMetadata() const; public:
 
-            // Returns true if m_boundsMin and m_boundsMax are both valid, finite numbers
+            // Returns true if m_bounds are both valid, finite numbers
             bool hasBounds() const;
             protected: bool locked_hasBounds() const; public:
 
             // Retuns bounds of non zero entries in m_raw
-            std::pair<Coord, Coord> getBounds() const;
-            protected: std::pair<Coord, Coord> locked_getBounds() const; public:
+            const Rect& getBounds() const;
+            protected: const Rect& locked_getBounds() const; public:
 
 
         // *** Other functionality
@@ -305,7 +311,7 @@ protected:
             // Purge any digits that exceed the precision window, return the number of purged digits
             int internal_purgeExcessDigits();
 
-            // Update the m_boundsMin and m_boundsMax variables based on the current values
+            // Update the m_bounds based on the current values
             void internal_updateBounds();
 
 };

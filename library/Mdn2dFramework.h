@@ -1,11 +1,13 @@
 #pragma once
 
+#include "../library/GlobalConfig.h"
+
 // Interface class for Mdn2d number framework class, for Mdn2d to talk upwards to the framework
 // within which they exist
 
 namespace mdn {
 
-class Mdn2dFramework {
+class MDN_API Mdn2dFramework {
 
 public:
 
@@ -17,6 +19,11 @@ public:
     // Returns the framework's 'name', used in error messaging
     virtual std::string name() const {
         return "DummyFramework";
+    }
+
+    // Returns the framework's 'name', used in error messaging
+    virtual void setName(const std::string& nameIn) {
+        // Do nothing
     }
 
     // Returns true if an Mdn2d exists with the given name, false otherwise

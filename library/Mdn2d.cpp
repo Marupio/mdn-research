@@ -257,8 +257,8 @@ mdn::CoordSet mdn::Mdn2d::locked_add(const Coord& xy, int value) {
         changed.insert(xy);
     }
     if (carry != 0) {
-        changed.merge(locked_add(xy.copyTranslateX(1), carry));
-        changed.merge(locked_add(xy.copyTranslateY(1), carry));
+        changed.merge(locked_add(xy.translatedX(1), carry));
+        changed.merge(locked_add(xy.translatedY(1), carry));
     }
     Log_N_Debug3_T("changed " << changed.size() << " digits");
     return changed;
@@ -289,8 +289,8 @@ mdn::CoordSet mdn::Mdn2d::locked_add(const Coord& xy, long value) {
         changed.insert(xy);
     }
     if (carry != 0) {
-        changed.merge(locked_add(xy.copyTranslateX(1), carry));
-        changed.merge(locked_add(xy.copyTranslateY(1), carry));
+        changed.merge(locked_add(xy.translatedX(1), carry));
+        changed.merge(locked_add(xy.translatedY(1), carry));
     }
     Log_N_Debug3_T("changed " << changed.size() << " digits");
     return changed;
@@ -320,8 +320,8 @@ mdn::CoordSet mdn::Mdn2d::locked_add(const Coord& xy, long long value) {
         changed.insert(xy);
     }
     if (carry != 0) {
-        changed.merge(locked_add(xy.copyTranslateX(1), carry));
-        changed.merge(locked_add(xy.copyTranslateY(1), carry));
+        changed.merge(locked_add(xy.translatedX(1), carry));
+        changed.merge(locked_add(xy.translatedY(1), carry));
     }
     Log_N_Debug3_T("changed " << changed.size() << " digits");
     return changed;
@@ -410,10 +410,10 @@ mdn::CoordSet mdn::Mdn2d::locked_addFraxis(const Coord& xy, double fraction, Fra
     CoordSet changed;
     switch(fraxis) {
         case Fraxis::X:
-            changed = internal_fraxis(xy.copyTranslateX(-1), fraction, -1, 0, -1);
+            changed = internal_fraxis(xy.translatedX(-1), fraction, -1, 0, -1);
             break;
         case Fraxis::Y:
-            changed = internal_fraxis(xy.copyTranslateY(-1), fraction, 0, -1, 1);
+            changed = internal_fraxis(xy.translatedY(-1), fraction, 0, -1, 1);
             break;
         default:
             std::ostringstream oss;
@@ -759,7 +759,7 @@ mdn::CoordSet mdn::Mdn2d::internal_fraxis(const Coord& xy, double f, int dX, int
         if (Log_Showing_Debug4) {
             Log_N_Debug4(
                 "internal_fraxis loop, added " << static_cast<int>(d) << " to "
-                << xyWorking.copyTranslate(-dX, -dY) << ", "
+                << xyWorking.translated(-dX, -dY) << ", "
                 << "current vals: f=" << f << ", " << "xy=" << xyWorking << ", "
                 << "loop: prec=" << precisionOkay << ", num=" << numericsOkay
             );
@@ -787,7 +787,7 @@ mdn::CoordSet mdn::Mdn2d::internal_fraxisCascade(const Coord& xy, Digit d, int c
         Log_N_Debug4_H("cascade: " << static_cast<int>(d) << " at " << xy);
     }
     CoordSet changed;
-    Coord xyNext = xy.copyTranslate(c, -c);
+    Coord xyNext = xy.translated(c, -c);
     d *= -1;
     if (locked_checkPrecisionWindow(xyNext) == PrecisionStatus::Below) {
         // Cascade done

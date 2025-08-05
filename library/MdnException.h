@@ -8,20 +8,20 @@
 namespace mdn {
 
 // Base class for all MDN-related runtime errors
-class MdnException : public std::runtime_error {
+class MDN_API MdnException : public std::runtime_error {
 public:
     explicit MdnException(const std::string& msg) : std::runtime_error(msg) {}
 };
 
 // Attempt to carry over from a zero digit
-class InvalidCarryOver : public MdnException {
+class MDN_API InvalidCarryOver : public MdnException {
 public:
     InvalidCarryOver(const Coord& xy)
         : MdnException("Coordinate " + xy.to_string() + ": invalid carry over at zero digit.") {}
 };
 
 // Attempt to assign out-of-range value to digit
-class OutOfRange : public MdnException {
+class MDN_API OutOfRange : public MdnException {
 public:
     OutOfRange(const Coord& xy, int value, int base)
         : MdnException(
@@ -31,7 +31,7 @@ public:
 };
 
 // Attempt to assign out-of-range value to digit
-class ZeroEncountered : public MdnException {
+class MDN_API ZeroEncountered : public MdnException {
 public:
     ZeroEncountered(const Coord& xy)
         : MdnException(
@@ -41,21 +41,21 @@ public:
 };
 
 // MetaData is out of sync or invalid
-class MetaDataInvalid : public MdnException {
+class MDN_API MetaDataInvalid : public MdnException {
 public:
     MetaDataInvalid(const std::string& description)
         : MdnException("MDN MetaData invalid: " + description) {};
 };
 
 // Argument cannot be self
-class IllegalSelfReference : public MdnException {
+class MDN_API IllegalSelfReference : public MdnException {
 public:
     IllegalSelfReference(const std::string& description)
         : MdnException("Supplied argument must not be the exact same object: " + description) {};
 };
 
 // Bases must match
-class BaseMismatch : public MdnException {
+class MDN_API BaseMismatch : public MdnException {
 public:
     BaseMismatch(int baseA, int baseB)
         : MdnException(
@@ -65,24 +65,31 @@ public:
 };
 
 // This operation breaks the governing laws of MDNs
-class IllegalOperation : public MdnException {
+class MDN_API IllegalOperation : public MdnException {
 public:
     IllegalOperation(const std::string& description)
         : MdnException("Illegal operation: " + description) {};
 };
 
 // This operation breaks the governing laws of MDNs
-class InvalidState: public MdnException {
+class MDN_API InvalidState: public MdnException {
 public:
     InvalidState(const std::string& description)
         : MdnException("Invalid state detected: " + description) {};
 };
 
 // Division by zero is about to occur
-class DivideByZero : public MdnException {
+class MDN_API DivideByZero : public MdnException {
 public:
     DivideByZero()
         : MdnException("Division by zero") {};
+};
+
+// Division by zero is about to occur
+class MDN_API InvalidArgument : public MdnException {
+public:
+    InvalidArgument(const std::string& description)
+        : MdnException("Invalid argument detected: " + description) {};
 };
 
 

@@ -127,8 +127,8 @@ mdn::Carryover mdn::Mdn2dRules::locked_checkCarryover(const Coord& xy) const {
     Log_N_Debug3_H("At " << xy);
     Carryover result = static_checkCarryover(
         locked_getValue(xy),
-        locked_getValue(xy.copyTranslateX(1)),
-        locked_getValue(xy.copyTranslateY(1)),
+        locked_getValue(xy.translatedX(1)),
+        locked_getValue(xy.translatedY(1)),
         m_config.baseDigit()
     );
     if (Log_Showing_Debug3) {
@@ -154,8 +154,8 @@ mdn::CoordSet mdn::Mdn2dRules::carryover(const Coord& xy) {
 
 mdn::CoordSet mdn::Mdn2dRules::locked_carryover(const Coord& xy, int carry) {
     Log_N_Debug3_H("At " << xy << ", carry=" << carry);
-    Coord xy_x = xy.copyTranslateX(1);
-    Coord xy_y = xy.copyTranslateY(1);
+    Coord xy_x = xy.translatedX(1);
+    Coord xy_y = xy.translatedY(1);
     Digit p = locked_getValue(xy);
     Digit x = locked_getValue(xy_x);
     Digit y = locked_getValue(xy_y);
@@ -399,7 +399,7 @@ void mdn::Mdn2dRules::locked_shiftRight(int nDigits) {
         for (const Coord& coord : coords) {
             Digit d = m_raw[coord];
             m_raw.erase(coord);
-            m_raw[coord.copyTranslateX(nDigits)] = d;
+            m_raw[coord.translatedX(nDigits)] = d;
         }
     }
     internal_modified();
@@ -429,7 +429,7 @@ void mdn::Mdn2dRules::locked_shiftLeft(int nDigits) {
         for (const Coord& coord : coords) {
             Digit d = m_raw[coord];
             m_raw.erase(coord);
-            m_raw[coord.copyTranslateX(-nDigits)] = d;
+            m_raw[coord.translatedX(-nDigits)] = d;
         }
     }
     internal_modified();
@@ -459,7 +459,7 @@ void mdn::Mdn2dRules::locked_shiftUp(int nDigits) {
         for (const Coord& coord : coords) {
             Digit d = m_raw[coord];
             m_raw.erase(coord);
-            m_raw[coord.copyTranslateY(nDigits)] = d;
+            m_raw[coord.translatedY(nDigits)] = d;
         }
     }
     internal_modified();
@@ -489,7 +489,7 @@ void mdn::Mdn2dRules::locked_shiftDown(int nDigits) {
         for (const Coord& coord : coords) {
             Digit d = m_raw[coord];
             m_raw.erase(coord);
-            m_raw[coord.copyTranslateY(-nDigits)] = d;
+            m_raw[coord.translatedY(-nDigits)] = d;
         }
     }
     internal_modified();
@@ -577,8 +577,8 @@ void mdn::Mdn2dRules::internal_polymorphicScan() const {
 
 void mdn::Mdn2dRules::internal_oneCarryover(const Coord& xy) {
     Log_N_Debug4_H("At " << xy);
-    Coord xy_x = xy.copyTranslateX(1);
-    Coord xy_y = xy.copyTranslateY(1);
+    Coord xy_x = xy.translatedX(1);
+    Coord xy_y = xy.translatedY(1);
     Digit p = locked_getValue(xy);
     Digit x = locked_getValue(xy_x);
     Digit y = locked_getValue(xy_y);
@@ -605,8 +605,8 @@ void mdn::Mdn2dRules::internal_oneCarryover(const Coord& xy) {
 
 void mdn::Mdn2dRules::internal_ncarryover(const Coord& xy) {
     Log_N_Debug3_H("");
-    Coord xy_x = xy.copyTranslateX(1);
-    Coord xy_y = xy.copyTranslateY(1);
+    Coord xy_x = xy.translatedX(1);
+    Coord xy_y = xy.translatedY(1);
     Digit p = locked_getValue(xy);
     #ifdef MDN_DEBUG
         if (abs(p) < m_config.baseDigit()) {

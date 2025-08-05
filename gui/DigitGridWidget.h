@@ -1,8 +1,9 @@
-#include "../library/Mdn2d.h"
 #include "../library/Coord.h"
+#include "../library/GlobalConfig.h"
+#include "../library/Mdn2d.h"
 
 
-class DigitGridWidget : public QWidget {
+class MDN_API DigitGridWidget : public QWidget {
     Q_OBJECT
 
 public:

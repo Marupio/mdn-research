@@ -16,9 +16,10 @@
 
 #include <QLabel>
 
+#include "../library/GlobalConfig.h"
 #include "../library/Mdn2d.h"
 
-class MainWindow : public QMainWindow {
+class MDN_API MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:

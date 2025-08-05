@@ -2,9 +2,11 @@
 
 #include <string>
 
+#include "GlobalConfig.h"
+
 namespace mdn {
 
-class ErrorHandling {
+class MDN_API ErrorHandling {
 
 public:
 

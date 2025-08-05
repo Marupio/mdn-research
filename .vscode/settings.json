@@ -104,6 +104,7 @@
     "regex": "cpp",
     "slist": "cpp",
     "typeindex": "cpp",
-    "valarray": "cpp"
+    "valarray": "cpp",
+    "qtextedit": "cpp"
   }
 }

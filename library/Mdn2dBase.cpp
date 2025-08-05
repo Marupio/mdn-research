@@ -120,8 +120,7 @@ mdn::Mdn2dBase::Mdn2dBase(std::string nameIn)
 :
     m_config(Mdn2dConfig::static_defaultConfig()),
     m_name(nameIn),
-    m_boundsMin({constants::intMax, constants::intMax}),
-    m_boundsMax({constants::intMin, constants::intMin}),
+    m_bounds(Rect::Invalid()),
     m_modified(false),
     m_event(0)
 {
@@ -139,8 +138,7 @@ mdn::Mdn2dBase::Mdn2dBase(Mdn2dConfig config, std::string nameIn)
 :
     m_config(config),
     m_name(nameIn),
-    m_boundsMin({constants::intMax, constants::intMax}),
-    m_boundsMax({constants::intMin, constants::intMin}),
+    m_bounds(Rect::Invalid()),
     m_modified(false),
     m_event(0)
 {
@@ -172,8 +170,7 @@ mdn::Mdn2dBase::Mdn2dBase(const Mdn2dBase& other, std::string nameIn):
     m_yIndex = other.m_yIndex;
     m_index = other.m_index;
     m_index = other.m_index;
-    m_boundsMin = other.m_boundsMin;
-    m_boundsMax = other.m_boundsMax;
+    m_bounds = other.m_bounds;
     Log_Debug3_T("");
 }
 
@@ -194,8 +191,7 @@ mdn::Mdn2dBase& mdn::Mdn2dBase::operator=(const Mdn2dBase& other) {
         m_xIndex = other.m_xIndex;
         m_yIndex = other.m_yIndex;
         m_index = other.m_index;
-        m_boundsMin = other.m_boundsMin;
-        m_boundsMax = other.m_boundsMax;
+        m_bounds = other.m_bounds;
         internal_modified();
     } else {
         Log_Warn("Attempting to set Mdn2d equal to itself");
@@ -222,8 +218,7 @@ mdn::Mdn2dBase::Mdn2dBase(Mdn2dBase&& other, std::string nameIn) noexcept :
     m_xIndex = std::move(other.m_xIndex);
     m_yIndex = std::move(other.m_yIndex);
     m_index = std::move(other.m_index);
-    m_boundsMin = other.m_boundsMin;
-    m_boundsMax = other.m_boundsMax;
+    m_bounds = other.m_bounds;
     Log_Debug3_T("");
 }
 
@@ -245,8 +240,7 @@ mdn::Mdn2dBase& mdn::Mdn2dBase::operator=(Mdn2dBase&& other) noexcept {
         m_xIndex = std::move(other.m_xIndex);
         m_yIndex = std::move(other.m_yIndex);
         m_index = std::move(other.m_index);
-        m_boundsMin = other.m_boundsMin;
-        m_boundsMax = other.m_boundsMax;
+        m_bounds = other.m_bounds;
         internal_modified();
     } else {
         Log_Warn("Attempting to set Mdn2d equal to itself");
@@ -342,8 +336,13 @@ void mdn::Mdn2dBase::getRow(int y, std::vector<Digit>& digits) const {
 
 
 void mdn::Mdn2dBase::locked_getRow(int y, std::vector<Digit>& digits) const {
-    int xStart = m_boundsMin.x();
-    int xEnd = m_boundsMax.x() + 1; // one past the end, prevent fencepost
+    if (!m_bounds.isValid()) {
+        // No non-zero digits to fill
+        std::fill(digits.begin(), digits.end(), Digit(0));
+        return;
+    }
+    int xStart = m_bounds.min().x();
+    int xEnd = m_bounds.max().x() + 1;
     int xCount = xEnd - xStart;
     Log_N_Debug3_H(
         "Row " << y << " from x (" << xStart << " .. " << xEnd << "), "
@@ -394,8 +393,13 @@ void mdn::Mdn2dBase::getCol(int x, std::vector<Digit>& digits) const {
 
 
 void mdn::Mdn2dBase::locked_getCol(int x, std::vector<Digit>& digits) const {
-    int yStart = m_boundsMin.y();
-    int yEnd = m_boundsMax.y() + 1; // one past the end, prevent fencepost
+    if (!m_bounds.isValid()) {
+        // No non-zero digits to fill
+        std::fill(digits.begin(), digits.end(), Digit(0));
+        return;
+    }
+    int yStart = m_bounds.min().y();
+    int yEnd = m_bounds.max().y() + 1; // one past the end, prevent fencepost
     int yCount = yEnd - yStart;
     Log_N_Debug3(
         "Column " << x << " from y (" << yStart << " .. " << yEnd << "), "
@@ -685,12 +689,12 @@ std::vector<std::string> mdn::Mdn2dBase::toStringRows() const {
 
 
 std::vector<std::string> mdn::Mdn2dBase::locked_toStringRows() const {
-    int xStart = m_boundsMin.x();
-    int xEnd = m_boundsMax.x()+1;
+    int xStart = m_bounds.min().x();
+    int xEnd = m_bounds.max().x()+1;
     int xCount = xEnd - xStart;
 
-    int yStart = m_boundsMin.y();
-    int yEnd = m_boundsMax.y()+1;
+    int yStart = m_bounds.min().y();
+    int yEnd = m_bounds.max().y()+1;
     int yCount = yEnd - yStart;
 
     Log_N_Debug3(
@@ -750,12 +754,12 @@ std::vector<std::string> mdn::Mdn2dBase::toStringCols() const {
 
 
 std::vector<std::string> mdn::Mdn2dBase::locked_toStringCols() const {
-    int xStart = m_boundsMin.x();
-    int xEnd = m_boundsMax.x()+1;
+    int xStart = m_bounds.min().x();
+    int xEnd = m_bounds.max().x()+1;
     int xCount = xEnd - xStart;
 
-    int yStart = m_boundsMin.y();
-    int yEnd = m_boundsMax.y()+1;
+    int yStart = m_bounds.min().y();
+    int yEnd = m_bounds.max().y()+1;
     int yCount = yEnd - yStart;
 
     Log_N_Debug3(
@@ -831,8 +835,8 @@ void mdn::Mdn2dBase::locked_rebuildMetadata() const {
     // auto itMaxX = m_xIndex.crbegin();
     // auto itMinY = m_yIndex.cbegin();
     // auto itMaxY = m_yIndex.crbegin();
-    // m_boundsMin = {itMinX->first, itMinY->first};
-    // m_boundsMax = {itMaxX->first, itMaxY->first};
+    // m_bounds.min() = {itMinX->first, itMinY->first};
+    // m_bounds.max() = {itMaxX->first, itMaxY->first};
 }
 
 
@@ -845,34 +849,28 @@ bool mdn::Mdn2dBase::hasBounds() const {
 
 
 bool mdn::Mdn2dBase::locked_hasBounds() const {
-    bool invalid = (
-        m_boundsMin.x() == constants::intMax ||
-        m_boundsMin.y() == constants::intMax ||
-        m_boundsMax.x() == constants::intMin ||
-        m_boundsMax.y() == constants::intMin
-    );
+    bool invalid = !m_bounds.isValid();
 
     Log_N_Debug3(
-        "Bounds:  min: " << m_boundsMin << "  max: " << m_boundsMax << "  result: " << (!invalid)
+        "Bounds: " << m_bounds << ", result: " << (!invalid)
     );
     return !invalid;
 }
 
 
-std::pair<mdn::Coord, mdn::Coord> mdn::Mdn2dBase::getBounds() const {
+const mdn::Rect& mdn::Mdn2dBase::getBounds() const {
     auto lock = ReadOnlyLock();
-    std::pair<Coord, Coord> bounds = locked_getBounds();
+    const Rect& bounds = locked_getBounds();
     if (Log_Showing_Debug2) {
-        Log_N_Debug2("Result: " << bounds.first << ", " << bounds.second);
+        Log_N_Debug2("Result: " << bounds);
     }
     return bounds;
 }
 
 
-std::pair<mdn::Coord, mdn::Coord> mdn::Mdn2dBase::locked_getBounds() const {
-    std::pair<Coord, Coord> bounds(m_boundsMin, m_boundsMax);
-    Log_N_Debug3("Result: " << bounds.first << ", " << bounds.second);
-    return bounds;
+const mdn::Rect& mdn::Mdn2dBase::locked_getBounds() const {
+    Log_N_Debug3("Result: " << m_bounds);
+    return m_bounds;
 }
 
 
@@ -934,7 +932,7 @@ mdn::PrecisionStatus mdn::Mdn2dBase::locked_checkPrecisionWindow(const Coord& xy
     int precision = m_config.precision();
 
     // minLimit - below this and the new value should not be added
-    Coord minLimit = m_boundsMax - precision;
+    Coord minLimit = m_bounds.max() - precision;
 
     // Check under limit
     if (xy.x() < minLimit.x() || xy.y() < minLimit.y()) {
@@ -946,7 +944,7 @@ mdn::PrecisionStatus mdn::Mdn2dBase::locked_checkPrecisionWindow(const Coord& xy
     // Check over limit
     CoordSet purgeSet;
     // maxLimit - above this and we need to purge existing values
-    Coord maxLimit = m_boundsMin + precision;
+    Coord maxLimit = m_bounds.min() + precision;
     // Check over limit
     int purgeX = xy.x() - maxLimit.x();
     int purgeY = xy.y() - maxLimit.y();
@@ -1005,8 +1003,7 @@ void mdn::Mdn2dBase::assertNotSelf(Mdn2dBase& that, const std::string& descripti
 
 void mdn::Mdn2dBase::internal_clearMetadata() const {
     Log_N_Debug3("");
-    m_boundsMin = Coord({constants::intMax, constants::intMax});
-    m_boundsMax = Coord({constants::intMin, constants::intMin});
+    m_bounds.clear();
 
     m_xIndex.clear();
     m_yIndex.clear();
@@ -1107,14 +1104,7 @@ void mdn::Mdn2dBase::internal_insertAddress(const Coord& xy) const {
     } else {
         yit->second.insert(xy);
     }
-    if (xy.x() < m_boundsMin.x())
-        m_boundsMin.x() = xy.x();
-    if (xy.x() > m_boundsMax.x())
-        m_boundsMax.x() = xy.x();
-    if (xy.y() < m_boundsMin.y())
-        m_boundsMin.y() = xy.y();
-    if (xy.y() > m_boundsMax.y())
-        m_boundsMax.y() = xy.y();
+    m_bounds.growToInclude(xy);
 }
 
 
@@ -1126,19 +1116,19 @@ int mdn::Mdn2dBase::internal_purgeExcessDigits() {
     }
 
     int precision = m_config.precision();
-    Coord currentSpan = m_boundsMax - m_boundsMin;
+    Coord gridSize = m_bounds.gridSize();
     CoordSet purgeSet;
-    int purgeX = currentSpan.x() - precision;
+    int purgeX = gridSize.x() - precision;
     if (purgeX > 0) {
-        int minX = m_boundsMax.x() - precision;
+        int minX = m_bounds.max().x() - precision;
         for (const auto& [x, coords] : m_xIndex) {
             if (x >= minX) break;
             purgeSet.insert(coords.begin(), coords.end());
         }
     }
-    int purgeY = currentSpan.y() - precision;
+    int purgeY = gridSize.y() - precision;
     if (purgeY > 0) {
-        int minY = m_boundsMax.y() - precision;
+        int minY = m_bounds.max().y() - precision;
         for (const auto& [y, coords] : m_yIndex) {
             if (y >= minY) break;
             purgeSet.insert(coords.begin(), coords.end());
@@ -1148,9 +1138,7 @@ int mdn::Mdn2dBase::internal_purgeExcessDigits() {
         if (Log_Showing_Debug) {
             Log_N_Debug_H(
                 "Purging " << purgeSet.size() << " digits, now below numerical precision window: "
-                << "  min: " << m_boundsMin
-                << "  max: " << m_boundsMax
-                << "  precision: " << m_config.precision()
+                << m_bounds << ", precision: " << m_config.precision()
             );
         }
         locked_setToZero(purgeSet);
@@ -1164,20 +1152,14 @@ int mdn::Mdn2dBase::internal_purgeExcessDigits() {
 
 void mdn::Mdn2dBase::internal_updateBounds() {
     if (m_xIndex.empty() || m_yIndex.empty()) {
-        m_boundsMin = Coord({constants::intMax, constants::intMax});
-        m_boundsMax = Coord({constants::intMin, constants::intMin});
+        m_bounds.clear();
         Log_N_Debug3("Updating bounds: no non-zero digits exist, there are no bounds");
     } else {
         auto itMinX = m_xIndex.cbegin();
         auto itMaxX = m_xIndex.crbegin();
         auto itMinY = m_yIndex.cbegin();
         auto itMaxY = m_yIndex.crbegin();
-        m_boundsMin = {itMinX->first, itMinY->first};
-        m_boundsMax = {itMaxX->first, itMaxY->first};
-        Log_N_Debug3(
-            "Updating bounds, new bounds: "
-            << "   min: " << m_boundsMin
-            << "   max: " << m_boundsMax
-        );
+        m_bounds.set(itMinX->first, itMinY->first, itMaxX->first, itMaxY->first);
+        Log_N_Debug3("Updating bounds, new bounds: " << m_bounds);
     }
 }

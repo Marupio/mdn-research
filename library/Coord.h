@@ -20,25 +20,42 @@ public:
     int y() const { return m_y; }
     int& y() { return m_y; }
 
-    Coord copyTranslate(int xIncr, int yIncr) const {
-        Coord ret(*this);
-        ret.m_x += xIncr;
-        ret.m_y += yIncr;
-        return ret;
+    void set(int x, int y) {
+        m_x = x;
+        m_y = y;
     }
-    Coord copyTranslateX(int xIncr) const {
-        Coord ret(*this);
-        ret.m_x += xIncr;
-        return ret;
-    }
-    Coord copyTranslateY(int yIncr) const {
-        Coord ret(*this);
-        ret.m_y += yIncr;
-        return ret;
-    }
-    void translate(int xIncr, int yIncr) { m_x += xIncr; m_y += yIncr; }
-    void translateX(int xIncr) { m_x += xIncr; }
-    void translateY(int yIncr) { m_y += yIncr; }
+
+    // *** Functions that create a new Coord instance
+
+        // Creates a new Coord, translated by the given (xIncr, yIncr)
+        Coord translated(int xIncr, int yIncr) const {
+            Coord ret(*this);
+            ret.m_x += xIncr;
+            ret.m_y += yIncr;
+            return ret;
+        }
+        // Creates a new Coord, translated along x by the given xIncr
+        Coord translatedX(int xIncr) const {
+            Coord ret(*this);
+            ret.m_x += xIncr;
+            return ret;
+        }
+        // Creates a new Coord, translated along y by the given yIncr
+        Coord translatedY(int yIncr) const {
+            Coord ret(*this);
+            ret.m_y += yIncr;
+            return ret;
+        }
+
+
+    // *** Functions that modify *this
+
+        // Move the Coord by the given (xIncr, yIncr)
+        void translate(int xIncr, int yIncr) { m_x += xIncr; m_y += yIncr; }
+        // Move the Coord along x by the given xIncr
+        void translateX(int xIncr) { m_x += xIncr; }
+        // Move the Coord along y by the given yIncr
+        void translateY(int yIncr) { m_y += yIncr; }
 
     // Compound operators
     Coord& operator+=(int val) {

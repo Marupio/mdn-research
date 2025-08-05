@@ -5,9 +5,10 @@
 // #include <QtGui/qcolor.h>
 // #include <QColor>
 
+#include "../library/GlobalConfig.h"
 #include "../library/Mdn2d.h"
 
-class NumberDisplayWidget : public QWidget {
+class MDN_API NumberDisplayWidget : public QWidget {
     Q_OBJECT
 
 public:

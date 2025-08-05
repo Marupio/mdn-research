@@ -12,9 +12,13 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QWidget>
+
 #include "DigitGridWidget.h"
 
-class MainWindow : public QMainWindow {
+#include "../library/GlobalConfig.h"
+
+
+class MDN_API MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
