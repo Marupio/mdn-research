@@ -250,6 +250,95 @@ mdn::Mdn2dBase& mdn::Mdn2dBase::operator=(Mdn2dBase&& other) noexcept {
 }
 
 
+const mdn::Mdn2dConfig& mdn::Mdn2dBase::getConfig() const {
+    auto lock = lockReadOnly();
+    Log_N_Debug2("");
+    return locked_getConfig();
+}
+
+
+const mdn::Mdn2dConfig& mdn::Mdn2dBase::locked_getConfig() const {
+    if (Log_Showing_Debug4) {
+        Log_N_Debug4("returning config: " << m_config);
+    } else {
+        Log_N_Debug3("");
+    }
+    return m_config;
+}
+
+
+mdn::Mdn2dConfigImpact mdn::Mdn2dBase::assessConfigChange(const Mdn2dConfig& newConfig) {
+    auto lock = lockReadOnly();
+    Log_N_Debug2("");
+    return locked_assessConfigChange(newConfig);
+}
+
+
+mdn::Mdn2dConfigImpact mdn::Mdn2dBase::locked_assessConfigChange(const Mdn2dConfig& newConfig) {
+    if (Log_Showing_Debug4) {
+        Log_N_Debug4_H("assessing new: " << newConfig << " against old: " << m_config);
+    } else {
+        Log_N_Debug3_H("");
+    }
+
+    Mdn2dConfigImpact result = Mdn2dConfigImpact::Unknown;
+    if (newConfig.base() != m_config.base()) {
+        result = Mdn2dConfigImpact::AllDigitsCleared;
+    } else if (newConfig.precision() < m_config.precision()) {
+        if (newConfig.signConvention() != m_config.signConvention()) {
+            result = Mdn2dConfigImpact::PossibleDigitLossAndPolymorphism;
+        }
+        result = Mdn2dConfigImpact::PossibleDigitLoss;
+    } else if (newConfig.signConvention() != m_config.signConvention()) {
+        result = Mdn2dConfigImpact::PossiblePolymorphism;
+    } else {
+        result = Mdn2dConfigImpact::NoImpact;
+    }
+    if (Log_Showing_Debug4) {
+        Log_N_Debug4_T(
+            "result = " << Mdn2dConfigImpactToName(result) << ", "
+                << Mdn2dConfigImpactToDescription(result)
+        );
+    } else {
+        Log_N_Debug3_T("result = " << Mdn2dConfigImpactToName(result));
+    }
+}
+
+
+void mdn::Mdn2dBase::setConfig(Mdn2dConfig& newConfig) {
+    auto lock = lockWriteable();
+    Log_N_Debug2("");
+    locked_setConfig(newConfig);
+}
+
+
+void mdn::Mdn2dBase::locked_setConfig(Mdn2dConfig newConfig) {
+    if (Log_Showing_Debug4) {
+        Log_N_Debug4_H("applying new config: " << newConfig);
+    } else {
+        Log_N_Debug3_H("");
+    }
+
+    if (newConfig.base() != m_config.base()) {
+        Log_N_Debug4("Requires full clear()");
+        locked_clear();
+    } else if (newConfig.precision() < m_config.precision()) {
+        if (newConfig.signConvention() != m_config.signConvention()) {
+            // Can only be handled by Rules layer
+            // result = Mdn2dConfigImpact::PossibleDigitLossAndPolymorphism;
+        }
+        Log_N_Debug4("Setting reduced precision - may lose digits");
+        int nLost = locked_setPrecision(newConfig.precision());
+        Log_N_Debug3("Precision reduction lost " << nLost << " digits");
+    } else if (newConfig.signConvention() != m_config.signConvention()) {
+        // Can only be handled by Rules layer
+        // result = Mdn2dConfigImpact::PossiblePolymorphism;
+    }
+    m_config = newConfig;
+    Log_N_Debug3_T("");
+}
+
+
 const std::string& mdn::Mdn2dBase::getName() const {
     auto lock = lockReadOnly();
     Log_N_Debug2("");

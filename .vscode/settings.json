@@ -105,6 +105,7 @@
     "slist": "cpp",
     "typeindex": "cpp",
     "valarray": "cpp",
-    "qtextedit": "cpp"
+    "qtextedit": "cpp",
+    "qlineedit": "cpp"
   }
 }

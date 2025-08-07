@@ -32,7 +32,8 @@ public:
     //  fixOrdering - when true, corrects inputs where individual components of min and max might
     //      need to be swapped. Useful when source coords are unreliable. See fixOrdering function.
     Rect(Coord min, Coord max, bool fixOrdering = false)
-        : m_min(min), m_max(max)
+        : m_min(min), m_max(max),
+        m_infNorth(false), m_infSouth(false), m_infWest(false), m_infEast(false)
     {
         if (fixOrdering) {
             this->fixOrdering();
@@ -43,7 +44,8 @@ public:
     //  fixOrdering - when true, corrects inputs where individual components of min and max might
     //      need to be swapped. Useful when source coords are unreliable. See fixOrdering function.
     Rect(int xmin, int ymin, int xmax, int ymax, bool fixOrdering = false)
-        : m_min(xmin, ymin), m_max(xmax, ymax)
+        : m_min(xmin, ymin), m_max(xmax, ymax),
+        m_infNorth(false), m_infSouth(false), m_infWest(false), m_infEast(false)
     {
         if (fixOrdering) {
             this->fixOrdering();
@@ -286,8 +288,15 @@ public:
 
 
 private:
+
     Coord m_min;
     Coord m_max;
+
+    bool m_infNorth;
+    bool m_infSouth;
+    bool m_infWest;
+    bool m_infEast;
+
 };
 
 } // end namespace mdn

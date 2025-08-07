@@ -122,7 +122,33 @@ private:
 //          Log_Debug2("output message");
 //      }
 
+
+// Assertion macros
+#define Internal_AssertStart(expression, messageIfFailed) \
+    if (!expression) { \
+        std::ostringstream oss; \
+        oss << InternalLoggerFileRef << messageIfFailed << std::endl; \
+        FailedAssertion err = FailedAssertion(oss.str().c_str()); \
+        Logger& loginst = Logger::instance(); \
+        loginst.error(err.what());
+
+// The library is independent of GUI frameworks, but here exists a macro allowing a QMessageBox,
+//  allowing GUI code to call this macro in a place where QMessageBox is defined
+#define Internal_AssertQCrit QMessageBox::critical(nullptr, "Failed Assert", err.what());
+#define Internal_AssertEnd throw err; }
+
+#define Assert(expression, messageIfFailed) \
+    Internal_AssertStart(expression, messageIfFailed) \
+    Internal_AssertEnd
+#define AssertQ(expression, messageIfFailed) \
+    Internal_AssertStart(expression, messageIfFailed) \
+    Internal_AssertQCrit \
+    Internal_AssertEnd
+
 #ifdef MDN_DEBUG
+
+    #define DBAssert(expression, messageIfFailed) Assert(expression, messageIfFailed)
+    #define DBAssertQ(expression, messageIfFailed) AssertQ(expression, messageIfFailed)
 
     // Internal use - this macro brings together the final logging code
     #define InternalLoggerAssembleFunction(FILE_REF, message, level) { \
@@ -137,8 +163,14 @@ private:
 
     // Internal use - the FileRef, intended to be wrapped by a string ctor, produces a nicely
     //  formatted prefix to each log entry:
-    //      [        |Mdn2dBase.cpp:598,setValue]
+    //      [Mdn2dBase.cpp:598,setValue]
     #define InternalLoggerFileRef \
+            "[" + Tools::removePath(__FILE__) + ":" + std::to_string(__LINE__) + "," + \
+            __func__ + "] "
+
+    // Internal use - As above, but with indentation:
+    //      [        |Mdn2dBase.cpp:598,setValue]
+    #define InternalIdentedLoggerFileRef \
             "[" + std::to_string(Logger::instance().getIndent()) + "|" \
             + Tools::removePath(__FILE__) + ":" + std::to_string(__LINE__) + "," + \
             __func__ + "] "
@@ -147,7 +179,7 @@ private:
     //      [        |Mdn2dBase.cpp:598,setValue] Mdn2d_2_Copy_1:
     //  Obviously only useful if the class has member variable:
     //      std::string m_name;
-    #define InternalLoggerNamedFileRef InternalLoggerFileRef + m_name + ": "
+    #define InternalLoggerNamedFileRef InternalIdentedLoggerFileRef + m_name + ": "
 
     // Standard log message:
     //  No header / footer indent / unindent
@@ -160,7 +192,7 @@ private:
     //  No header / footer indent / unindent
     //  File ref with no object name
     #define InternalLoggerAnonymous(message, level) \
-        InternalLoggerAssembleFunction( InternalLoggerFileRef, message, level )
+        InternalLoggerAssembleFunction( InternalIdentedLoggerFileRef, message, level )
 
 
     // Internal use - Wrapper for producing a header message that increases the indentation level
@@ -270,6 +302,9 @@ private:
     #define Log_N_Debug_T(message) InternalLoggerNamedFooter(message, debug)
 
 #else
+    #define DBAssert(expression, messageIfFailed) do {} while (false);
+    #define DBAssertQ(expression, messageIfFailed) do {} while (false);
+
     #define Log_Debug4(message)   do {} while (false);
     #define Log_Debug3(message)   do {} while (false);
     #define Log_Debug2(message)   do {} while (false);

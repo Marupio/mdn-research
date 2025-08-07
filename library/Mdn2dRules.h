@@ -56,6 +56,13 @@ public:
 
     // *** Member Functions
 
+        // *** Config
+
+            // Change the config - can lead to any of the Mdn2dConfigImpact effects
+            // Overriding virtual fn from base for access to carryover functionality
+            protected: void locked_setConfig(Mdn2dConfig newConfig) override; public:
+
+
         // *** Transformations
 
             // Return the Carryover type (enumareation) of xy

@@ -14,6 +14,8 @@
 
 namespace mdn {
 
+
+
 // Contains all settings governing behaviour of an Mdn2d
 class MDN_API Mdn2dConfig {
 
@@ -25,6 +27,7 @@ class MDN_API Mdn2dConfig {
 
     // Pointer to framework governing class - what object holds this Mdn2d?
     static Mdn2dFramework* m_masterPtr;
+
 
 public:
 
@@ -77,7 +80,7 @@ public:
 
     // *** Constructors
 
-    // Construct from parts
+    // Construct from parts, or null
     Mdn2dConfig(
         int baseIn=10,
         int maxSpanIn=16,
@@ -158,6 +161,7 @@ public:
     }
 
     friend std::istream& operator>>(std::istream& is, Mdn2dConfig& c) {
+        // TODO - problem, epsilon is derived from precision, should not be independent
         char lparen, letter, colon, comma, rparen;
         std::string fname;
         std::string sname;

@@ -112,6 +112,20 @@ mdn::Mdn2dRules& mdn::Mdn2dRules::operator=(Mdn2dRules&& other) noexcept {
 }
 
 
+void mdn::Mdn2dRules::locked_setConfig(Mdn2dConfig newConfig) {
+    Log_N_Debug3_H("");
+    SignConvention origSc = m_config.signConvention();
+    SignConvention newSc = newConfig.signConvention();
+    Mdn2dBase::locked_setConfig(newConfig);
+    if (origSc != newSc) {
+        Log_N_Debug4("SignConvention changed: checking for polymorphic carryovers.");
+        int nChanged = locked_carryoverCleanupAll().size();
+        Log_N_Debug3("SignConvention change led to " << nChanged << " polymorphic changes.");
+    }
+    Log_N_Debug3_T("");
+}
+
+
 mdn::Carryover mdn::Mdn2dRules::checkCarryover(const Coord& xy) const {
     auto lock = lockReadOnly();
     Log_N_Debug2_H("At: " << xy);

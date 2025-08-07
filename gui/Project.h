@@ -16,14 +16,21 @@ namespace mdn {
 
 class MDN_API Project: public Mdn2dFramework {
 
-    // Null construction creates these zero-valued Mdn2d named tabs, in this order
-    static const std::vector<std::string> m_defaultMdn2dNames;
+protected:
+
+    // *** Protected member data
 
     // Appended to project name 'untitled' when no name provided
     static int m_untitledNumber;
 
+    // The parent main window app in Qt
+    MainWindow* m_parent;
+
     // Name of this project
     std::string m_name;
+
+    // Config for all numbers in this project
+    Mdn2dConfig m_config;
 
     // References to the constituent Mdn2d data, key is its tab position in the gui
     std::unordered_map<int, Mdn2d> m_data;
@@ -35,10 +42,21 @@ class MDN_API Project: public Mdn2dFramework {
     std::unordered_map<int, std::string> m_addressingIndexToName;
 
 
+    // *** Protected member functions
+
+    // Shift Mdn tabs, starting at 'start' shifting a distance of 'shift' tabs
+    //  Exceptions
+    //      * InvalidArgument - shift cannot be negative
+    void shiftMdnTabsRight(int start, int shift);
+    void shiftMdnTabsLeft(int end, int shift);
+
+
 public:
 
-    // Construct a null project
-    Project(std::string name="");
+    // *** Constructors
+
+    // Construct a null project' given its name and the number of empty Mdns to start with
+    Project(MainWindow* parent=nullptr, std::string name="", int nStartMdn=3);
 
 
     // *** Mdn2dFramework API
@@ -77,9 +95,32 @@ public:
 
     // *** Project API
 
+        // Accessors for m_config
+        const Mdn2dConfig& config() const {
+            return m_config;
+        }
+
+        // Setter for m_config requires resetting of the Mdn2d's
+        void setConfig(Mdn2dConfig newConfig);
+
+
+        // *** MDN Accessors
+
+        // Return pointer to the i'th Mdn tab, nullptr on failure
+        const Mdn2d* GetMdn(int i) const;
+        Mdn2d* GetMdn(int i);
+
+        // Return pointer to Mdn2d at first tab, nullptr on failure
+        const Mdn2d* FirstMdn() const;
+        Mdn2d* FirstMdn();
+
+        // Return pointer to Mdn2d at last tab, nullptr on failure
+        const Mdn2d* LastMdn() const;
+        Mdn2d* LastMdn();
+
         // Inserts a new number at the 'end', i.e. the last index
-        void AppendMdn(Mdn2d& number) {
-            InsertMdn(number, -1);
+        void AppendMdn(Mdn2d& mdn) {
+            InsertMdn(mdn, -1);
         }
 
         // Insert a new number at the given index, index == -1 means 'at the end'
@@ -87,10 +128,10 @@ public:
         //      * Warning: if index is too big
         //          Recover: places number at the end
         //      * Warning: if number's name conflicts
-        //          Recover: rename the new number, by convention
-        void InsertMdn(Mdn2d& number, int index);
+        //          Recover: rename the new mdn, by convention
+        void InsertMdn(Mdn2d& mdn, int index);
 
-        // Duplicate the Mdn2d at the given index or given name, returns the name of the new number.
+        // Duplicate the Mdn2d at the given index or given name, returns the name of the new mdn.
         //  An empty string return indicates the operation failed
         //  Messaging
         //      * Warning: if index out of range or name does not exist
@@ -116,9 +157,19 @@ public:
         bool Erase(const std::string& name);
 
 
-    // Full Mdn-based selections
+    // Selection actions
 
-        void CopyMdnSelection();
+        // Perform a 'copy' operation on the selection
+        void CopySelection() const;
+
+        // Perform a 'cut' operation on the selection - a combination of Copy and Delete
+        void CutSelection();
+
+        // Selection acts as anchor to paste operation
+        void PasteOnSelection();
+
+        // Perform 'delete' operation on the selection
+        void DeleteSelection();
 
 };
 

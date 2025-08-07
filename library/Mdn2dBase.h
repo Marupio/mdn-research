@@ -9,6 +9,7 @@
 #include "CoordSet.h"
 #include "GlobalConfig.h"
 #include "Mdn2dConfig.h"
+#include "Mdn2dConfigImpact.h"
 #include "PrecisionStatus.h"
 #include "Rect.h"
 
@@ -131,6 +132,22 @@ public:
 
     // *** Member Functions
 
+        // *** Config
+
+            // Return the Mdn2dConfig for this number
+            const Mdn2dConfig& getConfig() const;
+            protected: const Mdn2dConfig& locked_getConfig() const; public:
+
+            // Assess the impact of changing the config to the supplied newConfig
+            Mdn2dConfigImpact assessConfigChange(const Mdn2dConfig& newConfig);
+            protected: Mdn2dConfigImpact locked_assessConfigChange(const Mdn2dConfig& newConfig); public:
+
+            // Change the config - can lead to any of the Mdn2dConfigImpact effects
+            void setConfig(Mdn2dConfig& newConfig);
+            // Locked version *copies* config - everyone has their own copy
+            protected: virtual void locked_setConfig(Mdn2dConfig newConfig); public:
+
+
         // *** Identity
 
             // Return name
@@ -140,7 +157,6 @@ public:
             // Set this number's 'name', deferring to framework for approval
             void setName(const std::string& nameIn);
             protected: void locked_setName(const std::string& nameIn); public:
-
 
 
         // *** Getters

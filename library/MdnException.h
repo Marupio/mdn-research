@@ -14,6 +14,13 @@ public:
 };
 
 // Attempt to carry over from a zero digit
+class MDN_API FailedAssertion : public MdnException {
+public:
+    FailedAssertion(const std::string& description)
+        : MdnException(description) {}
+};
+
+// Attempt to carry over from a zero digit
 class MDN_API InvalidCarryOver : public MdnException {
 public:
     InvalidCarryOver(const Coord& xy)
@@ -71,7 +78,7 @@ public:
         : MdnException("Illegal operation: " + description) {};
 };
 
-// This operation breaks the governing laws of MDNs
+// The objects or data have encountered an invalid state
 class MDN_API InvalidState: public MdnException {
 public:
     InvalidState(const std::string& description)
@@ -85,13 +92,19 @@ public:
         : MdnException("Division by zero") {};
 };
 
-// Division by zero is about to occur
+// Argument is not valid
 class MDN_API InvalidArgument : public MdnException {
 public:
     InvalidArgument(const std::string& description)
         : MdnException("Invalid argument detected: " + description) {};
 };
 
+// Cannot perform the operation for the given described reason
+class MDN_API InvalidOperation : public MdnException {
+public:
+    InvalidOperation(const std::string& description)
+        : MdnException("Invalid operation detected: " + description) {};
+};
 
 
 } // namespace mdn
