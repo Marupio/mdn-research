@@ -241,7 +241,7 @@ public:
             protected: bool locked_hasBounds() const; public:
 
             // Retuns bounds of non zero entries in m_raw
-            const Rect& getBounds() const;
+            const Rect& bounds() const;
             protected: const Rect& locked_getBounds() const; public:
 
 

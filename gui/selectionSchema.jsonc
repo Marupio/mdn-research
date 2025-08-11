@@ -1,0 +1,25 @@
+{
+  "type": "mdn-selection",
+  "version": 1,
+  "policy": "intersection",     // how we resolved per-tab bounds
+  "rect": {                     // final finite rect used for all tabs (inclusive)
+    "x0": <int>, "y0": <int>, "x1": <int>, "y1": <int>
+  },
+  "order": {                    // iteration order of rows/cols
+    "rows": "y_asc",            // y from y0→y1
+    "cols": "x_asc"             // x from x0→x1
+  },
+  "tabs": [
+    {
+      "id": <int>,              // tab id
+      "name": "<optional>",     // human label (optional)
+      "base": <int>,            // radix (optional, if handy)
+      "grid_tsv": "<TSV string with \\n rows>"  // row-major
+    }
+  ],
+  "meta": {
+    "app": "MDN",               // optional
+    "app_version": "<semver>",  // optional
+    "copied_at": "<ISO8601>"    // optional
+  }
+}

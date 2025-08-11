@@ -18,7 +18,7 @@
 #include "../library/GlobalConfig.h"
 
 
-class MDN_API MainWindow : public QMainWindow {
+class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:

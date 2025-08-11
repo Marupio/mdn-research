@@ -14,6 +14,60 @@ public:
 
     // *** Static member functions
 
+    // Return intersection of two rects. If they don't intersect, returns Rect::Invalid()
+    inline static Rect intersection(const Rect& a, const Rect& b) {
+        Coord minPt(
+            std::max(a.min().x(), b.min().x()),
+            std::max(a.min().y(), b.min().y())
+        );
+        Coord maxPt(
+            std::min(a.max().x(), b.max().x()),
+            std::min(a.max().y(), b.max().y())
+        );
+
+        Rect result(minPt, maxPt);
+        return result.isValid() ? result : Rect::Invalid();
+    }
+
+    // Return the smallest rect that contains both input rects
+    inline static Rect unionOf(const Rect& a, const Rect& b) {
+        if (!a.isValid()) return b;
+        if (!b.isValid()) return a;
+
+        Coord minPt(
+            std::min(a.min().x(), b.min().x()),
+            std::min(a.min().y(), b.min().y())
+        );
+        Coord maxPt(
+            std::max(a.max().x(), b.max().x()),
+            std::max(a.max().y(), b.max().y())
+        );
+
+        return Rect(minPt, maxPt);
+    }
+
+    // Check if rects overlap (intersection is non-empty)
+    inline static bool overlaps(const Rect& a, const Rect& b) {
+        return intersection(a, b).isValid();
+    }
+
+    // Check if two rects are adjacent but not overlapping
+    inline static bool areAdjacent(const Rect& a, const Rect& b) {
+        if (overlaps(a, b)) return false;
+
+        // One of the edges must touch
+        bool horizontalTouch =
+            (a.right() + 1 == b.left() || b.right() + 1 == a.left()) &&
+            !(a.top() < b.bottom() || b.top() < a.bottom());
+
+        bool verticalTouch =
+            (a.top() + 1 == b.bottom() || b.top() + 1 == a.bottom()) &&
+            !(a.right() < b.left() || b.right() < a.left());
+
+        return horizontalTouch || verticalTouch;
+    }
+
+
     // Returns an invalid rectangle, plays nice with growToInclude
     static Rect Invalid() {
         return Rect(
@@ -32,8 +86,7 @@ public:
     //  fixOrdering - when true, corrects inputs where individual components of min and max might
     //      need to be swapped. Useful when source coords are unreliable. See fixOrdering function.
     Rect(Coord min, Coord max, bool fixOrdering = false)
-        : m_min(min), m_max(max),
-        m_infNorth(false), m_infSouth(false), m_infWest(false), m_infEast(false)
+        : m_min(min), m_max(max)
     {
         if (fixOrdering) {
             this->fixOrdering();
@@ -44,8 +97,7 @@ public:
     //  fixOrdering - when true, corrects inputs where individual components of min and max might
     //      need to be swapped. Useful when source coords are unreliable. See fixOrdering function.
     Rect(int xmin, int ymin, int xmax, int ymax, bool fixOrdering = false)
-        : m_min(xmin, ymin), m_max(xmax, ymax),
-        m_infNorth(false), m_infSouth(false), m_infWest(false), m_infEast(false)
+        : m_min(xmin, ymin), m_max(xmax, ymax)
     {
         if (fixOrdering) {
             this->fixOrdering();
@@ -163,59 +215,6 @@ public:
         if (c.y() > m_max.y()) m_max.y() = c.y();
     }
 
-    // Return intersection of two rects. If they don't intersect, returns Rect::Invalid()
-    inline Rect intersection(const Rect& a, const Rect& b) {
-        Coord minPt(
-            std::max(a.min().x(), b.min().x()),
-            std::max(a.min().y(), b.min().y())
-        );
-        Coord maxPt(
-            std::min(a.max().x(), b.max().x()),
-            std::min(a.max().y(), b.max().y())
-        );
-
-        Rect result(minPt, maxPt);
-        return result.isValid() ? result : Rect::Invalid();
-    }
-
-    // Return the smallest rect that contains both input rects
-    inline Rect unionOf(const Rect& a, const Rect& b) {
-        if (!a.isValid()) return b;
-        if (!b.isValid()) return a;
-
-        Coord minPt(
-            std::min(a.min().x(), b.min().x()),
-            std::min(a.min().y(), b.min().y())
-        );
-        Coord maxPt(
-            std::max(a.max().x(), b.max().x()),
-            std::max(a.max().y(), b.max().y())
-        );
-
-        return Rect(minPt, maxPt);
-    }
-
-    // Check if rects overlap (intersection is non-empty)
-    inline bool overlaps(const Rect& a, const Rect& b) {
-        return intersection(a, b).isValid();
-    }
-
-    // Check if two rects are adjacent but not overlapping
-    inline bool areAdjacent(const Rect& a, const Rect& b) {
-        if (overlaps(a, b)) return false;
-
-        // One of the edges must touch
-        bool horizontalTouch =
-            (a.right() + 1 == b.left() || b.right() + 1 == a.left()) &&
-            !(a.top() < b.bottom() || b.top() < a.bottom());
-
-        bool verticalTouch =
-            (a.top() + 1 == b.bottom() || b.top() + 1 == a.bottom()) &&
-            !(a.right() < b.left() || b.right() < a.left());
-
-        return horizontalTouch || verticalTouch;
-    }
-
     std::vector<Coord> toCoordVector() const {
         std::vector<Coord> coords;
         if (!isValid()) return coords;
@@ -291,12 +290,6 @@ private:
 
     Coord m_min;
     Coord m_max;
-
-    bool m_infNorth;
-    bool m_infSouth;
-    bool m_infWest;
-    bool m_infEast;
-
 };
 
 } // end namespace mdn

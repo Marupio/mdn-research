@@ -8,7 +8,7 @@
 #include "../library/GlobalConfig.h"
 #include "../library/Mdn2d.h"
 
-class MDN_API NumberDisplayWidget : public QWidget {
+class NumberDisplayWidget : public QWidget {
     Q_OBJECT
 
 public:

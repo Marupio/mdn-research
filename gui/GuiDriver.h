@@ -10,7 +10,7 @@
 
 namespace mdn {
 
-class MDN_API GuiDriver {
+class GuiDriver {
 
     MainWindow m_mainWindow;
     std::shared_ptr<Project>* m_projectPtr;

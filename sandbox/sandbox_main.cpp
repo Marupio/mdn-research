@@ -109,7 +109,7 @@ int execute() {
     for (auto riter = slot5Disp.rbegin(); riter != slot5Disp.rend(); ++riter) {
         std::cout << *riter << '\n';
     }
-    Log_Info("slot5 bounds = " << slot5.getBounds());
+    Log_Info("slot5 bounds = " << slot5.bounds());
 
     Log_Info("NewInstance slot6");
     Mdn2d slot6 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));
@@ -121,7 +121,7 @@ int execute() {
     for (auto riter = slot6Disp.rbegin(); riter != slot6Disp.rend(); ++riter) {
         std::cout << *riter << '\n';
     }
-    Log_Info("slot6 bounds = " << slot6.getBounds());
+    Log_Info("slot6 bounds = " << slot6.bounds());
 
     return 0;
 }

@@ -3,7 +3,7 @@
 #include "../library/Mdn2d.h"
 
 
-class MDN_API DigitGridWidget : public QWidget {
+class DigitGridWidget : public QWidget {
     Q_OBJECT
 
 public:

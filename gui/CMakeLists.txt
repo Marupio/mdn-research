@@ -34,6 +34,8 @@ target_link_libraries(mdn_gui PRIVATE ${QT_LIBS} mdn)
 
 include_directories("../library")
 
+# target_compile_definitions(mdn_gui PRIVATE mdn_EXPORTS)
+
 if(IS_VSCODE_BUILD_BOOL)
     message(STATUS "Adding command to copy Qt DLLs and library for VS Code build")
     add_custom_command(TARGET mdn_gui POST_BUILD

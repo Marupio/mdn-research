@@ -1,53 +1,81 @@
 #include "Project.h"
 
+#include <QJsonObject>
+
 #include "../library/MdnException.h"
+#include "Selection.h"
+
 
 int mdn::Project::m_untitledNumber = 0;
 
-void mdn::Project::shiftMdnTabsRight(int start, int shift) {
+void mdn::Project::shiftMdnTabsRight(int start, int end, int shift) {
     int lastI = m_data.size() - 1;
+    if (end > lastI || end < 0) {
+        end = lastI;
+    }
+    if (start > end) {
+        int tmp = start;
+        start = end;
+        end = tmp;
+    }
     if (start > lastI) {
         // Already at the end
         return;
     }
-    if (shift < 0) {
+    if (shift <= 0) {
         InvalidArgument err = InvalidArgument(
-            "Tab shift (" + std::to_string(shift) + ") cannot be negative."
+            "Tab shift (" + std::to_string(shift) + ") cannot be zero or negative."
         );
         QMessageBox::critical(m_parent, "shiftMdnTabsRight", err.what());
         throw err;
     }
 
-    for (int tabI = lastI; tabI >= start; --tabI) {
+    for (int tabI = end; tabI >= start; --tabI) {
         std::string curName = m_addressingIndexToName[tabI];
         int newIndex = tabI + shift;
         m_addressingIndexToName.erase(tabI);
-
         m_addressingIndexToName.insert({newIndex, curName});
+
+        auto node = m_data.extract(tabI);
+        node.key() = newIndex;
+        m_data.insert(std::move(node));
+
         m_addressingNameToIndex[curName] = newIndex;
     }
 }
 
 
-void mdn::Project::shiftMdnTabsLeft(int start, int shift) {
+void mdn::Project::shiftMdnTabsLeft(int start, int end, int shift) {
     int lastI = m_data.size() - 1;
+    if (end > lastI || end < 0) {
+        end = lastI;
+    }
+    if (start > end) {
+        int tmp = start;
+        start = end;
+        end = tmp;
+    }
     if (start > lastI) {
         // Already at the end
         return;
     }
-    if (shift < 0) {
+    if (shift <= 0) {
         InvalidArgument err = InvalidArgument(
-            "Tab shift (" + std::to_string(shift) + ") cannot be negative."
+            "Tab shift (" + std::to_string(shift) + ") cannot be zero or negative."
         );
         QMessageBox::critical(m_parent, "shiftMdnTabsRight", err.what());
         throw err;
     }
-    for (int tabI = shift; tabI <= lastI; ++tabI) {
+    for (int tabI = start + shift; tabI <= end; ++tabI) {
         std::string curName = m_addressingIndexToName[tabI];
         int newIndex = tabI - shift;
         m_addressingIndexToName.erase(tabI);
-
         m_addressingIndexToName.insert({newIndex, curName});
+
+        auto node = m_data.extract(tabI);
+        node.key() = newIndex;
+        m_data.insert(std::move(node));
+
         m_addressingNameToIndex[curName] = newIndex;
     }
 }
@@ -170,28 +198,77 @@ void mdn::Project::setConfig(Mdn2dConfig newConfig) {
             // including Mdn2dConfigImpactNames::Unknown
             InvalidState err("Did not receive a valid Mdn2dConfigImpact response");
             Log_Error(err.what());
-            throw error;
+            throw err;
         }
-    }
-
-
-    Mdn2dConfigImpact assessConfigChange(const Mdn2dConfig& newConfig);
-
-
-    // Maybe I need to be a little more surgical here
-    // TODO
-
-    if (m_config.base() != newConfig.base()) {
-        // Warn user that this action will clear all numbers, get yes/no
-        // no --> return
-        // Clear all numbers
-        // ignore all other aspects of config, set to new config
     }
 }
 
 
+bool mdn::Project::Contains(std::string name, bool warnIfMissing) const {
+    int index = IndexOfMdn(name);
+    if (index < 0) {
+        if (warnIfMissing) {
+            std::ostringstream oss;
+            oss << "Mdn2d with name '" << name << "' does not exist.";
+            QMessageBox::warning(m_parent, "Contains", oss.str().c_str());
+            return false;
+        }
+        return false;
+    }
+    const auto iter = m_data.find(index);
+    if (iter == m_data.cend()) {
+        if (warnIfMissing) {
+            std::ostringstream oss;
+            oss << "Mdn2d with name '" << name << "' exists in addressing but not in data.";
+            QMessageBox::warning(m_parent, "Contains", oss.str().c_str());
+            return false;
+        }
+        return false;
+    }
+    const Mdn2d& num = iter->second;
+    if (num.getName() != name) {
+        return false;
+    }
+    return true;
+}
+
+
+bool mdn::Project::Contains(int i, bool warnIfMissing) const {
+    const auto iter = m_data.find(i);
+    if (iter == m_data.cend()) {
+        if (warnIfMissing) {
+            std::ostringstream oss;
+            oss << "Invalid index (" << i << "), expecting 0 .. " << (m_data.size() - 1);
+            QMessageBox::warning(m_parent, "Contains", oss.str().c_str());
+            return false;
+        }
+
+        return false;
+    }
+    return true;
+}
+
+
+int mdn::Project::IndexOfMdn(std::string name) const {
+    const auto iter = m_addressingNameToIndex.find(name);
+    if (iter == m_addressingNameToIndex.cend()) {
+        return -1;
+    }
+    return iter->second;
+}
+
+
+std::string mdn::Project::NameOfMdn(int i) const {
+    const auto iter = m_addressingIndexToName.find(i);
+    if (iter == m_addressingIndexToName.cend()) {
+        return "";
+    }
+    return iter->second;
+}
+
+
 const mdn::Mdn2d* mdn::Project::GetMdn(int i) const {
-    auto iter = m_data.find(i);
+    const auto iter = m_data.find(i);
     if (iter == m_data.cend()) {
         return nullptr;
     }
@@ -203,6 +280,24 @@ mdn::Mdn2d* mdn::Project::GetMdn(int i) {
         return nullptr;
     }
     return &(iter->second);
+}
+
+
+const mdn::Mdn2d* mdn::Project::GetMdn(std::string name) const {
+    const auto iter = m_addressingNameToIndex.find(name);
+    if (iter == m_addressingNameToIndex.cend()) {
+        return nullptr;
+    }
+    int index = iter->second;
+    return &(m_data.at(index));
+}
+mdn::Mdn2d* mdn::Project::GetMdn(std::string name) {
+    auto iter = m_addressingNameToIndex.find(name);
+    if (iter == m_addressingNameToIndex.cend()) {
+        return nullptr;
+    }
+    int index = iter->second;
+    return &(m_data[index]);
 }
 
 
@@ -257,7 +352,7 @@ void mdn::Project::InsertMdn(Mdn2d& mdn, int index) {
 
     // Shift addressing over
     if (index < maxNewIndex) {
-        shiftMdnTabsRight(index, 1);
+        shiftMdnTabsRight(index);
     }
     m_addressingNameToIndex.insert({newName, index});
     m_addressingIndexToName.insert({index, newName});
@@ -279,32 +374,85 @@ std::string mdn::Project::DuplicateMdn(int index) {
 
 
 std::string mdn::Project::DuplicateMdn(const std::string& name) {
-
+    if (!Contains(name, true)) {
+        return false;
+    }
+    Mdn2d* src = GetMdn(name);
+    AssertQ(src, "Failed to retrieve Mdn '" << name << "'");
+    int index = IndexOfMdn(name);
+    Mdn2d dup = Mdn2d::Duplicate(*src);
+    InsertMdn(dup, index + 1);
+    return dup.getName();
 }
 
 
 bool mdn::Project::MoveMdn(int fromIndex, int toIndex) {
-
+    if (fromIndex == toIndex) {
+        // Nothing to do
+        return true;
+    }
+    if (!Contains(fromIndex, true)) {
+        return false;
+    }
+    // Extract the number and erase the addressing metadata
+    auto node = m_data.extract(fromIndex);
+    std::string name = node.mapped().getName();
+    node.key() = toIndex;
+    m_addressingIndexToName.erase(fromIndex);
+    m_addressingNameToIndex.erase(name);
+    if (fromIndex > toIndex) {
+        // Shifting digits to the right
+        shiftMdnTabsRight(fromIndex - 1, toIndex + 1);
+    } else {
+        // Shifting digits to the left
+        shiftMdnTabsLeft(fromIndex + 1, toIndex - 1);
+    }
+    m_data.insert(std::move(node));
+    m_addressingIndexToName.insert({toIndex, name});
+    m_addressingNameToIndex.insert({name, toIndex});
+    return true;
 }
 
 
 bool mdn::Project::MoveMdn(const std::string& name, int toIndex) {
-
+    int fromIndex = IndexOfMdn(name);
+    if (fromIndex < 0) {
+        std::ostringstream oss;
+        oss << "Mdn2d with name '" << name << "' does not exist.";
+        QMessageBox::warning(m_parent, "MoveMdn", oss.str().c_str());
+        return false;
+    }
+    return MoveMdn(fromIndex, toIndex);
 }
 
 
 bool mdn::Project::Erase(int index) {
-
+    if (!Contains(index, true)) {
+        return false;
+    }
+    std::string name = NameOfMdn(index);
+    m_data.erase(index);
+    m_addressingIndexToName.erase(index);
+    m_addressingNameToIndex.erase(name);
+    shiftMdnTabsLeft(index+1);
 }
 
 
 bool mdn::Project::Erase(const std::string& name) {
-
+    if (!Contains(name, true)) {
+        return false;
+    }
+    int index = IndexOfMdn(name);
+    AssertQ(index >= 0, "Failed to find the index of contained Mdn2d '" << name << "'.");
+    m_data.erase(index);
+    m_addressingIndexToName.erase(index);
+    m_addressingNameToIndex.erase(name);
+    shiftMdnTabsLeft(index+1);
 }
 
 
 void mdn::Project::CopySelection() const {
-
+    // TODO
 }
 
 

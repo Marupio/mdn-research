@@ -947,7 +947,7 @@ bool mdn::Mdn2dBase::locked_hasBounds() const {
 }
 
 
-const mdn::Rect& mdn::Mdn2dBase::getBounds() const {
+const mdn::Rect& mdn::Mdn2dBase::bounds() const {
     auto lock = ReadOnlyLock();
     const Rect& bounds = locked_getBounds();
     if (Log_Showing_Debug2) {

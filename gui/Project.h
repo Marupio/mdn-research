@@ -14,7 +14,7 @@
 
 namespace mdn {
 
-class MDN_API Project: public Mdn2dFramework {
+class Project: public Mdn2dFramework {
 
 protected:
 
@@ -41,14 +41,19 @@ protected:
     // m_addressingIndexToName[index] = name
     std::unordered_map<int, std::string> m_addressingIndexToName;
 
+    // Selection, Rect bounds of digits, and list of MDNs coser;
+    Selection m_selection;
+
 
     // *** Protected member functions
 
-    // Shift Mdn tabs, starting at 'start' shifting a distance of 'shift' tabs
+    // Shift Mdn tabs, starting at 'start', ending at 'end', shifting a distance of 'shift' tabs
     //  Exceptions
     //      * InvalidArgument - shift cannot be negative
-    void shiftMdnTabsRight(int start, int shift);
-    void shiftMdnTabsLeft(int end, int shift);
+    void shiftMdnTabsRight(int start, int end=-1, int shift=1);
+    void shiftMdnTabsLeft(int start, int end=-1, int shift=1);
+    // void shiftMdnTabsRight(int start, int shift);
+    // void shiftMdnTabsLeft(int end, int shift);
 
 
 public:
@@ -106,9 +111,30 @@ public:
 
         // *** MDN Accessors
 
+        // Checks if the Mdn2d exists in the main m_data array, returns:
+        //  true  - number exists
+        //  false - number does not exist
+        //  false - addressing data bad
+        // warnIfMissing, when true, issues a QMessageBox warning if the Mdn2d is missing
+        bool Contains(std::string name, bool warnIfMissing = false) const;
+        bool Contains(int i, bool warnIfMissing = false) const;
+
+        // Return the index (tab position) for the Mdn of the given name, -1 = not found
+        int IndexOfMdn(std::string name) const;
+
+        // Return the name for the Mdn at the given tab index, empty string for bad index
+        std::string NameOfMdn(int i) const;
+
         // Return pointer to the i'th Mdn tab, nullptr on failure
+        //  e.g.:
+        //      Mdn2d* src = GetMdn(fromIndex);
+        //      AssertQ(src, "Failed to acquire Mdn2d from index " << fromIndex);
         const Mdn2d* GetMdn(int i) const;
         Mdn2d* GetMdn(int i);
+
+        // Return pointer to the i'th Mdn tab, nullptr on failure
+        const Mdn2d* GetMdn(std::string name) const;
+        Mdn2d* GetMdn(std::string name);
 
         // Return pointer to Mdn2d at first tab, nullptr on failure
         const Mdn2d* FirstMdn() const;
@@ -158,6 +184,16 @@ public:
 
 
     // Selection actions
+
+        // Access current selection
+        const Selection& selection() const { return m_selection; }
+
+        // Set new selection
+        void setSelection(Selection s) {
+            m_selection = std::move(s);
+            // TODO
+            // emit signal, update UI
+        }
 
         // Perform a 'copy' operation on the selection
         void CopySelection() const;

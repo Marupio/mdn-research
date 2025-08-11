@@ -124,6 +124,13 @@ private:
 
 
 // Assertion macros
+// Internal use - the FileRef, intended to be wrapped by a string ctor, produces a nicely
+//  formatted prefix to each log entry:
+//      [Mdn2dBase.cpp:598,setValue]
+#define InternalLoggerFileRef \
+        "[" + Tools::removePath(__FILE__) + ":" + std::to_string(__LINE__) + "," + \
+        __func__ + "] "
+
 #define Internal_AssertStart(expression, messageIfFailed) \
     if (!expression) { \
         std::ostringstream oss; \
@@ -160,13 +167,6 @@ private:
         oss << loginst.indent() << fileRef << message; \
         loginst.level(oss.str()); \
     }
-
-    // Internal use - the FileRef, intended to be wrapped by a string ctor, produces a nicely
-    //  formatted prefix to each log entry:
-    //      [Mdn2dBase.cpp:598,setValue]
-    #define InternalLoggerFileRef \
-            "[" + Tools::removePath(__FILE__) + ":" + std::to_string(__LINE__) + "," + \
-            __func__ + "] "
 
     // Internal use - As above, but with indentation:
     //      [        |Mdn2dBase.cpp:598,setValue]
