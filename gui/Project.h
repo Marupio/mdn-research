@@ -116,37 +116,37 @@ public:
         //  false - number does not exist
         //  false - addressing data bad
         // warnIfMissing, when true, issues a QMessageBox warning if the Mdn2d is missing
-        bool Contains(std::string name, bool warnIfMissing = false) const;
-        bool Contains(int i, bool warnIfMissing = false) const;
+        bool contains(std::string name, bool warnIfMissing = false) const;
+        bool contains(int i, bool warnIfMissing = false) const;
 
         // Return the index (tab position) for the Mdn of the given name, -1 = not found
-        int IndexOfMdn(std::string name) const;
+        int indexOfMdn(std::string name) const;
 
         // Return the name for the Mdn at the given tab index, empty string for bad index
-        std::string NameOfMdn(int i) const;
+        std::string nameOfMdn(int i) const;
 
         // Return pointer to the i'th Mdn tab, nullptr on failure
         //  e.g.:
-        //      Mdn2d* src = GetMdn(fromIndex);
+        //      Mdn2d* src = getMdn(fromIndex);
         //      AssertQ(src, "Failed to acquire Mdn2d from index " << fromIndex);
-        const Mdn2d* GetMdn(int i) const;
-        Mdn2d* GetMdn(int i);
+        const Mdn2d* getMdn(int i) const;
+        Mdn2d* getMdn(int i);
 
         // Return pointer to the i'th Mdn tab, nullptr on failure
-        const Mdn2d* GetMdn(std::string name) const;
-        Mdn2d* GetMdn(std::string name);
+        const Mdn2d* getMdn(std::string name) const;
+        Mdn2d* getMdn(std::string name);
 
         // Return pointer to Mdn2d at first tab, nullptr on failure
-        const Mdn2d* FirstMdn() const;
-        Mdn2d* FirstMdn();
+        const Mdn2d* firstMdn() const;
+        Mdn2d* firstMdn();
 
         // Return pointer to Mdn2d at last tab, nullptr on failure
-        const Mdn2d* LastMdn() const;
-        Mdn2d* LastMdn();
+        const Mdn2d* lastMdn() const;
+        Mdn2d* lastMdn();
 
         // Inserts a new number at the 'end', i.e. the last index
-        void AppendMdn(Mdn2d& mdn) {
-            InsertMdn(mdn, -1);
+        void appendMdn(Mdn2d& mdn) {
+            insertMdn(mdn, -1);
         }
 
         // Insert a new number at the given index, index == -1 means 'at the end'
@@ -155,15 +155,15 @@ public:
         //          Recover: places number at the end
         //      * Warning: if number's name conflicts
         //          Recover: rename the new mdn, by convention
-        void InsertMdn(Mdn2d& mdn, int index);
+        void insertMdn(Mdn2d& mdn, int index);
 
         // Duplicate the Mdn2d at the given index or given name, returns the name of the new mdn.
         //  An empty string return indicates the operation failed
         //  Messaging
         //      * Warning: if index out of range or name does not exist
         //          Recover: returns empty string, takes no other action
-        std::string DuplicateMdn(int index);
-        std::string DuplicateMdn(const std::string& name);
+        std::string duplicateMdn(int index);
+        std::string duplicateMdn(const std::string& name);
 
         // Move Mdn2d at 'fromIndex' or given name to  'toIndex'; if toIndex == -1, moves it to the
         //  end.  Returns true or false based on success of operation.
@@ -172,15 +172,15 @@ public:
         //          Recover: returns false
         //      * Warning: if toIndex is out of range
         //          Recover: places number at the end
-        bool MoveMdn(int fromIndex, int toIndex);
-        bool MoveMdn(const std::string& name, int toIndex);
+        bool moveMdn(int fromIndex, int toIndex);
+        bool moveMdn(const std::string& name, int toIndex);
 
-        // Erase the Mdn2d at the given index or given name, shifting all higher entries one lower
+        // eraseMdn the Mdn2d at the given index or given name, shifting all higher entries one lower
         //  Messaging
         //      * Warning: if index out of range or name does not exist
         //          Recover: returns false
-        bool Erase(int index);
-        bool Erase(const std::string& name);
+        bool eraseMdn(int index);
+        bool eraseMdn(const std::string& name);
 
 
     // Selection actions
@@ -196,16 +196,16 @@ public:
         }
 
         // Perform a 'copy' operation on the selection
-        void CopySelection() const;
+        void copySelection() const;
 
         // Perform a 'cut' operation on the selection - a combination of Copy and Delete
-        void CutSelection();
+        void cutSelection();
 
         // Selection acts as anchor to paste operation
-        void PasteOnSelection();
+        void pasteSelection();
 
         // Perform 'delete' operation on the selection
-        void DeleteSelection();
+        void deleteSelection();
 
 };
 

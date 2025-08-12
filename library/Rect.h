@@ -26,7 +26,7 @@ public:
         );
 
         Rect result(minPt, maxPt);
-        return result.isValid() ? result : Rect::Invalid();
+        return result.isValid() ? result : Rect::invalid();
     }
 
     // Return the smallest rect that contains both input rects
@@ -69,7 +69,7 @@ public:
 
 
     // Returns an invalid rectangle, plays nice with growToInclude
-    static Rect Invalid() {
+    static Rect invalid() {
         return Rect(
             Coord(std::numeric_limits<int>::max(), std::numeric_limits<int>::max()),
             Coord(std::numeric_limits<int>::min(), std::numeric_limits<int>::min())
@@ -80,7 +80,7 @@ public:
     // *** Constructors
 
     // Construct null - retuns an invalid rectangle
-    Rect() : Rect(Invalid()) {}
+    Rect() : Rect(invalid()) {}
 
     // Construct from components
     //  fixOrdering - when true, corrects inputs where individual components of min and max might
@@ -165,7 +165,7 @@ public:
     }
 
     void clear() {
-        *this = Rect::Invalid();
+        *this = Rect::invalid();
     }
 
     void set(Coord min, Coord max, bool fixOrdering = false) {
@@ -249,7 +249,7 @@ public:
         is >> word;
 
         if (word == "Empty]") {
-            r = Rect::Invalid();
+            r = Rect::invalid();
             return is;
         }
 

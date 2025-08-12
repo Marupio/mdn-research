@@ -1,25 +1,38 @@
 {
-  "type": "mdn-selection",
-  "version": 1,
-  "policy": "intersection",     // how we resolved per-tab bounds
-  "rect": {                     // final finite rect used for all tabs (inclusive)
-    "x0": <int>, "y0": <int>, "x1": <int>, "y1": <int>
-  },
-  "order": {                    // iteration order of rows/cols
-    "rows": "y_asc",            // y from y0→y1
-    "cols": "x_asc"             // x from x0→x1
-  },
-  "tabs": [
-    {
-      "id": <int>,              // tab id
-      "name": "<optional>",     // human label (optional)
-      "base": <int>,            // radix (optional, if handy)
-      "grid_tsv": "<TSV string with \\n rows>"  // row-major
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:mdn:selection:v2",
+  "type": "object",
+  "required": ["type", "version", "rect", "order", "origin_tab_id", "grid_tsv"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "mdn-selection" },
+    "version": { "const": 1 },
+    "origin_tab_id": { "type": "integer" },
+    "rect": {
+      "type": "object",
+      "required": ["x0", "y0", "x1", "y1"],
+      "additionalProperties": false,
+      "properties": {
+        "x0": { "type": "integer" },
+        "y0": { "type": "integer" },
+        "x1": { "type": "integer" },
+        "y1": { "type": "integer" }
+      }
+    },
+    "order": {
+      "type": "object",
+      "required": ["rows", "cols"],
+      "additionalProperties": false,
+      "properties": {
+        "rows": { "enum": ["y_asc", "y_desc"] },
+        "cols": { "enum": ["x_asc", "x_desc"] }
+      }
+    },
+    "base": { "type": "integer", "minimum": 2 },          // optional
+    "grid_tsv": { "type": "string", "minLength": 1 },      // newline-separated rows
+    "meta": {
+      "type": "object",
+      "additionalProperties": true
     }
-  ],
-  "meta": {
-    "app": "MDN",               // optional
-    "app_version": "<semver>",  // optional
-    "copied_at": "<ISO8601>"    // optional
   }
 }

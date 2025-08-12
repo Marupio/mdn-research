@@ -1,6 +1,9 @@
 #include "Project.h"
 
+#include <QClipboard>
+#include <QGuiApplication>
 #include <QJsonObject>
+#include <QMimeData>
 
 #include "../library/MdnException.h"
 #include "Selection.h"
@@ -91,7 +94,7 @@ mdn::Project::Project(MainWindow* parent, std::string name, int nStartMdn):
     for (int i = 0; i < nStartMdn; ++i) {
         std::string nextName = Mdn2d::static_generateNextName();
         Mdn2d newMdn = Mdn2d::NewInstance(m_config, nextName);
-        AppendMdn(newMdn);
+        appendMdn(newMdn);
     }
 }
 
@@ -137,8 +140,8 @@ void mdn::Project::setConfig(Mdn2dConfig newConfig) {
         return;
     }
     // For now, assume config is the same across all Mdn2d's
-    Mdn2d* first = FirstMdn();
-    AssertQ(first, "Failed to acquire FirstMdn()");
+    Mdn2d* first = firstMdn();
+    AssertQ(first, "Failed to acquire firstMdn()");
     Mdn2dConfigImpact impact = first->assessConfigChange(newConfig);
     switch (impact) {
         case Mdn2dConfigImpact::NoImpact: {
@@ -204,13 +207,13 @@ void mdn::Project::setConfig(Mdn2dConfig newConfig) {
 }
 
 
-bool mdn::Project::Contains(std::string name, bool warnIfMissing) const {
-    int index = IndexOfMdn(name);
+bool mdn::Project::contains(std::string name, bool warnIfMissing) const {
+    int index = indexOfMdn(name);
     if (index < 0) {
         if (warnIfMissing) {
             std::ostringstream oss;
             oss << "Mdn2d with name '" << name << "' does not exist.";
-            QMessageBox::warning(m_parent, "Contains", oss.str().c_str());
+            QMessageBox::warning(m_parent, "contains", oss.str().c_str());
             return false;
         }
         return false;
@@ -220,7 +223,7 @@ bool mdn::Project::Contains(std::string name, bool warnIfMissing) const {
         if (warnIfMissing) {
             std::ostringstream oss;
             oss << "Mdn2d with name '" << name << "' exists in addressing but not in data.";
-            QMessageBox::warning(m_parent, "Contains", oss.str().c_str());
+            QMessageBox::warning(m_parent, "contains", oss.str().c_str());
             return false;
         }
         return false;
@@ -233,13 +236,13 @@ bool mdn::Project::Contains(std::string name, bool warnIfMissing) const {
 }
 
 
-bool mdn::Project::Contains(int i, bool warnIfMissing) const {
+bool mdn::Project::contains(int i, bool warnIfMissing) const {
     const auto iter = m_data.find(i);
     if (iter == m_data.cend()) {
         if (warnIfMissing) {
             std::ostringstream oss;
             oss << "Invalid index (" << i << "), expecting 0 .. " << (m_data.size() - 1);
-            QMessageBox::warning(m_parent, "Contains", oss.str().c_str());
+            QMessageBox::warning(m_parent, "contains", oss.str().c_str());
             return false;
         }
 
@@ -249,7 +252,7 @@ bool mdn::Project::Contains(int i, bool warnIfMissing) const {
 }
 
 
-int mdn::Project::IndexOfMdn(std::string name) const {
+int mdn::Project::indexOfMdn(std::string name) const {
     const auto iter = m_addressingNameToIndex.find(name);
     if (iter == m_addressingNameToIndex.cend()) {
         return -1;
@@ -258,7 +261,7 @@ int mdn::Project::IndexOfMdn(std::string name) const {
 }
 
 
-std::string mdn::Project::NameOfMdn(int i) const {
+std::string mdn::Project::nameOfMdn(int i) const {
     const auto iter = m_addressingIndexToName.find(i);
     if (iter == m_addressingIndexToName.cend()) {
         return "";
@@ -267,14 +270,14 @@ std::string mdn::Project::NameOfMdn(int i) const {
 }
 
 
-const mdn::Mdn2d* mdn::Project::GetMdn(int i) const {
+const mdn::Mdn2d* mdn::Project::getMdn(int i) const {
     const auto iter = m_data.find(i);
     if (iter == m_data.cend()) {
         return nullptr;
     }
     return &(iter->second);
 }
-mdn::Mdn2d* mdn::Project::GetMdn(int i) {
+mdn::Mdn2d* mdn::Project::getMdn(int i) {
     auto iter = m_data.find(i);
     if (iter == m_data.end()) {
         return nullptr;
@@ -283,7 +286,7 @@ mdn::Mdn2d* mdn::Project::GetMdn(int i) {
 }
 
 
-const mdn::Mdn2d* mdn::Project::GetMdn(std::string name) const {
+const mdn::Mdn2d* mdn::Project::getMdn(std::string name) const {
     const auto iter = m_addressingNameToIndex.find(name);
     if (iter == m_addressingNameToIndex.cend()) {
         return nullptr;
@@ -291,7 +294,7 @@ const mdn::Mdn2d* mdn::Project::GetMdn(std::string name) const {
     int index = iter->second;
     return &(m_data.at(index));
 }
-mdn::Mdn2d* mdn::Project::GetMdn(std::string name) {
+mdn::Mdn2d* mdn::Project::getMdn(std::string name) {
     auto iter = m_addressingNameToIndex.find(name);
     if (iter == m_addressingNameToIndex.cend()) {
         return nullptr;
@@ -301,25 +304,25 @@ mdn::Mdn2d* mdn::Project::GetMdn(std::string name) {
 }
 
 
-const mdn::Mdn2d* mdn::Project::FirstMdn() const {
-    return GetMdn(0);
+const mdn::Mdn2d* mdn::Project::firstMdn() const {
+    return getMdn(0);
 }
-mdn::Mdn2d* mdn::Project::FirstMdn() {
-    return GetMdn(0);
+mdn::Mdn2d* mdn::Project::firstMdn() {
+    return getMdn(0);
 }
 
 
-const mdn::Mdn2d* mdn::Project::LastMdn() const {
+const mdn::Mdn2d* mdn::Project::lastMdn() const {
     int lastI = m_data.size() - 1;
-    return GetMdn(lastI);
+    return getMdn(lastI);
 }
-mdn::Mdn2d* mdn::Project::LastMdn() {
+mdn::Mdn2d* mdn::Project::lastMdn() {
     int lastI = m_data.size() - 1;
-    return GetMdn(lastI);
+    return getMdn(lastI);
 }
 
 
-void mdn::Project::InsertMdn(Mdn2d& mdn, int index) {
+void mdn::Project::insertMdn(Mdn2d& mdn, int index) {
     // For warning messages
     std::ostringstream oss;
 
@@ -347,7 +350,7 @@ void mdn::Project::InsertMdn(Mdn2d& mdn, int index) {
         warnings += 1;
     }
     if (!oss.str().empty()) {
-        QMessageBox::warning(m_parent, "InsertMdn", oss.str().c_str());
+        QMessageBox::warning(m_parent, "insertMdn", oss.str().c_str());
     }
 
     // Shift addressing over
@@ -359,39 +362,39 @@ void mdn::Project::InsertMdn(Mdn2d& mdn, int index) {
 }
 
 
-std::string mdn::Project::DuplicateMdn(int index) {
-    Mdn2d* src = GetMdn(index);
+std::string mdn::Project::duplicateMdn(int index) {
+    Mdn2d* src = getMdn(index);
     if (!src) {
         std::ostringstream oss;
         oss << "Invalid index (" << index << "), expecting 0 .. " << (m_data.size() - 1);
-        QMessageBox::warning(m_parent, "DuplicateMdn", oss.str().c_str());
+        QMessageBox::warning(m_parent, "duplicateMdn", oss.str().c_str());
         return "";
     }
     Mdn2d dup = Mdn2d::Duplicate(*src);
-    InsertMdn(dup, index + 1);
+    insertMdn(dup, index + 1);
     return dup.getName();
 }
 
 
-std::string mdn::Project::DuplicateMdn(const std::string& name) {
-    if (!Contains(name, true)) {
+std::string mdn::Project::duplicateMdn(const std::string& name) {
+    if (!contains(name, true)) {
         return false;
     }
-    Mdn2d* src = GetMdn(name);
+    Mdn2d* src = getMdn(name);
     AssertQ(src, "Failed to retrieve Mdn '" << name << "'");
-    int index = IndexOfMdn(name);
+    int index = indexOfMdn(name);
     Mdn2d dup = Mdn2d::Duplicate(*src);
-    InsertMdn(dup, index + 1);
+    insertMdn(dup, index + 1);
     return dup.getName();
 }
 
 
-bool mdn::Project::MoveMdn(int fromIndex, int toIndex) {
+bool mdn::Project::moveMdn(int fromIndex, int toIndex) {
     if (fromIndex == toIndex) {
         // Nothing to do
         return true;
     }
-    if (!Contains(fromIndex, true)) {
+    if (!contains(fromIndex, true)) {
         return false;
     }
     // Extract the number and erase the addressing metadata
@@ -414,23 +417,23 @@ bool mdn::Project::MoveMdn(int fromIndex, int toIndex) {
 }
 
 
-bool mdn::Project::MoveMdn(const std::string& name, int toIndex) {
-    int fromIndex = IndexOfMdn(name);
+bool mdn::Project::moveMdn(const std::string& name, int toIndex) {
+    int fromIndex = indexOfMdn(name);
     if (fromIndex < 0) {
         std::ostringstream oss;
         oss << "Mdn2d with name '" << name << "' does not exist.";
-        QMessageBox::warning(m_parent, "MoveMdn", oss.str().c_str());
+        QMessageBox::warning(m_parent, "moveMdn", oss.str().c_str());
         return false;
     }
-    return MoveMdn(fromIndex, toIndex);
+    return moveMdn(fromIndex, toIndex);
 }
 
 
-bool mdn::Project::Erase(int index) {
-    if (!Contains(index, true)) {
+bool mdn::Project::eraseMdn(int index) {
+    if (!contains(index, true)) {
         return false;
     }
-    std::string name = NameOfMdn(index);
+    std::string name = nameOfMdn(index);
     m_data.erase(index);
     m_addressingIndexToName.erase(index);
     m_addressingNameToIndex.erase(name);
@@ -438,11 +441,11 @@ bool mdn::Project::Erase(int index) {
 }
 
 
-bool mdn::Project::Erase(const std::string& name) {
-    if (!Contains(name, true)) {
+bool mdn::Project::eraseMdn(const std::string& name) {
+    if (!contains(name, true)) {
         return false;
     }
-    int index = IndexOfMdn(name);
+    int index = indexOfMdn(name);
     AssertQ(index >= 0, "Failed to find the index of contained Mdn2d '" << name << "'.");
     m_data.erase(index);
     m_addressingIndexToName.erase(index);
@@ -451,22 +454,73 @@ bool mdn::Project::Erase(const std::string& name) {
 }
 
 
-void mdn::Project::CopySelection() const {
-    // TODO
+void mdn::Project::copySelection() const {
+    const mdn::Selection& sel = selection();
+    if (sel.isEmpty()) {
+        return;
+    }
+
+    const mdn::Mdn2d* src = sel.get();
+    if (!src) {
+        return;
+    }
+
+    mdn::Rect r = sel.rect;
+    // r.fixOrdering();
+    if (!r.isValid()) {
+        return;
+    }
+
+    QString tsv;
+    tsv.reserve(r.width() * r.height() * 2);
+
+    std::vector<mdn::Digit> rowBuf; rowBuf.reserve(r.width());
+    for (int y = r.bottom(); y <= r.top(); ++y) {
+        rowBuf.clear();
+        src->getRowRange(y, r.left(), r.right(), rowBuf);
+        const std::string line = mdn::Tools::vectorToString(rowBuf, '\t', false);
+        tsv += QString::fromStdString(line);
+        tsv += u'\n';
+    }
+
+    // JSON payload (v1)
+    QJsonObject root;
+    root["type"] = "mdn-selection";
+    root["version"] = 1;
+    root["origin_name"] = QString::fromStdString(src->getName()); // optional
+
+    QJsonObject jrect;
+    jrect["x0"] = r.left();   jrect["y0"] = r.bottom();
+    jrect["x1"] = r.right();  jrect["y1"] = r.top();
+    root["rect"] = jrect;
+
+    QJsonObject order;
+    order["rows"] = "y_asc"; order["cols"] = "x_asc";
+    root["order"] = order;
+
+    root["grid_tsv"] = tsv;
+
+    auto* mime = new QMimeData();
+    mime->setData("application/x-mdn-selection+json",
+                  QJsonDocument(root).toJson(QJsonDocument::Compact));
+    mime->setData("text/tab-separated-values", tsv.toUtf8());
+    mime->setText(tsv);
+
+    QGuiApplication::clipboard()->setMimeData(mime);
 }
 
 
-void mdn::Project::CutSelection() {
+void mdn::Project::cutSelection() {
 
 }
 
 
-void mdn::Project::PasteOnSelection() {
+void mdn::Project::pasteSelection() {
 
 }
 
 
-void mdn::Project::DeleteSelection() {
+void mdn::Project::deleteSelection() {
 
 }
 

@@ -120,7 +120,7 @@ mdn::Mdn2dBase::Mdn2dBase(std::string nameIn)
 :
     m_config(Mdn2dConfig::static_defaultConfig()),
     m_name(nameIn),
-    m_bounds(Rect::Invalid()),
+    m_bounds(Rect::invalid()),
     m_modified(false),
     m_event(0)
 {
@@ -138,7 +138,7 @@ mdn::Mdn2dBase::Mdn2dBase(Mdn2dConfig config, std::string nameIn)
 :
     m_config(config),
     m_name(nameIn),
-    m_bounds(Rect::Invalid()),
+    m_bounds(Rect::invalid()),
     m_modified(false),
     m_event(0)
 {
@@ -250,6 +250,16 @@ mdn::Mdn2dBase& mdn::Mdn2dBase::operator=(Mdn2dBase&& other) noexcept {
 }
 
 
+mdn::Mdn2dBase::~Mdn2dBase() {
+    Log_N_Debug4_H("");
+    for (auto& [id, obs] : m_observers) {
+        Log_N_Debug4("farewell call on " << id);
+        obs->farewell();
+    }
+    Log_N_Debug4_T("");
+}
+
+
 const mdn::Mdn2dConfig& mdn::Mdn2dBase::getConfig() const {
     auto lock = lockReadOnly();
     Log_N_Debug2("");
@@ -339,6 +349,49 @@ void mdn::Mdn2dBase::locked_setConfig(Mdn2dConfig newConfig) {
 }
 
 
+void mdn::Mdn2dBase::registerObserver(MdnObserver* obs) const {
+    auto lock = lockWriteable();
+    Log_N_Debug2("");
+    locked_registerObserver(obs);
+}
+
+
+void mdn::Mdn2dBase::locked_registerObserver(MdnObserver* obs) const {
+    static int instance = 0;
+    Log_N_Debug3("Registering " << instance);
+    obs->setInstance(instance);
+    m_observers.insert({instance++, obs});
+}
+
+
+void mdn::Mdn2dBase::unregisterObserver(MdnObserver* obs) const {
+    auto lock = lockWriteable();
+    Log_N_Debug2("");
+    locked_unregisterObserver(obs);
+}
+
+
+void mdn::Mdn2dBase::locked_unregisterObserver(MdnObserver* obs) const {
+    Log_N_Debug3_H("");
+    if (!obs) {
+        Log_Warn("Attempting to unregister invalid observer");
+        Log_N_Debug3_T("");
+        return;
+    }
+    auto iter = m_observers.find(obs->instance());
+    if (iter == m_observers.end()) {
+        Log_Warn(
+            "Attempting to unregister observer " << obs->instance() << ", attached to Mdn2d '"
+            << obs->get()->getName() << "' from incorrect Mdn2d '" << locked_getName() << "'"
+        );
+        Log_N_Debug3_T("");
+        return;
+    }
+    m_observers.erase(obs->instance());
+    Log_N_Debug3_T("");
+}
+
+
 const std::string& mdn::Mdn2dBase::getName() const {
     auto lock = lockReadOnly();
     Log_N_Debug2("");
@@ -393,6 +446,59 @@ mdn::Digit mdn::Mdn2dBase::locked_getValue(const Coord& xy) const {
 }
 
 
+bool mdn::Mdn2dBase::getRowRange(int y, int x0, int x1, std::vector<mdn::Digit>& out) const {
+    auto lock = lockReadOnly();
+    Log_N_Debug2_H("");
+    bool result = locked_getRowRange(y, x0, x1, out);
+    Log_N_Debug2_T("result = " << result);
+}
+
+
+bool mdn::Mdn2dBase::locked_getRowRange(
+    int y,
+    int xStart,
+    int xEnd,
+    std::vector<mdn::Digit>& out
+) const
+{
+    int xCount = xEnd - xStart;
+    Log_N_Debug3_H(
+        "Row " << y << " from x (" << xStart << " .. " << xEnd << "), "
+        << xCount << " elements"
+    );
+    out.resize(xCount);
+    std::fill(out.begin(), out.end(), 0);
+    auto it = m_yIndex.find(y);
+    if (it != m_yIndex.end()) {
+        // There are non-zero entries on this row, fill them in
+        const CoordSet& coords = it->second;
+        for (const Coord& coord : coords) {
+            out[coord.x()-xStart] = m_raw.at(coord);
+        }
+    }
+    Log_N_Debug3_T("");
+}
+
+
+void mdn::Mdn2dBase::setRowRange(int y, int xStart, const std::vector<mdn::Digit>& row) {
+    auto lock = lockWriteable();
+    Log_N_Debug2_H("y=" << y << ",xStart=" << xStart);
+    locked_setRowRange(y, xStart, row);
+    Log_N_Debug2_T("");
+}
+
+
+void mdn::Mdn2dBase::locked_setRowRange(int y, int xStart, const std::vector<mdn::Digit>& row) {
+    Log_N_Debug3_H("y=" << y << ",xStart=" << xStart);
+    Coord cursor(xStart, y);
+    for (int i = 0; i < row.size(); ++i) {
+        locked_setValue(cursor, row[i]);
+        cursor.translateX(1);
+    }
+    Log_N_Debug3_T("");
+}
+
+
 std::vector<mdn::Digit> mdn::Mdn2dBase::getRow(int y) const {
     auto lock = lockReadOnly();
     Log_N_Debug2_H("");
@@ -425,29 +531,19 @@ void mdn::Mdn2dBase::getRow(int y, std::vector<Digit>& digits) const {
 
 
 void mdn::Mdn2dBase::locked_getRow(int y, std::vector<Digit>& digits) const {
+    Log_N_Debug3_H("y=" << y);
     if (!m_bounds.isValid()) {
         // No non-zero digits to fill
-        std::fill(digits.begin(), digits.end(), Digit(0));
+        if (digits.size()) {
+            std::fill(digits.begin(), digits.end(), Digit(0));
+        }
+        Log_N_Debug3_T("no bounds");
         return;
     }
     int xStart = m_bounds.min().x();
     int xEnd = m_bounds.max().x() + 1;
-    int xCount = xEnd - xStart;
-    Log_N_Debug3_H(
-        "Row " << y << " from x (" << xStart << " .. " << xEnd << "), "
-        << xCount << " elements"
-    );
-    digits.resize(xCount);
-    std::fill(digits.begin(), digits.end(), 0);
-    auto it = m_yIndex.find(y);
-    if (it != m_yIndex.end()) {
-        // There are non-zero entries on this row, fill them in
-        const CoordSet& coords = it->second;
-        for (const Coord& coord : coords) {
-            digits[coord.x()-xStart] = m_raw.at(coord);
-        }
-    }
-    Log_N_Debug3_T("");
+    bool result = locked_getRowRange(y, xStart, xEnd, digits);
+    Log_N_Debug3_T("x range (" << xStart << "," << xEnd << "), result=" << result);
 }
 
 

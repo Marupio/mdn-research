@@ -63,7 +63,7 @@ public:
         // QRect to Mdn Rect
         static Rect toRect(const QRect& q) {
             if (!q.isValid())
-                return Rect::Invalid();
+                return Rect::invalid();
 
             Coord min(q.left(), q.top());
             Coord max(q.right(), q.bottom()); // inclusive in MDN

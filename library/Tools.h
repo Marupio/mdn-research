@@ -1,10 +1,13 @@
 #pragma once
 
-#include <vector>
-#include <string>
+#include <cstdint>
+#include <ostream>
 #include <sstream>
+#include <string>
+#include <type_traits>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 
 #include "Constants.h"
 #include "Digit.h"
@@ -15,29 +18,54 @@ namespace mdn {
 class MDN_API Tools {
 
 public:
+
     static const std::vector<char> m_digToAlpha;
     static const std::string m_boxArt_h; // ─
     static const std::string m_boxArt_v; // │
     static const std::string m_boxArt_x; // ┼
+
+    template <class T>
+    struct is_byte_like
+    : std::bool_constant<
+            std::is_integral_v<std::remove_cv_t<T>> &&
+            sizeof(std::remove_cv_t<T>) == 1> {};
+    template <class T>
+    inline static constexpr bool is_byte_like_v = is_byte_like<T>::value;
+
 
     // Convert a vector of anything to a string delimiter
     template<typename T>
     static std::string vectorToString(
         const std::vector<T>& array, const std::string& delimiter, bool reverse
     ) {
-        if (array.empty()) return "";
+        if (array.empty()) {
+            return "";
+        }
 
         std::ostringstream oss;
         if (reverse) {
             size_t lastI = array.size()-1;
-            oss << array[lastI];
+            if constexpr (is_byte_like_v<T>)
+                out << static_cast<int>(array[lastI]);
+            else
+                out << array[lastI];
             for (size_t i = lastI-1; i >= 0; --i) {
-                oss << delimiter << array[i];
+                if constexpr (is_byte_like_v<T>)
+                    out << delimiter << static_cast<int>(array[i]);
+                else
+                    out << delimiter << array[i];
             }
         } else {
-            oss << array[0];
+            if constexpr (is_byte_like_v<T>)
+                out << static_cast<int>(array[0]);
+            else
+                out << array[0];
             for (size_t i = 1; i < array.size(); ++i) {
                 oss << delimiter << array[i];
+                if constexpr (is_byte_like_v<T>)
+                    out << delimiter <<static_cast<int>(array[i]);
+                else
+                    out << delimiter << array[i];
             }
         }
         return oss.str();

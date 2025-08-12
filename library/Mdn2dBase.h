@@ -10,6 +10,7 @@
 #include "GlobalConfig.h"
 #include "Mdn2dConfig.h"
 #include "Mdn2dConfigImpact.h"
+#include "MdnObserver.h"
 #include "PrecisionStatus.h"
 #include "Rect.h"
 
@@ -51,6 +52,8 @@ protected:
     static std::string locked_generateCopyName(const std::string& nameIn);
 
 
+    // *** Local variables
+
     // Configuration settings for this Mdn2dBase
     Mdn2dConfig m_config;
 
@@ -72,6 +75,10 @@ protected:
 
     // Full index
     mutable CoordSet m_index;
+
+    // Observers
+    mutable std::unordered_map<int, MdnObserver*> m_observers;
+
 
     // *** Metadata
 
@@ -127,7 +134,7 @@ public:
             Mdn2dBase& operator=(Mdn2dBase&& other) noexcept;
 
             // Virtual destructor
-            virtual ~Mdn2dBase() {}
+            virtual ~Mdn2dBase();
 
 
     // *** Member Functions
@@ -147,6 +154,16 @@ public:
             // Locked version *copies* config - everyone has their own copy
             protected: virtual void locked_setConfig(Mdn2dConfig newConfig); public:
 
+        // *** Observers
+
+            // Register a new observer
+            void registerObserver(MdnObserver* obs) const;
+            protected: void locked_registerObserver(MdnObserver* obs) const; public:
+
+            // Unregister the owner (does not delete observer)
+            void unregisterObserver(MdnObserver* obs) const;
+            protected: void locked_unregisterObserver(MdnObserver* obs) const; public:
+
 
         // *** Identity
 
@@ -164,6 +181,31 @@ public:
             // Retrieves the value at coordinate (x, y), or 0 if not present.
             Digit getValue(const Coord& xy) const;
             protected: Digit locked_getValue(const Coord& xy) const; public:
+
+            // Write out a continuous range for a row, from xStart to xEnd, inclusive.
+            // out.size() becomes (x1 - x0 + 1). Returns false only on internal error.
+            bool getRowRange
+            (
+                int y,
+                int xStart,
+                int xEnd,
+                std::vector<mdn::Digit>& out
+            ) const;
+        protected:
+            bool locked_getRowRange
+            (
+                int y,
+                int xStart,
+                int xEnd,
+                std::vector<mdn::Digit>& out
+            ) const;
+        public:
+
+            // Write a contiguous row back in one call. Interprets 0 as "setToZero".
+            void setRowRange(int y, int xStart, const std::vector<mdn::Digit>& row);
+            protected:
+                void locked_setRowRange(int y, int xStart, const std::vector<mdn::Digit>& row);
+            public:
 
             // Assembles the row at the given y index value, spanning the x bounds of full MDN
             std::vector<Digit> getRow(int y) const;
@@ -261,6 +303,10 @@ public:
             //  * PrecisionStatus::Above  - below precision window
             PrecisionStatus checkPrecisionWindow(const Coord& xy) const;
             protected: PrecisionStatus locked_checkPrecisionWindow(const Coord& xy) const; public:
+
+            // Register class as observer, inform when destroyed
+            void registerObserver(MdnObserver* obs) const;
+            protected: void locked_registerObserver(MdnObserver* obs) const;
 
             // Set the m_modified flag to trigger housekeeping with derived data when operations are
             // complete
