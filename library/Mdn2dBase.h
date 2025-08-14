@@ -304,10 +304,6 @@ public:
             PrecisionStatus checkPrecisionWindow(const Coord& xy) const;
             protected: PrecisionStatus locked_checkPrecisionWindow(const Coord& xy) const; public:
 
-            // Register class as observer, inform when destroyed
-            void registerObserver(MdnObserver* obs) const;
-            protected: void locked_registerObserver(MdnObserver* obs) const;
-
             // Set the m_modified flag to trigger housekeeping with derived data when operations are
             // complete
 

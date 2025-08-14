@@ -230,7 +230,7 @@ public:
         //  B-2 - Rect -> Mdn+Rect  - replace same rect (relative) on target with source, size check
         //      required: if target is 1x1, paste okay, use that as bottom left anchor, otherwise
         //      the size must match exactly
-        void pasteOnSelection(int index=-1);
+        bool pasteOnSelection(int index=-1);
 
         // Perform 'delete' operation on the selection
         void deleteSelection();

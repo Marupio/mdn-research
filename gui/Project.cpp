@@ -486,7 +486,7 @@ namespace { // local utilities
 
 struct DecodedPaste {
     QString scope;              // "rect" | "mdn" | ""
-    Rect    srcRect = Rect::invalid();
+    Rect    srcRect = Rect::GetInvalid();
     std::vector<std::vector<Digit>> rows; // rows[r][c]
     bool valid()  const { return !rows.empty() && !rows.front().empty(); }
     int  width()  const { return valid() ? int(rows.front().size()) : 0; }
@@ -573,6 +573,70 @@ static void encodeRectToClipboard(const Mdn2d& src, const Rect& r, const QString
 }
 
 
+static DecodedPaste decodeClipboard() {
+    DecodedPaste out;
+
+    const QMimeData* mime = QGuiApplication::clipboard()->mimeData();
+    if (!mime) {
+        return out;
+    }
+
+    QString tsv;
+
+    if (mime->hasFormat("application/x-mdn-selection+json")) {
+        const auto bytes = mime->data("application/x-mdn-selection+json");
+        QJsonParseError err{};
+        const auto doc = QJsonDocument::fromJson(bytes, &err);
+        if (err.error == QJsonParseError::NoError && doc.isObject()) {
+            const auto obj = doc.object();
+            if (obj.value("type").toString() == QLatin1String("mdn-selection")) {
+                out.scope = obj.value("scope").toString();
+                if (obj.contains("rect") && obj.value("rect").isObject()) {
+                    const auto ro = obj.value("rect").toObject();
+                    out.srcRect = Rect(
+                        ro.value("x0").toInt(), ro.value("y0").toInt(),
+                        ro.value("x1").toInt(), ro.value("y1").toInt(),
+                        /*fixOrdering*/true
+                    );
+                }
+                tsv = obj.value("grid_tsv").toString();
+            }
+        }
+    }
+
+    if (tsv.isEmpty() && mime->hasFormat("text/tab-separated-values")) {
+        tsv = QString::fromUtf8(mime->data("text/tab-separated-values"));
+    }
+    if (tsv.isEmpty() && mime->hasText()) {
+        tsv = mime->text();
+    }
+
+    if (tsv.isEmpty()) {
+        return out;
+    }
+
+    const QStringList lines = tsv.split('\n', Qt::SkipEmptyParts);
+    if (lines.isEmpty()) {
+        return out;
+    }
+
+    out.rows.reserve(lines.size());
+    for (const QString& line : lines) {
+        const QStringList parts = line.split('\t', Qt::KeepEmptyParts);
+        std::vector<Digit> row;
+        row.reserve(parts.size());
+        for (const QString& s : parts) {
+            bool ok = false;
+            const int v = s.toInt(&ok);
+            row.push_back(static_cast<Digit>(ok ? v : 0));
+        }
+        out.rows.push_back(std::move(row));
+    }
+
+    return out;
+}
+
+
 void mdn::Project::copySelection() const {
     const mdn::Selection& sel = selection();
     const Mdn2d* src = sel.get();
@@ -589,7 +653,7 @@ void mdn::Project::copySelection() const {
 
 
 void mdn::Project::copyMdn(int index) const {
-    const Mdn2d* src = getMdnByIndex(index); // TODO: replace with your accessor
+    const Mdn2d* src = getMdn(index);
     if (src == nullptr) {
         return;
     }
@@ -609,201 +673,53 @@ void mdn::Project::cutSelection() {
 }
 
 
-namespace { // anon
+bool mdn::Project::pasteOnSelection(int index) {
+    const mdn::Selection& sel = selection();
 
-struct DecodedPaste {
-    // "rect" | "mdn" | ""
-    QString scope;
-
-    // where it was copied from (optional)
-    mdn::Rect srcRect = mdn::Rect::GetInvalid();
-
-    // rows[r][c]
-    std::vector<std::vector<mdn::Digit>> rows;
-
-    // True if Selection the decoded paste contains valid data
-    bool isValid() const { return !rows.empty() && !rows.front().empty(); }
-
-    int width() const { return isValid() ? static_cast<int>(rows.front().size()) : 0; }
-
-    int height() const { return isValid() ? static_cast<int>(rows.size()) : 0; }
-
-};
-
-
-bool parseTsv(const QString& tsv, std::vector<std::vector<mdn::Digit>>& out)
-{
-    out.clear();
-
-    const QStringList lines = tsv.split(u'\n', Qt::SkipEmptyParts);
-    if (lines.isEmpty()) {
+    Mdn2d* dst = nullptr;
+    if (index >= 0) {
+        dst = getMdn(index);
+    } else {
+        dst = sel.get();
+    }
+    if (dst == nullptr) {
         return false;
     }
 
-    for (const QString& line : lines) {
-        const QStringList parts = line.split(u'\t', Qt::KeepEmptyParts);
-        std::vector<mdn::Digit> row;
-        row.reserve(parts.size());
-
-        for (const QString& s : parts) {
-            bool ok = false;
-            const int v = s.toInt(&ok);
-            if (!ok) {
-                // strict numeric TSV for v0
-                return false;
-            }
-            row.push_back(static_cast<mdn::Digit>(v));
-        }
-
-        out.push_back(std::move(row));
-    }
-
-    const std::size_t w = out.front().size();
-    for (const auto& r : out) {
-        if (r.size() != w) {
-            // must be rectangular
-            return false;
-        }
-    }
-
-    return true;
-}
-
-DecodedPaste decodeClipboard()
-{
-    DecodedPaste p;
-
-    const QMimeData* mime = QGuiApplication::clipboard()->mimeData();
-    if (!mime) {
-        return p;
-    }
-
-    if (mime->hasFormat("application/x-mdn-selection+json")) {
-        // Pasting Mdn-formatted data
-        const QByteArray bytes = mime->data("application/x-mdn-selection+json");
-        QJsonParseError err{};
-        const QJsonDocument doc = QJsonDocument::fromJson(bytes, &err);
-
-        if (err.error == QJsonParseError::NoError && doc.isObject()) {
-            const QJsonObject obj = doc.object();
-            if (obj.value("type").toString() == "mdn-selection") {
-                // scope (optional -> default to "rect")
-                p.scope = obj.value("scope").toString();
-                if (p.scope.isEmpty()) {
-                    p.scope = QStringLiteral("rect");
-                }
-
-                // source rect (optional; used for tab-context paste anchor)
-                if (obj.contains("rect")) {
-                    const QJsonObject r = obj.value("rect").toObject();
-                    const int x0 = r.value("x0").toInt();
-                    const int y0 = r.value("y0").toInt();
-                    const int x1 = r.value("x1").toInt();
-                    const int y1 = r.value("y1").toInt();
-                    p.srcRect = mdn::Rect(x0, y0, x1, y1, true /*fixOrdering*/);
-                }
-
-                // grid
-                const QString tsv = obj.value("grid_tsv").toString();
-                if (!tsv.isEmpty() && parseTsv(tsv, p.rows)) {
-                    return p;
-                }
-            } // if (obj.value("type").toString() == "mdn-selection")
-        } // if (err.error == QJsonParseError::NoError && doc.isObject())
-    }
-
-    // From here:
-    //  * not mdn-formatted data
-    //  * mdn-formatted data that is not type=="mdn-selection"
-    //  * mdn-formatted data that is type=="mdn-selection" but could not get the data:
-    //      o fromJson returned an error
-    //      o fromJson returned an invalid object
-    //      o fromJson worked but tsv was empty or parseTsv returned false
-    // Attempt tsv fallback
-    QString tsv;
-    if (mime->hasFormat("text/tab-separated-values")) {
-        tsv = QString::fromUtf8(mime->data("text/tab-separated-values"));
-    } else if (mime->hasText()) {
-        tsv = mime->text();
-    }
-
-    if (!tsv.isEmpty() && parseTsv(tsv, p.rows)) {
-        p.scope = QStringLiteral("rect");
-        return p;
-    }
-
-    return DecodedPaste{};
-}
-
-void showSizeMismatchDialog(int selW, int selH, int dataW, int dataH)
-{
-    QMessageBox::warning(
-        nullptr,
-        QStringLiteral("Paste size mismatch"),
-        QStringLiteral("Selection %1×%2 vs data %3×%4")
-            .arg(selW)
-            .arg(selH)
-            .arg(dataW)
-            .arg(dataH)
-    );
-}
-
-} // namespace (anon)
-
-
-void mdn::Project::pasteOnSelection(int index) {
-    Mdn2d* targetMdn = nullptr;
-    Rect targetRect = Rect::GetInvalid();
-
-    if (index < 0) {
-        const Selection& sel = selection();
-        // AssertQ(sel.hasMdn(), "Internal error: selection has no valid Mdn");
-        if (!sel.hasMdn()) {
-            // Selection has no valid Mdn - probably no Mdn tabs present, fail mostly silently
-            #ifdef MDN_DEBUG
-                Log_N_WarnQ("Attempting to 'paste' when no Mdn tab is in the selection.");
-            #endif
-            return;
-        }
-        targetMdn = sel.get();
-        if (sel.hasRect()) {
-            targetRect = sel.rect;
-        }
-    } else {
-        // Not based on m_selection - an index has been supplied
-        targetMdn = getMdn(index, true);
-        if (!targetMdn) {
-            return;
-        }
-    }
-
     DecodedPaste p = decodeClipboard();
-    if (!p.isValid()) {
-        return;
+    if (!p.valid()) {
+        return false;
     }
-    const int w = p.width();
-    const int h = p.height();
 
-    // Determine bottom-left anchor
+    const int W = p.width();
+    const int H = p.height();
+
+    const bool haveSel = (index < 0) && sel.rect.isValid();
+
     int ax = 0;
     int ay = 0;
 
-    if (targetRect.isValid()) {
-        // A-2 or B-2
-        const int rw = targetRect.width();
-        const int rh = targetRect.height();
-
-        if (rw == 1 && rh == 1) {
-            ax = targetRect.left();
-            ay = targetRect.bottom();
-        } else if (rw == w && rh == h) {
-            ax = targetRect.left();
-            ay = targetRect.bottom();
+    if (haveSel) {
+        const Rect r = [&]() { Rect t = sel.rect; t.fixOrdering(); return t; }();
+        const int SW = r.width();
+        const int SH = r.height();
+        if (SW == 1 && SH == 1) {
+            ax = r.left();
+            ay = r.bottom();
+        } else if (SW == W && SH == H) {
+            ax = r.left();
+            ay = r.bottom();
         } else {
-            showSizeMismatchDialog(rw, rh, w, h);
-            return;
+            // Size mismatch in grid context
+            QMessageBox::warning(
+                nullptr,
+                QStringLiteral("Paste size mismatch"),
+                QString("Selection %1x%2 vs data %3x%4").arg(SW).arg(SH).arg(W).arg(H)
+            );
+            return false;
         }
     } else {
+        // Tab context (no valid selection rect)
         if (p.scope == QLatin1String("rect")) {
             if (p.srcRect.isValid()) {
                 ax = p.srcRect.left();
@@ -813,8 +729,7 @@ void mdn::Project::pasteOnSelection(int index) {
                 ay = 0;
             }
         } else if (p.scope == QLatin1String("mdn")) {
-            // Replace entire MDN
-            targetMdn->clear();
+            dst->clear();
             if (p.srcRect.isValid()) {
                 ax = p.srcRect.left();
                 ay = p.srcRect.bottom();
@@ -823,16 +738,18 @@ void mdn::Project::pasteOnSelection(int index) {
                 ay = 0;
             }
         } else {
-            // Unknown scope -> conservative default
+            // Unknown scope: conservative default
             ax = 0;
             ay = 0;
         }
     }
 
-    // Apply: one row at a time (zeros clear)
-    for (int r = 0; r < h; ++r) {
-        targetMdn->setRowRange(ay + r, ax, p.rows[static_cast<std::size_t>(r)]);
+    // Overwrite rows (zeros in payload clear cells)
+    for (int r = 0; r < H; ++r) {
+        dst->setRowRange(ay + r, ax, p.rows[size_t(r)]);
     }
+
+    return true;
 }
 
 

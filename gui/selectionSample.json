@@ -1,8 +1,32 @@
 {
-    "type": "mdn-selection",
-    "version": 1,
-    "origin_name": "SourceMdnName",
-    "rect": { "x0": 1, "x1": 2, "y0": 10, "y1": 20 },
-    "order": {"rows": "y_asc", "cols": "x_asc"},
-    "grid_tsv": "0\t1\t2\t3\t4\n0\t1\t2\t3\t4\n0\t1\t2\t3\t4"
+  "type": "mdn-selection",
+  "version": 1,
+  "scope": "rect",
+  "origin": {
+    "mdn": "<name or id>",
+    "rect": {"x0": -4, "y0": 0, "x1": 12, "y1": 8}
+  },
+  "rect": {
+    "x0": -4, "y0": 0, "x1": 12, "y1": 8
+  },
+  "order": {"rows": "y_asc", "cols": "x_asc"},
+  "grid_tsv": "<tab-separated rows>"
+}
+{
+  "type": "mdn-selection",
+  "version": 1,
+  "scope": "rect",
+  "origin": {"mdn": "Foo", "rect": {"x0": 0, "y0": 0, "x1": 3, "y1": 2}},
+  "rect": {"x0": 0, "y0": 0, "x1": 3, "y1": 2},
+  "order": {"rows": "y_asc", "cols": "x_asc"},
+  "grid_tsv": "1\t2\t3\t4\n5\t0\t0\t9\n0\t0\t0\t0\n"
+}
+{
+  "type": "mdn-selection",
+  "version": 1,
+  "scope": "mdn",
+  "origin": {"mdn": "Bar", "rect": {"x0": -2, "y0": -1, "x1": 4, "y1": 3}},
+  "rect": {"x0": -2, "y0": -1, "x1": 4, "y1": 3},
+  "order": {"rows": "y_asc", "cols": "x_asc"},
+  "grid_tsv": "..."
 }

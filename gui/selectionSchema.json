@@ -1,0 +1,57 @@
+{
+  "$id": "urn:mdn:selection-schema:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MDN Clipboard Payload v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type", "version", "scope", "rect"],
+  "properties": {
+    "type": { "const": "mdn-selection" },
+    "version": { "type": "integer", "const": 1 },
+    "scope": { "type": "string", "enum": ["rect", "mdn"] },
+    "origin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mdn", "rect"],
+      "properties": {
+        "mdn": { "type": "string", "minLength": 1 },
+        "rect": { "$ref": "#/definitions/rect" }
+      }
+    },
+    "rect": { "$ref": "#/definitions/rect" },
+    "order": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rows", "cols"],
+      "properties": {
+        "rows": { "type": "string", "enum": ["y_asc"] },
+        "cols": { "type": "string", "enum": ["x_asc"] }
+      }
+    },
+    "grid_tsv": { "type": "string" },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": { "type": "integer", "minimum": -128, "maximum": 127 }
+      }
+    }
+  },
+  "oneOf": [
+    { "required": ["grid_tsv"] },
+    { "required": ["rows"] }
+  ],
+  "defs": {
+    "rect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x0", "y0", "x1", "y1"],
+      "properties": {
+        "x0": { "type": "integer" },
+        "y0": { "type": "integer" },
+        "x1": { "type": "integer" },
+        "y1": { "type": "integer" }
+      }
+    }
+  }
+}
