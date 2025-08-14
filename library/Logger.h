@@ -152,7 +152,8 @@ private:
     Internal_AssertQCrit \
     Internal_AssertEnd
 
-#ifdef MDN_DEBUG
+
+#ifdef MDN_LOGS
 
     #define DBAssert(expression, messageIfFailed) Assert(expression, messageIfFailed)
     #define DBAssertQ(expression, messageIfFailed) AssertQ(expression, messageIfFailed)
@@ -165,8 +166,9 @@ private:
         ); \
         Logger& loginst = Logger::instance(); \
         oss << loginst.indent() << fileRef << message; \
-        loginst.level(oss.str()); \
-    }
+        loginst.level(oss.str());
+
+    #define InternalLoggerEchoToQ QMessageBox("Logger", oss.str().c_str()); }
 
     // Internal use - As above, but with indentation:
     //      [        |Mdn2dBase.cpp:598,setValue]
@@ -185,14 +187,31 @@ private:
     //  No header / footer indent / unindent
     //  File ref with object name
     #define InternalLoggerNamed(message, level) \
-        InternalLoggerAssembleFunction( InternalLoggerNamedFileRef, message, level )
+        InternalLoggerAssembleFunction( InternalLoggerNamedFileRef, message, level ) \
+        }
 
+    // Standard log message:
+    //  No header / footer indent / unindent
+    //  File ref with object name
+    //  Echo to QMessageBox
+    #define InternalLoggerNamedQ(message, level) \
+        InternalLoggerAssembleFunction( InternalLoggerNamedFileRef, message, level ) \
+        InternalLoggerEchoToQ
 
     // Standard log message:
     //  No header / footer indent / unindent
     //  File ref with no object name
     #define InternalLoggerAnonymous(message, level) \
-        InternalLoggerAssembleFunction( InternalIdentedLoggerFileRef, message, level )
+        InternalLoggerAssembleFunction( InternalIdentedLoggerFileRef, message, level ) \
+        }
+
+    // Standard log message:
+    //  No header / footer indent / unindent
+    //  File ref with no object name
+    //  Echo to QMessageBox
+    #define InternalLoggerAnonymousQ(message, level) \
+        InternalLoggerAssembleFunction( InternalIdentedLoggerFileRef, message, level ) \
+        InternalLoggerEchoToQ
 
 
     // Internal use - Wrapper for producing a header message that increases the indentation level
@@ -268,6 +287,15 @@ private:
     #define Log_Warn(message) InternalLoggerAnonymous(message, warn)
     #define Log_Error(message) InternalLoggerAnonymous(message, error)
 
+    // Anonymous, no changes in indentation, echo to QMessageBox
+    #define Log_Debug4Q(message) InternalLoggerAnonymousQ(message, debug4)
+    #define Log_Debug3Q(message) InternalLoggerAnonymousQ(message, debug3)
+    #define Log_Debug2Q(message) InternalLoggerAnonymousQ(message, debug2)
+    #define Log_DebugQ(message) InternalLoggerAnonymousQ(message, debug)
+    #define Log_InfoQ(message) InternalLoggerAnonymousQ(message, info)
+    #define Log_WarnQ(message) InternalLoggerAnonymousQ(message, warn)
+    #define Log_ErrorQ(message) InternalLoggerAnonymousQ(message, error)
+
     // Anonymous, headers - increase in indentation
     #define Log_Debug4_H(message) InternalLoggerAnonymousHeader(message, debug4)
     #define Log_Debug3_H(message) InternalLoggerAnonymousHeader(message, debug3)
@@ -288,6 +316,15 @@ private:
     #define Log_N_Info(message) InternalLoggerNamed(message, info)
     #define Log_N_Warn(message) InternalLoggerNamed(message, warn)
     #define Log_N_Error(message) InternalLoggerNamed(message, error)
+
+    // Named, no changes in indentation, echo to QMessageBox
+    #define Log_N_Debug4Q(message) InternalLoggerNamedQ(message, debug4)
+    #define Log_N_Debug3Q(message) InternalLoggerNamedQ(message, debug3)
+    #define Log_N_Debug2Q(message) InternalLoggerNamedQ(message, debug2)
+    #define Log_N_DebugQ(message) InternalLoggerNamedQ(message, debug)
+    #define Log_N_InfoQ(message) InternalLoggerNamedQ(message, info)
+    #define Log_N_WarnQ(message) InternalLoggerNamedQ(message, warn)
+    #define Log_N_ErrorQ(message) InternalLoggerNamedQ(message, error)
 
     // Named, headers - increase in indentation
     #define Log_N_Debug4_H(message) InternalLoggerNamedHeader(message, debug4)
@@ -312,6 +349,13 @@ private:
     #define Log_Info(message)     do {} while (false);
     #define Log_Warn(message)     do {} while (false);
     #define Log_Error(message)    do {} while (false);
+    #define Log_Debug4Q(message)   do {} while (false);
+    #define Log_Debug3Q(message)   do {} while (false);
+    #define Log_Debug2Q(message)   do {} while (false);
+    #define Log_DebugQ(message)    do {} while (false);
+    #define Log_InfoQ(message)     do {} while (false);
+    #define Log_WarnQ(message)     do {} while (false);
+    #define Log_ErrorQ(message)    do {} while (false);
     #define Log_Debug4_H(message) do {} while (false);
     #define Log_Debug3_H(message) do {} while (false);
     #define Log_Debug2_H(message) do {} while (false);
@@ -327,6 +371,13 @@ private:
     #define Log_N_Info(message)     do {} while (false);
     #define Log_N_Warn(message)     do {} while (false);
     #define Log_N_Error(message)    do {} while (false);
+    #define Log_N_Debug4Q(message)   do {} while (false);
+    #define Log_N_Debug3Q(message)   do {} while (false);
+    #define Log_N_Debug2Q(message)   do {} while (false);
+    #define Log_N_DebugQ(message)    do {} while (false);
+    #define Log_N_InfoQ(message)     do {} while (false);
+    #define Log_N_WarnQ(message)     do {} while (false);
+    #define Log_N_ErrorQ(message)    do {} while (false);
     #define Log_N_Debug4_H(message) do {} while (false);
     #define Log_N_Debug3_H(message) do {} while (false);
     #define Log_N_Debug2_H(message) do {} while (false);

@@ -16,6 +16,7 @@ protected:
 
     int m_instance = -1;
 
+
 public:
 
     // Return instance of this observer

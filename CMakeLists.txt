@@ -33,6 +33,17 @@ else(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "Release build enabled, no debug defined and stuff")
 endif()
 
+# Logging option
+option(Logs "Logging (ON by default)" ON)
+
+if(Logs)
+    add_compile_definitions(MDN_LOGS)
+    message(STATUS "Logging is ON (enabled) in this configuration")
+else(Logs)
+    message(STATUS "Logging is OFF (disabled) in this configuration")
+endif(Logs)
+
+
 # Top-level CMakeLists.txt
 
 # Choose which one to include by commenting out the other

@@ -11,13 +11,12 @@
 #include <QRect>
 
 #include "../library/Coord.h"
-#include "../library/GlobalConfig.h"
 #include "../library/Rect.h"
 
 
 namespace mdn {
 
-class MDN_API MdnQtInterface {
+class MdnQtInterface {
 public:
 
     // *** Strings
@@ -63,7 +62,7 @@ public:
         // QRect to Mdn Rect
         static Rect toRect(const QRect& q) {
             if (!q.isValid())
-                return Rect::invalid();
+                return Rect::GetInvalid();
 
             Coord min(q.left(), q.top());
             Coord max(q.right(), q.bottom()); // inclusive in MDN

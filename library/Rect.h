@@ -14,8 +14,16 @@ public:
 
     // *** Static member functions
 
-    // Return intersection of two rects. If they don't intersect, returns Rect::Invalid()
-    inline static Rect intersection(const Rect& a, const Rect& b) {
+    // Returns an invalid rectangle, plays nice with growToInclude
+    static Rect GetInvalid() {
+        return Rect(
+            Coord(std::numeric_limits<int>::max(), std::numeric_limits<int>::max()),
+            Coord(std::numeric_limits<int>::min(), std::numeric_limits<int>::min())
+        );
+    }
+
+    // Return intersection of two rects. If they don't intersect, returns Rect::GetInvalid()
+    inline static Rect Intersection(const Rect& a, const Rect& b) {
         Coord minPt(
             std::max(a.min().x(), b.min().x()),
             std::max(a.min().y(), b.min().y())
@@ -26,11 +34,11 @@ public:
         );
 
         Rect result(minPt, maxPt);
-        return result.isValid() ? result : Rect::invalid();
+        return result.isValid() ? result : Rect::GetInvalid();
     }
 
     // Return the smallest rect that contains both input rects
-    inline static Rect unionOf(const Rect& a, const Rect& b) {
+    inline static Rect UnionOf(const Rect& a, const Rect& b) {
         if (!a.isValid()) return b;
         if (!b.isValid()) return a;
 
@@ -47,13 +55,13 @@ public:
     }
 
     // Check if rects overlap (intersection is non-empty)
-    inline static bool overlaps(const Rect& a, const Rect& b) {
-        return intersection(a, b).isValid();
+    inline static bool Overlaps(const Rect& a, const Rect& b) {
+        return Intersection(a, b).isValid();
     }
 
     // Check if two rects are adjacent but not overlapping
-    inline static bool areAdjacent(const Rect& a, const Rect& b) {
-        if (overlaps(a, b)) return false;
+    inline static bool AreAdjacent(const Rect& a, const Rect& b) {
+        if (Overlaps(a, b)) return false;
 
         // One of the edges must touch
         bool horizontalTouch =
@@ -68,19 +76,10 @@ public:
     }
 
 
-    // Returns an invalid rectangle, plays nice with growToInclude
-    static Rect invalid() {
-        return Rect(
-            Coord(std::numeric_limits<int>::max(), std::numeric_limits<int>::max()),
-            Coord(std::numeric_limits<int>::min(), std::numeric_limits<int>::min())
-        );
-    }
-
-
     // *** Constructors
 
     // Construct null - retuns an invalid rectangle
-    Rect() : Rect(invalid()) {}
+    Rect() : Rect(GetInvalid()) {}
 
     // Construct from components
     //  fixOrdering - when true, corrects inputs where individual components of min and max might
@@ -120,6 +119,11 @@ public:
     // Returns true if this Rect is valid, i.e. min and max make sense
     bool isValid() const {
         return m_min.x() <= m_max.x() && m_min.y() <= m_max.y();
+    }
+
+    // Returns true if this Rect is invalid, i.e. min and max do not make sense
+    bool isInvalid() const {
+        return !isValid();
     }
 
     // Treats each component independently, ensures min and max are in the correct variable
@@ -165,7 +169,7 @@ public:
     }
 
     void clear() {
-        *this = Rect::invalid();
+        *this = Rect::GetInvalid();
     }
 
     void set(Coord min, Coord max, bool fixOrdering = false) {
@@ -249,7 +253,7 @@ public:
         is >> word;
 
         if (word == "Empty]") {
-            r = Rect::invalid();
+            r = Rect::GetInvalid();
             return is;
         }
 

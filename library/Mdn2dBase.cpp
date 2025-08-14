@@ -120,7 +120,7 @@ mdn::Mdn2dBase::Mdn2dBase(std::string nameIn)
 :
     m_config(Mdn2dConfig::static_defaultConfig()),
     m_name(nameIn),
-    m_bounds(Rect::invalid()),
+    m_bounds(Rect::GetInvalid()),
     m_modified(false),
     m_event(0)
 {
@@ -138,7 +138,7 @@ mdn::Mdn2dBase::Mdn2dBase(Mdn2dConfig config, std::string nameIn)
 :
     m_config(config),
     m_name(nameIn),
-    m_bounds(Rect::invalid()),
+    m_bounds(Rect::GetInvalid()),
     m_modified(false),
     m_event(0)
 {

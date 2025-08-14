@@ -115,9 +115,9 @@ public:
         //  true  - number exists
         //  false - number does not exist
         //  false - addressing data bad
-        // warnIfMissing, when true, issues a QMessageBox warning if the Mdn2d is missing
-        bool contains(std::string name, bool warnIfMissing = false) const;
-        bool contains(int i, bool warnIfMissing = false) const;
+        // warnOnFailure, when true, issues a QMessageBox warning if the Mdn2d is missing
+        bool contains(std::string name, bool warnOnFailure = false) const;
+        bool contains(int i, bool warnOnFailure = false) const;
 
         // Return the index (tab position) for the Mdn of the given name, -1 = not found
         int indexOfMdn(std::string name) const;
@@ -129,20 +129,20 @@ public:
         //  e.g.:
         //      Mdn2d* src = getMdn(fromIndex);
         //      AssertQ(src, "Failed to acquire Mdn2d from index " << fromIndex);
-        const Mdn2d* getMdn(int i) const;
-        Mdn2d* getMdn(int i);
+        const Mdn2d* getMdn(int i, bool warnOnFailure=false) const;
+        Mdn2d* getMdn(int i, bool warnOnFailure=false);
 
-        // Return pointer to the i'th Mdn tab, nullptr on failure
-        const Mdn2d* getMdn(std::string name) const;
-        Mdn2d* getMdn(std::string name);
+        // Return pointer to the Mdn tab with the given name, nullptr on failure
+        const Mdn2d* getMdn(std::string name, bool warnOnFailure=false) const;
+        Mdn2d* getMdn(std::string name, bool warnOnFailure=false);
 
         // Return pointer to Mdn2d at first tab, nullptr on failure
-        const Mdn2d* firstMdn() const;
-        Mdn2d* firstMdn();
+        const Mdn2d* firstMdn(bool warnOnFailure=false) const;
+        Mdn2d* firstMdn(bool warnOnFailure=false);
 
         // Return pointer to Mdn2d at last tab, nullptr on failure
-        const Mdn2d* lastMdn() const;
-        Mdn2d* lastMdn();
+        const Mdn2d* lastMdn(bool warnOnFailure=false) const;
+        Mdn2d* lastMdn(bool warnOnFailure=false);
 
         // Inserts a new number at the 'end', i.e. the last index
         void appendMdn(Mdn2d& mdn) {
@@ -195,14 +195,42 @@ public:
             // emit signal, update UI
         }
 
-        // Perform a 'copy' operation on the selection
+        // Encodes a rectangular slice from src as mdn-selection JSON + TSV fallbacks.
+        static void encodeRectToClipboard(
+            const Mdn2d& src, const Rect& r, const QString& scope, const QString& originMdnName
+        );
+
+        // Copy current grid selection (scope:"rect"). Respects bottom-left inclusive rect.
         void copySelection() const;
+
+        // Copy whole MDN from a tab context (scope:"mdn").
+        void copyMdn(int index) const;
 
         // Perform a 'cut' operation on the selection - a combination of Copy and Delete
         void cutSelection();
 
-        // Selection acts as anchor to paste operation
-        void pasteSelection();
+        // Perform a paste operation, using clipboard data and the target:, where the target depends
+        //  on the supplied index:
+        //      if index < 0 (or missing), use m_selection for target
+        //      if index >= 0, target is Mdn tab at given index
+        //  Always overwrite destination, rect is anchored to the bottom-left (xmin, ymin())
+        //
+        //  Source scope (data on the clipboard)
+        //  A) "mdn"  - defines an entire Mdn for pasting
+        //  B) "rect" - defines a specific area on a specific Mdn
+        //
+        //  Destination scope (data currently selected, m_selection)
+        //  1. selection.hasMdnOnly    - target is the entire Mdn, (index >= 0)
+        //  -- selection.hasRectOnly   - invalid - need a Mdn for actual operation
+        //  2. selection.hasMdnAndRect - target is the specific area on the selected Mdn
+        //
+        //  A-1 - Mdn ->  Mdn       - replace entire target Mdn with source Mdn
+        //  A-2 - Mdn ->  Mdn+Rect  - Not valid (user error - tell user invalid data to paste here)
+        //  B-1 - Rect -> Mdn       - replace same rect (absolute) on target with source
+        //  B-2 - Rect -> Mdn+Rect  - replace same rect (relative) on target with source, size check
+        //      required: if target is 1x1, paste okay, use that as bottom left anchor, otherwise
+        //      the size must match exactly
+        void pasteOnSelection(int index=-1);
 
         // Perform 'delete' operation on the selection
         void deleteSelection();

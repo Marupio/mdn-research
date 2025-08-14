@@ -1,0 +1,8 @@
+{
+    "type": "mdn-selection",
+    "version": 1,
+    "origin_name": "SourceMdnName",
+    "rect": { "x0": 1, "x1": 2, "y0": 10, "y1": 20 },
+    "order": {"rows": "y_asc", "cols": "x_asc"},
+    "grid_tsv": "0\t1\t2\t3\t4\n0\t1\t2\t3\t4\n0\t1\t2\t3\t4"
+}
