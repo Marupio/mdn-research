@@ -25,7 +25,7 @@ public:
     }
 
     // Set the instance of this observer
-    int setInstance(int instance) {
+    void setInstance(int instance) {
         #ifdef MDN_DEBUG
             if (m_instance >= 0) {
                 Log_Warn("Setting MdnObserver instance when it is already set.");

@@ -182,46 +182,43 @@ public:
             Digit getValue(const Coord& xy) const;
             protected: Digit locked_getValue(const Coord& xy) const; public:
 
-            // Write out a continuous range for a row, from xStart to xEnd, inclusive.
-            // out.size() becomes (x1 - x0 + 1). Returns false only on internal error.
-            bool getRowRange
-            (
-                int y,
-                int xStart,
-                int xEnd,
-                std::vector<mdn::Digit>& out
-            ) const;
-        protected:
-            bool locked_getRowRange
-            (
-                int y,
-                int xStart,
-                int xEnd,
-                std::vector<mdn::Digit>& out
-            ) const;
-        public:
-
-            // Write a contiguous row back in one call. Interprets 0 as "setToZero".
-            void setRowRange(int y, int xStart, const std::vector<mdn::Digit>& row);
-            protected:
-                void locked_setRowRange(int y, int xStart, const std::vector<mdn::Digit>& row);
-            public:
-
             // Assembles the row at the given y index value, spanning the x bounds of full MDN
             std::vector<Digit> getRow(int y) const;
             protected: std::vector<Digit> locked_getRow(int y) const; public:
 
             // Assembles the row at the given y index value, spanning the x bounds of full MDN
-            void getRow(int y, std::vector<Digit>& digits) const;
-            protected: void locked_getRow(int y, std::vector<Digit>& digits) const; public:
+            void getRow(int y, std::vector<Digit>& out) const;
+            protected: void locked_getRow(int y, std::vector<Digit>& out) const; public:
+
+            // Write out a continuous range for a row, from x0 to x1, inclusive.
+            // out.size() becomes (x1 - x0 + 1).
+            void getRow(int y, int x0, int x1, std::vector<mdn::Digit>& out) const;
+            protected:
+            void locked_getRow(int y, int x0, int x1, std::vector<mdn::Digit>& out) const;
+            public:
+
+            // Write out a continuous range for a rows covering an area from Coord c0 to Coord c1
+            //  Returns bounds of output digits
+            Rect getAreaRows(VecVecDigit& out) const;
+            protected:
+            Rect locked_getAreaRows(VecVecDigit& out) const;
+            public:
+
+            // Write out a continuous range for a rows covering an area from Coord c0 to Coord c1
+            //  Returns bounds of output digits
+            void getAreaRows(const Coord& c0, const Coord& c1, VecVecDigit& out) const;
+            protected:
+            void locked_getAreaRows(const Coord& c0, const Coord& c1, VecVecDigit& out) const;
+            public:
+
 
             // Assembles the col at the given x index value, spanning the y bounds of full MDN
             std::vector<Digit> getCol(int x) const;
             protected: std::vector<Digit> locked_getCol(int x) const; public:
 
             // Assembles the col at the given x index value, spanning the y bounds of full MDN
-            void getCol(int x, std::vector<Digit>& digits) const;
-            protected: void locked_getCol(int x, std::vector<Digit>& digits) const; public:
+            void getCol(int x, std::vector<Digit>& out) const;
+            protected: void locked_getCol(int x, std::vector<Digit>& out) const; public:
 
 
         // *** Setters
@@ -256,20 +253,51 @@ public:
                 bool locked_setValue(const Coord& xy, long long value);
             public:
 
+            // Write a contiguous row back in one call. Interprets 0 as "setToZero".
+            void setRowRange(int y, int x0, const std::vector<mdn::Digit>& row);
+            protected:
+                void locked_setRowRange(int y, int x0, const std::vector<mdn::Digit>& row);
+            public:
+
+
 
         // *** Conversion / display
 
             // Converts the MDN to a human-readable string.
-            std::string toString() const;
-            protected: std::string locked_toString() const; public:
+            std::string toString(
+                std::string hDelim=Tools::m_boxArt_h,
+                std::string vDelim=Tools::m_boxArt_v,
+                std::string xDelim=Tools::m_boxArt_x
+            ) const;
+            protected: std::string locked_toString(
+                std::string hDelim=Tools::m_boxArt_h,
+                std::string vDelim=Tools::m_boxArt_v,
+                std::string xDelim=Tools::m_boxArt_x
+            ) const; public:
 
             // Converts the MDN to an array of strings, representing rows
-            std::vector<std::string> toStringRows() const;
-            protected: std::vector<std::string> locked_toStringRows() const; public:
+            std::vector<std::string> toStringRows(
+                std::string hDelim=Tools::m_boxArt_h,
+                std::string vDelim=Tools::m_boxArt_v,
+                std::string xDelim=Tools::m_boxArt_x
+            ) const;
+            protected: std::vector<std::string> locked_toStringRows(
+                std::string hDelim=Tools::m_boxArt_h,
+                std::string vDelim=Tools::m_boxArt_v,
+                std::string xDelim=Tools::m_boxArt_x
+            ) const; public:
 
             // Converts the MDN to an array of strings, representing columns
-            std::vector<std::string> toStringCols() const;
-            protected: std::vector<std::string> locked_toStringCols() const; public:
+            std::vector<std::string> toStringCols(
+                std::string hDelim=Tools::m_boxArt_h,
+                std::string vDelim=Tools::m_boxArt_v,
+                std::string xDelim=Tools::m_boxArt_x
+            ) const;
+            protected: std::vector<std::string> locked_toStringCols(
+                std::string hDelim=Tools::m_boxArt_h,
+                std::string vDelim=Tools::m_boxArt_v,
+                std::string xDelim=Tools::m_boxArt_x
+            ) const; public:
 
 
         // *** Transformations

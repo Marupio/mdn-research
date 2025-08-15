@@ -46,26 +46,26 @@ public:
         if (reverse) {
             size_t lastI = array.size()-1;
             if constexpr (is_byte_like_v<T>)
-                out << static_cast<int>(array[lastI]);
+                oss << static_cast<int>(array[lastI]);
             else
-                out << array[lastI];
+                oss << array[lastI];
             for (size_t i = lastI-1; i >= 0; --i) {
                 if constexpr (is_byte_like_v<T>)
-                    out << delimiter << static_cast<int>(array[i]);
+                    oss << delimiter << static_cast<int>(array[i]);
                 else
-                    out << delimiter << array[i];
+                    oss << delimiter << array[i];
             }
         } else {
             if constexpr (is_byte_like_v<T>)
-                out << static_cast<int>(array[0]);
+                oss << static_cast<int>(array[0]);
             else
-                out << array[0];
+                oss << array[0];
             for (size_t i = 1; i < array.size(); ++i) {
                 oss << delimiter << array[i];
                 if constexpr (is_byte_like_v<T>)
-                    out << delimiter <<static_cast<int>(array[i]);
+                    oss << delimiter <<static_cast<int>(array[i]);
                 else
-                    out << delimiter << array[i];
+                    oss << delimiter << array[i];
             }
         }
         return oss.str();

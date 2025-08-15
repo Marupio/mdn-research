@@ -496,7 +496,7 @@ void mdn::Project::copySelection() const {
     std::vector<Digit> rowBuf; rowBuf.reserve(r.width());
     for (int y = r.bottom(); y <= r.top(); ++y) {
         rowBuf.clear();
-        src->getRowRange(y, r.left(), r.right(), rowBuf);
+        src->getRow(y, r.left(), r.right(), rowBuf);
         const std::string line = Tools::vectorToString(rowBuf, '\t', false);
         tsv += QString::fromStdString(line);
         tsv += u'\n';

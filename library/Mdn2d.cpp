@@ -747,7 +747,6 @@ mdn::CoordSet mdn::Mdn2d::internal_fraxis(const Coord& xy, double f, int dX, int
     while (precisionOkay && numericsOkay && ++count < 1000) {
         f *= m_config.baseDouble();
         Digit d(f);
-        std::cerr << "f=" << f << ",int(f)=" << int(f) << ",int8_t(f)=" << static_cast<int>(int8_t(f)) << ", d=" << static_cast<int>(d) << std::endl;
         if (d != 0) {
             changed.merge(locked_add(xyWorking, d));
             changed.merge(internal_fraxisCascade(xyWorking, d, c));

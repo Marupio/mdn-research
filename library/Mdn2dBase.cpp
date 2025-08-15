@@ -312,6 +312,7 @@ mdn::Mdn2dConfigImpact mdn::Mdn2dBase::locked_assessConfigChange(const Mdn2dConf
     } else {
         Log_N_Debug3_T("result = " << Mdn2dConfigImpactToName(result));
     }
+    return result;
 }
 
 
@@ -446,59 +447,6 @@ mdn::Digit mdn::Mdn2dBase::locked_getValue(const Coord& xy) const {
 }
 
 
-bool mdn::Mdn2dBase::getRowRange(int y, int x0, int x1, std::vector<mdn::Digit>& out) const {
-    auto lock = lockReadOnly();
-    Log_N_Debug2_H("");
-    bool result = locked_getRowRange(y, x0, x1, out);
-    Log_N_Debug2_T("result = " << result);
-}
-
-
-bool mdn::Mdn2dBase::locked_getRowRange(
-    int y,
-    int xStart,
-    int xEnd,
-    std::vector<mdn::Digit>& out
-) const
-{
-    int xCount = xEnd - xStart;
-    Log_N_Debug3_H(
-        "Row " << y << " from x (" << xStart << " .. " << xEnd << "), "
-        << xCount << " elements"
-    );
-    out.resize(xCount);
-    std::fill(out.begin(), out.end(), 0);
-    auto it = m_yIndex.find(y);
-    if (it != m_yIndex.end()) {
-        // There are non-zero entries on this row, fill them in
-        const CoordSet& coords = it->second;
-        for (const Coord& coord : coords) {
-            out[coord.x()-xStart] = m_raw.at(coord);
-        }
-    }
-    Log_N_Debug3_T("");
-}
-
-
-void mdn::Mdn2dBase::setRowRange(int y, int xStart, const std::vector<mdn::Digit>& row) {
-    auto lock = lockWriteable();
-    Log_N_Debug2_H("y=" << y << ",xStart=" << xStart);
-    locked_setRowRange(y, xStart, row);
-    Log_N_Debug2_T("");
-}
-
-
-void mdn::Mdn2dBase::locked_setRowRange(int y, int xStart, const std::vector<mdn::Digit>& row) {
-    Log_N_Debug3_H("y=" << y << ",xStart=" << xStart);
-    Coord cursor(xStart, y);
-    for (int i = 0; i < row.size(); ++i) {
-        locked_setValue(cursor, row[i]);
-        cursor.translateX(1);
-    }
-    Log_N_Debug3_T("");
-}
-
-
 std::vector<mdn::Digit> mdn::Mdn2dBase::getRow(int y) const {
     auto lock = lockReadOnly();
     Log_N_Debug2_H("");
@@ -520,30 +468,78 @@ std::vector<mdn::Digit> mdn::Mdn2dBase::locked_getRow(int y) const {
 }
 
 
-void mdn::Mdn2dBase::getRow(int y, std::vector<Digit>& digits) const {
+void mdn::Mdn2dBase::getRow(int y, std::vector<Digit>& out) const {
     auto lock = lockReadOnly();
     Log_N_Debug2_H("");
-    locked_getRow(y, digits);
+    locked_getRow(y, out);
     if (Log_Showing_Debug2) {
-        Log_N_Debug2_T("Row " << y << ": inplace" << Tools::digitArrayToString(digits));
+        Log_N_Debug2_T("Row " << y << ": inplace" << Tools::digitArrayToString(out));
     }
 }
 
 
-void mdn::Mdn2dBase::locked_getRow(int y, std::vector<Digit>& digits) const {
+void mdn::Mdn2dBase::locked_getRow(int y, std::vector<Digit>& out) const {
     Log_N_Debug3_H("y=" << y);
     if (!m_bounds.isValid()) {
         // No non-zero digits to fill
-        if (digits.size()) {
-            std::fill(digits.begin(), digits.end(), Digit(0));
+        if (out.size()) {
+            std::fill(out.begin(), out.end(), Digit(0));
         }
         Log_N_Debug3_T("no bounds");
         return;
     }
     int xStart = m_bounds.min().x();
     int xEnd = m_bounds.max().x() + 1;
-    bool result = locked_getRowRange(y, xStart, xEnd, digits);
-    Log_N_Debug3_T("x range (" << xStart << "," << xEnd << "), result=" << result);
+    locked_getRow(y, xStart, xEnd, out);
+    Log_N_Debug3_T("x range (" << xStart << "," << xEnd << ")");
+}
+
+
+void mdn::Mdn2dBase::getRow(int y, int x0, int x1, std::vector<mdn::Digit>& out) const {
+    auto lock = lockReadOnly();
+    Log_N_Debug2("");
+    locked_getRow(y, x0, x1, out);
+}
+
+
+void mdn::Mdn2dBase::locked_getRow(int y, int x0, int x1, std::vector<mdn::Digit>& out) const
+{
+    int xCount = x1 - x0;
+    Log_N_Debug3_H(
+        "Row " << y << " from x (" << x0 << " .. " << x1 << "), "
+        << xCount << " elements"
+    );
+    out.resize(xCount);
+    std::fill(out.begin(), out.end(), 0);
+    auto it = m_yIndex.find(y);
+    if (it != m_yIndex.end()) {
+        // There are non-zero entries on this row, fill them in
+        const CoordSet& coords = it->second;
+        for (const Coord& coord : coords) {
+            out[coord.x()-x0] = m_raw.at(coord);
+        }
+    }
+    Log_N_Debug3_T("");
+}
+
+
+mdn::Rect mdn::Mdn2dBase::getAreaRows(VecVecDigit& out) const {
+    // TODO
+}
+
+
+mdn::Rect mdn::Mdn2dBase::locked_getAreaRows(VecVecDigit& out) const {
+    // TODO
+}
+
+
+void mdn::Mdn2dBase::getAreaRows(const Coord& c0, const Coord& c1, VecVecDigit& out) const {
+    // TODO
+}
+
+
+void mdn::Mdn2dBase::locked_getAreaRows(const Coord& c0, const Coord& c1, VecVecDigit& out) const {
+    // TODO
 }
 
 
@@ -567,20 +563,20 @@ std::vector<mdn::Digit> mdn::Mdn2dBase::locked_getCol(int x) const {
 }
 
 
-void mdn::Mdn2dBase::getCol(int x, std::vector<Digit>& digits) const {
+void mdn::Mdn2dBase::getCol(int x, std::vector<Digit>& out) const {
     auto lock = lockReadOnly();
     Log_N_Debug2_H("Column " << x);
-    locked_getCol(x, digits);
+    locked_getCol(x, out);
     if (Log_Showing_Debug2) {
-        Log_N_Debug2_T("Column " << x << ": inplace" << Tools::digitArrayToString(digits));
+        Log_N_Debug2_T("Column " << x << ": inplace" << Tools::digitArrayToString(out));
     }
 }
 
 
-void mdn::Mdn2dBase::locked_getCol(int x, std::vector<Digit>& digits) const {
+void mdn::Mdn2dBase::locked_getCol(int x, std::vector<Digit>& out) const {
     if (!m_bounds.isValid()) {
-        // No non-zero digits to fill
-        std::fill(digits.begin(), digits.end(), Digit(0));
+        // No non-zero out to fill
+        std::fill(out.begin(), out.end(), Digit(0));
         return;
     }
     int yStart = m_bounds.min().y();
@@ -590,14 +586,14 @@ void mdn::Mdn2dBase::locked_getCol(int x, std::vector<Digit>& digits) const {
         "Column " << x << " from y (" << yStart << " .. " << yEnd << "), "
         << yCount << " elements"
     );
-    digits.resize(yCount);
-    std::fill(digits.begin(), digits.end(), 0);
+    out.resize(yCount);
+    std::fill(out.begin(), out.end(), 0);
     auto it = m_xIndex.find(x);
     if (it != m_xIndex.end()) {
         // There are non-zero entries on this row, fill them in
         const CoordSet& coords = it->second;
         for (const Coord& coord : coords) {
-            digits[coord.x()-yStart] = m_raw.at(coord);
+            out[coord.x()-yStart] = m_raw.at(coord);
         }
     }
 }
@@ -846,7 +842,30 @@ bool mdn::Mdn2dBase::locked_setValue(const Coord& xy, long long value) {
 }
 
 
-std::string mdn::Mdn2dBase::toString() const {
+void mdn::Mdn2dBase::setRowRange(int y, int x0, const std::vector<mdn::Digit>& row) {
+    auto lock = lockWriteable();
+    Log_N_Debug2_H("y=" << y << ",x0=" << x0);
+    locked_setRowRange(y, x0, row);
+    Log_N_Debug2_T("");
+}
+
+
+void mdn::Mdn2dBase::locked_setRowRange(int y, int x0, const std::vector<mdn::Digit>& row) {
+    Log_N_Debug3_H("y=" << y << ",x0=" << x0);
+    Coord cursor(x0, y);
+    for (int i = 0; i < row.size(); ++i) {
+        locked_setValue(cursor, row[i]);
+        cursor.translateX(1);
+    }
+    Log_N_Debug3_T("");
+}
+
+
+std::string mdn::Mdn2dBase::toString(
+    std::string hDelim,
+    std::string vDelim,
+    std::string xDelim
+) const {
     auto lock = lockReadOnly();
     Log_N_Debug2_H("Converting to string");
     std::string result = locked_toString();
@@ -855,7 +874,11 @@ std::string mdn::Mdn2dBase::toString() const {
 }
 
 
-std::string mdn::Mdn2dBase::locked_toString() const {
+std::string mdn::Mdn2dBase::locked_toString(
+    std::string hDelim,
+    std::string vDelim,
+    std::string xDelim
+) const {
     Log_N_Debug3_H("Converting to string");
     std::vector<std::string> rows = locked_toStringRows();
     std::string result = Tools::vectorToString(rows, "\n", true);
@@ -864,7 +887,11 @@ std::string mdn::Mdn2dBase::locked_toString() const {
 }
 
 
-std::vector<std::string> mdn::Mdn2dBase::toStringRows() const {
+std::vector<std::string> mdn::Mdn2dBase::toStringRows(
+    std::string hDelim,
+    std::string vDelim,
+    std::string xDelim
+) const {
     auto lock = lockReadOnly();
     Log_N_Debug2_H("Converting rows to string array");
     std::vector<std::string> result = locked_toStringRows();
@@ -873,7 +900,11 @@ std::vector<std::string> mdn::Mdn2dBase::toStringRows() const {
 }
 
 
-std::vector<std::string> mdn::Mdn2dBase::locked_toStringRows() const {
+std::vector<std::string> mdn::Mdn2dBase::locked_toStringRows(
+    std::string hDelim,
+    std::string vDelim,
+    std::string xDelim
+) const {
     int xStart = m_bounds.min().x();
     int xEnd = m_bounds.max().x()+1;
     int xCount = xEnd - xStart;
@@ -896,18 +927,18 @@ std::vector<std::string> mdn::Mdn2dBase::locked_toStringRows() const {
     out.reserve(yCount+1);
     std::vector<Digit> digits;
     for (int y = yStart; y < yEnd; ++y) {
-        // First, are we at the yDigit line?
-        if (y == yDigLine) {
+        // First, are we at the yDigit line (and does it matter)?
+        if (y == yDigLine && (xDelim.size() + hDelim.size() > 0)) {
             int x;
             std::ostringstream oss;
             for (x = 0; x < xDigLine && x < xCount; ++x) {
-                oss << Tools::m_boxArt_h << Tools::m_boxArt_h;
+                oss << hDelim << hDelim;
             }
             if (x == xDigLine) {
-                oss << Tools::m_boxArt_x;
+                oss << xDelim;
             }
             for (; x < xCount; ++x) {
-                oss << Tools::m_boxArt_h << Tools::m_boxArt_h;
+                oss << hDelim << hDelim;
             }
             out.push_back(oss.str());
         }
@@ -920,7 +951,7 @@ std::vector<std::string> mdn::Mdn2dBase::locked_toStringRows() const {
             oss << Tools::digitToAlpha(digits[x]);
         }
         if (x == xDigLine) {
-            oss << Tools::m_boxArt_v;
+            oss << vDelim;
         }
         for (; x < xCount; ++x) {
             oss << Tools::digitToAlpha(digits[x]);
@@ -931,14 +962,22 @@ std::vector<std::string> mdn::Mdn2dBase::locked_toStringRows() const {
 }
 
 
-std::vector<std::string> mdn::Mdn2dBase::toStringCols() const {
+std::vector<std::string> mdn::Mdn2dBase::toStringCols(
+    std::string hDelim,
+    std::string vDelim,
+    std::string xDelim
+) const {
     auto lock = lockReadOnly();
     Log_N_Debug2("Converting columns to string array");
     return locked_toStringCols();
 }
 
 
-std::vector<std::string> mdn::Mdn2dBase::locked_toStringCols() const {
+std::vector<std::string> mdn::Mdn2dBase::locked_toStringCols(
+    std::string hDelim,
+    std::string vDelim,
+    std::string xDelim
+) const {
     int xStart = m_bounds.min().x();
     int xEnd = m_bounds.max().x()+1;
     int xCount = xEnd - xStart;
@@ -962,17 +1001,17 @@ std::vector<std::string> mdn::Mdn2dBase::locked_toStringCols() const {
     std::vector<Digit> digits;
     for (int x = xStart; x < xEnd; ++x) {
         // First, are we at the yDigit line?
-        if (x == xDigLine) {
+        if (x == xDigLine && (xDelim.size() + hDelim.size() > 0)) {
             int y;
             std::ostringstream oss;
             for (y = 0; y < yDigLine && y < yCount; ++y) {
-                oss << Tools::m_boxArt_h << Tools::m_boxArt_h;
+                oss << hDelim << hDelim;
             }
             if (y == yDigLine) {
-                oss << Tools::m_boxArt_x;
+                oss << xDelim;
             }
             for (; y < yCount; ++y) {
-                oss << Tools::m_boxArt_h << Tools::m_boxArt_h;
+                oss << hDelim << hDelim;
             }
             out.push_back(oss.str());
         }
@@ -984,7 +1023,7 @@ std::vector<std::string> mdn::Mdn2dBase::locked_toStringCols() const {
             oss << Tools::digitToAlpha(digits[y]);
         }
         if (y == yDigLine) {
-            oss << Tools::m_boxArt_v;
+            oss << vDelim;
         }
         for (; y < yCount; ++y) {
             oss << Tools::digitToAlpha(digits[y]);

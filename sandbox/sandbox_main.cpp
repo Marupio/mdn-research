@@ -29,19 +29,47 @@ int execute() {
     for (auto riter = slot0Disp.rbegin(); riter != slot0Disp.rend(); ++riter) {
         std::cout << *riter << '\n';
     }
+    std::cout << "Bounds = " << slot0.bounds() << std::endl;
 
-    // Mdn2d slot1 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));
-    // slot1.add(COORD_ORIGIN, -4);
-    // slot1.setValue(Coord(0, 1), 2);
-    // slot1.setValue(Coord(1, 0), -2);
-    // std::cout << "Prepare for carryover!" << std::endl;
-    // slot1.carryover(COORD_ORIGIN);
+    Mdn2d slot1 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));
+    slot1.setValue(COORD_ORIGIN, -3);
+    slot1.setValue(Coord(4, 1), 2);
+    slot1.setValue(Coord(1, 4), -2);
+    slot1.setValue(Coord(-2, -1), 1);
+    slot1.setValue(Coord(-2, -3), 1);
 
-    // // slot1.add(COORD_ORIGIN, 1000);
-    // std::vector<std::string> slot1Disp = slot1.toStringRows();
-    // for (auto riter = slot1Disp.rbegin(); riter != slot1Disp.rend(); ++riter) {
-    //     std::cout << *riter << '\n';
-    // }
+    std::vector<std::string> slot1Disp = slot1.toStringRows();
+    for (auto riter = slot1Disp.rbegin(); riter != slot1Disp.rend(); ++riter) {
+        std::cout << *riter << '\n';
+    }
+    std::cout << "Bounds = " << slot1.bounds() << std::endl;
+
+
+    Mdn2d slot2 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));
+    slot2.add(COORD_ORIGIN, -4);
+    slot2.setValue(Coord(0, 1), 2);
+    slot2.setValue(Coord(1, 0), -2);
+    std::cout << "Prepare for carryover!" << std::endl;
+    slot2.carryover(COORD_ORIGIN);
+
+    std::vector<std::string> slot2Disp = slot2.toStringRows();
+    for (auto riter = slot2Disp.rbegin(); riter != slot2Disp.rend(); ++riter) {
+        std::cout << *riter << '\n';
+    }
+    std::cout << "Bounds = " << slot2.bounds() << std::endl;
+
+    Mdn2d slot3 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));
+    slot3.setValue(Coord(10, 10), 2);
+    slot3.setValue(Coord(11, 10), -2);
+    slot3.add(Coord(12,15), 1000);
+    std::cout << "Prepare for carryover!" << std::endl;
+    // slot3.carryover(COORD_ORIGIN);
+
+    std::vector<std::string> slot3Disp = slot3.toStringRows();
+    for (auto riter = slot3Disp.rbegin(); riter != slot3Disp.rend(); ++riter) {
+        std::cout << *riter << '\n';
+    }
+    std::cout << "Bounds = " << slot3.bounds() << std::endl;
 
     // Log_Info("Mdn2d slot2 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));");
     // Mdn2d slot2 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));
@@ -109,7 +137,7 @@ int execute() {
     for (auto riter = slot5Disp.rbegin(); riter != slot5Disp.rend(); ++riter) {
         std::cout << *riter << '\n';
     }
-    Log_Info("slot5 bounds = " << slot5.bounds());
+    std::cout << "Bounds = " << slot5.bounds() << std::endl;
 
     Log_Info("NewInstance slot6");
     Mdn2d slot6 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));
@@ -121,7 +149,7 @@ int execute() {
     for (auto riter = slot6Disp.rbegin(); riter != slot6Disp.rend(); ++riter) {
         std::cout << *riter << '\n';
     }
-    Log_Info("slot6 bounds = " << slot6.bounds());
+    std::cout << "Bounds = " << slot6.bounds() << std::endl;
 
     return 0;
 }
@@ -134,7 +162,7 @@ int main() {
     std::cout <<  std::setprecision(19);
     std::cerr <<  std::setprecision(19);
     Logger& sirTalksALot = Logger::instance();
-    sirTalksALot.setLevel(LogLevel::Debug4);
+    sirTalksALot.setLevel(LogLevel::Warning);
     sirTalksALot.setOutputToFile();
 
     int returnValue = -1;

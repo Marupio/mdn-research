@@ -1,0 +1,38 @@
+
+
+ACTUALLY
+Digit getValue(Coord)
+Digits getRow(y)
+void getRow(y, digits)
+void getRow(y, x0, x1, digits)
+
+Bounds getAreaRows();
+getAreaRows(int x0, int x1, int y0, int y1)
+getAreaRows(Coord min, Coord max)
+
+
+
+// x based on bounds
+vector getRowVector(int y)
+void getRowVector(int y, vector)
+
+// fully specified area
+void getRowVector(int y, int x0, int x1, vector)
+
+getColVector(int x)
+getColVector(int x, int y0, int y1)
+
+
+// Uses bounds
+getAreaRows();
+getAreaRows(int x0, int x1, int y0, int y1)
+getAreaRows(Coord min, Coord max)
+
+getAreaCols();
+getAreaCols(int x0, int x1, int y0, int y1)
+getAreaCols(Coord min, Coord max)
+
+
+
+
+toStri

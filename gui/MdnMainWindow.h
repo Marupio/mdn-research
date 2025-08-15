@@ -3,13 +3,11 @@
 
 #include <QMainWindow>
 
-#include "../library/GlobalConfig.h"
-
 namespace Ui {
 class MdnMainWindow;
 }
 
-class MDN_API MdnMainWindow : public QMainWindow
+class MdnMainWindow : public QMainWindow
 {
     Q_OBJECT
 

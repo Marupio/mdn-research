@@ -147,7 +147,7 @@ public:
         // Assignment multiplication, *this *= rhs
         Mdn2d& operator*=(const Mdn2d& rhs);
         protected:
-            // I'm different from unlocked: I return the changed set, but the standard -= return is
+            // I'm different from unlocked: I return the changed set, but the standard *= return is
             //  just *this
             CoordSet locked_timesEquals(const Mdn2d& rhs);
         public:

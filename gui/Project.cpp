@@ -502,10 +502,12 @@ static QString joinDigitsTSV(const std::vector<Digit>& v) {
     return parts.join('\t');
 }
 
+
 static QString rectToJsonStr(const Rect& r) {
     return QString("{\"x0\": %1, \"y0\": %2, \"x1\": %3, \"y1\": %4}")
         .arg(r.left()).arg(r.bottom()).arg(r.right()).arg(r.top());
 }
+
 
 static QJsonObject rectToJson(const Rect& r) {
     QJsonObject o;
@@ -519,8 +521,12 @@ static QJsonObject rectToJson(const Rect& r) {
 } // anonymous namespace
 
 
-static void encodeRectToClipboard(const Mdn2d& src, const Rect& r, const QString& scope,
-                                  const QString& originMdnName) {
+static void encodeRectToClipboard(
+    const Mdn2d& src,
+    const Rect& r,
+    const QString& scope,
+    const QString& originMdnName
+) {
     Rect rr = r; rr.fixOrdering();
     const int x0 = rr.left();
     const int x1 = rr.right();
@@ -535,7 +541,7 @@ static void encodeRectToClipboard(const Mdn2d& src, const Rect& r, const QString
 
     for (int y = y0; y <= y1; ++y) {
         row.clear();
-        const bool ok = src.getRowRange(y, x0, x1, row);
+        const bool ok = src.getRow(y, x0, x1, row);
         if (!ok) {
             // Internal error safeguard: still build a zero row of correct width.
             row.assign(size_t(rr.width()), Digit(0));
