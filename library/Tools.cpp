@@ -16,43 +16,73 @@ const std::string mdn::Tools::m_boxArt_v = u8"\u2502"; // │
 const std::string mdn::Tools::m_boxArt_x = u8"\u253C"; // ┼
 
 
-std::string mdn::Tools::digitToAlpha(Digit value, std::string pos, std::string neg) {
-    std::string ret;
+std::string mdn::Tools::digitToAlpha(
+    Digit value,
+    bool alphaNumerics,
+    std::string pos,
+    std::string neg
+) {
+    std::string prefix;
     if (value < 0) {
-        ret += neg;
+        prefix += neg;
         value = -value;
     } else {
-        ret += pos;
+        prefix += pos;
     }
-    if (value >= 0 && value <= 9) {
-        ret += char('0' + value);
-    } else if (value >= 10 && value <= 31) {
-        ret += char('A' + (value - 10));
+    if (value >= 0 && value <= 31) {
+        if (alphaNumerics) {
+            return prefix + m_digToAlpha[value];
+        } else {
+            int intVal = static_cast<int>(value);
+            static const int ten = 10;
+            int tens = intVal%ten;
+            int ones = intVal/ten;
+            if (tens == 0) {
+                std::string ret = " " + prefix + std::to_string(ones);
+                return ret;
+            }
+            std::string ret = prefix + std::to_string(tens) + std::to_string(ones);
+            return ret;
+        }
     } else {
     #ifdef MDN_DEBUG
         throw std::out_of_range(
             "digitToAlpha: value out of range (0..31): " + std::to_string(value)
         );
     #else
-        ret = "??"; // fallback for release builds
+        return "??"; // fallback for release builds
     #endif
     }
-    return ret;
 }
 
 
-std::string mdn::Tools::digitToAlpha(int value, std::string pos, std::string neg) {
-    return digitToAlpha(Digit(value), pos, neg);
+std::string mdn::Tools::digitToAlpha(
+    int value,
+    bool alphaNumerics,
+    std::string pos,
+    std::string neg
+) {
+    return digitToAlpha(Digit(value), alphaNumerics, pos, neg);
 }
 
 
-std::string mdn::Tools::digitToAlpha(long value, std::string pos, std::string neg) {
-    return digitToAlpha(Digit(value), pos, neg);
+std::string mdn::Tools::digitToAlpha(
+    long value,
+    bool alphaNumerics,
+    std::string pos,
+    std::string neg
+) {
+    return digitToAlpha(Digit(value), alphaNumerics, pos, neg);
 }
 
 
-std::string mdn::Tools::digitToAlpha(long long value, std::string pos, std::string neg) {
-    return digitToAlpha(Digit(value), pos, neg);
+std::string mdn::Tools::digitToAlpha(
+    long long value,
+    bool alphaNumerics,
+    std::string pos,
+    std::string neg
+) {
+    return digitToAlpha(Digit(value), alphaNumerics, pos, neg);
 }
 
 

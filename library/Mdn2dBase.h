@@ -183,42 +183,39 @@ public:
             protected: Digit locked_getValue(const Coord& xy) const; public:
 
             // Assembles the row at the given y index value, spanning the x bounds of full MDN
-            std::vector<Digit> getRow(int y) const;
-            protected: std::vector<Digit> locked_getRow(int y) const; public:
+            VecDigit getRow(int y) const;
+            protected: VecDigit locked_getRow(int y) const; public:
 
             // Assembles the row at the given y index value, spanning the x bounds of full MDN
-            void getRow(int y, std::vector<Digit>& out) const;
-            protected: void locked_getRow(int y, std::vector<Digit>& out) const; public:
+            void getRow(int y, VecDigit& out) const;
+            protected: void locked_getRow(int y, VecDigit& out) const; public:
 
             // Write out a continuous range for a row, from x0 to x1, inclusive.
             // out.size() becomes (x1 - x0 + 1).
-            void getRow(int y, int x0, int x1, std::vector<mdn::Digit>& out) const;
+            void getRow(int y, int x0, int x1, VecDigit& out) const;
             protected:
-            void locked_getRow(int y, int x0, int x1, std::vector<mdn::Digit>& out) const;
+            void locked_getRow(int y, int x0, int x1, VecDigit& out) const;
             public:
 
             // Write out a continuous range for a rows covering an area from Coord c0 to Coord c1
             //  Returns bounds of output digits
             Rect getAreaRows(VecVecDigit& out) const;
-            protected:
-            Rect locked_getAreaRows(VecVecDigit& out) const;
-            public:
 
             // Write out a continuous range for a rows covering an area from Coord c0 to Coord c1
             //  Returns bounds of output digits
-            void getAreaRows(const Coord& c0, const Coord& c1, VecVecDigit& out) const;
+            void getAreaRows(const Rect& window, VecVecDigit& out) const;
             protected:
-            void locked_getAreaRows(const Coord& c0, const Coord& c1, VecVecDigit& out) const;
+            void locked_getAreaRows(const Rect& window, VecVecDigit& out) const;
             public:
 
 
             // Assembles the col at the given x index value, spanning the y bounds of full MDN
-            std::vector<Digit> getCol(int x) const;
-            protected: std::vector<Digit> locked_getCol(int x) const; public:
+            VecDigit getCol(int x) const;
+            protected: VecDigit locked_getCol(int x) const; public:
 
             // Assembles the col at the given x index value, spanning the y bounds of full MDN
-            void getCol(int x, std::vector<Digit>& out) const;
-            protected: void locked_getCol(int x, std::vector<Digit>& out) const; public:
+            void getCol(int x, VecDigit& out) const;
+            protected: void locked_getCol(int x, VecDigit& out) const; public:
 
 
         // *** Setters
@@ -254,50 +251,124 @@ public:
             public:
 
             // Write a contiguous row back in one call. Interprets 0 as "setToZero".
-            void setRowRange(int y, int x0, const std::vector<mdn::Digit>& row);
+            void setRowRange(int y, int x0, const VecDigit& row);
             protected:
-                void locked_setRowRange(int y, int x0, const std::vector<mdn::Digit>& row);
+                void locked_setRowRange(int y, int x0, const VecDigit& row);
             public:
 
 
 
-        // *** Conversion / display
+        // *** Conversion to string
+        //  These functions convert the Mdn2d or portions of it to human-readable ascii text.  Some
+        //  common parameters include:
+        //      * hDelim: horizontal delimiter, for use at the 0 digit line, e.g. ─
+        //      * vDelim: vertical delimiter, for use at the 0 digit vertical line, e.g. │
+        //      * xDelim: cross delimiter, for use at the origin, where the two lines meet, e.g. ┼
+        //      * enableAlphaNumerics: when true, converts all digits to a single alphanumeric
+        //          character, 0-9, a, b, c ..., see Tools::digitToAlpha
+        //      * window: the rectangular area to include in the view, padding with zeros when it
+        //          extends beyond the bounds of this number
 
-            // Converts the MDN to a human-readable string.
+            // Converts the full MDN to a human-readable string
             std::string toString(
+                bool enableAlphaNumerics=true,
                 std::string hDelim=Tools::m_boxArt_h,
                 std::string vDelim=Tools::m_boxArt_v,
-                std::string xDelim=Tools::m_boxArt_x
+                std::string xDelim=Tools::m_boxArt_x,
+                std::string negStr=Tools::m_boxArt_h,
+                std::string posStr=" "
             ) const;
             protected: std::string locked_toString(
+                bool enableAlphaNumerics=true,
                 std::string hDelim=Tools::m_boxArt_h,
                 std::string vDelim=Tools::m_boxArt_v,
-                std::string xDelim=Tools::m_boxArt_x
+                std::string xDelim=Tools::m_boxArt_x,
+                std::string negStr=Tools::m_boxArt_h,
+                std::string posStr=" "
+            ) const; public:
+
+            // Converts the full MDN to a human-readable string
+            std::string toString(
+                const Rect& window,
+                bool enableAlphaNumerics=true,
+                std::string hDelim=Tools::m_boxArt_h,
+                std::string vDelim=Tools::m_boxArt_v,
+                std::string xDelim=Tools::m_boxArt_x,
+                std::string negStr=Tools::m_boxArt_h,
+                std::string posStr=" "
+            ) const;
+            protected: std::string locked_toString(
+                const Rect& window,
+                bool enableAlphaNumerics=true,
+                std::string hDelim=Tools::m_boxArt_h,
+                std::string vDelim=Tools::m_boxArt_v,
+                std::string xDelim=Tools::m_boxArt_x,
+                std::string negStr=Tools::m_boxArt_h,
+                std::string posStr=" "
             ) const; public:
 
             // Converts the MDN to an array of strings, representing rows
             std::vector<std::string> toStringRows(
+                bool enableAlphaNumerics=true,
                 std::string hDelim=Tools::m_boxArt_h,
                 std::string vDelim=Tools::m_boxArt_v,
-                std::string xDelim=Tools::m_boxArt_x
+                std::string xDelim=Tools::m_boxArt_x,
+                std::string negStr=Tools::m_boxArt_h,
+                std::string posStr=" "
             ) const;
             protected: std::vector<std::string> locked_toStringRows(
+                bool enableAlphaNumerics=true,
                 std::string hDelim=Tools::m_boxArt_h,
                 std::string vDelim=Tools::m_boxArt_v,
-                std::string xDelim=Tools::m_boxArt_x
+                std::string xDelim=Tools::m_boxArt_x,
+                std::string negStr=Tools::m_boxArt_h,
+                std::string posStr=" "
+            ) const; public:
+
+            // Converts the MDN to an array of strings, representing rows
+            std::vector<std::string> toStringRows(
+                const Rect& window,
+                bool enableAlphaNumerics=true,
+                std::string hDelim=Tools::m_boxArt_h,
+                std::string vDelim=Tools::m_boxArt_v,
+                std::string xDelim=Tools::m_boxArt_x,
+                std::string negStr=Tools::m_boxArt_h,
+                std::string posStr=" "
+            ) const;
+            protected: std::vector<std::string> locked_toStringRows(
+                const Rect& window,
+                bool enableAlphaNumerics=true,
+                std::string hDelim=Tools::m_boxArt_h,
+                std::string vDelim=Tools::m_boxArt_v,
+                std::string xDelim=Tools::m_boxArt_x,
+                std::string negStr=Tools::m_boxArt_h,
+                std::string posStr=" "
             ) const; public:
 
             // Converts the MDN to an array of strings, representing columns
             std::vector<std::string> toStringCols(
+                bool enableAlphaNumerics=true,
                 std::string hDelim=Tools::m_boxArt_h,
                 std::string vDelim=Tools::m_boxArt_v,
-                std::string xDelim=Tools::m_boxArt_x
+                std::string xDelim=Tools::m_boxArt_x,
+                std::string negStr=Tools::m_boxArt_h,
+                std::string posStr=" "
             ) const;
             protected: std::vector<std::string> locked_toStringCols(
+                bool enableAlphaNumerics=true,
                 std::string hDelim=Tools::m_boxArt_h,
                 std::string vDelim=Tools::m_boxArt_v,
-                std::string xDelim=Tools::m_boxArt_x
+                std::string xDelim=Tools::m_boxArt_x,
+                std::string negStr=Tools::m_boxArt_h,
+                std::string posStr=" "
             ) const; public:
+
+
+        // *** Save / load
+
+            enum CommaTabSpace { Comma, Tab, Space };
+
+            void saveText(std::ostream& os, bool showAxes, CommaTabSpace delimiter) const;
 
 
         // *** Transformations
