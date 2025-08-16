@@ -260,7 +260,6 @@ public:
             public:
 
 
-
         // *** Conversion to string
         //  These functions convert the Mdn2d or portions of it to human-readable ascii text.  Some
         //  common parameters include:
@@ -420,10 +419,17 @@ public:
 
         // *** Save / load
 
-            void saveText(std::ostream& os, bool showAxes, CommaTabSpace delimiter) const;
-            protected: void locked_saveText(
-                std::ostream& os, bool showAxes, CommaTabSpace delimiter
+            void saveTextPretty(std::ostream& os, bool wideNegatives, bool alphanumeric) const;
+            protected: void locked_saveTextPretty(
+                std::ostream& os,
+                bool wideNegatives,
+                bool alphanumeric
             ) const; public:
+
+            void saveTextUtility(std::ostream& os, CommaTabSpace delim) const;
+            protected:
+                void locked_saveTextUtility(std::ostream& os, CommaTabSpace delim) const;
+            public:
 
 
         // *** Transformations

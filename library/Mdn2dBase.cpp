@@ -1253,37 +1253,42 @@ std::vector<std::string> mdn::Mdn2dBase::locked_toStringCols(
 }
 
 
-void mdn::Mdn2dBase::saveText(std::ostream& os, bool showAxes, CommaTabSpace delimiter) const {
+void mdn::Mdn2dBase::saveTextPretty(std::ostream& os,
+    bool wideNegatives,
+    bool alphanumeric
+) const {
     auto lock = lockReadOnly();
     Log_N_Debug2("");
-    locked_saveText(os, showAxes, delimiter);
+    locked_saveTextPretty(os, wideNegatives, alphanumeric);
 }
 
 
-void mdn::Mdn2dBase::locked_saveText(
+void mdn::Mdn2dBase::locked_saveTextPretty(
     std::ostream& os,
-    bool showAxes,
-    CommaTabSpace delimiter
+    bool wideNegatives,
+    bool alphanumeric
 ) const {
-
-    std::string hDelim=Tools::m_boxArt_h,
-    std::string vDelim=Tools::m_boxArt_v,
-    std::string xDelim=Tools::m_boxArt_x,
-    std::string negStr=Tools::m_boxArt_h,
-    std::string posStr=" "
-
-    std::string number = locked_toString(
-        const Rect& window,
-        bool enableAlphaNumerics=true,
-        std::string hDelim=Tools::m_boxArt_h,
-        std::string vDelim=Tools::m_boxArt_v,
-        std::string xDelim=Tools::m_boxArt_x,
-        std::string negStr=Tools::m_boxArt_h,
-        std::string posStr=" "
-    ) const;
+    std::vector<std::string> txt = locked_saveTextPrettyRows(m_bounds, wideNegatives, alphanumeric);
+    os << m_bounds << '\n';
+    for (auto riter = txt.rbegin(); riter != txt.rend(); ++riter) {
+        os << *riter << std::endl;
+    }
+}
 
 
-    os << m_bounds << std::endl;
+void mdn::Mdn2dBase::saveTextUtility(std::ostream& os, CommaTabSpace delim) const {
+    auto lock = lockReadOnly();
+    Log_N_Debug2("");
+    locked_saveTextUtility(os, delim);
+}
+
+
+void mdn::Mdn2dBase::locked_saveTextUtility(std::ostream& os, CommaTabSpace delim) const {
+    std::vector<std::string> txt = locked_saveTextUtilityRows(m_bounds, delim);
+    os << m_bounds << '\n';
+    for (auto riter = txt.rbegin(); riter != txt.rend(); ++riter) {
+        os << *riter << std::endl;
+    }
 }
 
 
