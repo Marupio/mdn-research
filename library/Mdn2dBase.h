@@ -13,11 +13,13 @@
 #include "MdnObserver.h"
 #include "PrecisionStatus.h"
 #include "Rect.h"
+#include "TextOptions.h"
 
 namespace mdn {
 
 class Mdn2d;
 class Project;
+struct TextWriteOptions;
 
 // Digit layer of 2d multi dimensional numbers, establishes:
 //  * 2-dimensional digit representation
@@ -27,6 +29,9 @@ class MDN_API Mdn2dBase {
 
     // *** Friends
     friend class Project;
+
+    // This guy handles input and output, mostly text-related
+    friend class Mdn2dIO;
 
 
 protected:
@@ -98,10 +103,6 @@ public:
 
     using WritableLock = std::unique_lock<std::shared_mutex>;
     using ReadOnlyLock = std::shared_lock<std::shared_mutex>;
-
-    // Delimiter types
-    enum CommaTabSpace { Comma, Tab, Space };
-    static std::string toString(CommaTabSpace delim);
 
 
     // *** Static functions
@@ -260,6 +261,16 @@ public:
             public:
 
 
+        // *** Mdn2dIO functionality hooks
+
+        // Stream ops delegate to Mdn2dIO (defined in free operators in Mdn2dIO.h)
+
+        // Convenience: return lines for pretty/utility output via IO options
+        // (declared here; defined in Mdn2dBase.cpp to avoid circular includes)
+        std::vector<std::string> toStringRows(const TextWriteOptions& opt) const;
+        std::vector<std::string> toStringCols(const TextWriteOptions& opt) const;
+
+
         // *** Conversion to string
         //  These functions convert the Mdn2d or portions of it to human-readable ascii text.  Some
         //  common parameters include:
@@ -400,6 +411,7 @@ public:
 
             // Converts the MDN to an array of strings, representing columns
             std::vector<std::string> toStringCols(
+                const Rect& window,
                 bool enableAlphaNumerics=true,
                 CommaTabSpace delim=CommaTabSpace::Space,
                 std::string hDelim=Tools::m_boxArt_h,
@@ -408,6 +420,7 @@ public:
                 std::string negStr=Tools::m_boxArt_h
             ) const;
             protected: std::vector<std::string> locked_toStringCols(
+                const Rect& widnow,
                 bool enableAlphaNumerics=true,
                 CommaTabSpace delim=CommaTabSpace::Space,
                 std::string hDelim=Tools::m_boxArt_h,

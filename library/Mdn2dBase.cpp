@@ -11,6 +11,7 @@
 #include "GlobalConfig.h"
 #include "Logger.h"
 #include "Mdn2d.h"
+#include "Mdn2dIO.h"
 #include "MdnException.h"
 #include "Tools.h"
 
@@ -80,18 +81,6 @@ std::string mdn::Mdn2dBase::locked_generateCopyName(const std::string& nameIn) {
     }
     Log_Debug4_T("Returning " << candidate);
     return candidate;
-}
-
-
-std::string mdn::Mdn2dBase::toString(CommaTabSpace delim) {
-    switch (delim) {
-        case CommaTabSpace::Comma:
-            return ",";
-        case CommaTabSpace::Tab:
-            return "\t";
-        case CommaTabSpace::Space:
-            return " ";
-    }
 }
 
 
@@ -896,6 +885,15 @@ void mdn::Mdn2dBase::locked_setRowRange(int y, int x0, const VecDigit& row) {
 }
 
 
+std::vector<std::string> mdn::Mdn2dBase::toStringRows(const TextWriteOptions& opt) const {
+    return mdn::Mdn2dIO::toStringRows(*this, opt);
+}
+
+std::vector<std::string> mdn::Mdn2dBase::toStringCols(const TextWriteOptions& opt) const {
+    return mdn::Mdn2dIO::toStringCols(*this, opt);
+}
+
+
 std::vector<std::string> mdn::Mdn2dBase::saveTextPrettyRows(
     bool wideNegatives, bool alphanumeric
 ) const {
@@ -929,7 +927,6 @@ std::vector<std::string> mdn::Mdn2dBase::locked_saveTextPrettyRows(
     Log_N_Debug3_T("");
     return result;
 }
-
 
 std::vector<std::string> mdn::Mdn2dBase::saveTextUtilityRows(CommaTabSpace delim) const {
     auto lock = lockReadOnly();
@@ -1084,7 +1081,7 @@ std::vector<std::string> mdn::Mdn2dBase::locked_toStringRows(
         << "    yRange = (" << yStart << " .. " << yEnd << "), " << yCount << " rows"
     );
 
-    std::string delimStr = toString(delim);
+    std::string delimStr = mdn::toString(delim);
 
     // Pad with spaces only when delim is Space
     int signAndDigitPadding = 0;
@@ -1146,10 +1143,10 @@ std::vector<std::string> mdn::Mdn2dBase::locked_toStringRows(
                     signAndDigitPadding
                 )
             );
-            oss << digStr << delim;
+            oss << digStr << delimStr;
         }
         if (x == xDigLine) {
-            oss << vDelim << delim;
+            oss << vDelim << delimStr;
         }
         for (; x < xCount; ++x) {
             std::string digStr(
@@ -1161,7 +1158,7 @@ std::vector<std::string> mdn::Mdn2dBase::locked_toStringRows(
                     signAndDigitPadding
                 )
             );
-            oss << digStr << delim;
+            oss << digStr << delimStr;
         }
         out.push_back(oss.str());
     } // end y loop
@@ -1170,6 +1167,7 @@ std::vector<std::string> mdn::Mdn2dBase::locked_toStringRows(
 
 
 std::vector<std::string> mdn::Mdn2dBase::toStringCols(
+    const Rect& window,
     bool enableAlphaNumerics,
     CommaTabSpace delim,
     std::string hDelim,
@@ -1179,37 +1177,48 @@ std::vector<std::string> mdn::Mdn2dBase::toStringCols(
 ) const {
     auto lock = lockReadOnly();
     Log_N_Debug2("Converting columns to string array");
-    return locked_toStringCols();
+    return locked_toStringCols(
+        window, enableAlphaNumerics, delim, hDelim, vDelim, xDelim, negStr
+    );
 }
 
 
 std::vector<std::string> mdn::Mdn2dBase::locked_toStringCols(
+    const Rect& window,
     bool enableAlphaNumerics,
-    CommaTabSpace delim,
+    mdn::CommaTabSpace delim,
     std::string hDelim,
     std::string vDelim,
     std::string xDelim,
     std::string negStr
 ) const {
-    int xStart = m_bounds.min().x();
-    int xEnd = m_bounds.max().x()+1;
+    int xStart = window.min().x();
+    int xEnd = window.max().x()+1;
     int xCount = xEnd - xStart;
 
-    int yStart = m_bounds.min().y();
-    int yEnd = m_bounds.max().y()+1;
+    int yStart = window.min().y();
+    int yEnd = window.max().y()+1;
     int yCount = yEnd - yStart;
 
-    std::string delimStr = toString(delim);
-    std::string posStr = "";
-    if (delim == CommaTabSpace::Space) {
-        posStr = " ";
-    }
-
     Log_N_Debug3(
-        "Converting columns to an array of strings:\n"
-        << "    xRange = (" << xStart << " .. " << xEnd << "), " << xCount << " columns,\n"
-        << "    yRange = (" << yStart << " .. " << yEnd << "), " << yCount << " elements"
+        "Converting rows to an array of strings:\n"
+        << "    yRange = (" << yStart << " .. " << yEnd << "), " << yCount << " columns,"
+        << "    xRange = (" << xStart << " .. " << xEnd << "), " << xCount << " elements\n"
     );
+
+    std::string delimStr = mdn::toString(delim);
+
+    // Pad with spaces only when delim is Space
+    int signAndDigitPadding = 0;
+    if (delim == CommaTabSpace::Space) {
+        if (!enableAlphaNumerics && m_config.base() > 10) {
+            // sign and digit may be 3 characters: e.g. -12
+            signAndDigitPadding = 3;
+        } else {
+            // sign and digit will never exceed 2 characters: e.g. -c
+            signAndDigitPadding = 2;
+        }
+    }
 
     // DigLine - digit line appears before what index in 'digits' array below
     int xDigLine = 0;
@@ -1219,15 +1228,25 @@ std::vector<std::string> mdn::Mdn2dBase::locked_toStringCols(
     out.reserve(xCount+1);
     VecDigit digits;
     for (int x = xStart; x < xEnd; ++x) {
-        // First, are we at the yDigit line?
-        if (x == xDigLine && (xDelim.size() + hDelim.size() > 0)) {
+        // First, are we at the xDigit line (and does it matter)?
+        if (x == xDigLine && (hDelim.size() > 0)) {
+            std::string hdAssemble;
+            if (signAndDigitPadding > 0) {
+                for (int i = 0; i <= signAndDigitPadding; ++i) {
+                    hdAssemble += hDelim;
+                }
+            } else {
+                // No character alignment, default to width of 2
+                hdAssemble = hDelim + hDelim;
+            }
             int y;
             std::ostringstream oss;
             for (y = 0; y < yDigLine && y < yCount; ++y) {
-                oss << hDelim << hDelim;
+                oss << hdAssemble;
             }
             if (y == yDigLine) {
-                oss << xDelim;
+                oss << xDelim << hDelim;
+                // extra 'hDelim' is to account for adding a delim after the vertical digit line
             }
             for (; y < yCount; ++y) {
                 oss << hDelim << hDelim;
@@ -1235,17 +1254,36 @@ std::vector<std::string> mdn::Mdn2dBase::locked_toStringCols(
             out.push_back(oss.str());
         }
         locked_getCol(x, digits);
+
         assert(digits.size() == yCount && "Columns are not the expected size");
         std::ostringstream oss;
         int y;
         for (y = 0; y < yDigLine && y < yCount; ++y) {
-            oss << Tools::digitToAlpha(digits[y], enableAlphaNumerics, posStr, negStr);
+            std::string digStr(
+                Tools::digitToAlpha(
+                    digits[y],
+                    enableAlphaNumerics,
+                    "",
+                    negStr,
+                    signAndDigitPadding
+                )
+            );
+            oss << digStr << delimStr;
         }
         if (y == yDigLine) {
-            oss << vDelim;
+            oss << vDelim << delimStr;
         }
         for (; y < yCount; ++y) {
-            oss << Tools::digitToAlpha(digits[y], enableAlphaNumerics, posStr, negStr);
+            std::string digStr(
+                Tools::digitToAlpha(
+                    digits[y],
+                    enableAlphaNumerics,
+                    "",
+                    negStr,
+                    signAndDigitPadding
+                )
+            );
+            oss << digStr << delimStr;
         }
         out.push_back(oss.str());
     } // end y loop
