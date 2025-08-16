@@ -116,16 +116,32 @@ public:
 
     // Converts a value between -32 and 32 to -V,..,-C,-B,-A,-9,-8, .. ,-1,0,1,...,8,9,A,B,...,V
     static std::string digitToAlpha(
-        Digit value, bool alphaNumerics=true, std::string pos=" ", std::string neg=m_boxArt_h
+        Digit value,
+        bool alphaNumerics=true,
+        std::string pos=" ",
+        std::string neg=m_boxArt_h,
+        int padSpacesToWidth=0
     );
     static std::string digitToAlpha(
-        int value, bool alphaNumerics=true, std::string pos=" ", std::string neg=m_boxArt_h
+        int value,
+        bool alphaNumerics=true,
+        std::string pos=" ",
+        std::string neg=m_boxArt_h,
+        int padSpacesToWidth=0
     );
     static std::string digitToAlpha(
-        long value, bool alphaNumerics=true, std::string pos=" ", std::string neg=m_boxArt_h
+        long value,
+        bool alphaNumerics=true,
+        std::string pos=" ",
+        std::string neg=m_boxArt_h,
+        int padSpacesToWidth=0
     );
     static std::string digitToAlpha(
-        long long value, bool alphaNumerics=true, std::string pos=" ", std::string neg=m_boxArt_h
+        long long value,
+        bool alphaNumerics=true,
+        std::string pos=" ",
+        std::string neg=m_boxArt_h,
+        int padSpacesToWidth=0
     );
 
     // Convert a std::vector<Digit> to a string

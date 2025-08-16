@@ -16,11 +16,26 @@ const std::string mdn::Tools::m_boxArt_v = u8"\u2502"; // │
 const std::string mdn::Tools::m_boxArt_x = u8"\u253C"; // ┼
 
 
+namespace { // anonymous
+
+std::string prefixSpacesToWidth(const std::string& input, int width) {
+    if (width <= 0 || input.size() >= static_cast<std::size_t>(width))
+        return input;
+
+    const auto w = static_cast<std::size_t>(width);
+    std::string out(w, ' ');
+    std::copy(input.begin(), input.end(), out.begin() + (w - input.size()));
+    return out;
+}
+
+} // end anonymous namespace
+
 std::string mdn::Tools::digitToAlpha(
     Digit value,
     bool alphaNumerics,
     std::string pos,
-    std::string neg
+    std::string neg,
+    int padSpacesToWidth
 ) {
     std::string prefix;
     if (value < 0) {
@@ -29,20 +44,21 @@ std::string mdn::Tools::digitToAlpha(
     } else {
         prefix += pos;
     }
+    std::string ret;
     if (value >= 0 && value <= 31) {
         if (alphaNumerics) {
-            return prefix + m_digToAlpha[value];
+            ret = prefix + m_digToAlpha[value];
         } else {
+            // May have to break value into pieces, maximum two digits
             int intVal = static_cast<int>(value);
             static const int ten = 10;
             int tens = intVal%ten;
             int ones = intVal/ten;
             if (tens == 0) {
-                std::string ret = " " + prefix + std::to_string(ones);
-                return ret;
+                ret = " " + prefix + std::to_string(ones);
+            } else {
+                ret = prefix + std::to_string(tens) + std::to_string(ones);
             }
-            std::string ret = prefix + std::to_string(tens) + std::to_string(ones);
-            return ret;
         }
     } else {
     #ifdef MDN_DEBUG
@@ -50,9 +66,10 @@ std::string mdn::Tools::digitToAlpha(
             "digitToAlpha: value out of range (0..31): " + std::to_string(value)
         );
     #else
-        return "??"; // fallback for release builds
+        ret = "??"; // fallback for release builds
     #endif
     }
+    return prefixSpacesToWidth(ret, padSpacesToWidth);
 }
 
 
@@ -60,9 +77,10 @@ std::string mdn::Tools::digitToAlpha(
     int value,
     bool alphaNumerics,
     std::string pos,
-    std::string neg
+    std::string neg,
+    int padSpacesToWidth
 ) {
-    return digitToAlpha(Digit(value), alphaNumerics, pos, neg);
+    return digitToAlpha(Digit(value), alphaNumerics, pos, neg, padSpacesToWidth);
 }
 
 
@@ -70,9 +88,10 @@ std::string mdn::Tools::digitToAlpha(
     long value,
     bool alphaNumerics,
     std::string pos,
-    std::string neg
+    std::string neg,
+    int padSpacesToWidth
 ) {
-    return digitToAlpha(Digit(value), alphaNumerics, pos, neg);
+    return digitToAlpha(Digit(value), alphaNumerics, pos, neg, padSpacesToWidth);
 }
 
 
@@ -80,9 +99,10 @@ std::string mdn::Tools::digitToAlpha(
     long long value,
     bool alphaNumerics,
     std::string pos,
-    std::string neg
+    std::string neg,
+    int padSpacesToWidth
 ) {
-    return digitToAlpha(Digit(value), alphaNumerics, pos, neg);
+    return digitToAlpha(Digit(value), alphaNumerics, pos, neg, padSpacesToWidth);
 }
 
 
