@@ -19,8 +19,9 @@ const std::string mdn::Tools::BoxArtStr_x = u8"\u253C"; // ┼
 namespace { // anonymous
 
 std::string prefixSpacesToWidth(const std::string& input, int width) {
-    if (width <= 0 || input.size() >= static_cast<std::size_t>(width))
+    if (width <= 0 || input.size() >= static_cast<std::size_t>(width)) {
         return input;
+    }
 
     const auto w = static_cast<std::size_t>(width);
     std::string out(w, ' ');
@@ -55,7 +56,11 @@ std::string mdn::Tools::digitToAlpha(
             int tens = intVal%ten;
             int ones = intVal/ten;
             if (tens == 0) {
-                ret = " " + prefix + std::to_string(ones);
+                if (padSpacesToWidth) {
+                    ret = " " + prefix + std::to_string(ones);
+                } else {
+                    ret = prefix + std::to_string(ones);
+                }
             } else {
                 ret = prefix + std::to_string(tens) + std::to_string(ones);
             }

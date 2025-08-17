@@ -270,9 +270,12 @@ std::vector<std::string> mdn::Mdn2dIO::toStringRows(
             }
             lines.push_back(oss.str());
         }
-    Log_Debug3_H("getRow dispatch(" << y << "," << x0 << "," << x1 << ", row)");
+        Log_Debug3_H("getRow dispatch(" << y << "," << x0 << "," << x1 << ", row)");
         src.locked_getRow(y, x0, x1, row);
-    Log_Debug3_T("row.size()=" << row.size() << ", xCount=" << xCount << ", row.size()==xCount=" << (row.size() == xCount));
+        Log_Debug3_T(
+            "row.size()=" << row.size() << ", xCount=" << xCount << ", row.size()==xCount="
+                << (row.size() == xCount)
+        );
         Assert(row.size() == xCount, "Rows are not the expected size");
         std::ostringstream line;
 
@@ -291,7 +294,7 @@ std::vector<std::string> mdn::Mdn2dIO::toStringRows(
             );
             line << digStr << delimStr;
         }
-        if (i == xDigLine) {
+        if (hasAxes && (i == xDigLine)) {
             line << V << delimStr;
         }
         for (; i < xCount; ++i) {
@@ -321,10 +324,10 @@ std::vector<std::string> mdn::Mdn2dIO::toStringCols(
     Log_Debug3_H(src.getName());
     Rect b = src.hasBounds() ? src.bounds() : Rect::GetInvalid();
     Rect w = opt.window.isValid() ? opt.window : b;
-    std::vector<std::string> cols;
+    std::vector<std::string> lines;
     if (!w.isValid()) {
         Log_Debug3_T("Empty window");
-        return cols;
+        return lines;
     }
 
     const int x0 = w.left();
@@ -332,41 +335,141 @@ std::vector<std::string> mdn::Mdn2dIO::toStringCols(
     const int y0 = w.bottom();
     const int y1 = w.top();
 
-    // Build a buffer of rows once, then emit columns
-    std::vector<std::vector<Digit>> rowsBuf;
-    rowsBuf.reserve(static_cast<std::size_t>(w.height()));
+    const int xCount = w.width();
+    const int yCount = w.height();
 
-    std::vector<Digit> row;
-    row.reserve(static_cast<std::size_t>(w.width()));
+    Log_Debug3(
+        "w=" << w
+        << ", x:(" << x0 << "," << x1 << ")=" << xCount
+        << ", y::(" << y0 << "," << y1 << ")=" << yCount
+    );
 
-    Log_Debug3("Converting windowed area " << w << " to string output.");
-    for (int y = y0; y <= y1; ++y) {
-        row.clear();
-        src.getRow(y, x0, x1, row);
-        rowsBuf.push_back(row);
+    std::string H = "";
+    std::string V = "";
+    std::string X = "";
+    bool hasAxes = false;
+    switch (opt.axes) {
+        case AxesOutput::None: {
+            break;
+        }
+        case AxesOutput::BoxArt: {
+            hasAxes = true;
+            H = Tools::BoxArtStr_h;
+            V = Tools::BoxArtStr_v;
+            X = Tools::BoxArtStr_x;
+            break;
+        }
+        case AxesOutput::Simple: {
+            hasAxes = true;
+            H = "-";
+            V = "|";
+            X = "+";
+            break;
+        }
     }
+
+    std::string delimStr = mdn::toString(opt.delim);
+
+    // Pad with spaces only when delim is Space
+    int signAndDigitPadding = 0;
+    if (opt.delim == CommaTabSpace::Space) {
+        if (!opt.alphanumeric && src.getConfig().base() > 10) {
+            // sign and digit may be 3 characters: e.g. -12
+            signAndDigitPadding = 3;
+        } else {
+            // sign and digit will never exceed 2 characters: e.g. -c
+            signAndDigitPadding = 2;
+        }
+    }
+
+    // DigLine - digit line appears before what index in 'col' array below
+    int yDigLine = -y0;
+    int xDigLine = 0;
+
+    std::string negativeStr = opt.wideNegatives? Tools::BoxArtStr_h : "-";
+
+    std::vector<Digit> col;
+    Log_Debug3("Reserving " << yCount);
+    col.reserve(static_cast<std::size_t>(yCount));
+
+    // I can estlablish a lock - I know people, Mdn2dBase is a friend of mine
+    auto lock = src.lockReadOnly();
+    // Now only use locked_* and internal_* functions
 
     for (int x = x0; x <= x1; ++x) {
-        std::vector<int> col;
-        col.reserve(static_cast<std::size_t>(w.height()));
-        for (int y = y0; y <= y1; ++y) {
-            Digit d = rowsBuf[static_cast<std::size_t>(y - y0)][static_cast<std::size_t>(x - x0)];
-            if (opt.alphanumeric && std::abs(static_cast<int>(d)) < 36) {
-                int v = std::abs(static_cast<int>(d));
-                char ch = (v < 10) ? static_cast<char>('0' + v) : static_cast<char>('a' + (v - 10));
-                // represent alphas numerically for columns to keep delimited shape
-                int signedVal = (d < 0) ? -v : v;
-                col.push_back(signedVal);
+        // First, if axes are on, are we at the xDigit line?
+        Log_Debug3("x=" << x);
+        if (hasAxes && (x == xDigLine)) {
+            std::string hAssemble;
+            if (signAndDigitPadding > 0) {
+                for (int i = 0; i <= signAndDigitPadding; ++i) {
+                    hAssemble += H;
+                }
             } else {
-                col.push_back(static_cast<int>(d));
+                // No character alignment, default to width of 2
+                hAssemble = H + H;
             }
+            // i indexes along a col i=0 where y=y0, i.e. y = y0+i
+            int i;
+            std::ostringstream oss;
+            for (i = 0; i < yDigLine && i < yCount; ++i) {
+                oss << hAssemble;
+            }
+            if (i == yDigLine) {
+                oss << X << H;
+                // extra 'H' is to account for adding a delimeter after the vertical digit line
+            }
+            for (; i < yCount; ++i) {
+                oss << hAssemble;
+            }
+            lines.push_back(oss.str());
         }
-        cols.push_back(joinDelimited(col, delimChar(opt.delim)));
-    }
+        Log_Debug3_H("getCol dispatch(" << x << "," << x0 << "," << x1 << ", col)");
+        src.locked_getCol(x, y0, y1, col);
+        Log_Debug3_T(
+            "col.size()=" << col.size() << ", yCount=" << yCount << ", col.size()==yCount="
+                << (col.size() == yCount)
+        );
+        Assert(col.size() == yCount, "Cols are not the expected size");
+        std::ostringstream line;
 
-    Log_Debug3_T("returning " << cols.size() << " lines of text");
-    return cols;
+        // Now indexing by position in the col array
+        int i;
+        for (i = 0; i < yDigLine && i < yCount; ++i) {
+            Log_Debug3("i=" << i << ", col.size() = " << col.size());
+            std::string digStr(
+                Tools::digitToAlpha(
+                    col[i],
+                    opt.alphanumeric,
+                    "",
+                    negativeStr,
+                    signAndDigitPadding
+                )
+            );
+            line << digStr << delimStr;
+        }
+        if (hasAxes && (i == yDigLine)) {
+            line << V << delimStr;
+        }
+        for (; i < yCount; ++i) {
+            Log_Debug3("i=" << i << ", yCount=" << yCount << ", col.size() = " << col.size());
+            std::string digStr(
+                Tools::digitToAlpha(
+                    col[i],
+                    opt.alphanumeric,
+                    "",
+                    negativeStr,
+                    signAndDigitPadding
+                )
+            );
+            line << digStr << delimStr;
+        }
+        lines.push_back(line.str());
+    } // end x loop
+    Log_Debug3_T("returning " << lines.size() << " lines of text");
+    return lines;
 }
+
 
 void mdn::Mdn2dIO::saveTextUtility(
     const Mdn2dBase& src,

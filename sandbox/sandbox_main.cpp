@@ -68,7 +68,7 @@ static void populateSample(Mdn2dBase& m) {
     m.setConfig(newCfg);
 
     // Define a 7x5 rectangle from (-2,-1) to (4,3)
-    const Rect r(-2, -1, 4, 3, /*fixOrdering*/true);
+    const Rect r(-2, -1, 4, 3, true);
 
     // y = -1
     {
@@ -160,11 +160,28 @@ int main() {
     populateSample(a);
     Log_Debug_T("");
 
+    // Pretty rows (box-art axes, alphanumerics, wide negatives)
+    {
+        printSection("Pretty rows (DefaultPretty)");
+        TextWriteOptions opt = TextWriteOptions::DefaultPretty();
+        auto lines = Mdn2dIO::toStringRows(a, opt);
+        printLines(lines, true);
+
+        std::cout << '\n';
+
+        std::vector<std::string> rows(a.toStringRows());
+        std::vector<std::string>::const_iterator iter;
+        for (auto riter = rows.rbegin(); riter != rows.rend(); ++riter) {
+            std::cout << *riter << '\n';
+        }
+        std::cout << "Bounds = " << a.bounds() << std::endl;
+    }
     // Utility rows with various delimiters
     {
     Log_Debug_H("");
         printSection("Utility rows (space)");
-        auto lines = Mdn2dIO::toStringRows(a, TextWriteOptions::DefaultUtility(CommaTabSpace::Space));
+        auto lines =
+            Mdn2dIO::toStringRows(a, TextWriteOptions::DefaultUtility(CommaTabSpace::Space));
         printLines(lines, true);
     Log_Debug_T("");
 
@@ -196,7 +213,7 @@ int main() {
     Log_Debug_H("");
         printSection("Pretty rows (windowed -1..2 x 0..2)");
         TextWriteOptions opt = TextWriteOptions::DefaultPretty();
-        opt.window = Rect(-1, 0, 2, 2, /*fixOrdering*/true);
+        opt.window = Rect(-1, 0, 2, 2, true);
         auto lines = Mdn2dIO::toStringRows(a, opt);
         printLines(lines, true);
     Log_Debug_T("");
@@ -207,10 +224,23 @@ int main() {
     Log_Debug_H("");
         printSection("Round-trip: pretty text");
         Mdn2d b = roundTripTextPretty(a);
-        bool same = equalByUtilityText(a, b);
+        bool sameA = equalByUtilityText(a, b);
+        bool sameB = (a == b);
         Log_Info(
-            "" << (same ? "PASS" : "FAIL") << " — pretty text round-trip equals by utility rows"
+            "\n"
+            << (sameA ? "PASS" : "FAIL") << " — pretty text round-trip equals by utility rows\n"
+            << (sameB ? "PASS" : "FAIL") << " — pretty text round-trip equals by utility rows\n"
         );
+        {
+            TextWriteOptions opt = TextWriteOptions::DefaultPretty();
+            auto lines = Mdn2dIO::toStringRows(a, opt);
+            printLines(lines, true);
+        }
+        {
+            TextWriteOptions opt = TextWriteOptions::DefaultPretty();
+            auto lines = Mdn2dIO::toStringRows(b, opt);
+            printLines(lines, true);
+        }
 
         // Show the blob that was parsed (optional)
         Log_Info("" << "\n[pretty blob parsed]\n" << prettyBlob(a));

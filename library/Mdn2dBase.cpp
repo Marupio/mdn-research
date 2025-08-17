@@ -1142,7 +1142,7 @@ std::vector<std::string> mdn::Mdn2dBase::locked_toStringRows(
             for (x = 0; x < xDigLine && x < xCount; ++x) {
                 oss << hdAssemble;
             }
-            if (x == xDigLine) {
+            if (hDelim.size() > 0 && (x == xDigLine)) {
                 oss << xDelim << hDelim;
                 // extra 'hDelim' is to account for adding a delim after the vertical digit line
             }
