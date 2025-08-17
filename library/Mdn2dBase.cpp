@@ -866,15 +866,15 @@ bool mdn::Mdn2dBase::locked_setValue(const Coord& xy, long long value) {
 }
 
 
-void mdn::Mdn2dBase::setRowRange(int y, int x0, const VecDigit& row) {
+void mdn::Mdn2dBase::setRow(int y, int x0, const VecDigit& row) {
     auto lock = lockWriteable();
     Log_N_Debug2_H("y=" << y << ",x0=" << x0);
-    locked_setRowRange(y, x0, row);
+    locked_setRow(y, x0, row);
     Log_N_Debug2_T("");
 }
 
 
-void mdn::Mdn2dBase::locked_setRowRange(int y, int x0, const VecDigit& row) {
+void mdn::Mdn2dBase::locked_setRow(int y, int x0, const VecDigit& row) {
     Log_N_Debug3_H("y=" << y << ",x0=" << x0);
     Coord cursor(x0, y);
     for (int i = 0; i < row.size(); ++i) {

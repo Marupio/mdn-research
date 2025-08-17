@@ -15,7 +15,7 @@ namespace mdn {
 
 class MDN_API Mdn2dIO {
 public:
-    // -------- Text → strings --------
+    // -------- Text -> strings --------
     static std::vector<std::string> toStringRows(
         const Mdn2dBase& src,
         const TextWriteOptions& opt = TextWriteOptions::DefaultPretty()
@@ -26,7 +26,7 @@ public:
         const TextWriteOptions& opt = TextWriteOptions::DefaultUtility()
     );
 
-    // -------- Text → streams (convenience wrappers) --------
+    // -------- Text -> streams (convenience wrappers) --------
     static void saveTextPretty(
         const Mdn2dBase& src,
         std::ostream& os,

@@ -752,7 +752,7 @@ bool mdn::Project::pasteOnSelection(int index) {
 
     // Overwrite rows (zeros in payload clear cells)
     for (int r = 0; r < H; ++r) {
-        dst->setRowRange(ay + r, ax, p.rows[size_t(r)]);
+        dst->setRow(ay + r, ax, p.rows[size_t(r)]);
     }
 
     return true;

@@ -255,9 +255,9 @@ public:
             public:
 
             // Write a contiguous row back in one call. Interprets 0 as "setToZero".
-            void setRowRange(int y, int x0, const VecDigit& row);
+            void setRow(int y, int x0, const VecDigit& row);
             protected:
-                void locked_setRowRange(int y, int x0, const VecDigit& row);
+                void locked_setRow(int y, int x0, const VecDigit& row);
             public:
 
 

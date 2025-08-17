@@ -759,7 +759,7 @@ void mdn::Project::pasteOnSelection(int index) {
 
     // Apply: one row at a time (zeros clear)
     for (int r = 0; r < h; ++r) {
-        targetMdn->setRowRange(ay + r, ax, p.rows[static_cast<std::size_t>(r)]);
+        targetMdn->setRow(ay + r, ax, p.rows[static_cast<std::size_t>(r)]);
     }
 }
 

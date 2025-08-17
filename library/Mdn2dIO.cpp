@@ -124,29 +124,8 @@ static char delimChar(mdn::CommaTabSpace d) {
 
 } // anonymous
 
-namespace mdn {
 
-TextWriteOptions TextWriteOptions::DefaultPretty() {
-    TextWriteOptions o;
-    o.axes = AxesOutput::BoxArt;
-    o.alphanumeric = true;
-    o.wideNegatives = true;
-    o.delim = CommaTabSpace::Space;
-    o.window = Rect::GetInvalid();
-    return o;
-}
-
-TextWriteOptions TextWriteOptions::DefaultUtility(CommaTabSpace d) {
-    TextWriteOptions o;
-    o.axes = AxesOutput::None;
-    o.alphanumeric = false;
-    o.wideNegatives = false;
-    o.delim = d;
-    o.window = Rect::GetInvalid();
-    return o;
-}
-
-std::vector<std::string> Mdn2dIO::toStringRows(
+std::vector<std::string> mdn::Mdn2dIO::toStringRows(
     const Mdn2dBase& src,
     const TextWriteOptions& opt
 ) {
@@ -234,7 +213,7 @@ std::vector<std::string> Mdn2dIO::toStringRows(
     return lines;
 }
 
-std::vector<std::string> Mdn2dIO::toStringCols(
+std::vector<std::string> mdn::Mdn2dIO::toStringCols(
     const Mdn2dBase& src,
     const TextWriteOptions& opt
 ) {
@@ -284,7 +263,7 @@ std::vector<std::string> Mdn2dIO::toStringCols(
     return cols;
 }
 
-void Mdn2dIO::saveTextUtility(
+void mdn::Mdn2dIO::saveTextUtility(
     const Mdn2dBase& src,
     std::ostream& os,
     const TextWriteOptions& opt
@@ -298,7 +277,7 @@ void Mdn2dIO::saveTextUtility(
     }
 }
 
-void Mdn2dIO::saveTextPretty(
+void mdn::Mdn2dIO::saveTextPretty(
     const Mdn2dBase& src,
     std::ostream& os,
     const TextWriteOptions& opt
@@ -312,7 +291,7 @@ void Mdn2dIO::saveTextPretty(
     }
 }
 
-TextReadSummary Mdn2dIO::loadText(
+mdn::TextReadSummary mdn::Mdn2dIO::loadText(
     std::istream& is,
     Mdn2dBase& dst
 ) {
@@ -396,13 +375,13 @@ TextReadSummary Mdn2dIO::loadText(
         for (int c = 0; c < out.width; ++c) {
             row.push_back(static_cast<Digit>(grid[static_cast<std::size_t>(r)][static_cast<std::size_t>(c)]));
         }
-        dst.setRowRange(out.parsedRect.bottom() + r, out.parsedRect.left(), row);
+        dst.setRow(out.parsedRect.bottom() + r, out.parsedRect.left(), row);
     }
 
     return out;
 }
 
-void Mdn2dIO::saveBinary(
+void mdn::Mdn2dIO::saveBinary(
     const Mdn2dBase& src,
     std::ostream& os
 ) {
@@ -461,7 +440,7 @@ void Mdn2dIO::saveBinary(
     }
 }
 
-void Mdn2dIO::loadBinary(
+void mdn::Mdn2dIO::loadBinary(
     std::istream& is,
     Mdn2dBase& dst
 ) {
@@ -503,24 +482,16 @@ void Mdn2dIO::loadBinary(
     is.read(reinterpret_cast<char*>(&H), sizeof(H));
     is.read(reinterpret_cast<char*>(&W), sizeof(W));
 
-/////////////////////////// WORKING HERE //////////////////////////
+    Mdn2dConfig dstCfg = dst.getConfig();
     Mdn2dConfig cfg = Mdn2dConfig(
-        int baseIn=10,
-        int maxSpanIn=16,
-        SignConvention signConventionIn=SignConvention::Positive,
-        int maxCarryoverItersIn = 20,
-        Fraxis defaultFraxisIn=Fraxis::X
+        static_cast<int>(base32),
+        static_cast<int>(prec32),
+        static_cast<SignConvention>(sign8),
+        dstCfg.maxCarryoverIters(),
+        dstCfg.defaultFraxis()
     );
 
-
-
-    Mdn2dConfig cfg = dst.getConfig();
-    cfg.setBase(static_cast<int>(base32));
-    cfg.setPrecision(static_cast<int>(prec32));
-    cfg.setSignConvention(static_cast<SignConvention>(sign8));
     dst.setConfig(cfg);
-
-    dst.clear();
 
     if (H <= 0 || W <= 0) {
         return;
@@ -535,11 +506,12 @@ void Mdn2dIO::loadBinary(
             is.read(reinterpret_cast<char*>(&b8), sizeof(b8));
             row[static_cast<std::size_t>(c)] = static_cast<Digit>(b8);
         }
-        dst.setRowRange(y0 + r, x0, row);
+        dst.setRow(y0 + r, x0, row);
     }
 }
 
-TextReadSummary Mdn2dIO::load(
+
+mdn::TextReadSummary mdn::Mdn2dIO::load(
     std::istream& is,
     Mdn2dBase& dst
 ) {
@@ -583,5 +555,3 @@ TextReadSummary Mdn2dIO::load(
 
     return loadText(is, dst);
 }
-
-} // namespace mdn
