@@ -167,8 +167,17 @@ std::vector<std::string> mdn::Mdn2dIO::toStringRows(
     const Mdn2dBase& src,
     const TextWriteOptions& opt
 ) {
+    auto lock = src.lockReadOnly();
+    return locked_toStringRows(src, opt);
+}
+
+
+std::vector<std::string> mdn::Mdn2dIO::locked_toStringRows(
+    const Mdn2dBase& src,
+    const TextWriteOptions& opt
+) {
     Log_Debug3_H(src.getName());
-    Rect b = src.hasBounds() ? src.bounds() : Rect::GetInvalid();
+    Rect b = src.locked_hasBounds() ? src.locked_bounds() : Rect::GetInvalid();
     Rect w = opt.window.isValid() ? opt.window : b;
     std::vector<std::string> lines;
     if (!w.isValid()) {
@@ -219,7 +228,7 @@ std::vector<std::string> mdn::Mdn2dIO::toStringRows(
     // Pad with spaces only when delim is Space
     int signAndDigitPadding = 0;
     if (opt.delim == CommaTabSpace::Space) {
-        if (!opt.alphanumeric && src.getConfig().base() > 10) {
+        if (!opt.alphanumeric && src.locked_getConfig().base() > 10) {
             // sign and digit may be 3 characters: e.g. -12
             signAndDigitPadding = 3;
         } else {
@@ -237,10 +246,6 @@ std::vector<std::string> mdn::Mdn2dIO::toStringRows(
     std::vector<Digit> row;
     Log_Debug3("Reserving " << xCount);
     row.reserve(static_cast<std::size_t>(xCount));
-
-    // I can estlablish a lock - I know people, Mdn2dBase is a friend of mine
-    auto lock = src.lockReadOnly();
-    // Now only use locked_* and internal_* functions
 
     for (int y = y0; y <= y1; ++y) {
         // First, if axes are on, are we at the yDigit line?
@@ -321,8 +326,17 @@ std::vector<std::string> mdn::Mdn2dIO::toStringCols(
     const Mdn2dBase& src,
     const TextWriteOptions& opt
 ) {
-    Log_Debug3_H(src.getName());
-    Rect b = src.hasBounds() ? src.bounds() : Rect::GetInvalid();
+    auto lock = src.lockReadOnly();
+    return locked_toStringCols(src, opt);
+}
+
+
+std::vector<std::string> mdn::Mdn2dIO::locked_toStringCols(
+    const Mdn2dBase& src,
+    const TextWriteOptions& opt
+) {
+    Log_Debug3_H(src.locked_getName());
+    Rect b = src.locked_hasBounds() ? src.locked_bounds() : Rect::GetInvalid();
     Rect w = opt.window.isValid() ? opt.window : b;
     std::vector<std::string> lines;
     if (!w.isValid()) {
@@ -373,7 +387,7 @@ std::vector<std::string> mdn::Mdn2dIO::toStringCols(
     // Pad with spaces only when delim is Space
     int signAndDigitPadding = 0;
     if (opt.delim == CommaTabSpace::Space) {
-        if (!opt.alphanumeric && src.getConfig().base() > 10) {
+        if (!opt.alphanumeric && src.locked_getConfig().base() > 10) {
             // sign and digit may be 3 characters: e.g. -12
             signAndDigitPadding = 3;
         } else {
@@ -391,10 +405,6 @@ std::vector<std::string> mdn::Mdn2dIO::toStringCols(
     std::vector<Digit> col;
     Log_Debug3("Reserving " << yCount);
     col.reserve(static_cast<std::size_t>(yCount));
-
-    // I can estlablish a lock - I know people, Mdn2dBase is a friend of mine
-    auto lock = src.lockReadOnly();
-    // Now only use locked_* and internal_* functions
 
     for (int x = x0; x <= x1; ++x) {
         // First, if axes are on, are we at the xDigit line?
@@ -471,29 +481,23 @@ std::vector<std::string> mdn::Mdn2dIO::toStringCols(
 }
 
 
-void mdn::Mdn2dIO::saveTextUtility(
-    const Mdn2dBase& src,
-    std::ostream& os,
-    const TextWriteOptions& opt
-) {
-    Log_Debug3_H("");
-    std::vector<std::string> lines = toStringRows(src, opt);
-    for (std::size_t i = 0; i < lines.size(); ++i) {
-        os << lines[i];
-        if (i + 1 < lines.size()) {
-            os << '\n';
-        }
-    }
-    Log_Debug3_T("");
-}
-
 void mdn::Mdn2dIO::saveTextPretty(
     const Mdn2dBase& src,
     std::ostream& os,
     const TextWriteOptions& opt
 ) {
+    auto lock = src.lockReadOnly();
+    return locked_saveTextPretty(src, os, opt);
+}
+
+
+void mdn::Mdn2dIO::locked_saveTextPretty(
+    const Mdn2dBase& src,
+    std::ostream& os,
+    const TextWriteOptions& opt
+) {
     Log_Debug3_H("");
-    std::vector<std::string> lines = toStringRows(src, opt);
+    std::vector<std::string> lines = locked_toStringRows(src, opt);
     for (std::size_t i = 0; i < lines.size(); ++i) {
         os << lines[i];
         if (i + 1 < lines.size()) {
@@ -503,7 +507,44 @@ void mdn::Mdn2dIO::saveTextPretty(
     Log_Debug3_T("");
 }
 
+
+void mdn::Mdn2dIO::saveTextUtility(
+    const Mdn2dBase& src,
+    std::ostream& os,
+    const TextWriteOptions& opt
+) {
+    auto lock = src.lockReadOnly();
+    return locked_saveTextUtility(src, os, opt);
+}
+
+
+void mdn::Mdn2dIO::locked_saveTextUtility(
+    const Mdn2dBase& src,
+    std::ostream& os,
+    const TextWriteOptions& opt
+) {
+    Log_Debug3_H("");
+    std::vector<std::string> lines = locked_toStringRows(src, opt);
+    for (std::size_t i = 0; i < lines.size(); ++i) {
+        os << lines[i];
+        if (i + 1 < lines.size()) {
+            os << '\n';
+        }
+    }
+    Log_Debug3_T("");
+}
+
+
 mdn::TextReadSummary mdn::Mdn2dIO::loadText(
+    std::istream& is,
+    Mdn2dBase& dst
+) {
+    auto lock = dst.lockWriteable();
+    return locked_loadText(is, dst);
+}
+
+
+mdn::TextReadSummary mdn::Mdn2dIO::locked_loadText(
     std::istream& is,
     Mdn2dBase& dst
 ) {
@@ -582,14 +623,14 @@ mdn::TextReadSummary mdn::Mdn2dIO::loadText(
     out.width = static_cast<int>(grid.front().size());
     out.parsedRect = Rect(0, 0, out.width - 1, out.height - 1);
 
-    dst.clear();
+    dst.locked_clear();
     for (int r = 0; r < out.height; ++r) {
         std::vector<Digit> row;
         row.reserve(static_cast<std::size_t>(out.width));
         for (int c = 0; c < out.width; ++c) {
             row.push_back(static_cast<Digit>(grid[static_cast<std::size_t>(r)][static_cast<std::size_t>(c)]));
         }
-        dst.setRow(out.parsedRect.bottom() + r, out.parsedRect.left(), row);
+        dst.locked_setRow(out.parsedRect.bottom() + r, out.parsedRect.left(), row);
     }
 
     Log_Debug3_T("");
@@ -658,7 +699,17 @@ void mdn::Mdn2dIO::saveBinary(
     Log_Debug3_T("");
 }
 
+
 void mdn::Mdn2dIO::loadBinary(
+    std::istream& is,
+    Mdn2dBase& dst
+) {
+    auto lock = dst.lockWriteable();
+    return locked_loadBinary(is, dst);
+}
+
+
+void mdn::Mdn2dIO::locked_loadBinary(
     std::istream& is,
     Mdn2dBase& dst
 ) {
@@ -707,7 +758,7 @@ void mdn::Mdn2dIO::loadBinary(
     is.read(reinterpret_cast<char*>(&H), sizeof(H));
     is.read(reinterpret_cast<char*>(&W), sizeof(W));
 
-    Mdn2dConfig dstCfg = dst.getConfig();
+    Mdn2dConfig dstCfg = dst.locked_getConfig();
     Mdn2dConfig cfg = Mdn2dConfig(
         static_cast<int>(base32),
         static_cast<int>(prec32),
@@ -716,7 +767,7 @@ void mdn::Mdn2dIO::loadBinary(
         dstCfg.defaultFraxis()
     );
 
-    dst.setConfig(cfg);
+    dst.locked_setConfig(cfg);
 
     if (H <= 0 || W <= 0) {
         Log_Debug3_T("");
@@ -732,13 +783,22 @@ void mdn::Mdn2dIO::loadBinary(
             is.read(reinterpret_cast<char*>(&b8), sizeof(b8));
             row[static_cast<std::size_t>(c)] = static_cast<Digit>(b8);
         }
-        dst.setRow(y0 + r, x0, row);
+        dst.locked_setRow(y0 + r, x0, row);
     }
     Log_Debug3_T("");
 }
 
 
 mdn::TextReadSummary mdn::Mdn2dIO::load(
+    std::istream& is,
+    Mdn2dBase& dst
+) {
+    auto lock = dst.lockWriteable();
+    return locked_load(is, dst);
+}
+
+
+mdn::TextReadSummary mdn::Mdn2dIO::locked_load(
     std::istream& is,
     Mdn2dBase& dst
 ) {
@@ -750,7 +810,7 @@ mdn::TextReadSummary mdn::Mdn2dIO::load(
     is.seekg(pos);
 
     if (std::memcmp(head, "MDN2D\0", 6) == 0) {
-        loadBinary(is, dst);
+        locked_loadBinary(is, dst);
 
         is.seekg(pos);
         char magic[6];
@@ -781,7 +841,7 @@ mdn::TextReadSummary mdn::Mdn2dIO::load(
         return out;
     }
 
-    auto result = loadText(is, dst);
+    auto result = locked_loadText(is, dst);
     Log_Debug3_T("result = " << result);
 
     return result;

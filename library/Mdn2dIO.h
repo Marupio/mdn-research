@@ -20,8 +20,16 @@ public:
         const Mdn2dBase& src,
         const TextWriteOptions& opt = TextWriteOptions::DefaultPretty()
     );
+    static std::vector<std::string> locked_toStringRows(
+        const Mdn2dBase& src,
+        const TextWriteOptions& opt = TextWriteOptions::DefaultPretty()
+    );
 
     static std::vector<std::string> toStringCols(
+        const Mdn2dBase& src,
+        const TextWriteOptions& opt = TextWriteOptions::DefaultUtility()
+    );
+    static std::vector<std::string> locked_toStringCols(
         const Mdn2dBase& src,
         const TextWriteOptions& opt = TextWriteOptions::DefaultUtility()
     );
@@ -32,8 +40,18 @@ public:
         std::ostream& os,
         const TextWriteOptions& opt = TextWriteOptions::DefaultPretty()
     );
+    static void locked_saveTextPretty(
+        const Mdn2dBase& src,
+        std::ostream& os,
+        const TextWriteOptions& opt = TextWriteOptions::DefaultPretty()
+    );
 
     static void saveTextUtility(
+        const Mdn2dBase& src,
+        std::ostream& os,
+        const TextWriteOptions& opt = TextWriteOptions::DefaultUtility()
+    );
+    static void locked_saveTextUtility(
         const Mdn2dBase& src,
         std::ostream& os,
         const TextWriteOptions& opt = TextWriteOptions::DefaultUtility()
@@ -45,9 +63,17 @@ public:
         std::istream& is,
         Mdn2dBase& dst
     );
+    static TextReadSummary locked_loadText(
+        std::istream& is,
+        Mdn2dBase& dst
+    );
 
     // -------- Binary I/O --------
     static void saveBinary(
+        const Mdn2dBase& src,
+        std::ostream& os
+    );
+    static void locked_saveBinary(
         const Mdn2dBase& src,
         std::ostream& os
     );
@@ -56,10 +82,18 @@ public:
         std::istream& is,
         Mdn2dBase& dst
     );
+    static void locked_loadBinary(
+        std::istream& is,
+        Mdn2dBase& dst
+    );
 
     // -------- Dispatcher --------
     // Sniffs stream; calls loadBinary() if magic matches, else loadText().
     static TextReadSummary load(
+        std::istream& is,
+        Mdn2dBase& dst
+    );
+    static TextReadSummary locked_load(
         std::istream& is,
         Mdn2dBase& dst
     );

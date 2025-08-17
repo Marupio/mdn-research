@@ -33,6 +33,7 @@ public:
     void setLevel(LogLevel level) { m_minLevel = level; }
 
     // Echo output messages to log file 'debugFile', leave blank for default log file location
+    void setOutputToFileLegacy(std::filesystem::path debugFile="");
     void setOutputToFile(std::filesystem::path debugFile="");
 
     LogLevel getLevel() { return m_minLevel; }

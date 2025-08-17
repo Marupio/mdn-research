@@ -908,9 +908,20 @@ void mdn::Mdn2dBase::locked_setRow(int y, int x0, const VecDigit& row) {
 }
 
 
+std::vector<std::string> mdn::Mdn2dBase::toStringRows() const {
+    return toStringRows(TextWriteOptions::DefaultPretty());
+}
+
+
 std::vector<std::string> mdn::Mdn2dBase::toStringRows(const TextWriteOptions& opt) const {
     return mdn::Mdn2dIO::toStringRows(*this, opt);
 }
+
+
+std::vector<std::string> mdn::Mdn2dBase::toStringCols() const {
+    return toStringCols(TextWriteOptions::DefaultPretty());
+}
+
 
 std::vector<std::string> mdn::Mdn2dBase::toStringCols(const TextWriteOptions& opt) const {
     return mdn::Mdn2dIO::toStringCols(*this, opt);
@@ -945,8 +956,10 @@ std::vector<std::string> mdn::Mdn2dBase::locked_saveTextPrettyRows(
     Rect& window, bool wideNegatives, bool alphanumeric
 ) const {
     Log_N_Debug3_H("");
-    std::vector<std::string> result =
-        locked_toStringRows(window, alphanumeric, CommaTabSpace::Space);
+    TextWriteOptions opt(TextWriteOptions::DefaultPretty());
+    opt.wideNegatives = wideNegatives;
+    opt.alphanumeric = alphanumeric;
+    std::vector<std::string> result(Mdn2dIO::locked_toStringRows(*this, opt));
     Log_N_Debug3_T("");
     return result;
 }
@@ -977,340 +990,11 @@ std::vector<std::string> mdn::Mdn2dBase::locked_saveTextUtilityRows(
     Rect& window, CommaTabSpace delim
 ) const {
     Log_N_Debug3_H("");
-    std::vector<std::string> result =
-        locked_toStringRows(
-            window,
-            false, // do not enableAlphanumerics
-            delim, // proper 'utility' output: Comma or Tabs, not spaces, but user can do it
-            "", // no horizontal axes
-            "", // no vertical axes
-            "", // no cross axes
-            "-" // use standard negative symbol
-        );
+    TextWriteOptions opt(TextWriteOptions::DefaultUtility());
+    opt.delim = delim;
+    std::vector<std::string> result(Mdn2dIO::locked_toStringRows(*this, opt));
     Log_N_Debug3_T("");
     return result;
-}
-
-
-std::string mdn::Mdn2dBase::toString(
-    bool enableAlphaNumerics,
-    CommaTabSpace delim,
-    std::string hDelim,
-    std::string vDelim,
-    std::string xDelim,
-    std::string negStr
-) const {
-    auto lock = lockReadOnly();
-    Log_N_Debug2_H("Converting to string");
-    std::string result =
-        locked_toString(enableAlphaNumerics, delim, hDelim, vDelim, xDelim, negStr);
-    Log_N_Debug2_T("result=" << result);
-    return result;
-}
-
-
-std::string mdn::Mdn2dBase::locked_toString(
-    bool enableAlphaNumerics,
-    CommaTabSpace delim,
-    std::string hDelim,
-    std::string vDelim,
-    std::string xDelim,
-    std::string negStr
-) const {
-    Log_N_Debug3_H("Converting to string");
-    std::vector<std::string> rows =
-        locked_toStringRows(enableAlphaNumerics, delim, hDelim, vDelim, xDelim, negStr);
-    std::string result = Tools::vectorToString(rows, "\n", true);
-    Log_N_Debug3_T("result=" << result);
-    return result;
-}
-
-
-std::vector<std::string> mdn::Mdn2dBase::toStringRows(
-    bool enableAlphaNumerics,
-    CommaTabSpace delim,
-    std::string hDelim,
-    std::string vDelim,
-    std::string xDelim,
-    std::string negStr
-) const {
-    auto lock = lockReadOnly();
-    Log_N_Debug2_H("Converting rows to string array");
-    std::vector<std::string> result =
-        locked_toStringRows(enableAlphaNumerics, delim, hDelim, vDelim, xDelim, negStr);
-    Log_N_Debug2_T("result is a set of " << result.size() << " rows");
-    return result;
-}
-
-
-std::vector<std::string> mdn::Mdn2dBase::locked_toStringRows(
-    bool enableAlphaNumerics,
-    CommaTabSpace delim,
-    std::string hDelim,
-    std::string vDelim,
-    std::string xDelim,
-    std::string negStr
-) const {
-    Log_N_Debug3_H("Converting rows to string array");
-    std::vector<std::string> result =
-        locked_toStringRows(
-            m_bounds, enableAlphaNumerics, delim, hDelim, vDelim, xDelim, negStr
-        );
-    Log_N_Debug3_T("result is a set of " << result.size() << " rows");
-    return result;
-}
-
-
-std::vector<std::string> mdn::Mdn2dBase::toStringRows(
-    const Rect& window,
-    bool enableAlphaNumerics,
-    CommaTabSpace delim,
-    std::string hDelim,
-    std::string vDelim,
-    std::string xDelim,
-    std::string negStr
-) const {
-    auto lock = lockReadOnly();
-    Log_N_Debug2_H("Converting rows to string array");
-    std::vector<std::string> result =
-        locked_toStringRows(
-            window, enableAlphaNumerics, delim, hDelim, vDelim, xDelim, negStr
-        );
-    Log_N_Debug2_T("result is a set of " << result.size() << " rows");
-    return result;
-}
-
-
-std::vector<std::string> mdn::Mdn2dBase::locked_toStringRows(
-    const Rect& window,
-    bool enableAlphaNumerics,
-    CommaTabSpace delim,
-    std::string hDelim,
-    std::string vDelim,
-    std::string xDelim,
-    std::string negStr
-) const {
-    int xStart = window.min().x(); // left
-    int xEnd = window.max().x()+1; // right+1
-    int xCount = xEnd - xStart;    // width
-
-    int yStart = window.min().y(); // bottom
-    int yEnd = window.max().y()+1; // top+1
-    int yCount = yEnd - yStart;    // height
-
-    Log_N_Debug3(
-        "Converting rows to an array of strings:\n"
-        << "    xRange = (" << xStart << " .. " << xEnd << "), " << xCount << " elements,\n"
-        << "    yRange = (" << yStart << " .. " << yEnd << "), " << yCount << " rows"
-    );
-
-    std::string delimStr = mdn::toString(delim);
-
-    // Pad with spaces only when delim is Space
-    int signAndDigitPadding = 0;
-    if (delim == CommaTabSpace::Space) {
-        if (!enableAlphaNumerics && m_config.base() > 10) {
-            // sign and digit may be 3 characters: e.g. -12
-            signAndDigitPadding = 3;
-        } else {
-            // sign and digit will never exceed 2 characters: e.g. -c
-            signAndDigitPadding = 2;
-        }
-    }
-
-    // DigLine - digit line appears before what index in 'digits' array below
-    int xDigLine = -xStart;
-    int yDigLine = 0;
-
-    std::vector<std::string> out;
-    out.reserve(yCount+1);
-    VecDigit digits;
-    for (int y = yStart; y < yEnd; ++y) {
-        // First, are we at the yDigit line (and does it matter)?
-        if (y == yDigLine && (hDelim.size() > 0)) {
-            std::string hdAssemble;
-            if (signAndDigitPadding > 0) {
-                for (int i = 0; i <= signAndDigitPadding; ++i) {
-                    hdAssemble += hDelim;
-                }
-            } else {
-                // No character alignment, default to width of 2
-                hdAssemble = hDelim + hDelim;
-            }
-            int x;
-            std::ostringstream oss;
-            for (x = 0; x < xDigLine && x < xCount; ++x) {
-                oss << hdAssemble;
-            }
-            if (hDelim.size() > 0 && (x == xDigLine)) {
-                oss << xDelim << hDelim;
-                // extra 'hDelim' is to account for adding a delim after the vertical digit line
-            }
-            for (; x < xCount; ++x) {
-                oss << hdAssemble;
-            }
-            out.push_back(oss.str());
-        }
-        locked_getRow(y, xStart, xEnd-1, digits);
-
-        Assert(digits.size() == xCount, "Rows are not the expected size");
-        std::ostringstream oss;
-        int x;
-        for (x = 0; x < xDigLine && x < xCount; ++x) {
-            std::string digStr(
-                Tools::digitToAlpha(
-                    digits[x],
-                    enableAlphaNumerics,
-                    "",
-                    negStr,
-                    signAndDigitPadding
-                )
-            );
-            oss << digStr << delimStr;
-        }
-        if (x == xDigLine) {
-            oss << vDelim << delimStr;
-        }
-        for (; x < xCount; ++x) {
-            std::string digStr(
-                Tools::digitToAlpha(
-                    digits[x],
-                    enableAlphaNumerics,
-                    "",
-                    negStr,
-                    signAndDigitPadding
-                )
-            );
-            oss << digStr << delimStr;
-        }
-        out.push_back(oss.str());
-    } // end y loop
-    return out;
-}
-
-
-std::vector<std::string> mdn::Mdn2dBase::toStringCols(
-    const Rect& window,
-    bool enableAlphaNumerics,
-    CommaTabSpace delim,
-    std::string hDelim,
-    std::string vDelim,
-    std::string xDelim,
-    std::string negStr
-) const {
-    auto lock = lockReadOnly();
-    Log_N_Debug2("Converting columns to string array");
-    return locked_toStringCols(
-        window, enableAlphaNumerics, delim, hDelim, vDelim, xDelim, negStr
-    );
-}
-
-
-std::vector<std::string> mdn::Mdn2dBase::locked_toStringCols(
-    const Rect& window,
-    bool enableAlphaNumerics,
-    mdn::CommaTabSpace delim,
-    std::string hDelim,
-    std::string vDelim,
-    std::string xDelim,
-    std::string negStr
-) const {
-    int xStart = window.min().x();
-    int xEnd = window.max().x()+1;
-    int xCount = xEnd - xStart;
-
-    int yStart = window.min().y();
-    int yEnd = window.max().y()+1;
-    int yCount = yEnd - yStart;
-
-    Log_N_Debug3(
-        "Converting rows to an array of strings:\n"
-        << "    yRange = (" << yStart << " .. " << yEnd << "), " << yCount << " columns,"
-        << "    xRange = (" << xStart << " .. " << xEnd << "), " << xCount << " elements\n"
-    );
-
-    std::string delimStr = mdn::toString(delim);
-
-    // Pad with spaces only when delim is Space
-    int signAndDigitPadding = 0;
-    if (delim == CommaTabSpace::Space) {
-        if (!enableAlphaNumerics && m_config.base() > 10) {
-            // sign and digit may be 3 characters: e.g. -12
-            signAndDigitPadding = 3;
-        } else {
-            // sign and digit will never exceed 2 characters: e.g. -c
-            signAndDigitPadding = 2;
-        }
-    }
-
-    // DigLine - digit line appears before what index in 'digits' array below
-    int xDigLine = 0;
-    int yDigLine = -yStart;
-
-    std::vector<std::string> out;
-    out.reserve(xCount+1);
-    VecDigit digits;
-    for (int x = xStart; x < xEnd; ++x) {
-        // First, are we at the xDigit line (and does it matter)?
-        if (x == xDigLine && (hDelim.size() > 0)) {
-            std::string hdAssemble;
-            if (signAndDigitPadding > 0) {
-                for (int i = 0; i <= signAndDigitPadding; ++i) {
-                    hdAssemble += hDelim;
-                }
-            } else {
-                // No character alignment, default to width of 2
-                hdAssemble = hDelim + hDelim;
-            }
-            int y;
-            std::ostringstream oss;
-            for (y = 0; y < yDigLine && y < yCount; ++y) {
-                oss << hdAssemble;
-            }
-            if (y == yDigLine) {
-                oss << xDelim << hDelim;
-                // extra 'hDelim' is to account for adding a delim after the vertical digit line
-            }
-            for (; y < yCount; ++y) {
-                oss << hdAssemble;
-            }
-            out.push_back(oss.str());
-        }
-        locked_getCol(x, yStart, yEnd-1, digits);
-
-        Assert(digits.size() == yCount, "Columns are not the expected size");
-        std::ostringstream oss;
-        int y;
-        for (y = 0; y < yDigLine && y < yCount; ++y) {
-            std::string digStr(
-                Tools::digitToAlpha(
-                    digits[y],
-                    enableAlphaNumerics,
-                    "",
-                    negStr,
-                    signAndDigitPadding
-                )
-            );
-            oss << digStr << delimStr;
-        }
-        if (y == yDigLine) {
-            oss << vDelim << delimStr;
-        }
-        for (; y < yCount; ++y) {
-            std::string digStr(
-                Tools::digitToAlpha(
-                    digits[y],
-                    enableAlphaNumerics,
-                    "",
-                    negStr,
-                    signAndDigitPadding
-                )
-            );
-            oss << digStr << delimStr;
-        }
-        out.push_back(oss.str());
-    } // end y loop
-    return out;
 }
 
 
@@ -1403,7 +1087,7 @@ bool mdn::Mdn2dBase::locked_hasBounds() const {
 
 const mdn::Rect& mdn::Mdn2dBase::bounds() const {
     auto lock = ReadOnlyLock();
-    const Rect& bounds = locked_getBounds();
+    const Rect& bounds = locked_bounds();
     if (Log_Showing_Debug2) {
         Log_N_Debug2("Result: " << bounds);
     }
@@ -1411,7 +1095,7 @@ const mdn::Rect& mdn::Mdn2dBase::bounds() const {
 }
 
 
-const mdn::Rect& mdn::Mdn2dBase::locked_getBounds() const {
+const mdn::Rect& mdn::Mdn2dBase::locked_bounds() const {
     Log_N_Debug3("Result: " << m_bounds);
     return m_bounds;
 }
