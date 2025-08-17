@@ -598,16 +598,34 @@ void mdn::Mdn2dBase::getCol(int x, VecDigit& out) const {
 
 
 void mdn::Mdn2dBase::locked_getCol(int x, VecDigit& out) const {
+    Log_N_Debug3_H("x=" << x);
     if (!m_bounds.isValid()) {
-        // No non-zero out to fill
-        std::fill(out.begin(), out.end(), Digit(0));
+        // No non-zero digits to fill
+        if (out.size()) {
+            std::fill(out.begin(), out.end(), Digit(0));
+        }
+        Log_N_Debug3_T("no bounds");
         return;
     }
     int yStart = m_bounds.min().y();
-    int yEnd = m_bounds.max().y() + 1; // one past the end, prevent fencepost
-    int yCount = yEnd - yStart;
-    Log_N_Debug3(
-        "Column " << x << " from y (" << yStart << " .. " << yEnd << "), "
+    int yEnd = m_bounds.max().y() + 1;
+    locked_getCol(x, yStart, yEnd, out);
+    Log_N_Debug3_T("y range (" << yStart << "," << yEnd << ")");
+}
+
+
+void mdn::Mdn2dBase::getCol(int x, int y0, int y1, VecDigit& out) const {
+    auto lock = lockReadOnly();
+    Log_N_Debug2("");
+    locked_getCol(x, y0, y1, out);
+}
+
+
+void mdn::Mdn2dBase::locked_getCol(int x, int y0, int y1, VecDigit& out) const
+{
+    int yCount = y1 - y0;
+    Log_N_Debug3_H(
+        "Col " << x << " from y (" << y0 << " .. " << y1 << "), "
         << yCount << " elements"
     );
     out.resize(yCount);
@@ -617,9 +635,10 @@ void mdn::Mdn2dBase::locked_getCol(int x, VecDigit& out) const {
         // There are non-zero entries on this row, fill them in
         const CoordSet& coords = it->second;
         for (const Coord& coord : coords) {
-            out[coord.x()-yStart] = m_raw.at(coord);
+            out[coord.y()-y0] = m_raw.at(coord);
         }
     }
+    Log_N_Debug3_T("");
 }
 
 
@@ -1067,13 +1086,13 @@ std::vector<std::string> mdn::Mdn2dBase::locked_toStringRows(
     std::string xDelim,
     std::string negStr
 ) const {
-    int xStart = window.min().x();
-    int xEnd = window.max().x()+1;
-    int xCount = xEnd - xStart;
+    int xStart = window.min().x(); // left
+    int xEnd = window.max().x()+1; // right+1
+    int xCount = xEnd - xStart;    // width
 
-    int yStart = window.min().y();
-    int yEnd = window.max().y()+1;
-    int yCount = yEnd - yStart;
+    int yStart = window.min().y(); // bottom
+    int yEnd = window.max().y()+1; // top+1
+    int yCount = yEnd - yStart;    // height
 
     Log_N_Debug3(
         "Converting rows to an array of strings:\n"
@@ -1124,13 +1143,13 @@ std::vector<std::string> mdn::Mdn2dBase::locked_toStringRows(
                 // extra 'hDelim' is to account for adding a delim after the vertical digit line
             }
             for (; x < xCount; ++x) {
-                oss << hDelim << hDelim;
+                oss << hdAssemble;
             }
             out.push_back(oss.str());
         }
-        locked_getRow(y, digits);
+        locked_getRow(y, xStart, xEnd-1, digits);
 
-        assert(digits.size() == xCount && "Rows are not the expected size");
+        Assert(digits.size() == xCount, "Rows are not the expected size");
         std::ostringstream oss;
         int x;
         for (x = 0; x < xDigLine && x < xCount; ++x) {
@@ -1249,13 +1268,13 @@ std::vector<std::string> mdn::Mdn2dBase::locked_toStringCols(
                 // extra 'hDelim' is to account for adding a delim after the vertical digit line
             }
             for (; y < yCount; ++y) {
-                oss << hDelim << hDelim;
+                oss << hdAssemble;
             }
             out.push_back(oss.str());
         }
-        locked_getCol(x, digits);
+        locked_getCol(x, yStart, yEnd-1, digits);
 
-        assert(digits.size() == yCount && "Columns are not the expected size");
+        Assert(digits.size() == yCount, "Columns are not the expected size");
         std::ostringstream oss;
         int y;
         for (y = 0; y < yDigLine && y < yCount; ++y) {

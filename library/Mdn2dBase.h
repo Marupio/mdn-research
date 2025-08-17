@@ -221,6 +221,13 @@ public:
             void getCol(int x, VecDigit& out) const;
             protected: void locked_getCol(int x, VecDigit& out) const; public:
 
+            // Write out a continuous range for a row, from x0 to x1, inclusive.
+            // out.size() becomes (x1 - x0 + 1).
+            void getCol(int x, int y0, int y1, VecDigit& out) const;
+            protected:
+            void locked_getCol(int x, int y0, int y1, VecDigit& out) const;
+            public:
+
 
         // *** Setters
 

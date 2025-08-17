@@ -7,6 +7,7 @@
 #include <sstream>
 
 #include "Coord.h"
+#include "Logger.h"
 #include "Mdn2dConfig.h"
 #include "Tools.h"
 
@@ -166,77 +167,126 @@ std::vector<std::string> mdn::Mdn2dIO::toStringRows(
     const int y0 = w.bottom();
     const int y1 = w.top();
 
-    const std::string& H = (opt.axes == AxesOutput::BoxArt) ? Tools::BoxArtStr_h : std::string("-");
-    const std::string& V = (opt.axes == AxesOutput::BoxArt) ? Tools::BoxArtStr_v : std::string("|");
-    const std::string& X = (opt.axes == AxesOutput::BoxArt) ? Tools::BoxArtStr_x : std::string("+");
+    const int xCount = w.width();
+    const int yCount = w.height();
+
+    Log_Debug3("Converting windowed area " << w << " to string output.");
+
+    std::string H = "";
+    std::string V = "";
+    std::string X = "";
+    bool hasAxes = false;
+    switch (opt.axes) {
+        case AxesOutput::None: {
+            break;
+        }
+        case AxesOutput::BoxArt: {
+            hasAxes = true;
+            H = Tools::BoxArtStr_h;
+            V = Tools::BoxArtStr_v;
+            X = Tools::BoxArtStr_x;
+            break;
+        }
+        case AxesOutput::Simple: {
+            hasAxes = true;
+            H = "-";
+            V = "|";
+            X = "+";
+            break;
+        }
+    }
+
+    std::string delimStr = mdn::toString(opt.delim);
+
+    // Pad with spaces only when delim is Space
+    int signAndDigitPadding = 0;
+    if (opt.delim == CommaTabSpace::Space) {
+        if (!opt.alphanumeric && src.getConfig().base() > 10) {
+            // sign and digit may be 3 characters: e.g. -12
+            signAndDigitPadding = 3;
+        } else {
+            // sign and digit will never exceed 2 characters: e.g. -c
+            signAndDigitPadding = 2;
+        }
+    }
+
+    // DigLine - digit line appears before what index in 'row' array below
+    int xDigLine = -x0;
+    int yDigLine = 0;
+
+    std::string negativeStr = opt.wideNegatives? Tools::BoxArtStr_h : "-";
 
     std::vector<Digit> row;
-    row.reserve(static_cast<std::size_t>(w.width()));
+    row.reserve(static_cast<std::size_t>(xCount));
+
+    // I can estlablish a lock - I know people, Mdn2dBase is a friend of mine
+    auto lock = src.lockReadOnly();
+    // Now only use locked_* and internal_* functions
 
     for (int y = y0; y <= y1; ++y) {
-        row.clear();
-        src.getRow(y, x0, x1, row);
-
-        std::ostringstream line;
-        for (int x = x0; x <= x1; ++x) {
-            const Digit d = row[static_cast<std::size_t>(x - x0)];
-            if (opt.alphanumeric && std::abs(static_cast<int>(d)) < 36) {
-                int v = std::abs(static_cast<int>(d));
-                char ch = (v < 10) ? static_cast<char>('0' + v) : static_cast<char>('a' + (v - 10));
-                if (d < 0) {
-                    if (opt.wideNegatives) {
-                        line << H << ch;
-                    } else {
-                        line << '-' << ch;
-                    }
-                } else {
-                    line << ch;
+        // First, if axes are on, are we at the yDigit line?
+        if (hasAxes && (y == yDigLine)) {
+            std::string hAssemble;
+            if (signAndDigitPadding > 0) {
+                for (int i = 0; i <= signAndDigitPadding; ++i) {
+                    hAssemble += H;
                 }
             } else {
-                line << static_cast<int>(d);
+                // No character alignment, default to width of 2
+                hAssemble = H + H;
             }
-            if (x < x1) {
-                line << (opt.delim == CommaTabSpace::Comma ? ','
-                         : opt.delim == CommaTabSpace::Tab   ? '\t'
-                         : ' ');
+            int x;
+            std::ostringstream oss;
+            for (x = 0; x < xDigLine && x < xCount; ++x) {
+                oss << hAssemble;
             }
-        }
-
-        if (opt.axes != AxesOutput::None && 0 >= x0 && 0 <= x1) {
-            const int col = (0 - x0);
-            std::string s = line.str();
-            int seps = 0;
-            std::size_t insertAt = s.size();
-            for (std::size_t i = 0; i < s.size(); ++i) {
-                if (s[i] == ',' || s[i] == '\t' || s[i] == ' ') {
-                    ++seps;
-                }
-                if (seps == col) {
-                    insertAt = i;
-                    break;
-                }
+            if (x == xDigLine) {
+                oss << X << H;
+                // extra 'H' is to account for adding a delimeter after the vertical digit line
             }
-            s.insert(insertAt, V);
-            lines.push_back(std::move(s));
-        } else {
-            lines.push_back(line.str());
+            for (; x < xCount; ++x) {
+                oss << hAssemble;
+            }
+            lines.push_back(oss.str());
         }
-    }
-
-    if (opt.axes != AxesOutput::None && 0 >= y0 && 0 <= y1) {
-        const int widthChars = (w.width() * 2) - 1;
-        std::string axis;
-        for (int i = 0; i < widthChars; ++i) {
-            axis += H;
+        src.getRow(y, x0, x1, row);
+        Assert(row.size() == xCount, "Rows are not the expected size");
+        std::ostringstream line;
+///////////
+        // Now indexing by position in the row array
+        int i;
+        for (i = 0; i < xDigLine && i < xCount; ++i) {
+            std::string digStr(
+                Tools::digitToAlpha(
+                    row[i],
+                    opt.alphanumeric,
+                    "",
+                    negativeStr,
+                    signAndDigitPadding
+                )
+            );
+            line << digStr << delimStr;
         }
-        if (0 >= x0 && 0 <= x1) {
-            axis += X;
+        if (i == xDigLine) {
+            line << V << delimStr;
         }
-        lines.push_back(std::move(axis));
-    }
-
+        for (; i < xCount; ++i) {
+            std::string digStr(
+                Tools::digitToAlpha(
+                    row[i],
+                    opt.alphanumeric,
+                    "",
+                    negativeStr,
+                    signAndDigitPadding
+                )
+            );
+            line << digStr << delimStr;
+        }
+        lines.push_back(line.str());
+    } // end y loop
     return lines;
 }
+
 
 std::vector<std::string> mdn::Mdn2dIO::toStringCols(
     const Mdn2dBase& src,

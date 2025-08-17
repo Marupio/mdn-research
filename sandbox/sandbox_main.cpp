@@ -28,11 +28,18 @@ static void printSection(const std::string& title) {
     std::cout << "\n=== " << title << " ===\n";
 }
 
-static void printLines(const std::vector<std::string>& lines) {
-    for (const std::string& s : lines) {
-        std::cout << s << "\n";
+static void printLines(const std::vector<std::string>& lines, bool topDown=false) {
+    if (topDown) {
+        for (auto it = lines.rbegin(); it != lines.rend(); ++it) {
+            std::cout << *it << '\n';
+        }
+    } else {
+        for (const std::string& s : lines) {
+            std::cout << s << '\n';
+        }
     }
 }
+
 
 static std::vector<Digit> makeRow(std::initializer_list<int> vals) {
     std::vector<Digit> row;
@@ -62,28 +69,28 @@ static void populateSample(Mdn2dBase& m) {
 
     // y = -1
     {
-        auto row = makeRow({  -1,  0,  1,  0,  0,  0,  0 });
+        auto row = makeRow({-1, 0, 1, 0, 0, 0, 0});
         m.setRow(-1, -2, row);
     }
     // y = 0
     {
-        auto row = makeRow({  0,  0,  0,  3,  0,  0,  -8 });
+        auto row = makeRow({0, 0, 0, 3, 0, 0, -8});
         m.setRow( 0, -2, row);
     }
     // y = 1
     {
-        auto row = makeRow({  1,  0,  0,  0,  3,  0,  -8});
+        auto row = makeRow({1, 0, 0, 0, 3, 0, -8});
         m.setRow( 1, -2, row);
     }
     // y = 2
     {
-        auto row = makeRow({  2,  0,  0,  0,  0,  1,  -8});
+        auto row = makeRow({2, 0, 0, 0, 0, 1, -8});
         m.setRow( 2, -2, row);
     }
     // y = 3  (put some negatives and alpha-range)
     {
         // {..., -3, 0, 10(a), 0, 0}
-        auto row = makeRow({  3,  0, -3,  0, 10,  0,  -8});
+        auto row = makeRow({3, 4, 5, 6, 7, 8, 9});
         m.setRow( 3, -2, row);
     }
 
@@ -137,27 +144,49 @@ int main() {
     Mdn2d a;
     populateSample(a);
 
+    // Mdn2d slot0 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));
+    // slot0.setValue(COORD_ORIGIN, 3);
+    // slot0.setValue(Coord(0, 1), 2);
+    // slot0.setValue(Coord(1, 0), -2);
+    // slot0.setValue(Coord(1, 1), 1);
+    // slot0.setValue(Coord(20, 6), 9);
+    //
+    // std::vector<std::string> slot0Disp = slot0.toStringRows();
+    // for (auto riter = slot0Disp.rbegin(); riter != slot0Disp.rend(); ++riter) {
+    //     std::cout << *riter << '\n';
+    // }
+    // std::cout << "Bounds = " << slot0.bounds() << std::endl;
+
     // Pretty rows (box-art axes, alphanumerics, wide negatives)
     {
         printSection("Pretty rows (DefaultPretty)");
         TextWriteOptions opt = TextWriteOptions::DefaultPretty();
         auto lines = Mdn2dIO::toStringRows(a, opt);
-        printLines(lines);
+        printLines(lines, true);
+
+        std::cout << '\n';
+
+        std::vector<std::string> rows(a.toStringRows());
+        std::vector<std::string>::const_iterator iter;
+        for (auto riter = rows.rbegin(); riter != rows.rend(); ++riter) {
+            std::cout << *riter << '\n';
+        }
+        std::cout << "Bounds = " << a.bounds() << std::endl;
     }
 
     // Utility rows with various delimiters
     {
         printSection("Utility rows (space)");
         auto lines = Mdn2dIO::toStringRows(a, TextWriteOptions::DefaultUtility(CommaTabSpace::Space));
-        printLines(lines);
+        printLines(lines, true);
 
         printSection("Utility rows (comma)");
         auto linesC = Mdn2dIO::toStringRows(a, TextWriteOptions::DefaultUtility(CommaTabSpace::Comma));
-        printLines(linesC);
+        printLines(linesC, true);
 
         printSection("Utility rows (tab)");
         auto linesT = Mdn2dIO::toStringRows(a, TextWriteOptions::DefaultUtility(CommaTabSpace::Tab));
-        printLines(linesT);
+        printLines(linesT, true);
     }
 
     // Columns view (utility-style, numeric, delimited)
@@ -165,7 +194,7 @@ int main() {
         printSection("Columns (utility, comma)");
         TextWriteOptions opt = TextWriteOptions::DefaultUtility(CommaTabSpace::Comma);
         auto cols = Mdn2dIO::toStringCols(a, opt);
-        printLines(cols);
+        printLines(cols, true);
     }
 
     // Windowed pretty (sub-rect)
@@ -174,7 +203,7 @@ int main() {
         TextWriteOptions opt = TextWriteOptions::DefaultPretty();
         opt.window = Rect(-1, 0, 2, 2, /*fixOrdering*/true);
         auto lines = Mdn2dIO::toStringRows(a, opt);
-        printLines(lines);
+        printLines(lines, true);
     }
 
     // Text pretty round-trip equivalence
