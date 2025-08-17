@@ -22,20 +22,24 @@ static inline char32_t boxCpFromUtf8(const std::string& s, char32_t fallback) {
     return u.empty() ? fallback : u[0];
 }
 
+
 static inline char32_t BOX_V() { // │
     static const char32_t cp = boxCpFromUtf8(mdn::Tools::BoxArtStr_v, U'\u2502');
     return cp;
 }
+
 
 static inline char32_t BOX_H() { // ─
     static const char32_t cp = boxCpFromUtf8(mdn::Tools::BoxArtStr_h, U'\u2500');
     return cp;
 }
 
+
 static inline char32_t BOX_X() { // ┼
     static const char32_t cp = boxCpFromUtf8(mdn::Tools::BoxArtStr_x, U'\u253C');
     return cp;
 }
+
 
 static inline char32_t toLower32(char32_t c) {
     if (c >= U'A' && c <= U'Z') {
@@ -43,6 +47,7 @@ static inline char32_t toLower32(char32_t c) {
     }
     return c;
 }
+
 
 static int alphaToDigit(char32_t c) {
     if (c >= U'0' && c <= U'9') {
@@ -55,6 +60,7 @@ static int alphaToDigit(char32_t c) {
     return std::numeric_limits<int>::min();
 }
 
+
 static std::string joinDelimited(const std::vector<int>& row, char delim) {
     std::ostringstream oss;
     if (!row.empty()) {
@@ -66,13 +72,16 @@ static std::string joinDelimited(const std::vector<int>& row, char delim) {
     return oss.str();
 }
 
+
 static inline bool isAxisCharSimple(char32_t c) {
     return c == U'|' || c == U'-' || c == U'+';
 }
 
+
 static inline bool isAxisCharBox(char32_t c) {
     return c == BOX_V() || c == BOX_H() || c == BOX_X();
 }
+
 
 static inline bool likelyAxisLine(const std::u32string& s) {
     for (char32_t c : s) {
@@ -85,6 +94,7 @@ static inline bool likelyAxisLine(const std::u32string& s) {
     }
     return !s.empty();
 }
+
 
 static std::u32string toU32(const std::string& in) {
     std::u32string out;
@@ -118,6 +128,7 @@ static std::u32string toU32(const std::string& in) {
     return out;
 }
 
+
 static std::string fromU32(const std::u32string& in) {
     std::string out;
     for (char32_t c : in) {
@@ -140,6 +151,7 @@ static std::string fromU32(const std::u32string& in) {
     return out;
 }
 
+
 static char delimChar(mdn::CommaTabSpace d) {
     switch (d) {
         case mdn::CommaTabSpace::Comma: return ',';
@@ -155,10 +167,12 @@ std::vector<std::string> mdn::Mdn2dIO::toStringRows(
     const Mdn2dBase& src,
     const TextWriteOptions& opt
 ) {
+    Log_Debug3_H(src.getName());
     Rect b = src.hasBounds() ? src.bounds() : Rect::GetInvalid();
     Rect w = opt.window.isValid() ? opt.window : b;
     std::vector<std::string> lines;
     if (!w.isValid()) {
+        Log_Debug3_T("Empty window");
         return lines;
     }
 
@@ -170,7 +184,11 @@ std::vector<std::string> mdn::Mdn2dIO::toStringRows(
     const int xCount = w.width();
     const int yCount = w.height();
 
-    Log_Debug3("Converting windowed area " << w << " to string output.");
+    Log_Debug3(
+        "w=" << w
+        << ", x:(" << x0 << "," << x1 << ")=" << xCount
+        << ", y::(" << y0 << "," << y1 << ")=" << yCount
+    );
 
     std::string H = "";
     std::string V = "";
@@ -217,6 +235,7 @@ std::vector<std::string> mdn::Mdn2dIO::toStringRows(
     std::string negativeStr = opt.wideNegatives? Tools::BoxArtStr_h : "-";
 
     std::vector<Digit> row;
+    Log_Debug3("Reserving " << xCount);
     row.reserve(static_cast<std::size_t>(xCount));
 
     // I can estlablish a lock - I know people, Mdn2dBase is a friend of mine
@@ -225,6 +244,7 @@ std::vector<std::string> mdn::Mdn2dIO::toStringRows(
 
     for (int y = y0; y <= y1; ++y) {
         // First, if axes are on, are we at the yDigit line?
+        Log_Debug3("y=" << y);
         if (hasAxes && (y == yDigLine)) {
             std::string hAssemble;
             if (signAndDigitPadding > 0) {
@@ -235,27 +255,31 @@ std::vector<std::string> mdn::Mdn2dIO::toStringRows(
                 // No character alignment, default to width of 2
                 hAssemble = H + H;
             }
-            int x;
+            // i indexes along a row i=0 where x=x0, i.e. x = x0+i
+            int i;
             std::ostringstream oss;
-            for (x = 0; x < xDigLine && x < xCount; ++x) {
+            for (i = 0; i < xDigLine && i < xCount; ++i) {
                 oss << hAssemble;
             }
-            if (x == xDigLine) {
+            if (i == xDigLine) {
                 oss << X << H;
                 // extra 'H' is to account for adding a delimeter after the vertical digit line
             }
-            for (; x < xCount; ++x) {
+            for (; i < xCount; ++i) {
                 oss << hAssemble;
             }
             lines.push_back(oss.str());
         }
-        src.getRow(y, x0, x1, row);
+    Log_Debug3_H("getRow dispatch(" << y << "," << x0 << "," << x1 << ", row)");
+        src.locked_getRow(y, x0, x1, row);
+    Log_Debug3_T("row.size()=" << row.size() << ", xCount=" << xCount << ", row.size()==xCount=" << (row.size() == xCount));
         Assert(row.size() == xCount, "Rows are not the expected size");
         std::ostringstream line;
-///////////
+
         // Now indexing by position in the row array
         int i;
         for (i = 0; i < xDigLine && i < xCount; ++i) {
+            Log_Debug3("i=" << i << ", row.size() = " << row.size());
             std::string digStr(
                 Tools::digitToAlpha(
                     row[i],
@@ -271,6 +295,7 @@ std::vector<std::string> mdn::Mdn2dIO::toStringRows(
             line << V << delimStr;
         }
         for (; i < xCount; ++i) {
+            Log_Debug3("i=" << i << ", xCount=" << xCount << ", row.size() = " << row.size());
             std::string digStr(
                 Tools::digitToAlpha(
                     row[i],
@@ -284,6 +309,7 @@ std::vector<std::string> mdn::Mdn2dIO::toStringRows(
         }
         lines.push_back(line.str());
     } // end y loop
+    Log_Debug3_T("returning " << lines.size() << " lines of text");
     return lines;
 }
 
@@ -292,10 +318,12 @@ std::vector<std::string> mdn::Mdn2dIO::toStringCols(
     const Mdn2dBase& src,
     const TextWriteOptions& opt
 ) {
+    Log_Debug3_H(src.getName());
     Rect b = src.hasBounds() ? src.bounds() : Rect::GetInvalid();
     Rect w = opt.window.isValid() ? opt.window : b;
     std::vector<std::string> cols;
     if (!w.isValid()) {
+        Log_Debug3_T("Empty window");
         return cols;
     }
 
@@ -311,6 +339,7 @@ std::vector<std::string> mdn::Mdn2dIO::toStringCols(
     std::vector<Digit> row;
     row.reserve(static_cast<std::size_t>(w.width()));
 
+    Log_Debug3("Converting windowed area " << w << " to string output.");
     for (int y = y0; y <= y1; ++y) {
         row.clear();
         src.getRow(y, x0, x1, row);
@@ -335,6 +364,7 @@ std::vector<std::string> mdn::Mdn2dIO::toStringCols(
         cols.push_back(joinDelimited(col, delimChar(opt.delim)));
     }
 
+    Log_Debug3_T("returning " << cols.size() << " lines of text");
     return cols;
 }
 
@@ -343,6 +373,7 @@ void mdn::Mdn2dIO::saveTextUtility(
     std::ostream& os,
     const TextWriteOptions& opt
 ) {
+    Log_Debug3_H("");
     std::vector<std::string> lines = toStringRows(src, opt);
     for (std::size_t i = 0; i < lines.size(); ++i) {
         os << lines[i];
@@ -350,6 +381,7 @@ void mdn::Mdn2dIO::saveTextUtility(
             os << '\n';
         }
     }
+    Log_Debug3_T("");
 }
 
 void mdn::Mdn2dIO::saveTextPretty(
@@ -357,6 +389,7 @@ void mdn::Mdn2dIO::saveTextPretty(
     std::ostream& os,
     const TextWriteOptions& opt
 ) {
+    Log_Debug3_H("");
     std::vector<std::string> lines = toStringRows(src, opt);
     for (std::size_t i = 0; i < lines.size(); ++i) {
         os << lines[i];
@@ -364,12 +397,14 @@ void mdn::Mdn2dIO::saveTextPretty(
             os << '\n';
         }
     }
+    Log_Debug3_T("");
 }
 
 mdn::TextReadSummary mdn::Mdn2dIO::loadText(
     std::istream& is,
     Mdn2dBase& dst
 ) {
+    Log_Debug3_H("");
     std::vector<std::string> lines;
     std::string line;
     while (std::getline(is, line)) {
@@ -436,6 +471,7 @@ mdn::TextReadSummary mdn::Mdn2dIO::loadText(
 
     TextReadSummary out;
     if (grid.empty()) {
+        Log_Debug3_T("");
         return out;
     }
 
@@ -453,6 +489,7 @@ mdn::TextReadSummary mdn::Mdn2dIO::loadText(
         dst.setRow(out.parsedRect.bottom() + r, out.parsedRect.left(), row);
     }
 
+    Log_Debug3_T("");
     return out;
 }
 
@@ -460,6 +497,7 @@ void mdn::Mdn2dIO::saveBinary(
     const Mdn2dBase& src,
     std::ostream& os
 ) {
+    Log_Debug3_H("");
     const char magic[6] = {'M','D','N','2','D','\0'};
     os.write(magic, 6);
 
@@ -499,6 +537,7 @@ void mdn::Mdn2dIO::saveBinary(
     os.write(reinterpret_cast<const char*>(&W), sizeof(W));
 
     if (!b.isValid()) {
+        Log_Debug3_T("");
         return;
     }
 
@@ -513,22 +552,28 @@ void mdn::Mdn2dIO::saveBinary(
             os.write(reinterpret_cast<const char*>(&b8), sizeof(b8));
         }
     }
+    Log_Debug3_T("");
 }
 
 void mdn::Mdn2dIO::loadBinary(
     std::istream& is,
     Mdn2dBase& dst
 ) {
+    Log_Debug3_H("");
     char magic[6] = {0};
     is.read(magic, 6);
     if (std::memcmp(magic, "MDN2D\0", 6) != 0) {
-        throw std::runtime_error("Invalid MDN2D binary magic");
+        std::runtime_error err("Invalid MDN2D binary magic");
+        Log_Error(err.what());
+        throw err;
     }
 
     std::uint16_t ver = 0;
     is.read(reinterpret_cast<char*>(&ver), sizeof(ver));
     if (ver != 1) {
-        throw std::runtime_error("Unsupported MDN2D binary version");
+        std::runtime_error err("Unsupported MDN2D binary version");
+        Log_Error(err.what());
+        throw err;
     }
 
     std::int32_t base32 = 0;
@@ -540,7 +585,9 @@ void mdn::Mdn2dIO::loadBinary(
     is.read(reinterpret_cast<char*>(&sign8), sizeof(sign8));
 
     if (base32 < 2 || base32 > 32) {
-        throw std::runtime_error("Unsupported base in MDN2D binary (must be 2..32)");
+        std::runtime_error err("Unsupported base in MDN2D binary (must be 2..32)");
+        Log_Error(err.what());
+        throw err;
     }
 
     std::int32_t x0 = 0;
@@ -569,6 +616,7 @@ void mdn::Mdn2dIO::loadBinary(
     dst.setConfig(cfg);
 
     if (H <= 0 || W <= 0) {
+        Log_Debug3_T("");
         return;
     }
 
@@ -583,6 +631,7 @@ void mdn::Mdn2dIO::loadBinary(
         }
         dst.setRow(y0 + r, x0, row);
     }
+    Log_Debug3_T("");
 }
 
 
@@ -590,6 +639,7 @@ mdn::TextReadSummary mdn::Mdn2dIO::load(
     std::istream& is,
     Mdn2dBase& dst
 ) {
+    Log_Debug3_H("");
     std::streampos pos = is.tellg();
     char head[6] = {0};
     is.read(head, 6);
@@ -628,5 +678,8 @@ mdn::TextReadSummary mdn::Mdn2dIO::load(
         return out;
     }
 
-    return loadText(is, dst);
+    auto result = loadText(is, dst);
+    Log_Debug3_T("result = " << result);
+
+    return result;
 }

@@ -67,12 +67,16 @@ public:
 
 // Stream operators (ASCII text). No trailing newline added.
 inline std::ostream& operator<<(std::ostream& os, const Mdn2dBase& mdn) {
+    Log_Debug3_H(mdn.getName());
     Mdn2dIO::saveTextPretty(mdn, os, TextWriteOptions::DefaultPretty());
+    Log_Debug3_T("");
     return os;
 }
 
 inline std::istream& operator>>(std::istream& is, Mdn2dBase& mdn) {
+    Log_Debug3_H("");
     Mdn2dIO::load(is, mdn);
+    Log_Debug3_T(mdn.getName());
     return is;
 }
 

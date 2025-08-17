@@ -31,7 +31,12 @@ class MDN_API Mdn2dConfig {
 
 public:
 
-    static Mdn2dFramework& master() { return *m_masterPtr; }
+    static Mdn2dFramework& getMaster() {
+        if (!m_masterPtr) {
+            m_masterPtr = &(mdn::DummyFramework);
+        }
+        return *m_masterPtr;
+    }
 
     // Set master pointer to the given framework, posts warning if already set
     static void setMaster(Mdn2dFramework& framework);

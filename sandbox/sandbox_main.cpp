@@ -5,6 +5,7 @@
 #include <cassert>
 
 // MDN headers
+#include "Logger.h"
 #include "Mdn2d.h"
 #include "Mdn2dBase.h"
 #include "Mdn2dConfig.h"
@@ -13,29 +14,31 @@
 #include "Digit.h"
 #include "Tools.h"
 
-using mdn::Mdn2d;
-using mdn::Mdn2dBase;
-using mdn::Mdn2dIO;
-using mdn::TextWriteOptions;
-using mdn::CommaTabSpace;
-using mdn::AxesOutput;
-using mdn::Rect;
-using mdn::Digit;
+// using mdn::Mdn2d;
+// using mdn::Mdn2dBase;
+// using mdn::Mdn2dIO;
+// using mdn::TextWriteOptions;
+// using mdn::CommaTabSpace;
+// using mdn::AxesOutput;
+// using mdn::Rect;
+// using mdn::Digit;
+
+using namespace mdn;
 
 // ----- helpers -------------------------------------------------
 
 static void printSection(const std::string& title) {
-    std::cout << "\n=== " << title << " ===\n";
+    Log_Info("" << "\n=== " << title << " ===");
 }
 
 static void printLines(const std::vector<std::string>& lines, bool topDown=false) {
     if (topDown) {
         for (auto it = lines.rbegin(); it != lines.rend(); ++it) {
-            std::cout << *it << '\n';
+            Log_Info("" << *it);
         }
     } else {
         for (const std::string& s : lines) {
-            std::cout << s << '\n';
+            Log_Info("" << s);
         }
     }
 }
@@ -111,13 +114,20 @@ static Mdn2d roundTripBinary(const Mdn2dBase& src) {
 
 // Round-trip pretty text (ASCII) and return a new instance
 static Mdn2d roundTripTextPretty(const Mdn2dBase& src) {
+    Log_Debug_H("roundTripTextPretty");
+
     std::stringstream ss;
     // operator<< emits pretty text via Mdn2dIO::saveTextPretty with defaults
+    Log_Debug("stream out Mdn2dBase");
     ss << src;
 
+    Log_Debug("null ctor");
     Mdn2d dst;
     // operator>> dispatches Mdn2dIO::load (sniffs binary then falls back to text)
+
+    Log_Debug("strea min to Mdn2d");
     ss >> dst;
+    Log_Debug_T("roundTripTextPretty");
     return dst;
 }
 
@@ -138,115 +148,111 @@ static std::string prettyBlob(const Mdn2dBase& m) {
 // ----- main tests ---------------------------------------------
 
 int main() {
-    std::cout << "MDN sandbox: text I/O smoke tests\n";
+    mdn::Logger& sirTalksALot = mdn::Logger::instance();
+    sirTalksALot.setLevel(mdn::LogLevel::Info);
+    sirTalksALot.setOutputToFile();
+
+    Log_Info("" << "MDN sandbox: text I/O smoke tests");
 
     // Build a sample MDN
+    Log_Debug_H("");
     Mdn2d a;
     populateSample(a);
-
-    // Mdn2d slot0 = Mdn2d::NewInstance(Mdn2dConfig(10, 32));
-    // slot0.setValue(COORD_ORIGIN, 3);
-    // slot0.setValue(Coord(0, 1), 2);
-    // slot0.setValue(Coord(1, 0), -2);
-    // slot0.setValue(Coord(1, 1), 1);
-    // slot0.setValue(Coord(20, 6), 9);
-    //
-    // std::vector<std::string> slot0Disp = slot0.toStringRows();
-    // for (auto riter = slot0Disp.rbegin(); riter != slot0Disp.rend(); ++riter) {
-    //     std::cout << *riter << '\n';
-    // }
-    // std::cout << "Bounds = " << slot0.bounds() << std::endl;
-
-    // Pretty rows (box-art axes, alphanumerics, wide negatives)
-    {
-        printSection("Pretty rows (DefaultPretty)");
-        TextWriteOptions opt = TextWriteOptions::DefaultPretty();
-        auto lines = Mdn2dIO::toStringRows(a, opt);
-        printLines(lines, true);
-
-        std::cout << '\n';
-
-        std::vector<std::string> rows(a.toStringRows());
-        std::vector<std::string>::const_iterator iter;
-        for (auto riter = rows.rbegin(); riter != rows.rend(); ++riter) {
-            std::cout << *riter << '\n';
-        }
-        std::cout << "Bounds = " << a.bounds() << std::endl;
-    }
+    Log_Debug_T("");
 
     // Utility rows with various delimiters
     {
+    Log_Debug_H("");
         printSection("Utility rows (space)");
         auto lines = Mdn2dIO::toStringRows(a, TextWriteOptions::DefaultUtility(CommaTabSpace::Space));
         printLines(lines, true);
+    Log_Debug_T("");
 
+    Log_Debug_H("");
         printSection("Utility rows (comma)");
         auto linesC = Mdn2dIO::toStringRows(a, TextWriteOptions::DefaultUtility(CommaTabSpace::Comma));
         printLines(linesC, true);
+    Log_Debug_T("");
 
+    Log_Debug_H("");
         printSection("Utility rows (tab)");
         auto linesT = Mdn2dIO::toStringRows(a, TextWriteOptions::DefaultUtility(CommaTabSpace::Tab));
         printLines(linesT, true);
+    Log_Debug_T("");
     }
 
     // Columns view (utility-style, numeric, delimited)
     {
+    Log_Debug_H("");
         printSection("Columns (utility, comma)");
         TextWriteOptions opt = TextWriteOptions::DefaultUtility(CommaTabSpace::Comma);
         auto cols = Mdn2dIO::toStringCols(a, opt);
         printLines(cols, true);
+    Log_Debug_T("");
     }
 
     // Windowed pretty (sub-rect)
     {
+    Log_Debug_H("");
         printSection("Pretty rows (windowed -1..2 x 0..2)");
         TextWriteOptions opt = TextWriteOptions::DefaultPretty();
         opt.window = Rect(-1, 0, 2, 2, /*fixOrdering*/true);
         auto lines = Mdn2dIO::toStringRows(a, opt);
         printLines(lines, true);
+    Log_Debug_T("");
     }
 
     // Text pretty round-trip equivalence
     {
+    Log_Debug_H("");
         printSection("Round-trip: pretty text");
         Mdn2d b = roundTripTextPretty(a);
         bool same = equalByUtilityText(a, b);
-        std::cout << (same ? "PASS" : "FAIL") << " — pretty text round-trip equals by utility rows\n";
+        Log_Info(
+            "" << (same ? "PASS" : "FAIL") << " — pretty text round-trip equals by utility rows"
+        );
 
         // Show the blob that was parsed (optional)
-        std::cout << "\n[pretty blob parsed]\n" << prettyBlob(a) << "\n";
+        Log_Info("" << "\n[pretty blob parsed]\n" << prettyBlob(a));
+    Log_Debug_T("");
     }
 
     // Binary round-trip equivalence
     {
+    Log_Debug_H("");
         printSection("Round-trip: binary");
         Mdn2d c = roundTripBinary(a);
         bool same = equalByUtilityText(a, c);
-        std::cout << (same ? "PASS" : "FAIL") << " — binary round-trip equals by utility rows\n";
+        Log_Info("" << (same ? "PASS" : "FAIL") << " — binary round-trip equals by utility rows");
+    Log_Debug_T("");
     }
 
     // Direct stream operators (<< >>) also covered by roundTripTextPretty
     {
+    Log_Debug_H("");
         printSection("Operator<< >> demo");
         std::stringstream ss;
         ss << a;
         Mdn2d d;
         ss >> d;
         bool same = equalByUtilityText(a, d);
-        std::cout << (same ? "PASS" : "FAIL") << " — operator round-trip equals\n";
+        Log_Info("" << (same ? "PASS" : "FAIL") << " — operator round-trip equals");
+    Log_Debug_T("");
     }
 
     // Explicit loader from a synthetic “pretty” string with axes and “Bounds = …” footer
     {
+    Log_Debug_H("");
         printSection("LoadText from pretty-ish blob (axes + Bounds line)");
         std::string blob = prettyBlob(a) + "\nBounds = [(-2,-1) -> (4,3)]\n";
         std::stringstream ss(blob);
         Mdn2d e;
         Mdn2dIO::loadText(ss, e);
         bool same = equalByUtilityText(a, e);
-        std::cout << (same ? "PASS" : "FAIL") << " — loadText handled axes + footer\n";
+        Log_Info("" << (same ? "PASS" : "FAIL") << " — loadText handled axes + footer");
+    Log_Debug_T("");
     }
 
-    std::cout << "\nDone.\n";
+    Log_Info("" << "\nDone.");
     return 0;
 }

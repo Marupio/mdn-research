@@ -58,15 +58,16 @@ public:
     void error(const std::string& msg) { log(LogLevel::Error, msg); }
 
     std::string levelToString(LogLevel level) const {
+        // All aligned to improve log readability
         switch (level) {
-            case LogLevel::Debug4: return "Debug4";
-            case LogLevel::Debug3: return "Debug3";
-            case LogLevel::Debug2: return "Debug2";
-            case LogLevel::Debug: return "Debug";
-            case LogLevel::Info: return "Info";
+            case LogLevel::Debug4: return  " Debug4";
+            case LogLevel::Debug3: return  " Debug3";
+            case LogLevel::Debug2: return  " Debug2";
+            case LogLevel::Debug: return   "  Debug";
+            case LogLevel::Info: return    "   Info";
             case LogLevel::Warning: return "Warning";
-            case LogLevel::Error: return "Error";
-            default: return "Unknown";
+            case LogLevel::Error: return   "  Error";
+            default: return                "Unknown";
         }
     }
 
@@ -132,7 +133,7 @@ private:
         __func__ + "] "
 
 #define Internal_AssertStart(expression, messageIfFailed) \
-    if (!expression) { \
+    if (!(expression)) { \
         std::ostringstream oss; \
         oss << InternalLoggerFileRef << messageIfFailed << std::endl; \
         FailedAssertion err = FailedAssertion(oss.str().c_str()); \
@@ -181,7 +182,7 @@ private:
     //      [        |Mdn2dBase.cpp:598,setValue] Mdn2d_2_Copy_1:
     //  Obviously only useful if the class has member variable:
     //      std::string m_name;
-    #define InternalLoggerNamedFileRef InternalIdentedLoggerFileRef + m_name + ": "
+    #define InternalLoggerNamedFileRef InternalIdentedLoggerFileRef + "(" + m_name + ") "
 
     // Standard log message:
     //  No header / footer indent / unindent

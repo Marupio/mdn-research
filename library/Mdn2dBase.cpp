@@ -58,14 +58,14 @@ std::string mdn::Mdn2dBase::locked_generateCopyName(const std::string& nameIn) {
         do {
             Log_Debug4("checking " << nCopy);
             candidate = base + std::to_string(nCopy++);
-        } while (Mdn2dConfig::master().mdnNameExists(candidate));
+        } while (Mdn2dConfig::getMaster().mdnNameExists(candidate));
         Log_Debug4_T("returning " << candidate);
         return candidate;
     }
 
     candidate = nameIn + "_Copy_0";
     Log_Debug4("No '_Copy_#' suffix, checking ..._Copy_0 availability");
-    while (Mdn2dConfig::master().mdnNameExists(candidate)) {
+    while (Mdn2dConfig::getMaster().mdnNameExists(candidate)) {
         Log_Debug4("'__Copy_0' not available");
         static std::regex baseRegex(R"((.*_Copy_))");
         std::smatch baseMatch;
@@ -74,7 +74,7 @@ std::string mdn::Mdn2dBase::locked_generateCopyName(const std::string& nameIn) {
             do {
                 Log_Debug4("Checking " << n);
                 candidate = baseMatch[1].str() + std::to_string(n++);
-            } while (Mdn2dConfig::master().mdnNameExists(candidate));
+            } while (Mdn2dConfig::getMaster().mdnNameExists(candidate));
         } else {
             break;
         }
@@ -415,7 +415,7 @@ void mdn::Mdn2dBase::setName(const std::string& nameIn) {
 
 
 void mdn::Mdn2dBase::locked_setName(const std::string& nameIn) {
-    std::string fwName = m_config.master().requestMdnNameChange(m_name, nameIn);
+    std::string fwName = m_config.getMaster().requestMdnNameChange(m_name, nameIn);
     Log_Debug3(
         "Attempting to change name from '" << m_name << "' to '" << nameIn << "', with framework"
         << " final approval as '" << fwName << "'"
@@ -505,7 +505,7 @@ void mdn::Mdn2dBase::getRow(int y, int x0, int x1, VecDigit& out) const {
 
 void mdn::Mdn2dBase::locked_getRow(int y, int x0, int x1, VecDigit& out) const
 {
-    int xCount = x1 - x0;
+    int xCount = x1 - x0 + 1;
     Log_N_Debug3_H(
         "Row " << y << " from x (" << x0 << " .. " << x1 << "), "
         << xCount << " elements"
@@ -517,7 +517,9 @@ void mdn::Mdn2dBase::locked_getRow(int y, int x0, int x1, VecDigit& out) const
         // There are non-zero entries on this row, fill them in
         const CoordSet& coords = it->second;
         for (const Coord& coord : coords) {
-            out[coord.x()-x0] = m_raw.at(coord);
+            if (coord.x() >= x0 && coord.x() <= x1) {
+                out[coord.x()-x0] = m_raw.at(coord);
+            }
         }
     }
     Log_N_Debug3_T("");
@@ -623,7 +625,7 @@ void mdn::Mdn2dBase::getCol(int x, int y0, int y1, VecDigit& out) const {
 
 void mdn::Mdn2dBase::locked_getCol(int x, int y0, int y1, VecDigit& out) const
 {
-    int yCount = y1 - y0;
+    int yCount = y1 - y0 + 1;
     Log_N_Debug3_H(
         "Col " << x << " from y (" << y0 << " .. " << y1 << "), "
         << yCount << " elements"
@@ -635,7 +637,9 @@ void mdn::Mdn2dBase::locked_getCol(int x, int y0, int y1, VecDigit& out) const
         // There are non-zero entries on this row, fill them in
         const CoordSet& coords = it->second;
         for (const Coord& coord : coords) {
-            out[coord.y()-y0] = m_raw.at(coord);
+            if (coord.y() >= y0 && coord.y() <= y1) {
+                out[coord.y()-y0] = m_raw.at(coord);
+            }
         }
     }
     Log_N_Debug3_T("");

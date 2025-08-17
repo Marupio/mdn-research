@@ -51,6 +51,7 @@ struct MDN_API TextWriteOptions {
     // Ready-made presets
     static TextWriteOptions DefaultPretty();
     static TextWriteOptions DefaultUtility(CommaTabSpace d = CommaTabSpace::Space);
+
 };
 
 // Result of reading text (pretty/utility) back into an MDN
@@ -64,6 +65,11 @@ struct MDN_API TextReadSummary {
 
     // rows
     int height = 0;
+
+    friend std::ostream& operator<<(std::ostream& os, const TextReadSummary& t) {
+        return os << "{" << t.parsedRect << ", (" << t.width << ", " << t.height << ")}";
+    }
 };
+
 
 } // end namespace mdn

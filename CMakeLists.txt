@@ -13,6 +13,22 @@ endif()
 
 set(CMAKE_CXX_STANDARD 17)
 
+# Debug define in *any* generator/config
+add_compile_definitions($<$<CONFIG:Debug>:MDN_DEBUG>)
+
+# Per-compiler debug options (compile + link), guarded properly
+# Use these globally, or put them per-target (recommended) – see below.
+
+# GLOBAL (applies to all targets)
+add_compile_options(
+  $<$<AND:$<NOT:$<CXX_COMPILER_ID:MSVC>>,$<CONFIG:Debug>>:-g>           # GCC/Clang Debug => -g
+  $<$<CXX_COMPILER_ID:MSVC>:/utf-8>                                     # nice to have on MSVC always
+  $<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/Zi>                 # MSVC Debug => PDB info
+)
+add_link_options(
+  $<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/DEBUG>              # MSVC link: emit PDB
+)
+
 # Set default build type if not specified
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
@@ -27,7 +43,7 @@ endif()
 # Add MDN_DEBUG define in Debug builds
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_definitions(MDN_DEBUG)
-    set(CMAKE_CXX_FLAGS_DEBUG "-g")
+    # set(CMAKE_CXX_FLAGS_DEBUG "-g")
     message(STATUS "Debug enabled, MDN_DEBUG is defined.")
 else(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "Release build enabled, no debug defined and stuff")

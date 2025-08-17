@@ -1,5 +1,4 @@
 add_library(mdn SHARED
-    ErrorHandling.cpp
     Logger.cpp
     Mdn2d.cpp
     Mdn2dBase.cpp
@@ -16,7 +15,7 @@ set_target_properties(mdn PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     PUBLIC_HEADER
-        "Carryover.h;Constants.h;Coord.h;CoordSet.h;Digit.h;ErrorHandling.h;Fraxis.h;\
+        "Carryover.h;Constants.h;Coord.h;CoordSet.h;Digit.h;Fraxis.h;\
 GlobalConfig.h;Logger.h;Mdn2d.h;Mdn2dBase.h;Mdn2dConfig.h;Mdn2dConfigImpact.h;Mdn2dFramework.h;\
 Mdn2dIO.h;Mdn2dRules.h;MdnException.h;MdnObserver.h;PrecisionStatus.h;Rect.h;SignConvention.h;\
 TextOptions.h;Tools.h"

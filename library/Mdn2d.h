@@ -2,6 +2,7 @@
 
 #include "GlobalConfig.h"
 #include "Mdn2dRules.h"
+#include "Mdn2dIO.h"
 
 namespace mdn {
 
