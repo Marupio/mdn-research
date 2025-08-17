@@ -11,9 +11,9 @@ const std::vector<char> mdn::Tools::m_digToAlpha(
     }
 );
 
-const std::string mdn::Tools::m_boxArt_h = u8"\u2500"; // ─
-const std::string mdn::Tools::m_boxArt_v = u8"\u2502"; // │
-const std::string mdn::Tools::m_boxArt_x = u8"\u253C"; // ┼
+const std::string mdn::Tools::BoxArtStr_h = u8"\u2500"; // ─
+const std::string mdn::Tools::BoxArtStr_v = u8"\u2502"; // │
+const std::string mdn::Tools::BoxArtStr_x = u8"\u253C"; // ┼
 
 
 namespace { // anonymous

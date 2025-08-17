@@ -20,9 +20,12 @@ class MDN_API Tools {
 public:
 
     static const std::vector<char> m_digToAlpha;
-    static const std::string m_boxArt_h; // ─
-    static const std::string m_boxArt_v; // │
-    static const std::string m_boxArt_x; // ┼
+    static const std::string BoxArtStr_h; // ─
+    static const std::string BoxArtStr_v; // │
+    static const std::string BoxArtStr_x; // ┼
+    static const char32_t BoxArtChar_h; // ─
+    static const char32_t BoxArtChar_v; // │
+    static const char32_t BoxArtChar_x; // ┼
 
     template <class T>
     struct is_byte_like
@@ -119,28 +122,28 @@ public:
         Digit value,
         bool alphaNumerics=true,
         std::string pos=" ",
-        std::string neg=m_boxArt_h,
+        std::string neg=BoxArtStr_h,
         int padSpacesToWidth=0
     );
     static std::string digitToAlpha(
         int value,
         bool alphaNumerics=true,
         std::string pos=" ",
-        std::string neg=m_boxArt_h,
+        std::string neg=BoxArtStr_h,
         int padSpacesToWidth=0
     );
     static std::string digitToAlpha(
         long value,
         bool alphaNumerics=true,
         std::string pos=" ",
-        std::string neg=m_boxArt_h,
+        std::string neg=BoxArtStr_h,
         int padSpacesToWidth=0
     );
     static std::string digitToAlpha(
         long long value,
         bool alphaNumerics=true,
         std::string pos=" ",
-        std::string neg=m_boxArt_h,
+        std::string neg=BoxArtStr_h,
         int padSpacesToWidth=0
     );
 

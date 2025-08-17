@@ -8,8 +8,33 @@
 
 #include "Coord.h"
 #include "Mdn2dConfig.h"
+#include "Tools.h"
 
 namespace {
+
+// Forward declaration so helpers can use toU32
+static std::u32string toU32(const std::string& in);
+
+// Use Tools' UTF-8 box-drawing strings; decode once to char32_t codepoints
+static inline char32_t boxCpFromUtf8(const std::string& s, char32_t fallback) {
+    std::u32string u = toU32(s);
+    return u.empty() ? fallback : u[0];
+}
+
+static inline char32_t BOX_V() { // │
+    static const char32_t cp = boxCpFromUtf8(mdn::Tools::BoxArtStr_v, U'\u2502');
+    return cp;
+}
+
+static inline char32_t BOX_H() { // ─
+    static const char32_t cp = boxCpFromUtf8(mdn::Tools::BoxArtStr_h, U'\u2500');
+    return cp;
+}
+
+static inline char32_t BOX_X() { // ┼
+    static const char32_t cp = boxCpFromUtf8(mdn::Tools::BoxArtStr_x, U'\u253C');
+    return cp;
+}
 
 static inline char32_t toLower32(char32_t c) {
     if (c >= U'A' && c <= U'Z') {
@@ -45,7 +70,7 @@ static inline bool isAxisCharSimple(char32_t c) {
 }
 
 static inline bool isAxisCharBox(char32_t c) {
-    return c == U'│' || c == U'─' || c == U'┼';
+    return c == BOX_V() || c == BOX_H() || c == BOX_X();
 }
 
 static inline bool likelyAxisLine(const std::u32string& s) {
@@ -141,9 +166,9 @@ std::vector<std::string> mdn::Mdn2dIO::toStringRows(
     const int y0 = w.bottom();
     const int y1 = w.top();
 
-    const std::string& H = (opt.axes == AxesOutput::BoxArt) ? Tools::m_boxArt_h : std::string("-");
-    const std::string& V = (opt.axes == AxesOutput::BoxArt) ? Tools::m_boxArt_v : std::string("|");
-    const std::string& X = (opt.axes == AxesOutput::BoxArt) ? Tools::m_boxArt_x : std::string("+");
+    const std::string& H = (opt.axes == AxesOutput::BoxArt) ? Tools::BoxArtStr_h : std::string("-");
+    const std::string& V = (opt.axes == AxesOutput::BoxArt) ? Tools::BoxArtStr_v : std::string("|");
+    const std::string& X = (opt.axes == AxesOutput::BoxArt) ? Tools::BoxArtStr_x : std::string("+");
 
     std::vector<Digit> row;
     row.reserve(static_cast<std::size_t>(w.width()));
@@ -319,10 +344,10 @@ mdn::TextReadSummary mdn::Mdn2dIO::loadText(
             continue;
         }
         for (char32_t& c : u) {
-            if (c == U'│' || c == U'|') {
+            if (c == BOX_V() || c == U'|') {
                 c = U' ';
             }
-            if (c == U'─') {
+            if (c == BOX_H()) {
                 c = U'-';
             }
         }

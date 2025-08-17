@@ -337,18 +337,18 @@ public:
             std::string toString(
                 bool enableAlphaNumerics=true,
                 CommaTabSpace delim=CommaTabSpace::Space,
-                std::string hDelim=Tools::m_boxArt_h,
-                std::string vDelim=Tools::m_boxArt_v,
-                std::string xDelim=Tools::m_boxArt_x,
-                std::string negStr=Tools::m_boxArt_h
+                std::string hDelim=Tools::BoxArtStr_h,
+                std::string vDelim=Tools::BoxArtStr_v,
+                std::string xDelim=Tools::BoxArtStr_x,
+                std::string negStr=Tools::BoxArtStr_h
             ) const;
             protected: std::string locked_toString(
                 bool enableAlphaNumerics=true,
                 CommaTabSpace delim=CommaTabSpace::Space,
-                std::string hDelim=Tools::m_boxArt_h,
-                std::string vDelim=Tools::m_boxArt_v,
-                std::string xDelim=Tools::m_boxArt_x,
-                std::string negStr=Tools::m_boxArt_h
+                std::string hDelim=Tools::BoxArtStr_h,
+                std::string vDelim=Tools::BoxArtStr_v,
+                std::string xDelim=Tools::BoxArtStr_x,
+                std::string negStr=Tools::BoxArtStr_h
             ) const; public:
 
             // Converts the full MDN to a human-readable string
@@ -356,37 +356,37 @@ public:
                 const Rect& window,
                 bool enableAlphaNumerics=true,
                 CommaTabSpace delim=CommaTabSpace::Space,
-                std::string hDelim=Tools::m_boxArt_h,
-                std::string vDelim=Tools::m_boxArt_v,
-                std::string xDelim=Tools::m_boxArt_x,
-                std::string negStr=Tools::m_boxArt_h
+                std::string hDelim=Tools::BoxArtStr_h,
+                std::string vDelim=Tools::BoxArtStr_v,
+                std::string xDelim=Tools::BoxArtStr_x,
+                std::string negStr=Tools::BoxArtStr_h
             ) const;
             protected: std::string locked_toString(
                 const Rect& window,
                 bool enableAlphaNumerics=true,
                 CommaTabSpace delim=CommaTabSpace::Space,
-                std::string hDelim=Tools::m_boxArt_h,
-                std::string vDelim=Tools::m_boxArt_v,
-                std::string xDelim=Tools::m_boxArt_x,
-                std::string negStr=Tools::m_boxArt_h
+                std::string hDelim=Tools::BoxArtStr_h,
+                std::string vDelim=Tools::BoxArtStr_v,
+                std::string xDelim=Tools::BoxArtStr_x,
+                std::string negStr=Tools::BoxArtStr_h
             ) const; public:
 
             // Converts the MDN to an array of strings, representing rows
             std::vector<std::string> toStringRows(
                 bool enableAlphaNumerics=true,
                 CommaTabSpace delim=CommaTabSpace::Space,
-                std::string hDelim=Tools::m_boxArt_h,
-                std::string vDelim=Tools::m_boxArt_v,
-                std::string xDelim=Tools::m_boxArt_x,
-                std::string negStr=Tools::m_boxArt_h
+                std::string hDelim=Tools::BoxArtStr_h,
+                std::string vDelim=Tools::BoxArtStr_v,
+                std::string xDelim=Tools::BoxArtStr_x,
+                std::string negStr=Tools::BoxArtStr_h
             ) const;
             protected: std::vector<std::string> locked_toStringRows(
                 bool enableAlphaNumerics=true,
                 CommaTabSpace delim=CommaTabSpace::Space,
-                std::string hDelim=Tools::m_boxArt_h,
-                std::string vDelim=Tools::m_boxArt_v,
-                std::string xDelim=Tools::m_boxArt_x,
-                std::string negStr=Tools::m_boxArt_h
+                std::string hDelim=Tools::BoxArtStr_h,
+                std::string vDelim=Tools::BoxArtStr_v,
+                std::string xDelim=Tools::BoxArtStr_x,
+                std::string negStr=Tools::BoxArtStr_h
             ) const; public:
 
             // Converts the MDN to an array of strings, representing rows
@@ -394,19 +394,19 @@ public:
                 const Rect& window,
                 bool enableAlphaNumerics=true,
                 CommaTabSpace delim=CommaTabSpace::Space,
-                std::string hDelim=Tools::m_boxArt_h,
-                std::string vDelim=Tools::m_boxArt_v,
-                std::string xDelim=Tools::m_boxArt_x,
-                std::string negStr=Tools::m_boxArt_h
+                std::string hDelim=Tools::BoxArtStr_h,
+                std::string vDelim=Tools::BoxArtStr_v,
+                std::string xDelim=Tools::BoxArtStr_x,
+                std::string negStr=Tools::BoxArtStr_h
             ) const;
             protected: std::vector<std::string> locked_toStringRows(
                 const Rect& window,
                 bool enableAlphaNumerics=true,
                 CommaTabSpace delim=CommaTabSpace::Space,
-                std::string hDelim=Tools::m_boxArt_h,
-                std::string vDelim=Tools::m_boxArt_v,
-                std::string xDelim=Tools::m_boxArt_x,
-                std::string negStr=Tools::m_boxArt_h
+                std::string hDelim=Tools::BoxArtStr_h,
+                std::string vDelim=Tools::BoxArtStr_v,
+                std::string xDelim=Tools::BoxArtStr_x,
+                std::string negStr=Tools::BoxArtStr_h
             ) const; public:
 
             // Converts the MDN to an array of strings, representing columns
@@ -414,19 +414,19 @@ public:
                 const Rect& window,
                 bool enableAlphaNumerics=true,
                 CommaTabSpace delim=CommaTabSpace::Space,
-                std::string hDelim=Tools::m_boxArt_h,
-                std::string vDelim=Tools::m_boxArt_v,
-                std::string xDelim=Tools::m_boxArt_x,
-                std::string negStr=Tools::m_boxArt_h
+                std::string hDelim=Tools::BoxArtStr_h,
+                std::string vDelim=Tools::BoxArtStr_v,
+                std::string xDelim=Tools::BoxArtStr_x,
+                std::string negStr=Tools::BoxArtStr_h
             ) const;
             protected: std::vector<std::string> locked_toStringCols(
                 const Rect& widnow,
                 bool enableAlphaNumerics=true,
                 CommaTabSpace delim=CommaTabSpace::Space,
-                std::string hDelim=Tools::m_boxArt_h,
-                std::string vDelim=Tools::m_boxArt_v,
-                std::string xDelim=Tools::m_boxArt_x,
-                std::string negStr=Tools::m_boxArt_h
+                std::string hDelim=Tools::BoxArtStr_h,
+                std::string vDelim=Tools::BoxArtStr_v,
+                std::string xDelim=Tools::BoxArtStr_x,
+                std::string negStr=Tools::BoxArtStr_h
             ) const; public:
 
 
