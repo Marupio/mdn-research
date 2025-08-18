@@ -34,22 +34,43 @@ inline std::string SignConventionToName(SignConvention SignConvention) {
     return SignConventionNames[fi];
 }
 
-inline SignConvention NameToSignConvention(const std::string& name) {
+inline SignConvention NameToSignConvention(const std::string& name, bool throwOnError=true) {
     for (int i = 0; i < SignConventionNames.size(); ++i) {
         if (SignConventionNames[i] == name) {
             return static_cast<SignConvention>(i);
         }
     }
-    std::ostringstream oss;
-    oss << "Invalid SignConvention type: " << name << " expecting:" << std::endl;
-    if (SignConventionNames.size()) {
-        oss << SignConventionNames[0];
+    if (throwOnError) {
+        std::ostringstream oss;
+        oss << "Invalid SignConvention type: " << name << " expecting:" << std::endl;
+        if (SignConventionNames.size()) {
+            oss << SignConventionNames[0];
+        }
+        for (auto iter = SignConventionNames.cbegin() + 1; iter != SignConventionNames.cend(); ++iter) {
+            oss << ", " << name;
+        }
+        throw std::invalid_argument(oss.str());
     }
-    for (auto iter = SignConventionNames.cbegin() + 1; iter != SignConventionNames.cend(); ++iter) {
-        oss << ", " << name;
-    }
-    throw std::invalid_argument(oss.str());
 }
 
+
+std::ostream& operator<<(std::ostream& os, const SignConvention& s) {
+    os << SignConventionToName(s);
+}
+
+std::istream& operator>>(std::istream& is, SignConvention& s) {
+
+    std::string word;
+    is >> word;
+
+    try {
+        s = NameToSignConvention(word);
+    }
+    catch (const std::invalid_argument& e) {
+        is.setstate(std::ios::failbit);
+        return is;
+    }
+    return is;
+}
 
 } // end namespace mdn

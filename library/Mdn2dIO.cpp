@@ -497,6 +497,9 @@ void mdn::Mdn2dIO::locked_saveTextPretty(
     const TextWriteOptions& opt
 ) {
     Log_Debug3_H("");
+    // First output header (name and bounds)
+    locked_saveTextHeader(src, os);
+    // Now output the data
     std::vector<std::string> lines = locked_toStringRows(src, opt);
     for (std::size_t i = 0; i < lines.size(); ++i) {
         os << lines[i];
@@ -524,6 +527,9 @@ void mdn::Mdn2dIO::locked_saveTextUtility(
     const TextWriteOptions& opt
 ) {
     Log_Debug3_H("");
+    // First output header (name and bounds)
+    locked_saveTextHeader(src, os);
+    // Now output the data
     std::vector<std::string> lines = locked_toStringRows(src, opt);
     for (std::size_t i = 0; i < lines.size(); ++i) {
         os << lines[i];
@@ -532,6 +538,20 @@ void mdn::Mdn2dIO::locked_saveTextUtility(
         }
     }
     Log_Debug3_T("");
+}
+
+
+void mdn::Mdn2dIO::locked_saveTextHeader(
+    const Mdn2dBase& src,
+    std::ostream& os
+) {
+    // Output this format for its header, before the data:
+    //  Mdn2d{nameOfMdn2d}
+    //  Bounds[(x0,y0)->(x1,y1)] (or bounds could also be 'Bounds[Empty]')
+    //  Config(b:10, p:16, s:Positive, c:20, f:X)
+    os << "Mdn2d{" << src.m_name << "}\n";
+    os << "Bounds" << src.locked_bounds() << '\n';
+    os << "Config" << src.locked_getConfig() << '\n';
 }
 
 
@@ -552,13 +572,16 @@ mdn::TextReadSummary mdn::Mdn2dIO::locked_loadText(
     std::vector<std::string> lines;
     std::string line;
     while (std::getline(is, line)) {
+        // Read in the Name and Bounds format from locked_saveTextUtility
+        //  'Mdn2d{name}\nBounds[(x0,y0)->(x1,y1)]'
+        // We need this data to offset the digits correctly
         if (!lines.size() && line.size() >= 3
             && static_cast<unsigned char>(line[0]) == 0xEF
             && static_cast<unsigned char>(line[1]) == 0xBB
             && static_cast<unsigned char>(line[2]) == 0xBF) {
             line.erase(0, 3);
         }
-        if (line.rfind("Bounds =", 0) == 0) {
+        if (line.rfind("Mdn2d", 0) == 0) {
             continue;
         }
         lines.push_back(line);

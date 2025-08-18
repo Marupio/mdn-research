@@ -57,6 +57,12 @@ public:
         const TextWriteOptions& opt = TextWriteOptions::DefaultUtility()
     );
 
+    // Outputs 'text format' the src name and bounds
+    static void mdn::Mdn2dIO::locked_saveTextHeader(
+        const Mdn2dBase& src,
+        std::ostream& os
+    );
+
     // Auto-detects pretty/utility by content; clears and writes into dst
     // Throws std::runtime_error on hard parse errors.
     static TextReadSummary loadText(

@@ -134,7 +134,7 @@ public:
     }
 
     friend std::ostream& operator<<(std::ostream& os, const Coord& c) {
-        return os << "(" << c.m_x << ", " << c.m_y << ")";
+        return os << "(" << c.m_x << "," << c.m_y << ")";
     }
 
     friend std::istream& operator>>(std::istream& is, Coord& c) {
@@ -152,7 +152,8 @@ public:
 
 
 private:
-    int m_x, m_y;
+    int m_x;
+    int m_y;
 };
 
 constexpr Coord COORD_ORIGIN = Coord{0, 0};
