@@ -163,6 +163,73 @@ static char delimChar(mdn::CommaTabSpace d) {
 } // anonymous
 
 
+void mdn::Mdn2dIO::internal_saveTextHeader(
+    const Mdn2dBase& src,
+    std::ostream& os
+) {
+    // Output this format for its header, before the data:
+    //  Mdn2d{nameOfMdn2d}
+    //  Bounds[(x0,y0)->(x1,y1)] (or bounds could also be 'Bounds[Empty]')
+    //  Config(b:10, p:16, s:Positive, c:20, f:X)
+    os << "Mdn2d{" << src.m_name << "}\n";
+    os << "Bounds" << src.locked_bounds() << '\n';
+    os << "Config" << src.locked_getConfig() << '\n';
+}
+
+
+bool mdn::Mdn2dIO::internal_parseNameLine(const std::string& line, std::string& outName) {
+    // Expected: Mdn2d{MyName}
+    if (line.rfind("Mdn2d{", 0) != 0) return false;
+    const auto open = line.find('{');
+    const auto close = line.rfind('}');
+    if (open == std::string::npos || close == std::string::npos || close <= open+1) return false;
+    outName = line.substr(open + 1, close - open - 1);
+    return true;
+}
+
+bool mdn::Mdn2dIO::internal_parseBoundsLine(
+    const std::string& line, int& x0, int& y0, int& x1, int& y1, bool& empty
+) {
+    // Expected: Bounds[(x0,y0)->(x1,y1)]  OR  Bounds[Empty]
+    if (line.rfind("Bounds[", 0) != 0) return false;
+    if (line.find("Empty") != std::string::npos) { empty = true; return true; }
+    empty = false;
+    int tx0, ty0, tx1, ty1;
+    // super lightweight parse:
+    const char* s = line.c_str();
+    if (std::sscanf(s, "Bounds[(%d,%d)->(%d,%d)]", &tx0, &ty0, &tx1, &ty1) == 4) {
+        x0 = tx0; y0 = ty0; x1 = tx1; y1 = ty1;
+        return true;
+    }
+    return false;
+}
+
+
+bool mdn::Mdn2dIO::internal_parseConfigLine(
+    const std::string& line, int& base, int& prec, int& sign
+) {
+    // Expected: Config(b:10, p:16, s:Positive, c:20, f:X)
+    // Only b,p,s are required for IO; others can be ignored or defaulted.
+    if (line.rfind("Config(", 0) != 0) return false;
+    // crude extraction; robust enough for your emitter
+    base = 10; prec = 16; sign = 0; // defaults
+    // base
+    auto bpos = line.find("b:");
+    if (bpos != std::string::npos) base = std::atoi(line.c_str() + bpos + 2);
+    // precision
+    auto ppos = line.find("p:");
+    if (ppos != std::string::npos) prec = std::atoi(line.c_str() + ppos + 2);
+    // sign
+    auto spos = line.find("s:");
+    if (spos != std::string::npos) {
+        if (line.find("Positive", spos) != std::string::npos) sign = 0;
+        else if (line.find("Negative", spos) != std::string::npos) sign = 1;
+        else if (line.find("Bidirectional", spos) != std::string::npos) sign = 2;
+    }
+    return true;
+}
+
+
 std::vector<std::string> mdn::Mdn2dIO::toStringRows(
     const Mdn2dBase& src,
     const TextWriteOptions& opt
@@ -498,7 +565,7 @@ void mdn::Mdn2dIO::locked_saveTextPretty(
 ) {
     Log_Debug3_H("");
     // First output header (name and bounds)
-    locked_saveTextHeader(src, os);
+    internal_saveTextHeader(src, os);
     // Now output the data
     std::vector<std::string> lines = locked_toStringRows(src, opt);
     for (std::size_t i = 0; i < lines.size(); ++i) {
@@ -528,7 +595,7 @@ void mdn::Mdn2dIO::locked_saveTextUtility(
 ) {
     Log_Debug3_H("");
     // First output header (name and bounds)
-    locked_saveTextHeader(src, os);
+    internal_saveTextHeader(src, os);
     // Now output the data
     std::vector<std::string> lines = locked_toStringRows(src, opt);
     for (std::size_t i = 0; i < lines.size(); ++i) {
@@ -538,20 +605,6 @@ void mdn::Mdn2dIO::locked_saveTextUtility(
         }
     }
     Log_Debug3_T("");
-}
-
-
-void mdn::Mdn2dIO::locked_saveTextHeader(
-    const Mdn2dBase& src,
-    std::ostream& os
-) {
-    // Output this format for its header, before the data:
-    //  Mdn2d{nameOfMdn2d}
-    //  Bounds[(x0,y0)->(x1,y1)] (or bounds could also be 'Bounds[Empty]')
-    //  Config(b:10, p:16, s:Positive, c:20, f:X)
-    os << "Mdn2d{" << src.m_name << "}\n";
-    os << "Bounds" << src.locked_bounds() << '\n';
-    os << "Config" << src.locked_getConfig() << '\n';
 }
 
 
@@ -569,21 +622,52 @@ mdn::TextReadSummary mdn::Mdn2dIO::locked_loadText(
     Mdn2dBase& dst
 ) {
     Log_Debug3_H("");
+
+    std::string nameLine, boundsLine, configLine;
+
+    // Handle optional BOM on the very first getline
+    if (!std::getline(is, nameLine)) {
+        Log_Debug3_T("empty stream");
+        return {};
+    }
+    if (nameLine.size() >= 3 &&
+        static_cast<unsigned char>(nameLine[0]) == 0xEF &&
+        static_cast<unsigned char>(nameLine[1]) == 0xBB &&
+        static_cast<unsigned char>(nameLine[2]) == 0xBF) {
+        nameLine.erase(0, 3);
+    }
+
+    if (!std::getline(is, boundsLine)) { return {}; }
+    if (!std::getline(is, configLine)) { return {}; }
+
+    std::string mdnName;
+    if (!internal_parseNameLine(nameLine, mdnName)) { return {}; }
+
+    int x0=0,y0=0,x1=-1,y1=-1; bool empty=false;
+    if (!internal_parseBoundsLine(boundsLine, x0, y0, x1, y1, empty)) { return {}; }
+
+    int base=10, prec=16, sign=0;
+    if (!internal_parseConfigLine(configLine, base, prec, sign)) { return {}; }
+
+
+    // Apply name & config
+    dst.m_name = mdnName; // allowed because we're in locked_*; matches how you write it out. :contentReference[oaicite:10]{index=10}
+    Mdn2dConfig dstCfg = dst.locked_getConfig();
+    Mdn2dConfig cfg(
+        base, prec, static_cast<SignConvention>(sign),
+        dstCfg.maxCarryoverIters(),
+        dstCfg.defaultFraxis()
+    );
+    dst.locked_setConfig(cfg);
+
+    // Clear and set bounds anchor
+    dst.locked_clear();
+    mdn::Rect writeRect = empty ? mdn::Rect::GetInvalid() : mdn::Rect(x0, y0, x1, y1, true);
+
+    // Now read the remainder of the stream as data lines (your existing logic below)
     std::vector<std::string> lines;
     std::string line;
     while (std::getline(is, line)) {
-        // Read in the Name and Bounds format from locked_saveTextUtility
-        //  'Mdn2d{name}\nBounds[(x0,y0)->(x1,y1)]'
-        // We need this data to offset the digits correctly
-        if (!lines.size() && line.size() >= 3
-            && static_cast<unsigned char>(line[0]) == 0xEF
-            && static_cast<unsigned char>(line[1]) == 0xBB
-            && static_cast<unsigned char>(line[2]) == 0xBF) {
-            line.erase(0, 3);
-        }
-        if (line.rfind("Mdn2d", 0) == 0) {
-            continue;
-        }
         lines.push_back(line);
     }
 
@@ -638,27 +722,40 @@ mdn::TextReadSummary mdn::Mdn2dIO::locked_loadText(
 
     TextReadSummary out;
     if (grid.empty()) {
-        Log_Debug3_T("");
+        Log_Debug3_T("result = " << out);
         return out;
     }
 
-    out.height = static_cast<int>(grid.size());
-    out.width = static_cast<int>(grid.front().size());
-    out.parsedRect = Rect(0, 0, out.width - 1, out.height - 1);
+    const int H = static_cast<int>(grid.size());
+    const int W = static_cast<int>(grid.front().size());
 
+    // Destination anchor (bottom-left) from header, or (0,0) if Empty/invalid
+    const int ax = writeRect.isValid() ? writeRect.left()   : 0;
+    const int ay = writeRect.isValid() ? writeRect.bottom() : 0;
+
+    // Clear and write rows, anchored at (ax, ay)
     dst.locked_clear();
-    for (int r = 0; r < out.height; ++r) {
-        std::vector<Digit> row;
-        row.reserve(static_cast<std::size_t>(out.width));
-        for (int c = 0; c < out.width; ++c) {
-            row.push_back(static_cast<Digit>(grid[static_cast<std::size_t>(r)][static_cast<std::size_t>(c)]));
+
+    std::vector<Digit> row;
+    row.resize(static_cast<std::size_t>(W));
+
+    for (int r = 0; r < H; ++r) {
+        for (int c = 0; c < W; ++c) {
+            row[static_cast<std::size_t>(c)] =
+                static_cast<Digit>(grid[static_cast<std::size_t>(r)][static_cast<std::size_t>(c)]);
         }
-        dst.locked_setRow(out.parsedRect.bottom() + r, out.parsedRect.left(), row);
+        dst.locked_setRow(ay + r, ax, row);
     }
 
-    Log_Debug3_T("");
+    // Report what we parsed/wrote
+    out.width  = W;
+    out.height = H;
+    out.parsedRect = Rect(ax, ay, ax + W - 1, ay + H - 1);
+
+    Log_Debug3_T("result = " << out);
     return out;
 }
+
 
 void mdn::Mdn2dIO::saveBinary(
     const Mdn2dBase& src,
@@ -668,22 +765,24 @@ void mdn::Mdn2dIO::saveBinary(
     const char magic[6] = {'M','D','N','2','D','\0'};
     os.write(magic, 6);
 
-    std::uint16_t ver = 1;
+    // version
+    uint16_t ver = 1;
     os.write(reinterpret_cast<const char*>(&ver), sizeof(ver));
 
-    const Mdn2dConfig& cfg = src.getConfig();
+    const std::string nameUtf8 = src.m_name;
+    uint32_t nameLen = static_cast<uint32_t>(nameUtf8.size());
+    os.write(reinterpret_cast<const char*>(&nameLen), sizeof(nameLen));
+    if (nameLen) {
+        os.write(nameUtf8.data(), nameLen);
+    }
 
-    int base = cfg.base();
-    if (base < 2) { base = 2; }
-    if (base > 32) { base = 32; }
-
-    std::int32_t base32 = static_cast<std::int32_t>(base);
-    std::int32_t prec32 = static_cast<std::int32_t>(cfg.precision());
-    std::uint8_t sign8 = static_cast<std::uint8_t>(cfg.signConvention());
-
-    os.write(reinterpret_cast<const char*>(&base32), sizeof(base32));
-    os.write(reinterpret_cast<const char*>(&prec32), sizeof(prec32));
-    os.write(reinterpret_cast<const char*>(&sign8), sizeof(sign8));
+    // existing: write config
+    int32_t base      = std::clamp(src.locked_getConfig().base(), 2, 32);
+    int32_t precision = src.locked_getConfig().precision();
+    uint8_t sign      = static_cast<uint8_t>(src.locked_getConfig().signConvention());
+    os.write(reinterpret_cast<const char*>(&base),      sizeof(base));
+    os.write(reinterpret_cast<const char*>(&precision), sizeof(precision));
+    os.write(reinterpret_cast<const char*>(&sign),      sizeof(sign));
 
     Rect b = src.hasBounds() ? src.bounds() : Rect::GetInvalid();
 
@@ -752,6 +851,17 @@ void mdn::Mdn2dIO::locked_loadBinary(
         Log_Error(err.what());
         throw err;
     }
+
+    std::uint32_t nameLen = 0;
+    is.read(reinterpret_cast<char*>(&nameLen), sizeof(nameLen));
+
+    std::string nameUtf8;
+    nameUtf8.resize(nameLen);
+    if (nameLen) {
+        is.read(nameUtf8.data(), nameLen);
+    }
+
+    dst.m_name = nameUtf8;
 
     std::int32_t base32 = 0;
     std::int32_t prec32 = 0;

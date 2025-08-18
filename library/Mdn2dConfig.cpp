@@ -25,7 +25,7 @@ void mdn::Mdn2dConfig::resetMaster(Mdn2dFramework& framework) {
 
 mdn::Mdn2dConfig::Mdn2dConfig(
     int baseIn,
-    int maxSpanIn,
+    int precisionIn,
     SignConvention signConventionIn,
     int maxCarryoverItersIn,
     Fraxis defaultFraxisIn
@@ -33,7 +33,7 @@ mdn::Mdn2dConfig::Mdn2dConfig(
     m_base(baseIn),
     m_baseDigit(static_cast<Digit>(baseIn)),
     m_baseDouble(static_cast<double>(baseIn)),
-    m_precision(maxSpanIn),
+    m_precision(precisionIn),
     m_epsilon(static_calculateEpsilon(m_precision, m_base)),
     m_signConvention(signConventionIn),
     m_maxCarryoverIters(maxCarryoverItersIn),
@@ -100,7 +100,7 @@ void mdn::Mdn2dConfig::validateConfig() const {
         std::ostringstream oss;
         oss << "Mdn2dConfig has an invalid setting:" << std::endl;
         oss << "    base = " << m_base << ", expecting be 2 .. 32" << std::endl;
-        oss << "    maxSpan = " << m_precision << ", must be > 0" << std::endl;
+        oss << "    precision = " << m_precision << ", must be > 0" << std::endl;
         oss << "    signConvention = " << SignConventionToName(m_signConvention);
         oss << ", expecting: 'Default', 'Positive', or 'Negative'" << std::endl;
         oss << "    maxCarryoverIters = " << m_maxCarryoverIters << std::endl;

@@ -51,14 +51,16 @@ inline SignConvention NameToSignConvention(const std::string& name, bool throwOn
         }
         throw std::invalid_argument(oss.str());
     }
+    return SignConvention::Invalid;
 }
 
 
-std::ostream& operator<<(std::ostream& os, const SignConvention& s) {
+inline std::ostream& operator<<(std::ostream& os, const SignConvention& s) {
     os << SignConventionToName(s);
+    return os;
 }
 
-std::istream& operator>>(std::istream& is, SignConvention& s) {
+inline std::istream& operator>>(std::istream& is, SignConvention& s) {
 
     std::string word;
     is >> word;

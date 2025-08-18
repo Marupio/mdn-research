@@ -88,7 +88,7 @@ public:
     // Construct from parts, or null
     Mdn2dConfig(
         int baseIn=10,
-        int maxSpanIn=16,
+        int precisionIn=16,
         SignConvention signConventionIn=SignConvention::Positive,
         int maxCarryoverItersIn = 20,
         Fraxis defaultFraxisIn=Fraxis::X
@@ -158,8 +158,8 @@ public:
             << "("
                 << "b:" << c.m_base
                 << ", p:" << c.m_precision
-                << ", e:" << c.m_epsilon
-                << ", s:" << SignConventionToName(c.m_signConvention)
+                // << ", e:" << c.m_epsilon
+                << ", s:" << c.m_signConvention
                 << ", c:" << c.m_maxCarryoverIters
                 << ", f:" << FraxisToName(c.m_defaultFraxis)
             << ")";
@@ -175,8 +175,6 @@ public:
         is >> lparen >> letter >> colon >> c.m_base;
         // Reading [, p:16]
         is >> comma >> letter >> colon >> c.m_precision;
-        // Reading [, e:2.4e-6]
-        is >> comma >> letter >> colon >> c.m_epsilon;
         // Reading [, s:Positive,]
         while (letter != ',') {
             is >> letter;
@@ -191,6 +189,7 @@ public:
             fname += letter;
         }
         c.m_defaultFraxis = NameToFraxis(fname);
+        c.m_epsilon = static_calculateEpsilon(c.m_precision, c.m_base);
         return is;
     }
 

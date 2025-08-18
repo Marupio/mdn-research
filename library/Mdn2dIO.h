@@ -14,6 +14,22 @@
 namespace mdn {
 
 class MDN_API Mdn2dIO {
+
+    // *** Private static functions
+
+    // Outputs 'text format' the src name. bounds and config
+    static void internal_saveTextHeader(const Mdn2dBase& src, std::ostream& os);
+
+    // Load header - name line
+    static bool internal_parseNameLine(const std::string& line, std::string& outName);
+
+    // Load header - bounds line
+    static bool internal_parseBoundsLine(const std::string& line, int& x0, int& y0, int& x1, int& y1, bool& empty);
+
+    // Load header - config line
+    static bool internal_parseConfigLine(const std::string& line, int& base, int& prec, int& sign);
+
+
 public:
     // -------- Text -> strings --------
     static std::vector<std::string> toStringRows(
@@ -55,12 +71,6 @@ public:
         const Mdn2dBase& src,
         std::ostream& os,
         const TextWriteOptions& opt = TextWriteOptions::DefaultUtility()
-    );
-
-    // Outputs 'text format' the src name and bounds
-    static void mdn::Mdn2dIO::locked_saveTextHeader(
-        const Mdn2dBase& src,
-        std::ostream& os
     );
 
     // Auto-detects pretty/utility by content; clears and writes into dst

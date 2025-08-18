@@ -261,7 +261,9 @@ public:
                 bool locked_setValue(const Coord& xy, long long value);
             public:
 
-            // Write a contiguous row back in one call. Interprets 0 as "setToZero".
+            // Write a contiguous row back in one call. Interprets 0 as "setToZero".  y is the row,
+            //  x0 is the column.  Why is it backwards?  Shouldn't it be x,y?  Well, I mean, we also
+            //  have getRow with y,x0,x1.
             void setRow(int y, int x0, const VecDigit& row);
             protected:
                 void locked_setRow(int y, int x0, const VecDigit& row);
