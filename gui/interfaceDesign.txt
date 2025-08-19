@@ -80,7 +80,7 @@
         //  the Mdn2d to perform this carryover.  Only the optional carryovers would be performed by
         //  a user.
         //
-        //  The "Carryover.h" file that contains the Carryover enum class also has a detailed
+        //  The "Carryover.hpp" file that contains the Carryover enum class also has a detailed
         //  description of all this.  Here it is:
         //
         // Carryovers

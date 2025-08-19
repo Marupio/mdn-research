@@ -1,4 +1,4 @@
-#include "NumberDisplayWidget.h"
+#include "NumberDisplayWidget.hpp"
 
 #include "../library/Coord.h"
 #include <QPainter>

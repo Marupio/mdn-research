@@ -5,14 +5,14 @@
 #include <cassert>
 
 // MDN headers
-#include "Logger.h"
+#include "Logger.hpp"
 #include "Mdn2d.h"
 #include "Mdn2dBase.h"
 #include "Mdn2dConfig.h"
 #include "Mdn2dIO.h"
-#include "Rect.h"
-#include "Digit.h"
-#include "Tools.h"
+#include "Rect.hpp"
+#include "Digit.hpp"
+#include "Tools.hpp"
 
 // using mdn::Mdn2d;
 // using mdn::Mdn2dBase;

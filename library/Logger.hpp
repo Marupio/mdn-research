@@ -7,8 +7,8 @@
 #include <string>
 #include <mutex>
 
-#include "GlobalConfig.h"
-#include "Tools.h"
+#include "GlobalConfig.hpp"
+#include "Tools.hpp"
 
 namespace mdn {
 

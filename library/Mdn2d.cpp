@@ -5,10 +5,10 @@
 #include <stdexcept>
 #include <sstream>
 
-#include "Constants.h"
-#include "Logger.h"
-#include "MdnException.h"
-#include "Tools.h"
+#include "Constants.hpp"
+#include "Logger.hpp"
+#include "MdnException.hpp"
+#include "Tools.hpp"
 
 
 mdn::Mdn2d::Mdn2d(std::string nameIn) :

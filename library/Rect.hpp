@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Coord.h"
-#include "GlobalConfig.h"
+#include "Coord.hpp"
+#include "GlobalConfig.hpp"
 #include <vector>
 #include <algorithm>
 #include <limits>

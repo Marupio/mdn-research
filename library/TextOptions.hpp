@@ -2,9 +2,9 @@
 
 #include <string>
 
-#include "GlobalConfig.h"
-#include "MdnException.h"
-#include "Rect.h"
+#include "GlobalConfig.hpp"
+#include "MdnException.hpp"
+#include "Rect.hpp"
 
 namespace mdn {
 

@@ -12,7 +12,7 @@
 
 #ifdef MDN_LOGS
 // All use of Logger functionality is enclosed in MDN_LOGS conditionals
-#include "Logger.h"
+#include "Logger.hpp"
 #endif
 
 namespace mdn {

@@ -1,4 +1,4 @@
-#include "Project.h"
+#include "Project.hpp"
 
 #include <QClipboard>
 #include <QGuiApplication>
@@ -12,8 +12,8 @@
 #include "../library/MdnException.h"
 #include "../library/Rect.h"
 #include "../library/SignConvention.h"
-#include "Selection.h"
-#include "MdnQtInterface.h"
+#include "Selection.hpp"
+#include "MdnQtInterface.hpp"
 
 
 int mdn::Project::m_untitledNumber = 0;

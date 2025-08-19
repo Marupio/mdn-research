@@ -6,7 +6,7 @@
 // QT includes
 #include <QMessageBox>
 
-#include "MainWindow.h"
+#include "MainWindow.hpp"
 
 #include "../library/GlobalConfig.h"
 #include "../library/Mdn2d.h"

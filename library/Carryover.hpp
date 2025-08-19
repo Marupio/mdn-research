@@ -78,7 +78,7 @@
 #include <vector>
 #include <string>
 
-#include "Logger.h"
+#include "Logger.hpp"
 
 // Carryover
 //  Type of carryover, depending on the root digit and the axial digits

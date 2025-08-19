@@ -5,11 +5,11 @@
 #include <stdexcept>
 #include <sstream>
 
-#include "Constants.h"
-#include "Logger.h"
+#include "Constants.hpp"
+#include "Logger.hpp"
 #include "Mdn2d.h"
-#include "MdnException.h"
-#include "Tools.h"
+#include "MdnException.hpp"
+#include "Tools.hpp"
 
 
 mdn::Carryover mdn::Mdn2dRules::static_checkCarryover(Digit p, Digit x, Digit y, Digit base) {

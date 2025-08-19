@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-#include "Logger.h"
+#include "Logger.hpp"
 
 // Sign enumeration
 

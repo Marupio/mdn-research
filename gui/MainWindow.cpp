@@ -1,6 +1,6 @@
-#include "MainWindow.h"
+#include "MainWindow.hpp"
 
-#include "NumberDisplayWidget.h"
+#include "NumberDisplayWidget.hpp"
 
 
 MainWindow::MainWindow(QWidget *parent)

@@ -3,14 +3,14 @@
 #include <cmath>
 #include <sstream>
 
-#include "Constants.h"
-#include "Digit.h"
-#include "Fraxis.h"
-#include "GlobalConfig.h"
-#include "Logger.h"
-#include "MdnException.h"
+#include "Constants.hpp"
+#include "Digit.hpp"
+#include "Fraxis.hpp"
+#include "GlobalConfig.hpp"
+#include "Logger.hpp"
+#include "MdnException.hpp"
 #include "Mdn2dFramework.h"
-#include "SignConvention.h"
+#include "SignConvention.hpp"
 
 namespace mdn {
 

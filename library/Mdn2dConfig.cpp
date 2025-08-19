@@ -1,7 +1,7 @@
 #include "Mdn2dConfig.h"
 
-#include "Logger.h"
-#include "MdnException.h"
+#include "Logger.hpp"
+#include "MdnException.hpp"
 
 
 mdn::Mdn2dFramework* mdn::Mdn2dConfig::m_masterPtr = nullptr;

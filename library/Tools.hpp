@@ -9,9 +9,9 @@
 #include <utility>
 #include <vector>
 
-#include "Constants.h"
-#include "Digit.h"
-#include "GlobalConfig.h"
+#include "Constants.hpp"
+#include "Digit.hpp"
+#include "GlobalConfig.hpp"
 
 namespace mdn {
 

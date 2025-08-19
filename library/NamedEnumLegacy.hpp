@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-#include "Logger.h"
+#include "Logger.hpp"
 
 // A few general tools to convert templated Enum into its associated name, and visa-versa
 // Not actually used yet.

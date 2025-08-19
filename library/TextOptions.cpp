@@ -1,4 +1,4 @@
-#include "TextOptions.h"
+#include "TextOptions.hpp"
 
 mdn::TextWriteOptions mdn::TextWriteOptions::DefaultPretty() {
     TextWriteOptions o;

@@ -3,7 +3,7 @@
 
 #include <stdexcept>
 #include <string>
-#include "Coord.h"
+#include "Coord.hpp"
 
 namespace mdn {
 

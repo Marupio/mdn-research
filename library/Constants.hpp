@@ -2,7 +2,7 @@
 
 #include <limits>
 
-#include "Digit.h"
+#include "Digit.hpp"
 
 namespace mdn {
 

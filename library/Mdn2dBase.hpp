@@ -6,14 +6,14 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "CoordSet.h"
-#include "GlobalConfig.h"
+#include "CoordSet.hpp"
+#include "GlobalConfig.hpp"
 #include "Mdn2dConfig.h"
 #include "Mdn2dConfigImpact.h"
-#include "MdnObserver.h"
-#include "PrecisionStatus.h"
-#include "Rect.h"
-#include "TextOptions.h"
+#include "MdnObserver.hpp"
+#include "PrecisionStatus.hpp"
+#include "Rect.hpp"
+#include "TextOptions.hpp"
 
 namespace mdn {
 

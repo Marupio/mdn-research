@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Carryover.h"
-#include "GlobalConfig.h"
+#include "Carryover.hpp"
+#include "GlobalConfig.hpp"
 #include "Mdn2dBase.h"
 
 namespace mdn {

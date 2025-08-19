@@ -5,11 +5,11 @@
 #include <string>
 #include <vector>
 
-#include "GlobalConfig.h"
+#include "GlobalConfig.hpp"
 #include "Mdn2dBase.h"
-#include "Rect.h"
-#include "TextOptions.h"
-#include "Tools.h"
+#include "Rect.hpp"
+#include "TextOptions.hpp"
+#include "Tools.hpp"
 
 namespace mdn {
 

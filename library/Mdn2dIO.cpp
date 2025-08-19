@@ -6,10 +6,10 @@
 #include <limits>
 #include <sstream>
 
-#include "Coord.h"
-#include "Logger.h"
+#include "Coord.hpp"
+#include "Logger.hpp"
 #include "Mdn2dConfig.h"
-#include "Tools.h"
+#include "Tools.hpp"
 
 namespace {
 

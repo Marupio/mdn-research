@@ -1,6 +1,6 @@
 // gui/main.cpp
 #include <QApplication>
-#include "MainWindow.h"
+#include "MainWindow.hpp"
 
 #include <QLabel>
 

@@ -2,7 +2,7 @@
 
 #include <unordered_set>
 
-#include "Coord.h"
+#include "Coord.hpp"
 
 namespace mdn {
 

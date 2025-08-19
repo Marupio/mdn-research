@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GlobalConfig.h"
+#include "GlobalConfig.hpp"
 #include "Mdn2dRules.h"
 #include "Mdn2dIO.h"
 

@@ -7,13 +7,13 @@
 #include <sstream>
 #include <filesystem>
 
-#include "Constants.h"
-#include "GlobalConfig.h"
-#include "Logger.h"
+#include "Constants.hpp"
+#include "GlobalConfig.hpp"
+#include "Logger.hpp"
 #include "Mdn2d.h"
 #include "Mdn2dIO.h"
-#include "MdnException.h"
-#include "Tools.h"
+#include "MdnException.hpp"
+#include "Tools.hpp"
 
 
 std::shared_mutex mdn::Mdn2dBase::m_static_mutex;
