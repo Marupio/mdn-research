@@ -61,7 +61,6 @@ inline std::ostream& operator<<(std::ostream& os, const SignConvention& s) {
 }
 
 inline std::istream& operator>>(std::istream& is, SignConvention& s) {
-
     std::string word;
     is >> word;
 

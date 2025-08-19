@@ -1,0 +1,49 @@
+#pragma once
+
+#include <QClipboard>
+#include <QGuiApplication>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QMimeData>
+#include <QStringList>
+
+#include "../library/Digit.h"
+#include "../library/Rect.h"
+#include "../library/Mdn2d.h"
+
+
+namespace mdn {
+
+class ClipboardData {
+
+public:
+
+    // *** Public data types ***
+
+    struct DecodedPaste {
+        // "rect" | "mdn" | ""
+        QString scope;
+
+        Rect srcRect = Rect::GetInvalid();
+
+        // rows[r][c]
+        std::vector<std::vector<Digit>> rows;
+
+        bool valid()  const { return !rows.empty() && !rows.front().empty(); }
+        int  width()  const { return valid() ? int(rows.front().size()) : 0; }
+        int  height() const { return valid() ? int(rows.size())         : 0; }
+    };
+
+    static DecodedPaste decodeClipboard();
+
+    void encodeRectToClipboard(
+        const Mdn2d& src,
+        const Rect& r,
+        const QString& scope,
+        const QString& originMdnName
+    );
+
+};
+
+} // end namespace mdn

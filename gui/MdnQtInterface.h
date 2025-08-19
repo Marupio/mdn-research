@@ -69,6 +69,35 @@ public:
 
             return Rect(min, max);
         }
+
+        // Mdn Rect to Json
+        static QJsonObject rectToJson(const Rect& r) {
+            QJsonObject o;
+            o["x0"] = r.left();
+            o["y0"] = r.bottom();
+            o["x1"] = r.right();
+            o["y1"] = r.top();
+            return o;
+        }
+
+        // Mdn Rect to Json, string form
+        static QString rectToJsonStr(const Rect& r) {
+            return QString
+            (
+                "{\"x0\": %1, \"y0\": %2, \"x1\": %3, \"y1\": %4}"
+            ).arg(r.left()).arg(r.bottom()).arg(r.right()).arg(r.top());
+        }
+
+
+        static QString joinDigitsTSV(const std::vector<Digit>& v) {
+            QStringList parts;
+            parts.reserve(int(v.size()));
+            for (Digit d : v) {
+                parts << QString::number(int(d));
+            }
+            return parts.join('\t');
+        }
+
 };
 
 } // end namespace mdn

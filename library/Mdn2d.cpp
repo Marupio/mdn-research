@@ -705,7 +705,7 @@ void mdn::Mdn2d::internal_checkFraxis(Fraxis& fraxis) const {
         if (Log_Showing_Debug4) {
             Log_N_Debug4("applying default fraxis: " << FraxisToName(fraxis));
         }
-        fraxis = m_config.defaultFraxis();
+        fraxis = m_config.fraxis();
     } else {
         if (Log_Showing_Debug4) {
             Log_N_Debug4("supplied fraxis: " << FraxisToName(fraxis));

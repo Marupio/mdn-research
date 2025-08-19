@@ -146,8 +146,8 @@ public:
         // *** Config
 
             // Return the Mdn2dConfig for this number
-            const Mdn2dConfig& getConfig() const;
-            protected: const Mdn2dConfig& locked_getConfig() const; public:
+            const Mdn2dConfig& config() const;
+            protected: const Mdn2dConfig& locked_config() const; public:
 
             // Assess the impact of changing the config to the supplied newConfig
             Mdn2dConfigImpact assessConfigChange(const Mdn2dConfig& newConfig);
@@ -172,8 +172,8 @@ public:
         // *** Identity
 
             // Return name
-            const std::string& getName() const;
-            protected: const std::string& locked_getName() const; public:
+            const std::string& name() const;
+            protected: const std::string& locked_name() const; public:
 
             // Set this number's 'name', deferring to framework for approval
             void setName(const std::string& nameIn);

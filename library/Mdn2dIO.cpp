@@ -173,7 +173,7 @@ void mdn::Mdn2dIO::internal_saveTextHeader(
     //  Config(b:10, p:16, s:Positive, c:20, f:X)
     os << "Mdn2d{" << src.m_name << "}\n";
     os << "Bounds" << src.locked_bounds() << '\n';
-    os << "Config" << src.locked_getConfig() << '\n';
+    os << "Config" << src.locked_config() << '\n';
 }
 
 
@@ -190,15 +190,15 @@ bool mdn::Mdn2dIO::internal_parseNameLine(const std::string& line, std::string& 
 bool mdn::Mdn2dIO::internal_parseBoundsLine(
     const std::string& line, int& x0, int& y0, int& x1, int& y1, bool& empty
 ) {
-    Log_Debug3("");
+    Log_Debug3_H("");
     // Expected: Bounds[(x0,y0)->(x1,y1)]  OR  Bounds[Empty]
     if (line.rfind("Bounds[", 0) != 0) {
-    Log_Debug3("");
+        Log_Debug3_T("");
         return false;
     }
     if (line.find("Empty") != std::string::npos) {
         empty = true;
-    Log_Debug3("");
+        Log_Debug3_T("");
         return true;
     }
     empty = false;
@@ -207,10 +207,10 @@ bool mdn::Mdn2dIO::internal_parseBoundsLine(
     const char* s = line.c_str();
     if (std::sscanf(s, "Bounds[(%d,%d)->(%d,%d)]", &tx0, &ty0, &tx1, &ty1) == 4) {
         x0 = tx0; y0 = ty0; x1 = tx1; y1 = ty1;
-    Log_Debug3("");
+        Log_Debug3_T("");
         return true;
     }
-    Log_Debug3("");
+    Log_Debug3_T("");
     return false;
 }
 
@@ -258,7 +258,7 @@ std::vector<std::string> mdn::Mdn2dIO::locked_toStringRows(
     const Mdn2dBase& src,
     const TextWriteOptions& opt
 ) {
-    Log_Debug3_H(src.getName());
+    Log_Debug3_H(src.name());
     Rect b = src.locked_hasBounds() ? src.locked_bounds() : Rect::GetInvalid();
     Rect w = opt.window.isValid() ? opt.window : b;
     std::vector<std::string> lines;
@@ -310,7 +310,7 @@ std::vector<std::string> mdn::Mdn2dIO::locked_toStringRows(
     // Pad with spaces only when delim is Space
     int signAndDigitPadding = 0;
     if (opt.delim == CommaTabSpace::Space) {
-        if (!opt.alphanumeric && src.locked_getConfig().base() > 10) {
+        if (!opt.alphanumeric && src.locked_config().base() > 10) {
             // sign and digit may be 3 characters: e.g. -12
             signAndDigitPadding = 3;
         } else {
@@ -331,7 +331,6 @@ std::vector<std::string> mdn::Mdn2dIO::locked_toStringRows(
 
     for (int y = y0; y <= y1; ++y) {
         // First, if axes are on, are we at the yDigit line?
-        Log_Debug3("y=" << y);
         if (hasAxes && (y == yDigLine)) {
             std::string hAssemble;
             if (signAndDigitPadding > 0) {
@@ -369,7 +368,6 @@ std::vector<std::string> mdn::Mdn2dIO::locked_toStringRows(
         // Now indexing by position in the row array
         int i;
         for (i = 0; i < xDigLine && i < xCount; ++i) {
-            Log_Debug3("i=" << i << ", row.size() = " << row.size());
             std::string digStr(
                 Tools::digitToAlpha(
                     row[i],
@@ -385,7 +383,6 @@ std::vector<std::string> mdn::Mdn2dIO::locked_toStringRows(
             line << V << delimStr;
         }
         for (; i < xCount; ++i) {
-            Log_Debug3("i=" << i << ", xCount=" << xCount << ", row.size() = " << row.size());
             std::string digStr(
                 Tools::digitToAlpha(
                     row[i],
@@ -417,7 +414,7 @@ std::vector<std::string> mdn::Mdn2dIO::locked_toStringCols(
     const Mdn2dBase& src,
     const TextWriteOptions& opt
 ) {
-    Log_Debug3_H(src.locked_getName());
+    Log_Debug3_H(src.locked_name());
     Rect b = src.locked_hasBounds() ? src.locked_bounds() : Rect::GetInvalid();
     Rect w = opt.window.isValid() ? opt.window : b;
     std::vector<std::string> lines;
@@ -469,7 +466,7 @@ std::vector<std::string> mdn::Mdn2dIO::locked_toStringCols(
     // Pad with spaces only when delim is Space
     int signAndDigitPadding = 0;
     if (opt.delim == CommaTabSpace::Space) {
-        if (!opt.alphanumeric && src.locked_getConfig().base() > 10) {
+        if (!opt.alphanumeric && src.locked_config().base() > 10) {
             // sign and digit may be 3 characters: e.g. -12
             signAndDigitPadding = 3;
         } else {
@@ -485,12 +482,10 @@ std::vector<std::string> mdn::Mdn2dIO::locked_toStringCols(
     std::string negativeStr = opt.wideNegatives? Tools::BoxArtStr_h : "-";
 
     std::vector<Digit> col;
-    Log_Debug3("Reserving " << yCount);
     col.reserve(static_cast<std::size_t>(yCount));
 
     for (int x = x0; x <= x1; ++x) {
         // First, if axes are on, are we at the xDigit line?
-        Log_Debug3("x=" << x);
         if (hasAxes && (x == xDigLine)) {
             std::string hAssemble;
             if (signAndDigitPadding > 0) {
@@ -528,7 +523,6 @@ std::vector<std::string> mdn::Mdn2dIO::locked_toStringCols(
         // Now indexing by position in the col array
         int i;
         for (i = 0; i < yDigLine && i < yCount; ++i) {
-            Log_Debug3("i=" << i << ", col.size() = " << col.size());
             std::string digStr(
                 Tools::digitToAlpha(
                     col[i],
@@ -544,7 +538,6 @@ std::vector<std::string> mdn::Mdn2dIO::locked_toStringCols(
             line << V << delimStr;
         }
         for (; i < yCount; ++i) {
-            Log_Debug3("i=" << i << ", yCount=" << yCount << ", col.size() = " << col.size());
             std::string digStr(
                 Tools::digitToAlpha(
                     col[i],
@@ -628,7 +621,7 @@ mdn::TextReadSummary mdn::Mdn2dIO::loadText(
     Mdn2dBase& dst
 ) {
     auto lock = dst.lockWriteable();
-    Log_Debug3_H("");
+    Log_Debug3("");
     return locked_loadText(is, dst);
 }
 
@@ -640,49 +633,41 @@ mdn::TextReadSummary mdn::Mdn2dIO::locked_loadText(
     Log_Debug3_H("");
     Log_Info("locked_loadText");
     std::string nameLine, boundsLine, configLine;
-    Log_Debug3("");
 
     // Handle optional BOM on the very first getline
     if (!std::getline(is, nameLine)) {
         Log_Debug3_T("empty stream");
         return {};
     }
-    Log_Debug3("");
     if (
         nameLine.size() >= 3 &&
         static_cast<unsigned char>(nameLine[0]) == 0xEF &&
         static_cast<unsigned char>(nameLine[1]) == 0xBB &&
         static_cast<unsigned char>(nameLine[2]) == 0xBF
     ) {
-    Log_Debug3("");
         nameLine.erase(0, 3);
     }
-    Log_Debug3("");
 
     if (!std::getline(is, boundsLine)) {
         Log_Debug3_T("Stream ended early");
         return {};
     }
-    Log_Debug3("");
     if (!std::getline(is, configLine)) {
         Log_Debug3_T("Stream ended early");
         return {};
     }
-    Log_Debug3("");
 
     std::string mdnName;
     if (!internal_parseNameLine(nameLine, mdnName)) {
         Log_Debug3_T("Stream ended early");
         return {};
     }
-    Log_Debug3("");
 
     int x0=0,y0=0,x1=-1,y1=-1; bool empty=false;
     if (!internal_parseBoundsLine(boundsLine, x0, y0, x1, y1, empty)) {
         Log_Debug3_T("Stream ended early");
         return {};
     }
-    Log_Debug3("");
 
     int base=10;
     int prec=16;
@@ -691,26 +676,19 @@ mdn::TextReadSummary mdn::Mdn2dIO::locked_loadText(
         Log_Debug3_T("Stream ended early");
         return {};
     }
-    Log_Debug3("");
-
 
     // Apply name & config
     dst.m_name = mdnName; // allowed because we're in locked_*; matches how you write it out. :contentReference[oaicite:10]{index=10}
-    Log_Debug3("");
-    const Mdn2dConfig& dstCfg = dst.locked_getConfig();
-    Log_Debug3("");
+    const Mdn2dConfig& dstCfg = dst.locked_config();
     Mdn2dConfig cfg(
         base, prec, static_cast<SignConvention>(sign),
         dstCfg.maxCarryoverIters(),
-        dstCfg.defaultFraxis()
+        dstCfg.fraxis()
     );
-    Log_Debug3("");
     dst.locked_setConfig(cfg);
-    Log_Debug3("");
     // Clear and set bounds anchor
     dst.locked_clear();
     mdn::Rect writeRect = empty ? mdn::Rect::GetInvalid() : mdn::Rect(x0, y0, x1, y1, true);
-    Log_Debug3("");
 
     // Now read the remainder of the stream as data lines (your existing logic below)
     std::vector<std::string> lines;
@@ -827,9 +805,9 @@ void mdn::Mdn2dIO::saveBinary(
     }
 
     // existing: write config
-    int32_t base      = std::clamp(src.locked_getConfig().base(), 2, 32);
-    int32_t precision = src.locked_getConfig().precision();
-    uint8_t sign      = static_cast<uint8_t>(src.locked_getConfig().signConvention());
+    int32_t base      = std::clamp(src.locked_config().base(), 2, 32);
+    int32_t precision = src.locked_config().precision();
+    uint8_t sign      = static_cast<uint8_t>(src.locked_config().signConvention());
     os.write(reinterpret_cast<const char*>(&base),      sizeof(base));
     os.write(reinterpret_cast<const char*>(&precision), sizeof(precision));
     os.write(reinterpret_cast<const char*>(&sign),      sizeof(sign));
@@ -941,13 +919,13 @@ void mdn::Mdn2dIO::locked_loadBinary(
     is.read(reinterpret_cast<char*>(&H), sizeof(H));
     is.read(reinterpret_cast<char*>(&W), sizeof(W));
 
-    Mdn2dConfig dstCfg = dst.locked_getConfig();
+    Mdn2dConfig dstCfg = dst.locked_config();
     Mdn2dConfig cfg = Mdn2dConfig(
         static_cast<int>(base32),
         static_cast<int>(prec32),
         static_cast<SignConvention>(sign8),
         dstCfg.maxCarryoverIters(),
-        dstCfg.defaultFraxis()
+        dstCfg.fraxis()
     );
 
     dst.locked_setConfig(cfg);
@@ -989,24 +967,19 @@ mdn::TextReadSummary mdn::Mdn2dIO::locked_load(
 
     // Remember where parsing should begin
     const std::streampos pos = is.tellg();
-    Log_Debug3("");
 
     // --- Sniff: try to read the 6-byte magic ---
     char head[6] = {0};
     is.read(head, 6);
     const std::streamsize n = is.gcount();
-    Log_Debug3("");
 
     // Always restore state & position before deciding what to do next
     is.clear();                 // clear eof/fail so seekg succeeds
     is.seekg(pos);
-    Log_Debug3("");
 
     const bool looksBinary = (n == 6) && (std::memcmp(head, "MDN2D\0", 6) == 0);
-    Log_Debug3("");
 
     if (looksBinary) {
-    Log_Debug3("");
         // --- Non-destructive peek of the binary header to build the summary ---
         // If anything below fails, we’ll fall back to text load.
         TextReadSummary out{};
@@ -1078,74 +1051,9 @@ mdn::TextReadSummary mdn::Mdn2dIO::locked_load(
         // If header peek failed, fall back to text loader
         Log_Warn("Binary header peek failed, falling back to text parser.");
     }
-    Log_Debug3("");
 
     // Text path (or binary sniff failed)
     auto result = locked_loadText(is, dst);
     Log_Debug3_T("result = " << result);
     return result;
 }
-
-
-// mdn::TextReadSummary mdn::Mdn2dIO::locked_load(
-//     std::istream& is,
-//     Mdn2dBase& dst
-// ) {
-//     Log_Debug3_H("");
-//     std::streampos pos = is.tellg();
-//     char head[6] = {0};
-//     is.read(head, 6);
-
-//     std::streamsize n = is.gcount();
-//     bool isBinary = (n == 6) && (std::memcmp(head, "MDN2D\0", 6) == 0);
-
-//     // Always restore position before continuing
-//     is.clear();              // clear ONLY after we’re done inspecting flags
-//     is.seekg(pos);
-
-//     if (isBinary) {
-//         // Parse once and return the real result from locked_loadBinary
-//         return locked_loadBinary(is, dst), TextReadSummary{/*fill from binary read if you want*/};
-//     }
-
-//     // Fall through to text
-//     auto result = locked_loadText(is, dst);
-//     return result;
-
-    // if (std::memcmp(head, "MDN2D\0", 6) == 0) {
-    //     locked_loadBinary(is, dst);
-
-    //     is.seekg(pos);
-    //     char magic[6];
-    //     is.read(magic, 6);
-
-    //     std::uint16_t ver = 0;
-    //     is.read(reinterpret_cast<char*>(&ver), sizeof(ver));
-
-    //     std::int32_t base32 = 0;
-    //     std::int32_t prec32 = 0;
-    //     std::uint8_t sign8 = 0;
-    //     is.read(reinterpret_cast<char*>(&base32), sizeof(base32));
-    //     is.read(reinterpret_cast<char*>(&prec32), sizeof(prec32));
-    //     is.read(reinterpret_cast<char*>(&sign8), sizeof(sign8));
-
-    //     std::int32_t x0, y0, x1, y1, H, W;
-    //     is.read(reinterpret_cast<char*>(&x0), sizeof(x0));
-    //     is.read(reinterpret_cast<char*>(&y0), sizeof(y0));
-    //     is.read(reinterpret_cast<char*>(&x1), sizeof(x1));
-    //     is.read(reinterpret_cast<char*>(&y1), sizeof(y1));
-    //     is.read(reinterpret_cast<char*>(&H), sizeof(H));
-    //     is.read(reinterpret_cast<char*>(&W), sizeof(W));
-
-    //     TextReadSummary out;
-    //     out.width = static_cast<int>(W);
-    //     out.height = static_cast<int>(H);
-    //     out.parsedRect = Rect(x0, y0, x1, y1);
-    //     return out;
-    // }
-
-    // auto result = locked_loadText(is, dst);
-    // Log_Debug3_T("result = " << result);
-
-    // return result;
-//}

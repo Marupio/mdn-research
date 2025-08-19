@@ -31,7 +31,7 @@ mdn::Mdn2dConfig::Mdn2dConfig(
     int precisionIn,
     SignConvention signConventionIn,
     int maxCarryoverItersIn,
-    Fraxis defaultFraxisIn
+    Fraxis fraxisIn
 ) :
     m_base(baseIn),
     m_baseDigit(static_cast<Digit>(baseIn)),
@@ -40,11 +40,11 @@ mdn::Mdn2dConfig::Mdn2dConfig(
     m_epsilon(static_calculateEpsilon(m_precision, m_base)),
     m_signConvention(signConventionIn),
     m_maxCarryoverIters(maxCarryoverItersIn),
-    m_defaultFraxis(defaultFraxisIn)
+    m_fraxis(fraxisIn)
 {
-    Log_Debug3("");
+    Log_Debug3_H("");
     validateConfig();
-    Log_Debug3("");
+    Log_Debug3_T("");
 }
 
 
@@ -74,9 +74,9 @@ void mdn::Mdn2dConfig::setSignConvention(int newVal) {
 }
 
 
-void mdn::Mdn2dConfig::setDefaultFraxis(int newVal) {
+void mdn::Mdn2dConfig::setFraxis(int newVal) {
     if (newVal >= 0 && newVal < FraxisNames.size()) {
-        m_defaultFraxis = static_cast<Fraxis>(newVal);
+        m_fraxis = static_cast<Fraxis>(newVal);
     } else {
         throw std::invalid_argument(
             "Fraxis must be a value between 0 and " + std::to_string(FraxisNames.size()) +
@@ -95,13 +95,13 @@ bool mdn::Mdn2dConfig::checkConfig() const {
             (m_signConvention == SignConvention::Negative) ||
             (m_signConvention == SignConvention::Default)
         ) &&
-        ((m_defaultFraxis == Fraxis::X) || (m_defaultFraxis == Fraxis::Y))
+        ((m_fraxis == Fraxis::X) || (m_fraxis == Fraxis::Y))
     );
 }
 
 
 void mdn::Mdn2dConfig::validateConfig() const {
-    Log_Debug3("");
+    Log_Debug3_H("");
     if (!checkConfig()) {
         std::ostringstream oss;
         oss << "Mdn2dConfig has an invalid setting:" << std::endl;
@@ -110,17 +110,17 @@ void mdn::Mdn2dConfig::validateConfig() const {
         oss << "    signConvention = " << SignConventionToName(m_signConvention);
         oss << ", expecting: 'Default', 'Positive', or 'Negative'" << std::endl;
         oss << "    maxCarryoverIters = " << m_maxCarryoverIters << std::endl;
-        oss << "    defaultFraxis = " << FraxisToName(m_defaultFraxis)
+        oss << "    fraxis = " << FraxisToName(m_fraxis)
             << ", expecting 'X' or 'Y'";
         InvalidArgument err(oss.str());
         Log_Error(err.what());
         throw err;
     }
-    Log_Debug3("");
+    Log_Debug3_T("");
 }
 
 
-std::string mdn::Mdn2dConfig::to_string() const {
+std::string mdn::Mdn2dConfig::toString() const {
     std::ostringstream oss;
     oss << *this;
     return oss.str();

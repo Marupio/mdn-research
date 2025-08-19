@@ -58,14 +58,14 @@ std::string mdn::Mdn2dBase::locked_generateCopyName(const std::string& nameIn) {
         do {
             Log_Debug4("checking " << nCopy);
             candidate = base + std::to_string(nCopy++);
-        } while (Mdn2dConfig::getMaster().mdnNameExists(candidate));
+        } while (Mdn2dConfig::master().mdnNameExists(candidate));
         Log_Debug4_T("returning " << candidate);
         return candidate;
     }
 
     candidate = nameIn + "_Copy_0";
     Log_Debug4("No '_Copy_#' suffix, checking ..._Copy_0 availability");
-    while (Mdn2dConfig::getMaster().mdnNameExists(candidate)) {
+    while (Mdn2dConfig::master().mdnNameExists(candidate)) {
         Log_Debug4("'__Copy_0' not available");
         static std::regex baseRegex(R"((.*_Copy_))");
         std::smatch baseMatch;
@@ -74,7 +74,7 @@ std::string mdn::Mdn2dBase::locked_generateCopyName(const std::string& nameIn) {
             do {
                 Log_Debug4("Checking " << n);
                 candidate = baseMatch[1].str() + std::to_string(n++);
-            } while (Mdn2dConfig::getMaster().mdnNameExists(candidate));
+            } while (Mdn2dConfig::master().mdnNameExists(candidate));
         } else {
             break;
         }
@@ -261,14 +261,14 @@ mdn::Mdn2dBase::~Mdn2dBase() {
 }
 
 
-const mdn::Mdn2dConfig& mdn::Mdn2dBase::getConfig() const {
+const mdn::Mdn2dConfig& mdn::Mdn2dBase::config() const {
     auto lock = lockReadOnly();
     Log_N_Debug2("");
-    return locked_getConfig();
+    return locked_config();
 }
 
 
-const mdn::Mdn2dConfig& mdn::Mdn2dBase::locked_getConfig() const {
+const mdn::Mdn2dConfig& mdn::Mdn2dBase::locked_config() const {
     if (Log_Showing_Debug4) {
         Log_N_Debug4("returning config: " << m_config);
     } else {
@@ -384,7 +384,7 @@ void mdn::Mdn2dBase::locked_unregisterObserver(MdnObserver* obs) const {
     if (iter == m_observers.end()) {
         Log_Warn(
             "Attempting to unregister observer " << obs->instance() << ", attached to Mdn2d '"
-            << obs->get()->getName() << "' from incorrect Mdn2d '" << locked_getName() << "'"
+            << obs->get()->name() << "' from incorrect Mdn2d '" << locked_name() << "'"
         );
         Log_N_Debug3_T("");
         return;
@@ -394,14 +394,14 @@ void mdn::Mdn2dBase::locked_unregisterObserver(MdnObserver* obs) const {
 }
 
 
-const std::string& mdn::Mdn2dBase::getName() const {
+const std::string& mdn::Mdn2dBase::name() const {
     auto lock = lockReadOnly();
     Log_N_Debug2("");
-    return locked_getName();
+    return locked_name();
 }
 
 
-const std::string& mdn::Mdn2dBase::locked_getName() const {
+const std::string& mdn::Mdn2dBase::locked_name() const {
     Log_Debug3("returning name=" << m_name);
     return m_name;
 }
@@ -415,7 +415,7 @@ void mdn::Mdn2dBase::setName(const std::string& nameIn) {
 
 
 void mdn::Mdn2dBase::locked_setName(const std::string& nameIn) {
-    std::string fwName = m_config.getMaster().requestMdnNameChange(m_name, nameIn);
+    std::string fwName = m_config.master().requestMdnNameChange(m_name, nameIn);
     Log_Debug3(
         "Attempting to change name from '" << m_name << "' to '" << nameIn << "', with framework"
         << " final approval as '" << fwName << "'"

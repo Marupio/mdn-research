@@ -31,7 +31,7 @@ class MDN_API Mdn2dConfig {
 
 public:
 
-    static Mdn2dFramework& getMaster() {
+    static Mdn2dFramework& master() {
         if (!m_masterPtr) {
             m_masterPtr = &(mdn::DummyFramework);
         }
@@ -43,6 +43,16 @@ public:
 
     // Set master pointer to the given framework, overwrites previously existing setting silently
     static void resetMaster(Mdn2dFramework& framework);
+
+    // Return default carryOverIters
+    static int defaultCarryOverIters() {
+        return 20;
+    }
+
+
+private:
+
+    // Private member data
 
     // If a message exists here, the associated Mdn2d is invalid for the reason contained in the
     // string.  Purpose of this is to prevent throwing during move ctor, so normal operation can be
@@ -74,7 +84,7 @@ public:
     int m_maxCarryoverIters;
 
     // Affects 1) fractional addition, 2) divide direction
-    Fraxis m_defaultFraxis;
+    Fraxis m_fraxis;
 
 
 public:
@@ -91,7 +101,7 @@ public:
         int precisionIn=16,
         SignConvention signConventionIn=SignConvention::Positive,
         int maxCarryoverItersIn = 20,
-        Fraxis defaultFraxisIn=Fraxis::X
+        Fraxis fraxisIn=Fraxis::X
     );
 
     // Returns true if the number became invalid during a noexcept function
@@ -135,14 +145,17 @@ public:
     }
 
     int maxCarryoverIters() const { return m_maxCarryoverIters; }
+    bool maxCarryoverItersIsDefault() const {
+        return m_maxCarryoverIters == defaultCarryOverIters();
+    }
     void setMaxCarryoverIters(int newVal) {
         m_maxCarryoverIters = newVal < 0 ? constants::intMax : newVal;
     }
 
-    Fraxis defaultFraxis() const { return m_defaultFraxis; }
-    void setDefaultFraxis(int newVal);
-    void setDefaultFraxis(std::string newName) { m_defaultFraxis = NameToFraxis(newName); }
-    void setDefaultFraxis(Fraxis fraxisIn) { m_defaultFraxis = fraxisIn; }
+    Fraxis fraxis() const { return m_fraxis; }
+    void setFraxis(int newVal);
+    void setFraxis(std::string newName) { m_fraxis = NameToFraxis(newName); }
+    void setFraxis(Fraxis fraxisIn) { m_fraxis = fraxisIn; }
 
     // Returns true if all settings are valid, false if something failed
     bool checkConfig() const;
@@ -150,7 +163,7 @@ public:
     // Throws if any setting is invalid
     void validateConfig() const;
 
-    std::string to_string() const;
+    std::string toString() const;
 
     // string format: (b:10, p:16, s:Positive, c:20, f:X)
     friend std::ostream& operator<<(std::ostream& os, const Mdn2dConfig& c) {
@@ -161,7 +174,7 @@ public:
                 // << ", e:" << c.m_epsilon
                 << ", s:" << c.m_signConvention
                 << ", c:" << c.m_maxCarryoverIters
-                << ", f:" << FraxisToName(c.m_defaultFraxis)
+                << ", f:" << FraxisToName(c.m_fraxis)
             << ")";
     }
 
@@ -188,14 +201,14 @@ public:
             is >> letter;
             fname += letter;
         }
-        c.m_defaultFraxis = NameToFraxis(fname);
+        c.m_fraxis = NameToFraxis(fname);
         c.m_epsilon = static_calculateEpsilon(c.m_precision, c.m_base);
         return is;
     }
 
     // SignConvention m_signConvention;
     // int m_maxCarryoverIters;
-    // Fraxis m_defaultFraxis;
+    // Fraxis m_fraxis;
 
         // From the perspective of an Mdn2d, look for compatibility.  The data that matters are:
         //  base, precision, sign convention

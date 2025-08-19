@@ -155,10 +155,20 @@ private:
     Internal_AssertEnd
 
 
-#ifdef MDN_LOGS
+#ifdef MDN_DEBUG
 
     #define DBAssert(expression, messageIfFailed) Assert(expression, messageIfFailed)
     #define DBAssertQ(expression, messageIfFailed) AssertQ(expression, messageIfFailed)
+
+#else
+
+    #define DBAssert(expression, messageIfFailed) do {} while (false);
+    #define DBAssertQ(expression, messageIfFailed) do {} while (false);
+
+#endif
+
+
+#ifdef MDN_LOGS
 
     // Internal use - this macro brings together the final logging code
     #define InternalLoggerAssembleFunction(FILE_REF, message, level) { \
@@ -341,8 +351,6 @@ private:
     #define Log_N_Debug_T(message) InternalLoggerNamedFooter(message, debug)
 
 #else
-    #define DBAssert(expression, messageIfFailed) do {} while (false);
-    #define DBAssertQ(expression, messageIfFailed) do {} while (false);
 
     #define Log_Debug4(message)   do {} while (false);
     #define Log_Debug3(message)   do {} while (false);

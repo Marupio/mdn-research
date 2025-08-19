@@ -63,7 +63,7 @@ static bool equalByUtilityText(const Mdn2dBase& a, const Mdn2dBase& b) {
 // Sample content: a small 7x5 window with negatives and alpha-range digits
 static void populateSample(Mdn2dBase& m) {
     // Configure base and a couple of defaults
-    mdn::Mdn2dConfig cfg = m.getConfig();
+    mdn::Mdn2dConfig cfg = m.config();
     mdn::Mdn2dConfig newCfg(10, 16, mdn::SignConvention::Positive, 20, mdn::Fraxis::X);
     m.setConfig(newCfg);
 
@@ -165,65 +165,65 @@ int main() {
     populateSample(a);
     Log_Debug_T("");
 
-//     // Pretty rows (box-art axes, alphanumerics, wide negatives)
-//     {
-//         printSection("Pretty rows (DefaultPretty)");
-//         TextWriteOptions opt = TextWriteOptions::DefaultPretty();
-//         auto lines = Mdn2dIO::toStringRows(a, opt);
-//         printLines(lines, true);
-//
-//         std::cout << '\n';
-//
-//         std::vector<std::string> rows(a.toStringRows());
-//         std::vector<std::string>::const_iterator iter;
-//         for (auto riter = rows.rbegin(); riter != rows.rend(); ++riter) {
-//             std::cout << *riter << '\n';
-//         }
-//         std::cout << "Bounds = " << a.bounds() << std::endl;
-//     }
-//     // Utility rows with various delimiters
-//     {
-//     Log_Debug_H("");
-//         printSection("Utility rows (space)");
-//         auto lines =
-//             Mdn2dIO::toStringRows(a, TextWriteOptions::DefaultUtility(CommaTabSpace::Space));
-//         printLines(lines, true);
-//     Log_Debug_T("");
-//
-//     Log_Debug_H("");
-//         printSection("Utility rows (comma)");
-//         auto linesC = Mdn2dIO::toStringRows(a, TextWriteOptions::DefaultUtility(CommaTabSpace::Comma));
-//         printLines(linesC, true);
-//     Log_Debug_T("");
-//
-//     Log_Debug_H("");
-//         printSection("Utility rows (tab)");
-//         auto linesT = Mdn2dIO::toStringRows(a, TextWriteOptions::DefaultUtility(CommaTabSpace::Tab));
-//         printLines(linesT, true);
-//     Log_Debug_T("");
-//     }
-//
-//     // Columns view (utility-style, numeric, delimited)
-//     {
-//     Log_Debug_H("");
-//         printSection("Columns (utility, comma)");
-//         TextWriteOptions opt = TextWriteOptions::DefaultUtility(CommaTabSpace::Comma);
-//         auto cols = Mdn2dIO::toStringCols(a, opt);
-//         printLines(cols, true);
-//     Log_Debug_T("");
-//     }
-//
-//     // Windowed pretty (sub-rect)
-//     {
-//     Log_Debug_H("");
-//         printSection("Pretty rows (windowed -1..2 x 0..2)");
-//         TextWriteOptions opt = TextWriteOptions::DefaultPretty();
-//         opt.window = Rect(-1, 0, 2, 2, true);
-//         auto lines = Mdn2dIO::toStringRows(a, opt);
-//         printLines(lines, true);
-//     Log_Debug_T("");
-//     }
-//
+    // Pretty rows (box-art axes, alphanumerics, wide negatives)
+    {
+        printSection("Pretty rows (DefaultPretty)");
+        TextWriteOptions opt = TextWriteOptions::DefaultPretty();
+        auto lines = Mdn2dIO::toStringRows(a, opt);
+        printLines(lines, true);
+
+        std::cout << '\n';
+
+        std::vector<std::string> rows(a.toStringRows());
+        std::vector<std::string>::const_iterator iter;
+        for (auto riter = rows.rbegin(); riter != rows.rend(); ++riter) {
+            std::cout << *riter << '\n';
+        }
+        std::cout << "Bounds = " << a.bounds() << std::endl;
+    }
+    // Utility rows with various delimiters
+    {
+    Log_Debug_H("");
+        printSection("Utility rows (space)");
+        auto lines =
+            Mdn2dIO::toStringRows(a, TextWriteOptions::DefaultUtility(CommaTabSpace::Space));
+        printLines(lines, true);
+    Log_Debug_T("");
+
+    Log_Debug_H("");
+        printSection("Utility rows (comma)");
+        auto linesC = Mdn2dIO::toStringRows(a, TextWriteOptions::DefaultUtility(CommaTabSpace::Comma));
+        printLines(linesC, true);
+    Log_Debug_T("");
+
+    Log_Debug_H("");
+        printSection("Utility rows (tab)");
+        auto linesT = Mdn2dIO::toStringRows(a, TextWriteOptions::DefaultUtility(CommaTabSpace::Tab));
+        printLines(linesT, true);
+    Log_Debug_T("");
+    }
+
+    // Columns view (utility-style, numeric, delimited)
+    {
+    Log_Debug_H("");
+        printSection("Columns (utility, comma)");
+        TextWriteOptions opt = TextWriteOptions::DefaultUtility(CommaTabSpace::Comma);
+        auto cols = Mdn2dIO::toStringCols(a, opt);
+        printLines(cols, true);
+    Log_Debug_T("");
+    }
+
+    // Windowed pretty (sub-rect)
+    {
+    Log_Debug_H("");
+        printSection("Pretty rows (windowed -1..2 x 0..2)");
+        TextWriteOptions opt = TextWriteOptions::DefaultPretty();
+        opt.window = Rect(-1, 0, 2, 2, true);
+        auto lines = Mdn2dIO::toStringRows(a, opt);
+        printLines(lines, true);
+    Log_Debug_T("");
+    }
+
     // Text pretty round-trip equivalence
     {
     Log_Debug_H("");

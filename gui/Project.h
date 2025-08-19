@@ -175,12 +175,12 @@ public:
         bool moveMdn(int fromIndex, int toIndex);
         bool moveMdn(const std::string& name, int toIndex);
 
-        // eraseMdn the Mdn2d at the given index or given name, shifting all higher entries one lower
+        // deleteMdn the Mdn2d at the given index or given name, shifting all higher entries one lower
         //  Messaging
         //      * Warning: if index out of range or name does not exist
         //          Recover: returns false
-        bool eraseMdn(int index);
-        bool eraseMdn(const std::string& name);
+        bool deleteMdn(int index);
+        bool deleteMdn(const std::string& name);
 
 
     // Selection actions
@@ -200,11 +200,11 @@ public:
             const Mdn2d& src, const Rect& r, const QString& scope, const QString& originMdnName
         );
 
-        // Copy current grid selection (scope:"rect"). Respects bottom-left inclusive rect.
-        void copySelection() const;
-
         // Copy whole MDN from a tab context (scope:"mdn").
         void copyMdn(int index) const;
+
+        // Copy current grid selection (scope:"rect"). Respects bottom-left inclusive rect.
+        void copySelection() const;
 
         // Perform a 'cut' operation on the selection - a combination of Copy and Delete
         void cutSelection();
@@ -217,19 +217,32 @@ public:
         //
         //  Source scope (data on the clipboard)
         //  A) "mdn"  - defines an entire Mdn for pasting
+        //              User right-clicked the Mdn tab and chose 'Copy'
+        //              User chose Copy Mdn from menu
         //  B) "rect" - defines a specific area on a specific Mdn
+        //              User highlighted a rectangular area and pressed Ctrl+C, Ctrl+Insert
+        //              User right-clicked highlighted rectangle and selected Copy
+        //              User chose Copy Selection from menu
         //
         //  Destination scope (data currently selected, m_selection)
         //  1. selection.hasMdnOnly    - target is the entire Mdn, (index >= 0)
+        //              User right-clicked Mdn tab and chose 'Paste'
+        //              User chose Paste Onto Mdn from menu
         //  -- selection.hasRectOnly   - invalid - need a Mdn for actual operation
         //  2. selection.hasMdnAndRect - target is the specific area on the selected Mdn
+        //              User highlighted a rectangular area and pressed Ctrl+V, Shift+Insert
+        //              User right-clicked highlighted rectangle and selected Paste
+        //              User chose Paste Onto Selection from menu
         //
-        //  A-1 - Mdn ->  Mdn       - replace entire target Mdn with source Mdn
-        //  A-2 - Mdn ->  Mdn+Rect  - Not valid (user error - tell user invalid data to paste here)
+        //  A-1 - Mdn  -> Mdn       - replace entire target Mdn with source Mdn
+        //  A-2 - Mdn  -> Mdn+Rect  - Not valid (user error - tell user invalid data to paste here)
         //  B-1 - Rect -> Mdn       - replace same rect (absolute) on target with source
         //  B-2 - Rect -> Mdn+Rect  - replace same rect (relative) on target with source, size check
         //      required: if target is 1x1, paste okay, use that as bottom left anchor, otherwise
         //      the size must match exactly
+        //
+        // Practically speaking:
+        //  A-1 - Mdn -> Mdn
         bool pasteOnSelection(int index=-1);
 
         // Perform 'delete' operation on the selection

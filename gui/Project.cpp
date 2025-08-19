@@ -11,6 +11,7 @@
 #include "../library/Logger.h"
 #include "../library/MdnException.h"
 #include "../library/Rect.h"
+#include "../library/SignConvention.h"
 #include "Selection.h"
 #include "MdnQtInterface.h"
 
@@ -235,7 +236,7 @@ bool mdn::Project::contains(std::string name, bool warnOnFailure) const {
         return false;
     }
     const Mdn2d& num = iter->second;
-    if (num.getName() != name) {
+    if (num.name() != name) {
         return false;
     }
     return true;
@@ -365,7 +366,7 @@ void mdn::Project::insertMdn(Mdn2d& mdn, int index) {
         index = maxNewIndex;
     }
     m_data.insert({index, mdn});
-    const std::string& origName = mdn.getName();
+    const std::string& origName = mdn.name();
     std::string newName;
     if (mdnNameExists(origName)) {
         newName = Mdn2d::static_generateCopyName(origName);
@@ -395,7 +396,7 @@ std::string mdn::Project::duplicateMdn(int index) {
     }
     Mdn2d dup = Mdn2d::Duplicate(*src);
     insertMdn(dup, index + 1);
-    return dup.getName();
+    return dup.name();
 }
 
 
@@ -407,7 +408,7 @@ std::string mdn::Project::duplicateMdn(const std::string& name) {
     int index = indexOfMdn(name);
     Mdn2d dup = Mdn2d::Duplicate(*src);
     insertMdn(dup, index + 1);
-    return dup.getName();
+    return dup.name();
 }
 
 
@@ -421,7 +422,7 @@ bool mdn::Project::moveMdn(int fromIndex, int toIndex) {
     }
     // Extract the number and erase the addressing metadata
     auto node = m_data.extract(fromIndex);
-    std::string name = node.mapped().getName();
+    std::string name = node.mapped().name();
     node.key() = toIndex;
     m_addressingIndexToName.erase(fromIndex);
     m_addressingNameToIndex.erase(name);
@@ -451,7 +452,7 @@ bool mdn::Project::moveMdn(const std::string& name, int toIndex) {
 }
 
 
-bool mdn::Project::eraseMdn(int index) {
+bool mdn::Project::deleteMdn(int index) {
     if (!contains(index, true)) {
         return false;
     }
@@ -463,7 +464,7 @@ bool mdn::Project::eraseMdn(int index) {
 }
 
 
-bool mdn::Project::eraseMdn(const std::string& name) {
+bool mdn::Project::deleteMdn(const std::string& name) {
     if (!contains(name, true)) {
         return false;
     }
@@ -477,171 +478,6 @@ bool mdn::Project::eraseMdn(const std::string& name) {
 
 
 
-using mdn::Digit;
-using mdn::Mdn2d;
-using mdn::Rect;
-using mdn::Coord;
-
-namespace { // local utilities
-
-struct DecodedPaste {
-    QString scope;              // "rect" | "mdn" | ""
-    Rect    srcRect = Rect::GetInvalid();
-    std::vector<std::vector<Digit>> rows; // rows[r][c]
-    bool valid()  const { return !rows.empty() && !rows.front().empty(); }
-    int  width()  const { return valid() ? int(rows.front().size()) : 0; }
-    int  height() const { return valid() ? int(rows.size())         : 0; }
-};
-
-static QString joinDigitsTSV(const std::vector<Digit>& v) {
-    QStringList parts;
-    parts.reserve(int(v.size()));
-    for (Digit d : v) {
-        parts << QString::number(int(d));
-    }
-    return parts.join('\t');
-}
-
-
-static QString rectToJsonStr(const Rect& r) {
-    return QString("{\"x0\": %1, \"y0\": %2, \"x1\": %3, \"y1\": %4}")
-        .arg(r.left()).arg(r.bottom()).arg(r.right()).arg(r.top());
-}
-
-
-static QJsonObject rectToJson(const Rect& r) {
-    QJsonObject o;
-    o["x0"] = r.left();
-    o["y0"] = r.bottom();
-    o["x1"] = r.right();
-    o["y1"] = r.top();
-    return o;
-}
-
-} // anonymous namespace
-
-
-static void encodeRectToClipboard(
-    const Mdn2d& src,
-    const Rect& r,
-    const QString& scope,
-    const QString& originMdnName
-) {
-    Rect rr = r; rr.fixOrdering();
-    const int x0 = rr.left();
-    const int x1 = rr.right();
-    const int y0 = rr.bottom();
-    const int y1 = rr.top();
-
-    QString tsv;
-    tsv.reserve(rr.width() * rr.height() * 2);
-
-    std::vector<Digit> row;
-    row.reserve(rr.width());
-
-    for (int y = y0; y <= y1; ++y) {
-        row.clear();
-        const bool ok = src.getRow(y, x0, x1, row);
-        if (!ok) {
-            // Internal error safeguard: still build a zero row of correct width.
-            row.assign(size_t(rr.width()), Digit(0));
-        }
-        tsv += joinDigitsTSV(row);
-        tsv += '\n';
-    }
-
-    QJsonObject root;
-    root["type"] = "mdn-selection";
-    root["version"] = 1;
-    root["scope"] = scope;
-
-    QJsonObject origin;
-    origin["mdn"] = originMdnName;
-    origin["rect"] = rectToJson(rr);
-    root["origin"] = origin;
-
-    root["rect"] = rectToJson(rr); // for scope=="mdn", this equals bounds()
-
-    QJsonObject order;
-    order["rows"] = "y_asc";
-    order["cols"] = "x_asc";
-    root["order"] = order;
-
-    root["grid_tsv"] = tsv;
-
-    auto* mime = new QMimeData();
-    mime->setData("application/x-mdn-selection+json",
-                  QJsonDocument(root).toJson(QJsonDocument::Compact));
-    mime->setData("text/tab-separated-values", tsv.toUtf8());
-    mime->setText(tsv);
-
-    QGuiApplication::clipboard()->setMimeData(mime); // takes ownership
-}
-
-
-static DecodedPaste decodeClipboard() {
-    DecodedPaste out;
-
-    const QMimeData* mime = QGuiApplication::clipboard()->mimeData();
-    if (!mime) {
-        return out;
-    }
-
-    QString tsv;
-
-    if (mime->hasFormat("application/x-mdn-selection+json")) {
-        const auto bytes = mime->data("application/x-mdn-selection+json");
-        QJsonParseError err{};
-        const auto doc = QJsonDocument::fromJson(bytes, &err);
-        if (err.error == QJsonParseError::NoError && doc.isObject()) {
-            const auto obj = doc.object();
-            if (obj.value("type").toString() == QLatin1String("mdn-selection")) {
-                out.scope = obj.value("scope").toString();
-                if (obj.contains("rect") && obj.value("rect").isObject()) {
-                    const auto ro = obj.value("rect").toObject();
-                    out.srcRect = Rect(
-                        ro.value("x0").toInt(), ro.value("y0").toInt(),
-                        ro.value("x1").toInt(), ro.value("y1").toInt(),
-                        /*fixOrdering*/true
-                    );
-                }
-                tsv = obj.value("grid_tsv").toString();
-            }
-        }
-    }
-
-    if (tsv.isEmpty() && mime->hasFormat("text/tab-separated-values")) {
-        tsv = QString::fromUtf8(mime->data("text/tab-separated-values"));
-    }
-    if (tsv.isEmpty() && mime->hasText()) {
-        tsv = mime->text();
-    }
-
-    if (tsv.isEmpty()) {
-        return out;
-    }
-
-    const QStringList lines = tsv.split('\n', Qt::SkipEmptyParts);
-    if (lines.isEmpty()) {
-        return out;
-    }
-
-    out.rows.reserve(lines.size());
-    for (const QString& line : lines) {
-        const QStringList parts = line.split('\t', Qt::KeepEmptyParts);
-        std::vector<Digit> row;
-        row.reserve(parts.size());
-        for (const QString& s : parts) {
-            bool ok = false;
-            const int v = s.toInt(&ok);
-            row.push_back(static_cast<Digit>(ok ? v : 0));
-        }
-        out.rows.push_back(std::move(row));
-    }
-
-    return out;
-}
-
 
 void mdn::Project::copySelection() const {
     const mdn::Selection& sel = selection();
@@ -654,7 +490,7 @@ void mdn::Project::copySelection() const {
     }
 
     Rect r = sel.rect; r.fixOrdering();
-    encodeRectToClipboard(*src, r, QStringLiteral("rect"), QString::fromStdString(src->getName()));
+    encodeRectToClipboard(*src, r, QStringLiteral("rect"), QString::fromStdString(src->name()));
 }
 
 
@@ -669,7 +505,7 @@ void mdn::Project::copyMdn(int index) const {
     }
 
     const Rect b = src->bounds();
-    encodeRectToClipboard(*src, b, QStringLiteral("mdn"), QString::fromStdString(src->getName()));
+    encodeRectToClipboard(*src, b, QStringLiteral("mdn"), QString::fromStdString(src->name()));
 }
 
 
@@ -760,6 +596,8 @@ bool mdn::Project::pasteOnSelection(int index) {
 
 
 void mdn::Project::deleteSelection() {
+    const mdn::Selection& sel = selection();
+
 
 }
 

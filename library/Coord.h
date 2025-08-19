@@ -185,4 +185,3 @@ namespace std {
         else return c.y();
     }
 }
-
