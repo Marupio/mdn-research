@@ -190,29 +190,40 @@ bool mdn::Mdn2dIO::internal_parseNameLine(const std::string& line, std::string& 
 bool mdn::Mdn2dIO::internal_parseBoundsLine(
     const std::string& line, int& x0, int& y0, int& x1, int& y1, bool& empty
 ) {
+    Log_Debug3("");
     // Expected: Bounds[(x0,y0)->(x1,y1)]  OR  Bounds[Empty]
-    if (line.rfind("Bounds[", 0) != 0) return false;
-    if (line.find("Empty") != std::string::npos) { empty = true; return true; }
+    if (line.rfind("Bounds[", 0) != 0) {
+    Log_Debug3("");
+        return false;
+    }
+    if (line.find("Empty") != std::string::npos) {
+        empty = true;
+    Log_Debug3("");
+        return true;
+    }
     empty = false;
     int tx0, ty0, tx1, ty1;
     // super lightweight parse:
     const char* s = line.c_str();
     if (std::sscanf(s, "Bounds[(%d,%d)->(%d,%d)]", &tx0, &ty0, &tx1, &ty1) == 4) {
         x0 = tx0; y0 = ty0; x1 = tx1; y1 = ty1;
+    Log_Debug3("");
         return true;
     }
+    Log_Debug3("");
     return false;
 }
 
 
 bool mdn::Mdn2dIO::internal_parseConfigLine(
-    const std::string& line, int& base, int& prec, int& sign
+    const std::string& line, int& base, int& prec, SignConvention& sign
 ) {
     // Expected: Config(b:10, p:16, s:Positive, c:20, f:X)
     // Only b,p,s are required for IO; others can be ignored or defaulted.
     if (line.rfind("Config(", 0) != 0) return false;
-    // crude extraction; robust enough for your emitter
-    base = 10; prec = 16; sign = 0; // defaults
+    base = 10;
+    prec = 16;
+    sign = SignConvention::Invalid;
     // base
     auto bpos = line.find("b:");
     if (bpos != std::string::npos) base = std::atoi(line.c_str() + bpos + 2);
@@ -222,10 +233,14 @@ bool mdn::Mdn2dIO::internal_parseConfigLine(
     // sign
     auto spos = line.find("s:");
     if (spos != std::string::npos) {
-        if (line.find("Positive", spos) != std::string::npos) sign = 0;
-        else if (line.find("Negative", spos) != std::string::npos) sign = 1;
-        else if (line.find("Bidirectional", spos) != std::string::npos) sign = 2;
+        std::string sstr = line.substr(spos, std::string::npos);
+        auto scpos = sstr.find(",");
+        if (scpos != std::string::npos) {
+            std::string scName = sstr.substr(2, scpos-2);
+            sign = NameToSignConvention(scName, false);
+        }
     }
+    Log_Debug3("base=" << base << ",prec=" << prec << ",sign=" << sign);
     return true;
 }
 
@@ -613,6 +628,7 @@ mdn::TextReadSummary mdn::Mdn2dIO::loadText(
     Mdn2dBase& dst
 ) {
     auto lock = dst.lockWriteable();
+    Log_Debug3_H("");
     return locked_loadText(is, dst);
 }
 
@@ -622,47 +638,79 @@ mdn::TextReadSummary mdn::Mdn2dIO::locked_loadText(
     Mdn2dBase& dst
 ) {
     Log_Debug3_H("");
-
+    Log_Info("locked_loadText");
     std::string nameLine, boundsLine, configLine;
+    Log_Debug3("");
 
     // Handle optional BOM on the very first getline
     if (!std::getline(is, nameLine)) {
         Log_Debug3_T("empty stream");
         return {};
     }
-    if (nameLine.size() >= 3 &&
+    Log_Debug3("");
+    if (
+        nameLine.size() >= 3 &&
         static_cast<unsigned char>(nameLine[0]) == 0xEF &&
         static_cast<unsigned char>(nameLine[1]) == 0xBB &&
-        static_cast<unsigned char>(nameLine[2]) == 0xBF) {
+        static_cast<unsigned char>(nameLine[2]) == 0xBF
+    ) {
+    Log_Debug3("");
         nameLine.erase(0, 3);
     }
+    Log_Debug3("");
 
-    if (!std::getline(is, boundsLine)) { return {}; }
-    if (!std::getline(is, configLine)) { return {}; }
+    if (!std::getline(is, boundsLine)) {
+        Log_Debug3_T("Stream ended early");
+        return {};
+    }
+    Log_Debug3("");
+    if (!std::getline(is, configLine)) {
+        Log_Debug3_T("Stream ended early");
+        return {};
+    }
+    Log_Debug3("");
 
     std::string mdnName;
-    if (!internal_parseNameLine(nameLine, mdnName)) { return {}; }
+    if (!internal_parseNameLine(nameLine, mdnName)) {
+        Log_Debug3_T("Stream ended early");
+        return {};
+    }
+    Log_Debug3("");
 
     int x0=0,y0=0,x1=-1,y1=-1; bool empty=false;
-    if (!internal_parseBoundsLine(boundsLine, x0, y0, x1, y1, empty)) { return {}; }
+    if (!internal_parseBoundsLine(boundsLine, x0, y0, x1, y1, empty)) {
+        Log_Debug3_T("Stream ended early");
+        return {};
+    }
+    Log_Debug3("");
 
-    int base=10, prec=16, sign=0;
-    if (!internal_parseConfigLine(configLine, base, prec, sign)) { return {}; }
+    int base=10;
+    int prec=16;
+    SignConvention sign=SignConvention::Invalid;
+    if (!internal_parseConfigLine(configLine, base, prec, sign)) {
+        Log_Debug3_T("Stream ended early");
+        return {};
+    }
+    Log_Debug3("");
 
 
     // Apply name & config
     dst.m_name = mdnName; // allowed because we're in locked_*; matches how you write it out. :contentReference[oaicite:10]{index=10}
-    Mdn2dConfig dstCfg = dst.locked_getConfig();
+    Log_Debug3("");
+    const Mdn2dConfig& dstCfg = dst.locked_getConfig();
+    Log_Debug3("");
     Mdn2dConfig cfg(
         base, prec, static_cast<SignConvention>(sign),
         dstCfg.maxCarryoverIters(),
         dstCfg.defaultFraxis()
     );
+    Log_Debug3("");
     dst.locked_setConfig(cfg);
-
+    Log_Debug3("");
     // Clear and set bounds anchor
     dst.locked_clear();
     mdn::Rect writeRect = empty ? mdn::Rect::GetInvalid() : mdn::Rect(x0, y0, x1, y1, true);
+    Log_Debug3("");
 
     // Now read the remainder of the stream as data lines (your existing logic below)
     std::vector<std::string> lines;
@@ -745,6 +793,8 @@ mdn::TextReadSummary mdn::Mdn2dIO::locked_loadText(
                 static_cast<Digit>(grid[static_cast<std::size_t>(r)][static_cast<std::size_t>(c)]);
         }
         dst.locked_setRow(ay + r, ax, row);
+        // dst.locked_setRow(ay + (H - 1 - r), ax, row);
+        Log_Info("row index is " << (ay+r) << ", and other one would be " << ay + (H - 1 - r));
     }
 
     // Report what we parsed/wrote
@@ -936,46 +986,166 @@ mdn::TextReadSummary mdn::Mdn2dIO::locked_load(
     Mdn2dBase& dst
 ) {
     Log_Debug3_H("");
-    std::streampos pos = is.tellg();
+
+    // Remember where parsing should begin
+    const std::streampos pos = is.tellg();
+    Log_Debug3("");
+
+    // --- Sniff: try to read the 6-byte magic ---
     char head[6] = {0};
     is.read(head, 6);
-    is.clear();
+    const std::streamsize n = is.gcount();
+    Log_Debug3("");
+
+    // Always restore state & position before deciding what to do next
+    is.clear();                 // clear eof/fail so seekg succeeds
     is.seekg(pos);
+    Log_Debug3("");
 
-    if (std::memcmp(head, "MDN2D\0", 6) == 0) {
-        locked_loadBinary(is, dst);
+    const bool looksBinary = (n == 6) && (std::memcmp(head, "MDN2D\0", 6) == 0);
+    Log_Debug3("");
 
+    if (looksBinary) {
+    Log_Debug3("");
+        // --- Non-destructive peek of the binary header to build the summary ---
+        // If anything below fails, we’ll fall back to text load.
+        TextReadSummary out{};
+        bool headerOk = true;
+
+        // Re-seek to start of payload for a careful peek
+        is.clear();
         is.seekg(pos);
-        char magic[6];
-        is.read(magic, 6);
 
+        // Helper to safely read POD and record failure without throwing here
+        auto safeRead = [&](void* dstBuf, std::size_t nbytes) {
+            is.read(reinterpret_cast<char*>(dstBuf), static_cast<std::streamsize>(nbytes));
+            if (!is) { headerOk = false; is.clear(); }
+        };
+
+        // 1) Magic (6) — already checked, but advance cursor
+        char magic[6] = {0};
+        safeRead(magic, sizeof(magic));
+        if (!(headerOk && std::memcmp(magic, "MDN2D\0", 6) == 0)) headerOk = false;
+
+        // 2) Version (uint16)
         std::uint16_t ver = 0;
-        is.read(reinterpret_cast<char*>(&ver), sizeof(ver));
+        if (headerOk) safeRead(&ver, sizeof(ver));
+        // Don’t throw here; let the real binary loader validate/throw.
+        // If unexpected, we’ll just fall back to text.
+        if (!(headerOk && ver == 1)) headerOk = false;
 
-        std::int32_t base32 = 0;
-        std::int32_t prec32 = 0;
+        // 3) Name length + name bytes
+        std::uint32_t nameLen = 0;
+        if (headerOk) safeRead(&nameLen, sizeof(nameLen));
+        if (headerOk && nameLen) {
+            // Skip over the name bytes
+            is.seekg(static_cast<std::streamoff>(nameLen), std::ios::cur);
+            if (!is) { headerOk = false; is.clear(); }
+        }
+
+        // 4) Config triplet: base (int32), precision (int32), sign (uint8)
+        std::int32_t base32 = 0, prec32 = 0;
         std::uint8_t sign8 = 0;
-        is.read(reinterpret_cast<char*>(&base32), sizeof(base32));
-        is.read(reinterpret_cast<char*>(&prec32), sizeof(prec32));
-        is.read(reinterpret_cast<char*>(&sign8), sizeof(sign8));
+        if (headerOk) safeRead(&base32, sizeof(base32));
+        if (headerOk) safeRead(&prec32, sizeof(prec32));
+        if (headerOk) safeRead(&sign8,  sizeof(sign8));
 
-        std::int32_t x0, y0, x1, y1, H, W;
-        is.read(reinterpret_cast<char*>(&x0), sizeof(x0));
-        is.read(reinterpret_cast<char*>(&y0), sizeof(y0));
-        is.read(reinterpret_cast<char*>(&x1), sizeof(x1));
-        is.read(reinterpret_cast<char*>(&y1), sizeof(y1));
-        is.read(reinterpret_cast<char*>(&H), sizeof(H));
-        is.read(reinterpret_cast<char*>(&W), sizeof(W));
+        // 5) Rect + size: x0,y0,x1,y1,H,W (all int32)
+        std::int32_t x0 = 0, y0 = 0, x1 = -1, y1 = -1, H = 0, W = 0;
+        if (headerOk) safeRead(&x0, sizeof(x0));
+        if (headerOk) safeRead(&y0, sizeof(y0));
+        if (headerOk) safeRead(&x1, sizeof(x1));
+        if (headerOk) safeRead(&y1, sizeof(y1));
+        if (headerOk) safeRead(&H,  sizeof(H));
+        if (headerOk) safeRead(&W,  sizeof(W));
 
-        TextReadSummary out;
-        out.width = static_cast<int>(W);
-        out.height = static_cast<int>(H);
-        out.parsedRect = Rect(x0, y0, x1, y1);
-        return out;
+        // Regardless of peek success, restore position before real parse
+        is.clear();
+        is.seekg(pos);
+
+        if (headerOk) {
+            // Do the *real* binary load (consumes stream)
+            locked_loadBinary(is, dst);
+
+            // Build an honest summary from the header we peeked
+            out.width      = static_cast<int>(W);
+            out.height     = static_cast<int>(H);
+            out.parsedRect = Rect(x0, y0, x1, y1);
+            Log_Debug3_T("result = " << out);
+            return out;
+        }
+
+        // If header peek failed, fall back to text loader
+        Log_Warn("Binary header peek failed, falling back to text parser.");
     }
+    Log_Debug3("");
 
+    // Text path (or binary sniff failed)
     auto result = locked_loadText(is, dst);
     Log_Debug3_T("result = " << result);
-
     return result;
 }
+
+
+// mdn::TextReadSummary mdn::Mdn2dIO::locked_load(
+//     std::istream& is,
+//     Mdn2dBase& dst
+// ) {
+//     Log_Debug3_H("");
+//     std::streampos pos = is.tellg();
+//     char head[6] = {0};
+//     is.read(head, 6);
+
+//     std::streamsize n = is.gcount();
+//     bool isBinary = (n == 6) && (std::memcmp(head, "MDN2D\0", 6) == 0);
+
+//     // Always restore position before continuing
+//     is.clear();              // clear ONLY after we’re done inspecting flags
+//     is.seekg(pos);
+
+//     if (isBinary) {
+//         // Parse once and return the real result from locked_loadBinary
+//         return locked_loadBinary(is, dst), TextReadSummary{/*fill from binary read if you want*/};
+//     }
+
+//     // Fall through to text
+//     auto result = locked_loadText(is, dst);
+//     return result;
+
+    // if (std::memcmp(head, "MDN2D\0", 6) == 0) {
+    //     locked_loadBinary(is, dst);
+
+    //     is.seekg(pos);
+    //     char magic[6];
+    //     is.read(magic, 6);
+
+    //     std::uint16_t ver = 0;
+    //     is.read(reinterpret_cast<char*>(&ver), sizeof(ver));
+
+    //     std::int32_t base32 = 0;
+    //     std::int32_t prec32 = 0;
+    //     std::uint8_t sign8 = 0;
+    //     is.read(reinterpret_cast<char*>(&base32), sizeof(base32));
+    //     is.read(reinterpret_cast<char*>(&prec32), sizeof(prec32));
+    //     is.read(reinterpret_cast<char*>(&sign8), sizeof(sign8));
+
+    //     std::int32_t x0, y0, x1, y1, H, W;
+    //     is.read(reinterpret_cast<char*>(&x0), sizeof(x0));
+    //     is.read(reinterpret_cast<char*>(&y0), sizeof(y0));
+    //     is.read(reinterpret_cast<char*>(&x1), sizeof(x1));
+    //     is.read(reinterpret_cast<char*>(&y1), sizeof(y1));
+    //     is.read(reinterpret_cast<char*>(&H), sizeof(H));
+    //     is.read(reinterpret_cast<char*>(&W), sizeof(W));
+
+    //     TextReadSummary out;
+    //     out.width = static_cast<int>(W);
+    //     out.height = static_cast<int>(H);
+    //     out.parsedRect = Rect(x0, y0, x1, y1);
+    //     return out;
+    // }
+
+    // auto result = locked_loadText(is, dst);
+    // Log_Debug3_T("result = " << result);
+
+    // return result;
+//}

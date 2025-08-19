@@ -1,5 +1,8 @@
 #include "Mdn2dConfig.h"
 
+#include "Logger.h"
+#include "MdnException.h"
+
 
 mdn::Mdn2dFramework* mdn::Mdn2dConfig::m_masterPtr = nullptr;
 
@@ -39,7 +42,9 @@ mdn::Mdn2dConfig::Mdn2dConfig(
     m_maxCarryoverIters(maxCarryoverItersIn),
     m_defaultFraxis(defaultFraxisIn)
 {
+    Log_Debug3("");
     validateConfig();
+    Log_Debug3("");
 }
 
 
@@ -96,6 +101,7 @@ bool mdn::Mdn2dConfig::checkConfig() const {
 
 
 void mdn::Mdn2dConfig::validateConfig() const {
+    Log_Debug3("");
     if (!checkConfig()) {
         std::ostringstream oss;
         oss << "Mdn2dConfig has an invalid setting:" << std::endl;
@@ -106,8 +112,11 @@ void mdn::Mdn2dConfig::validateConfig() const {
         oss << "    maxCarryoverIters = " << m_maxCarryoverIters << std::endl;
         oss << "    defaultFraxis = " << FraxisToName(m_defaultFraxis)
             << ", expecting 'X' or 'Y'";
-        throw std::invalid_argument(oss.str());
+        InvalidArgument err(oss.str());
+        Log_Error(err.what());
+        throw err;
     }
+    Log_Debug3("");
 }
 
 
@@ -119,11 +128,17 @@ std::string mdn::Mdn2dConfig::to_string() const {
 
 
 bool mdn::Mdn2dConfig::operator==(const Mdn2dConfig& rhs) const {
-    return (
+    bool result = (
         rhs.m_base == m_base &&
         rhs.m_precision == m_precision &&
         rhs.m_signConvention == m_signConvention
     );
+    if (Log_Showing_Debug3 && !result) {
+        Log_Debug3(
+            "rhs=" << rhs << ", lhs=" << *this
+        );
+    }
+    return result;
 }
 
 

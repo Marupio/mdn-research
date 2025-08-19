@@ -106,6 +106,8 @@
     "typeindex": "cpp",
     "valarray": "cpp",
     "qtextedit": "cpp",
-    "qlineedit": "cpp"
+    "qlineedit": "cpp",
+    "coroutine": "cpp",
+    "resumable": "cpp"
   }
 }

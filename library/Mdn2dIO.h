@@ -27,7 +27,9 @@ class MDN_API Mdn2dIO {
     static bool internal_parseBoundsLine(const std::string& line, int& x0, int& y0, int& x1, int& y1, bool& empty);
 
     // Load header - config line
-    static bool internal_parseConfigLine(const std::string& line, int& base, int& prec, int& sign);
+    static bool internal_parseConfigLine(
+        const std::string& line, int& base, int& prec, SignConvention& sign
+    );
 
 
 public:

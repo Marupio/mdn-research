@@ -234,7 +234,7 @@ public:
         if (!r.isValid()) {
             os << "[Empty]";
         } else {
-            os << "[" << r.min() << " -> " << r.max() << "]";
+            os << "[" << r.min() << "->" << r.max() << "]";
         }
         return os;
     }

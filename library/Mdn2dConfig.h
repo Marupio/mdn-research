@@ -134,7 +134,7 @@ public:
         m_signConvention = signConventionIn;
     }
 
-    int maxCarryoverIters() { return m_maxCarryoverIters; }
+    int maxCarryoverIters() const { return m_maxCarryoverIters; }
     void setMaxCarryoverIters(int newVal) {
         m_maxCarryoverIters = newVal < 0 ? constants::intMax : newVal;
     }
