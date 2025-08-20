@@ -185,6 +185,32 @@ public:
 
     // Selection actions
 
+        // Movement - moves the cursor location
+        //  * extendSelection - when true, cursor movement affects the size of the selected
+        //      rectangular region
+        //  * Up/Down/Left/Right - typically arrow key type movements
+        //  * Jump - typically [ctrl]+[arrow] - jump to next zero/non-zero boundary
+        //  * Page - typically [PgUp] type movement, left&right do exist, not sure required keys
+        //  * NextX / PrevX - move along x to the next digit, e.g. [tab]/[shift]+[tab] buttons
+        //  * NextY / PrevY - move along y to the next digit, e.g. [tab]/[shift]+[enter] buttons
+        void cursorUp(bool extendSelection) { m_selection.cursorUp(extendSelection); }
+        void cursorDn(bool extendSelection) { m_selection.cursorDn(extendSelection); }
+        void cursorLf(bool extendSelection) { m_selection.cursorLf(extendSelection); }
+        void cursorRt(bool extendSelection) { m_selection.cursorRt(extendSelection); }
+        void cursorJumpUp(bool extendSelection) { m_selection.cursorJumpUp(extendSelection); }
+        void cursorJumpDn(bool extendSelection) { m_selection.cursorJumpDn(extendSelection); }
+        void cursorJumpLf(bool extendSelection) { m_selection.cursorJumpLf(extendSelection); }
+        void cursorJumpRt(bool extendSelection) { m_selection.cursorJumpRt(extendSelection); }
+        void cursorPageUp(bool extendSelection) { m_selection.cursorPageUp(extendSelection); }
+        void cursorPageDn(bool extendSelection) { m_selection.cursorPageDn(extendSelection); }
+        void cursorPageLf(bool extendSelection) { m_selection.cursorPageLf(extendSelection); }
+        void cursorPageRt(bool extendSelection) { m_selection.cursorPageRt(extendSelection); }
+        void cursorOrigin(bool extendSelection) { m_selection.cursorOrigin(extendSelection); }
+        void cursorNextX(bool extendSelection) { m_selection.cursorNextX(extendSelection); }
+        void cursorPrevX(bool extendSelection) { m_selection.cursorPrevX(extendSelection); }
+        void cursorNextY(bool extendSelection) { m_selection.cursorNextY(extendSelection); }
+        void cursorPrevY(bool extendSelection) { m_selection.cursorPrevY(extendSelection); }
+
         // Access current selection
         const Selection& selection() const { return m_selection; }
 
@@ -251,4 +277,4 @@ public:
 };
 
 
-} // end namespace mdn
+}  // end namespace mdn

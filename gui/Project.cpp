@@ -486,11 +486,12 @@ void mdn::Project::copySelection() const {
     if (src == nullptr) {
         return;
     }
-    if (!sel.rect.isValid()) {
+    if (!sel.rect().isValid()) {
         return;
     }
 
-    Rect r = sel.rect; r.fixOrdering();
+    Rect r = sel.rect();
+    r.fixOrdering();
     encodeRectToClipboard(*src, r, QStringLiteral("rect"), QString::fromStdString(src->name()));
 }
 
@@ -537,13 +538,13 @@ bool mdn::Project::pasteOnSelection(int index) {
     const int W = p.width();
     const int H = p.height();
 
-    const bool haveSel = (index < 0) && sel.rect.isValid();
+    const bool haveSel = (index < 0) && sel.rect().isValid();
 
     int ax = 0;
     int ay = 0;
 
     if (haveSel) {
-        const Rect r = [&]() { Rect t = sel.rect; t.fixOrdering(); return t; }();
+        const Rect r = [&]() { Rect t = sel.rect(); t.fixOrdering(); return t; }();
         const int SW = r.width();
         const int SH = r.height();
         if (SW == 1 && SH == 1) {
@@ -602,7 +603,7 @@ void mdn::Project::deleteSelection() {
     if (!dst) {
         return;
     }
-    const Rect& rect(sel.rect);
+    const Rect& rect(sel.rect());
     dst->setToZero(rect);
 }
 

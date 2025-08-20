@@ -178,6 +178,14 @@ public:
         *this = Rect::GetInvalid();
     }
 
+    void set(Coord xy) {
+        m_min = xy;
+        m_max = xy;
+    }
+    void set(int x, int y) {
+        m_min = Coord(x, y);
+        m_max = m_min;
+    }
     void set(Coord min, Coord max, bool fixOrdering = false) {
         m_min = min;
         m_max = max;

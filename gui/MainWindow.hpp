@@ -13,7 +13,7 @@
 #include <QHBoxLayout>
 #include <QWidget>
 
-#include "DigitGridWidget.hpp"
+// #include "DigitGridWidget.hpp"
 
 #include "../library/GlobalConfig.hpp"
 

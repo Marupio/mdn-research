@@ -1,0 +1,17 @@
+TODO LIST
+
+The library code is now basically frozen, apart from debugging.
+Here is a list of tasks that I'd like to eventually complete for the library.
+
+* Propagate NamedEnum
+* Propogate ErrorPolicy
+* Propogate InputHandling
+* Propogate new Rect iterabilitiness
+* Change Mdn2dIO into a layer on the Mdn2d class structure
+* Consider adding namespace extensions: mdn::algo (algorithm), mdn::io
+
+GUI library
+
+Why not track that here also
+
+* Change the namespaces from simply mdn to mdn::gui
