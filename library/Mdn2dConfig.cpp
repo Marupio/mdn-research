@@ -1,4 +1,4 @@
-#include "Mdn2dConfig.h"
+#include "Mdn2dConfig.hpp"
 
 #include "Logger.hpp"
 #include "MdnException.hpp"

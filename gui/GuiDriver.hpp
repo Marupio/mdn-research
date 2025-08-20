@@ -5,8 +5,8 @@
 #include "MainWindow.hpp"
 #include "Project.hpp"
 
-#include "../library/GlobalConfig.h"
-#include "../library/Mdn2d.h"
+#include "../library/GlobalConfig.hpp"
+#include "../library/Mdn2d.hpp"
 
 namespace mdn {
 

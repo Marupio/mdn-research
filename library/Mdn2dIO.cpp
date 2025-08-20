@@ -1,4 +1,4 @@
-#include "Mdn2dIO.h"
+#include "Mdn2dIO.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -8,7 +8,7 @@
 
 #include "Coord.hpp"
 #include "Logger.hpp"
-#include "Mdn2dConfig.h"
+#include "Mdn2dConfig.hpp"
 #include "Tools.hpp"
 
 namespace {
@@ -357,7 +357,8 @@ std::vector<std::string> mdn::Mdn2dIO::locked_toStringRows(
             lines.push_back(oss.str());
         }
         Log_Debug3_H("getRow dispatch(" << y << "," << x0 << "," << x1 << ", row)");
-        src.locked_getRow(y, x0, x1, row);
+        Coord xy(x0, y);
+        src.locked_getRow(xy, xCount, row);
         Log_Debug3_T(
             "row.size()=" << row.size() << ", xCount=" << xCount << ", row.size()==xCount="
                 << (row.size() == xCount)
@@ -512,7 +513,8 @@ std::vector<std::string> mdn::Mdn2dIO::locked_toStringCols(
             lines.push_back(oss.str());
         }
         Log_Debug3_H("getCol dispatch(" << x << "," << x0 << "," << x1 << ", col)");
-        src.locked_getCol(x, y0, y1, col);
+        Coord xy(x, y0);
+        src.locked_getCol(xy, yCount, col);
         Log_Debug3_T(
             "col.size()=" << col.size() << ", yCount=" << yCount << ", col.size()==yCount="
                 << (col.size() == yCount)
@@ -770,7 +772,8 @@ mdn::TextReadSummary mdn::Mdn2dIO::locked_loadText(
             row[static_cast<std::size_t>(c)] =
                 static_cast<Digit>(grid[static_cast<std::size_t>(r)][static_cast<std::size_t>(c)]);
         }
-        dst.locked_setRow(ay + r, ax, row);
+        Coord xy(ax, ay + r);
+        dst.locked_setRow(xy, row);
         // dst.locked_setRow(ay + (H - 1 - r), ax, row);
         Log_Info("row index is " << (ay+r) << ", and other one would be " << ay + (H - 1 - r));
     }
@@ -838,9 +841,11 @@ void mdn::Mdn2dIO::saveBinary(
     std::vector<Digit> row;
     row.reserve(static_cast<std::size_t>(W));
 
+    std::int32_t width = x1 - x0 + 1;
     for (int y = y0; y <= y1; ++y) {
         row.clear();
-        src.getRow(y, x0, x1, row);
+        Coord xy(x0, y);
+        src.getRow(xy, width, row);
         for (Digit d : row) {
             std::int8_t b8 = static_cast<std::int8_t>(d);
             os.write(reinterpret_cast<const char*>(&b8), sizeof(b8));
@@ -944,7 +949,8 @@ void mdn::Mdn2dIO::locked_loadBinary(
             is.read(reinterpret_cast<char*>(&b8), sizeof(b8));
             row[static_cast<std::size_t>(c)] = static_cast<Digit>(b8);
         }
-        dst.locked_setRow(y0 + r, x0, row);
+        Coord xy(x0, y0 + r);
+        dst.locked_setRow(xy, row);
     }
     Log_Debug3_T("");
 }

@@ -8,14 +8,14 @@
 #include <QMimeData>
 #include <QStringList>
 
-#include "../library/Digit.h"
-#include "../library/Rect.h"
-#include "../library/Mdn2d.h"
+#include "../library/Digit.hpp"
+#include "../library/Rect.hpp"
+#include "../library/Mdn2d.hpp"
 
 
 namespace mdn {
 
-class ClipboardData {
+class Clipboard {
 
 public:
 

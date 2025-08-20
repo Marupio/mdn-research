@@ -1,6 +1,6 @@
 #include "NumberDisplayWidget.hpp"
 
-#include "../library/Coord.h"
+#include "../library/Coord.hpp"
 #include <QPainter>
 #include <QKeyEvent>
 

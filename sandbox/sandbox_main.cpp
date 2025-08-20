@@ -6,10 +6,10 @@
 
 // MDN headers
 #include "Logger.hpp"
-#include "Mdn2d.h"
-#include "Mdn2dBase.h"
-#include "Mdn2dConfig.h"
-#include "Mdn2dIO.h"
+#include "Mdn2d.hpp"
+#include "Mdn2dBase.hpp"
+#include "Mdn2dConfig.hpp"
+#include "Mdn2dIO.hpp"
 #include "Rect.hpp"
 #include "Digit.hpp"
 #include "Tools.hpp"

@@ -1,4 +1,4 @@
-#include "Mdn2dRules.h"
+#include "Mdn2dRules.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -7,7 +7,7 @@
 
 #include "Constants.hpp"
 #include "Logger.hpp"
-#include "Mdn2d.h"
+#include "Mdn2d.hpp"
 #include "MdnException.hpp"
 #include "Tools.hpp"
 

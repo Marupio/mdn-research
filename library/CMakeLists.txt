@@ -15,10 +15,10 @@ set_target_properties(mdn PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     PUBLIC_HEADER
-        "Carryover.h;Constants.h;Coord.h;CoordSet.h;Digit.h;Fraxis.h;\
-GlobalConfig.h;Logger.h;Mdn2d.h;Mdn2dBase.h;Mdn2dConfig.h;Mdn2dConfigImpact.h;Mdn2dFramework.h;\
-Mdn2dIO.h;Mdn2dRules.h;MdnException.h;MdnObserver.h;PrecisionStatus.h;Rect.h;SignConvention.h;\
-TextOptions.h;Tools.h"
+        "Carryover.hpp;Constants.hpp;Coord.hpp;CoordSet.hpp;Digit.hpp;Fraxis.hpp;GlobalConfig.hpp;\
+Logger.hpp;Mdn2d.hpp;Mdn2dBase.hpp;Mdn2dConfig.hpp;Mdn2dConfigImpact.hpp;Mdn2dFramework.hpp;\
+Mdn2dIO.hpp;Mdn2dRules.hpp;MdnException.hpp;MdnObserver.hpp;PrecisionStatus.hpp;Rect.hpp;\
+SignConvention.hpp;TextOptions.hpp;Tools.hpp"
 )
 
 target_include_directories(mdn PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

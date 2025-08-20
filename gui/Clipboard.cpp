@@ -1,5 +1,7 @@
 #include "Clipboard.hpp"
 
+#include "MdnQtInterface.hpp"
+
 void mdn::Clipboard::encodeRectToClipboard(
     const Mdn2d& src,
     const Rect& r,
@@ -20,12 +22,8 @@ void mdn::Clipboard::encodeRectToClipboard(
 
     for (int y = y0; y <= y1; ++y) {
         row.clear();
-        const bool ok = src.getRow(y, x0, x1, row);
-        if (!ok) {
-            // Internal error safeguard: still build a zero row of correct width.
-            row.assign(size_t(rr.width()), Digit(0));
-        }
-        tsv += joinDigitsTSV(row);
+        src.getRow(y, x0, x1, row);
+        tsv += MdnQtInterface::joinDigitsTSV(row);
         tsv += '\n';
     }
 
@@ -48,11 +46,10 @@ void mdn::Clipboard::encodeRectToClipboard(
 
     QJsonObject origin;
     origin["mdn"] = originMdnName;
-    origin["rect"] = rectToJson(rr);
+    origin["rect"] = MdnQtInterface::rectToJson(rr);
     origin["config"] = configDict;
     root["origin"] = origin;
-    root["rect"] = rectToJson(rr); // for scope=="mdn", this equals bounds()
-
+    root["rect"] = MdnQtInterface::rectToJson(rr); // for scope=="mdn", this equals bounds()
 
     QJsonObject order;
     order["rows"] = "y_asc";

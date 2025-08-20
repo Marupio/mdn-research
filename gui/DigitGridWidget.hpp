@@ -1,6 +1,6 @@
-#include "../library/Coord.h"
-#include "../library/GlobalConfig.h"
-#include "../library/Mdn2d.h"
+#include "../library/Coord.hpp"
+#include "../library/GlobalConfig.hpp"
+#include "../library/Mdn2d.hpp"
 
 
 class DigitGridWidget : public QWidget {

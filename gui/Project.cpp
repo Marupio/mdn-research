@@ -8,10 +8,10 @@
 #include <QMimeData>
 #include <QStringList>
 
-#include "../library/Logger.h"
-#include "../library/MdnException.h"
-#include "../library/Rect.h"
-#include "../library/SignConvention.h"
+#include "../library/Logger.hpp"
+#include "../library/MdnException.hpp"
+#include "../library/Rect.hpp"
+#include "../library/SignConvention.hpp"
 #include "Selection.hpp"
 #include "MdnQtInterface.hpp"
 
@@ -588,7 +588,7 @@ bool mdn::Project::pasteOnSelection(int index) {
 
     // Overwrite rows (zeros in payload clear cells)
     for (int r = 0; r < H; ++r) {
-        dst->setRow(ay + r, ax, p.rows[size_t(r)]);
+        dst->setRow(Coord(ax, ay + r), p.rows[size_t(r)]);
     }
 
     return true;

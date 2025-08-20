@@ -15,7 +15,7 @@
 
 #include "DigitGridWidget.hpp"
 
-#include "../library/GlobalConfig.h"
+#include "../library/GlobalConfig.hpp"
 
 
 class MainWindow : public QMainWindow {

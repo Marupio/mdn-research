@@ -8,8 +8,8 @@
 
 #include "CoordSet.hpp"
 #include "GlobalConfig.hpp"
-#include "Mdn2dConfig.h"
-#include "Mdn2dConfigImpact.h"
+#include "Mdn2dConfig.hpp"
+#include "Mdn2dConfigImpact.hpp"
 #include "MdnObserver.hpp"
 #include "PrecisionStatus.hpp"
 #include "Rect.hpp"
@@ -190,15 +190,26 @@ public:
             VecDigit getRow(int y) const;
             protected: VecDigit locked_getRow(int y) const; public:
 
-            // Assembles the row at the given y index value, spanning the x bounds of full MDN
+            // Assembles a full row of digits at the y-indexed row
             void getRow(int y, VecDigit& out) const;
             protected: void locked_getRow(int y, VecDigit& out) const; public:
 
-            // Write out a continuous range for a row, from x0 to x1, inclusive.
-            // out.size() becomes (x1 - x0 + 1).
-            void getRow(int y, int x0, int x1, VecDigit& out) const;
+            // Assembles a full row of digits, xy coordinate gives the row, x component is ignored
+            void getRow(const Coord& xy, VecDigit& out) const;
+            protected: void locked_getRow(const Coord& xy, VecDigit& out) const; public:
+
+            // // Write out a continuous range for a row, from x0 to x1, inclusive.
+            // // out.size() becomes (x1 - x0 + 1).
+            // void getRow(int y, int x0, int x1, VecDigit& out) const;
+            // protected:
+            // void locked_getRow(int y, int x0, int x1, VecDigit& out) const;
+            // public:
+
+            // Write out a continuous range for a row, starting at xy, and spanning width digits
+            // out.size() is width
+            void getRow(const Coord& xy, int width, VecDigit& out) const;
             protected:
-            void locked_getRow(int y, int x0, int x1, VecDigit& out) const;
+            void locked_getRow(const Coord& xy, int width, VecDigit& out) const;
             public:
 
             // Write out a continuous range for a rows covering an area from Coord c0 to Coord c1
@@ -221,11 +232,17 @@ public:
             void getCol(int x, VecDigit& out) const;
             protected: void locked_getCol(int x, VecDigit& out) const; public:
 
-            // Write out a continuous range for a row, from x0 to x1, inclusive.
-            // out.size() becomes (x1 - x0 + 1).
-            void getCol(int x, int y0, int y1, VecDigit& out) const;
+            // // Write out a continuous range for a row, from x0 to x1, inclusive.
+            // // out.size() becomes (x1 - x0 + 1).
+            // void getCol(int x, int y0, int y1, VecDigit& out) const;
+            // protected:
+            // void locked_getCol(int x, int y0, int y1, VecDigit& out) const;
+            // public:
+
+            // Write out a continuous range for a column, from xy, at height.
+            void getCol(const Coord& xy, int height, VecDigit& out) const;
             protected:
-            void locked_getCol(int x, int y0, int y1, VecDigit& out) const;
+            void locked_getCol(const Coord& xy, int height, VecDigit& out) const;
             public:
 
 
@@ -264,9 +281,9 @@ public:
             // Write a contiguous row back in one call. Interprets 0 as "setToZero".  y is the row,
             //  x0 is the column.  Why is it backwards?  Shouldn't it be x,y?  Well, I mean, we also
             //  have getRow with y,x0,x1.
-            void setRow(int y, int x0, const VecDigit& row);
+            void setRow(const Coord& xy, const VecDigit& row);
             protected:
-                void locked_setRow(int y, int x0, const VecDigit& row);
+                void locked_setRow(const Coord& xy, const VecDigit& row);
             public:
 
 

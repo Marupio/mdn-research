@@ -23,10 +23,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_executable(mdn_gui
     main.cpp
     MainWindow.cpp
-    MainWindow.h
+    MainWindow.hpp
     NumberDisplayWidget.cpp
-    NumberDisplayWidget.h
-    MdnMainWindow.h MdnMainWindow.cpp MdnMainWindow.ui
+    NumberDisplayWidget.hpp
+    MdnMainWindow.hpp MdnMainWindow.cpp MdnMainWindow.ui
     OperationHistory.ui
 )
 

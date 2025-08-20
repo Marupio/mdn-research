@@ -10,8 +10,8 @@
 #include <QPoint>
 #include <QRect>
 
-#include "../library/Coord.h"
-#include "../library/Rect.h"
+#include "../library/Coord.hpp"
+#include "../library/Rect.hpp"
 
 
 namespace mdn {

@@ -8,9 +8,9 @@
 
 #include "MainWindow.hpp"
 
-#include "../library/GlobalConfig.h"
-#include "../library/Mdn2d.h"
-#include "../library/Mdn2dFramework.h"
+#include "../library/GlobalConfig.hpp"
+#include "../library/Mdn2d.hpp"
+#include "../library/Mdn2dFramework.hpp"
 
 namespace mdn {
 

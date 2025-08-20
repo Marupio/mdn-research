@@ -1,4 +1,4 @@
-#include "Mdn2d.h"
+#include "Mdn2d.hpp"
 
 #include <cassert>
 #include <cmath>

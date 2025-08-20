@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "GlobalConfig.hpp"
-#include "Mdn2dBase.h"
+#include "Mdn2dBase.hpp"
 #include "Rect.hpp"
 #include "TextOptions.hpp"
 #include "Tools.hpp"

@@ -2,9 +2,9 @@
 
 #include <vector>
 
-#include "../library/Rect.h"
-#include "../library/Mdn2d.h"
-#include "../library/MdnObserver.h"
+#include "../library/Rect.hpp"
+#include "../library/Mdn2d.hpp"
+#include "../library/MdnObserver.hpp"
 
 namespace mdn {
 

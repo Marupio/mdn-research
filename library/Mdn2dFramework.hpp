@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../library/GlobalConfig.h"
+#include "../library/GlobalConfig.hpp"
 
 // Interface class for Mdn2d number framework class, for Mdn2d to talk upwards to the framework
 // within which they exist

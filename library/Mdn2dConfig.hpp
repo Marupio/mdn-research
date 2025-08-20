@@ -9,7 +9,7 @@
 #include "GlobalConfig.hpp"
 #include "Logger.hpp"
 #include "MdnException.hpp"
-#include "Mdn2dFramework.h"
+#include "Mdn2dFramework.hpp"
 #include "SignConvention.hpp"
 
 namespace mdn {

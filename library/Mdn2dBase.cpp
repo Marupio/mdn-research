@@ -1,4 +1,4 @@
-#include "Mdn2dBase.h"
+#include "Mdn2dBase.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -10,8 +10,8 @@
 #include "Constants.hpp"
 #include "GlobalConfig.hpp"
 #include "Logger.hpp"
-#include "Mdn2d.h"
-#include "Mdn2dIO.h"
+#include "Mdn2d.hpp"
+#include "Mdn2dIO.hpp"
 #include "MdnException.hpp"
 #include "Tools.hpp"
 
@@ -459,7 +459,6 @@ mdn::VecDigit mdn::Mdn2dBase::getRow(int y) const {
 }
 
 
-
 mdn::VecDigit mdn::Mdn2dBase::locked_getRow(int y) const {
     VecDigit digits;
     Log_N_Debug3_H("Row " << y);
@@ -489,28 +488,85 @@ void mdn::Mdn2dBase::locked_getRow(int y, VecDigit& out) const {
         Log_N_Debug3_T("no bounds");
         return;
     }
-    int xStart = m_bounds.min().x();
-    int xEnd = m_bounds.max().x() + 1;
-    locked_getRow(y, xStart, xEnd, out);
-    Log_N_Debug3_T("x range (" << xStart << "," << xEnd << ")");
+    locked_getRow(Coord(m_bounds.min().x(), y), m_bounds.width(), out);
+    Log_N_Debug3_T("");
 }
 
 
-void mdn::Mdn2dBase::getRow(int y, int x0, int x1, VecDigit& out) const {
+void mdn::Mdn2dBase::getRow(const Coord& xy, VecDigit& out) const {
+    auto lock = lockReadOnly();
+    Log_N_Debug2_H("");
+    locked_getRow(xy, out);
+    if (Log_Showing_Debug2) {
+        Log_N_Debug2_T("Row " << xy << ": inplace" << Tools::digitArrayToString(out));
+    }
+}
+
+
+void mdn::Mdn2dBase::locked_getRow(const Coord& xy, VecDigit& out) const {
+    Log_N_Debug3_H("xy=" << xy);
+    if (!m_bounds.isValid()) {
+        // No non-zero digits to fill
+        if (out.size()) {
+            std::fill(out.begin(), out.end(), Digit(0));
+        }
+        Log_N_Debug3_T("no bounds");
+        return;
+    }
+    // int xStart = m_bounds.min().x();
+    // int xEnd = m_bounds.max().x() + 1;
+    locked_getRow(xy, m_bounds.width(), out);
+    Log_N_Debug3_T("");
+}
+
+
+// void mdn::Mdn2dBase::getRow(int y, int x0, int x1, VecDigit& out) const {
+//     auto lock = lockReadOnly();
+//     Log_N_Debug2("");
+//     locked_getRow(y, x0, x1, out);
+// }
+
+
+// void mdn::Mdn2dBase::locked_getRow(int y, int x0, int x1, VecDigit& out) const
+// {
+//     int xCount = x1 - x0 + 1;
+//     Log_N_Debug3_H(
+//         "Row " << y << " from x (" << x0 << " .. " << x1 << "), "
+//         << xCount << " elements"
+//     );
+//     out.resize(xCount);
+//     std::fill(out.begin(), out.end(), 0);
+//     auto it = m_yIndex.find(y);
+//     if (it != m_yIndex.end()) {
+//         // There are non-zero entries on this row, fill them in
+//         const CoordSet& coords = it->second;
+//         for (const Coord& coord : coords) {
+//             if (coord.x() >= x0 && coord.x() <= x1) {
+//                 out[coord.x()-x0] = m_raw.at(coord);
+//             }
+//         }
+//     }
+//     Log_N_Debug3_T("");
+// }
+
+
+void mdn::Mdn2dBase::getRow(const Coord& xy, int width, VecDigit& out) const {
     auto lock = lockReadOnly();
     Log_N_Debug2("");
-    locked_getRow(y, x0, x1, out);
+    locked_getRow(xy, width, out);
 }
 
 
-void mdn::Mdn2dBase::locked_getRow(int y, int x0, int x1, VecDigit& out) const
+void mdn::Mdn2dBase::locked_getRow(const Coord& xy, int width, VecDigit& out) const
 {
-    int xCount = x1 - x0 + 1;
+    int x0 = xy.x();
+    int y = xy.y();
+    int x1 = x0 + width - 1;
     Log_N_Debug3_H(
         "Row " << y << " from x (" << x0 << " .. " << x1 << "), "
-        << xCount << " elements"
+        << width << " elements"
     );
-    out.resize(xCount);
+    out.resize(width);
     std::fill(out.begin(), out.end(), 0);
     auto it = m_yIndex.find(y);
     if (it != m_yIndex.end()) {
@@ -546,7 +602,7 @@ void mdn::Mdn2dBase::getAreaRows(const Rect& window, VecVecDigit& out) const {
 void mdn::Mdn2dBase::locked_getAreaRows(const Rect& window, VecVecDigit& out) const {
     int xStart = window.min().x();
     int xEnd = window.max().x()+1;
-    int xCount = xEnd - xStart;
+    int width = xEnd - xStart;
 
     int yStart = window.min().y();
     int yEnd = window.max().y()+1;
@@ -554,7 +610,7 @@ void mdn::Mdn2dBase::locked_getAreaRows(const Rect& window, VecVecDigit& out) co
 
     Log_N_Debug3_H(
         "Converting sparse storage to digit arrays covering window with:\n"
-        << "    xRange = (" << xStart << " .. " << xEnd << "), " << xCount << " elements,\n"
+        << "    xRange = (" << xStart << " .. " << xEnd << "), " << width << " elements,\n"
         << "    yRange = (" << yStart << " .. " << yEnd << "), " << yCount << " rows"
     );
 
@@ -562,8 +618,9 @@ void mdn::Mdn2dBase::locked_getAreaRows(const Rect& window, VecVecDigit& out) co
     out.reserve(yCount);
 
     for (int y = yStart; y < yEnd; ++y) {
-        VecDigit row(xCount, Digit(0));
-        locked_getRow(y, xStart, xEnd, row);
+        VecDigit row(width, Digit(0));
+        Coord xy(xStart, y);
+        locked_getRow(xy, width, row);
     }
     Log_N_Debug3_T("");
 }
@@ -609,28 +666,59 @@ void mdn::Mdn2dBase::locked_getCol(int x, VecDigit& out) const {
         Log_N_Debug3_T("no bounds");
         return;
     }
-    int yStart = m_bounds.min().y();
-    int yEnd = m_bounds.max().y() + 1;
-    locked_getCol(x, yStart, yEnd, out);
-    Log_N_Debug3_T("y range (" << yStart << "," << yEnd << ")");
+    Coord xy(x, m_bounds.min().y());
+    locked_getCol(xy, m_bounds.height(), out);
+    Log_N_Debug3_T("");
 }
 
 
-void mdn::Mdn2dBase::getCol(int x, int y0, int y1, VecDigit& out) const {
+// void mdn::Mdn2dBase::getCol(int x, int y0, int y1, VecDigit& out) const {
+//     auto lock = lockReadOnly();
+//     Log_N_Debug2("");
+//     locked_getCol(x, y0, y1, out);
+// }
+
+
+// void mdn::Mdn2dBase::locked_getCol(int x, int y0, int y1, VecDigit& out) const
+// {
+//     int yCount = y1 - y0 + 1;
+//     Log_N_Debug3_H(
+//         "Col " << x << " from y (" << y0 << " .. " << y1 << "), "
+//         << yCount << " elements"
+//     );
+//     out.resize(yCount);
+//     std::fill(out.begin(), out.end(), 0);
+//     auto it = m_xIndex.find(x);
+//     if (it != m_xIndex.end()) {
+//         // There are non-zero entries on this row, fill them in
+//         const CoordSet& coords = it->second;
+//         for (const Coord& coord : coords) {
+//             if (coord.y() >= y0 && coord.y() <= y1) {
+//                 out[coord.y()-y0] = m_raw.at(coord);
+//             }
+//         }
+//     }
+//     Log_N_Debug3_T("");
+// }
+
+
+void mdn::Mdn2dBase::getCol(const Coord& xy, int height, VecDigit& out) const {
     auto lock = lockReadOnly();
     Log_N_Debug2("");
-    locked_getCol(x, y0, y1, out);
+    locked_getCol(xy, height, out);
 }
 
 
-void mdn::Mdn2dBase::locked_getCol(int x, int y0, int y1, VecDigit& out) const
+void mdn::Mdn2dBase::locked_getCol(const Coord& xy, int height, VecDigit& out) const
 {
-    int yCount = y1 - y0 + 1;
+    int y0 = xy.y();
+    int x = xy.x();
+    int y1 = height + y0 - 1;
     Log_N_Debug3_H(
         "Col " << x << " from y (" << y0 << " .. " << y1 << "), "
-        << yCount << " elements"
+        << height << " elements"
     );
-    out.resize(yCount);
+    out.resize(height);
     std::fill(out.begin(), out.end(), 0);
     auto it = m_xIndex.find(x);
     if (it != m_xIndex.end()) {
@@ -889,17 +977,17 @@ bool mdn::Mdn2dBase::locked_setValue(const Coord& xy, long long value) {
 }
 
 
-void mdn::Mdn2dBase::setRow(int y, int x0, const VecDigit& row) {
+void mdn::Mdn2dBase::setRow(const Coord& xy, const VecDigit& row) {
     auto lock = lockWriteable();
-    Log_N_Debug2_H("y=" << y << ",x0=" << x0);
-    locked_setRow(y, x0, row);
+    Log_N_Debug2_H("at " << xy);
+    locked_setRow(xy, row);
     Log_N_Debug2_T("");
 }
 
 
-void mdn::Mdn2dBase::locked_setRow(int y, int x0, const VecDigit& row) {
-    Log_N_Debug3_H("y=" << y << ",x0=" << x0);
-    Coord cursor(x0, y);
+void mdn::Mdn2dBase::locked_setRow(const Coord& xy, const VecDigit& row) {
+    Log_N_Debug3_H("at " << xy);
+    Coord cursor = xy;
     for (int i = 0; i < row.size(); ++i) {
         locked_setValue(cursor, row[i]);
         cursor.translateX(1);
