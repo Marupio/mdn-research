@@ -12,6 +12,7 @@
 #include "../library/MdnException.hpp"
 #include "../library/Rect.hpp"
 #include "../library/SignConvention.hpp"
+#include "Clipboard.hpp"
 #include "Selection.hpp"
 #include "MdnQtInterface.hpp"
 
@@ -528,7 +529,7 @@ bool mdn::Project::pasteOnSelection(int index) {
         return false;
     }
 
-    DecodedPaste p = decodeClipboard();
+    Clipboard::DecodedPaste p = Clipboard::decodeClipboard();
     if (!p.valid()) {
         return false;
     }
@@ -597,8 +598,12 @@ bool mdn::Project::pasteOnSelection(int index) {
 
 void mdn::Project::deleteSelection() {
     const mdn::Selection& sel = selection();
-
-
+    Mdn2d* dst = sel.get();
+    if (!dst) {
+        return;
+    }
+    const Rect& rect(sel.rect);
+    dst->setToZero(rect);
 }
 
 

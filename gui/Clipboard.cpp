@@ -22,7 +22,7 @@ void mdn::Clipboard::encodeRectToClipboard(
 
     for (int y = y0; y <= y1; ++y) {
         row.clear();
-        src.getRow(y, x0, x1, row);
+        src.getRow(Coord(x0, y), rr.width(), row);
         tsv += MdnQtInterface::joinDigitsTSV(row);
         tsv += '\n';
     }

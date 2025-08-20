@@ -672,36 +672,6 @@ void mdn::Mdn2dBase::locked_getCol(int x, VecDigit& out) const {
 }
 
 
-// void mdn::Mdn2dBase::getCol(int x, int y0, int y1, VecDigit& out) const {
-//     auto lock = lockReadOnly();
-//     Log_N_Debug2("");
-//     locked_getCol(x, y0, y1, out);
-// }
-
-
-// void mdn::Mdn2dBase::locked_getCol(int x, int y0, int y1, VecDigit& out) const
-// {
-//     int yCount = y1 - y0 + 1;
-//     Log_N_Debug3_H(
-//         "Col " << x << " from y (" << y0 << " .. " << y1 << "), "
-//         << yCount << " elements"
-//     );
-//     out.resize(yCount);
-//     std::fill(out.begin(), out.end(), 0);
-//     auto it = m_xIndex.find(x);
-//     if (it != m_xIndex.end()) {
-//         // There are non-zero entries on this row, fill them in
-//         const CoordSet& coords = it->second;
-//         for (const Coord& coord : coords) {
-//             if (coord.y() >= y0 && coord.y() <= y1) {
-//                 out[coord.y()-y0] = m_raw.at(coord);
-//             }
-//         }
-//     }
-//     Log_N_Debug3_T("");
-// }
-
-
 void mdn::Mdn2dBase::getCol(const Coord& xy, int height, VecDigit& out) const {
     auto lock = lockReadOnly();
     Log_N_Debug2("");
@@ -731,6 +701,71 @@ void mdn::Mdn2dBase::locked_getCol(const Coord& xy, int height, VecDigit& out) c
         }
     }
     Log_N_Debug3_T("");
+}
+
+
+mdn::CoordSet mdn::Mdn2dBase::getNonZeroes(const Rect& window) const {
+    auto lock = lockReadOnly();
+    Log_N_Debug2_H("Collecting non-zero coords in window: " << window);
+    CoordSet result = locked_getNonZeroes(window);
+    Log_N_Debug2_T("Returning set containing " << result.size() << " coords");
+    return result;
+}
+
+mdn::CoordSet mdn::Mdn2dBase::locked_getNonZeroes(const Rect& window) const {
+    CoordSet result;
+
+    // Fast-outs
+    if (window.isInvalid()) {
+        Log_N_Debug3("Window invalid; returning empty set");
+        return result;
+    }
+    if (!locked_hasBounds()) {
+        Log_N_Debug3("No bounds; MDN has no non-zero digits");
+        return result;
+    }
+
+    // Clamp query to our current non-zero bounds
+    Rect w = Rect::Intersection(window, m_bounds);
+    if (!w.isValid()) {
+        Log_N_Debug3("Intersection is empty; returning empty set");
+        return result;
+    }
+
+    // Iterate by Y rows using m_yIndex; filter X on each row
+    const int y0 = w.bottom();
+    const int y1 = w.top();
+    const int x0 = w.left();
+    const int x1 = w.right();
+
+    // lower_bound..upper_bound over y
+    auto it = m_yIndex.lower_bound(y0);
+    const auto itEnd = m_yIndex.upper_bound(y1);
+
+    if (Log_Showing_Debug3) {
+        Log_N_Debug3_H(
+            "Row scan y=(" << y0 << ".." << y1
+            << "), x filter=(" << x0 << ".." << x1 << ")"
+        );
+    }
+
+    for (; it != itEnd; ++it) {
+        const CoordSet& rowSet = it->second;
+        for (const Coord& c : rowSet) {
+            const int x = c.x();
+            if (x >= x0 && x <= x1) {
+                result.insert(c);
+            }
+        }
+    }
+
+    if (Log_Showing_Debug4) {
+        std::string coordsList(Tools::setToString<Coord>(result, ','));
+        Log_N_Debug4_T("Found " << result.size() << " coords: " << coordsList);
+    } else {
+        Log_N_Debug3_T("Found " << result.size() << " coords");
+    }
+    return result;
 }
 
 
@@ -892,6 +927,41 @@ mdn::CoordSet mdn::Mdn2dBase::locked_setToZero(const CoordSet& purgeSet) {
         "Erased " << indexRowsRemoved << " index rows and " << indexColsRemoved << " index cols"
     );
 
+    return changed;
+}
+
+
+mdn::CoordSet mdn::Mdn2dBase::setToZero(const Rect& window) {
+    auto lock = lockWriteable();
+    Log_N_Debug2_H("Zeroing window: " << window);
+    CoordSet changed = locked_setToZero(window);
+    internal_operationComplete();
+    if (Log_Showing_Debug3) {
+        std::string coordsList(Tools::setToString<Coord>(changed, ','));
+        Log_N_Debug3_T("Returning changed coords: " << coordsList);
+    } else {
+        Log_N_Debug2_T("Returning set containing " << changed.size() << " changed coords");
+    }
+    return changed;
+}
+
+
+mdn::CoordSet mdn::Mdn2dBase::locked_setToZero(const Rect& window) {
+    Log_N_Debug3_H("window=" << window);
+    if (window.isInvalid()) {
+        Log_N_Debug3_T("window empty");
+        return CoordSet();
+    }
+    CoordSet purgeSet(
+        locked_getNonZeroes(window)
+    );
+    CoordSet changed(locked_setToZero(purgeSet));
+    if (Log_Showing_Debug4) {
+        std::string coordsList(Tools::setToString<Coord>(changed, ','));
+        Log_N_Debug4_T("Returning changed coords: " << coordsList);
+    } else {
+        Log_N_Debug3_T("Returning set containing " << changed.size() << " changed coords");
+    }
     return changed;
 }
 

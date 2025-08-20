@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "CoordSet.hpp"
+#include "CoordTypes.hpp"
 #include "GlobalConfig.hpp"
 #include "Mdn2dConfig.hpp"
 #include "Mdn2dConfigImpact.hpp"
@@ -43,18 +43,6 @@ protected:
 
     // Used to generate the next defaulted name
     static int m_nextNameSeed;
-
-    // Creates a new Mdn2d name, acquires static lock first
-    static std::string static_generateNextName();
-
-    // Creates a new Mdn2d name, assumes lock already acquired
-    static std::string locked_generateNextName();
-
-    // Create a 'copy' name from given nameIn (e.g. nameIn_copy0), acquires static lock first
-    static std::string static_generateCopyName(const std::string& nameIn);
-
-    // Create a 'copy' name from given nameIn (e.g. nameIn_copy0), assumes lock already acquired
-    static std::string locked_generateCopyName(const std::string& nameIn);
 
 
     // *** Local variables
@@ -106,6 +94,15 @@ public:
 
 
     // *** Static functions
+
+    // Creates a new Mdn2d name, acquires static lock first
+    static std::string static_generateNextName();
+    protected: static std::string locked_generateNextName(); public:
+
+    // Create a 'copy' name from given nameIn (e.g. nameIn_copy0), acquires static lock first
+    static std::string static_generateCopyName(const std::string& nameIn);
+    protected: static std::string locked_generateCopyName(const std::string& nameIn); public:
+
 
     // Create a fully-realised Mdn2d instance, accessible from downstream layers
     static Mdn2d NewInstance(
@@ -198,13 +195,6 @@ public:
             void getRow(const Coord& xy, VecDigit& out) const;
             protected: void locked_getRow(const Coord& xy, VecDigit& out) const; public:
 
-            // // Write out a continuous range for a row, from x0 to x1, inclusive.
-            // // out.size() becomes (x1 - x0 + 1).
-            // void getRow(int y, int x0, int x1, VecDigit& out) const;
-            // protected:
-            // void locked_getRow(int y, int x0, int x1, VecDigit& out) const;
-            // public:
-
             // Write out a continuous range for a row, starting at xy, and spanning width digits
             // out.size() is width
             void getRow(const Coord& xy, int width, VecDigit& out) const;
@@ -232,18 +222,16 @@ public:
             void getCol(int x, VecDigit& out) const;
             protected: void locked_getCol(int x, VecDigit& out) const; public:
 
-            // // Write out a continuous range for a row, from x0 to x1, inclusive.
-            // // out.size() becomes (x1 - x0 + 1).
-            // void getCol(int x, int y0, int y1, VecDigit& out) const;
-            // protected:
-            // void locked_getCol(int x, int y0, int y1, VecDigit& out) const;
-            // public:
-
             // Write out a continuous range for a column, from xy, at height.
             void getCol(const Coord& xy, int height, VecDigit& out) const;
             protected:
             void locked_getCol(const Coord& xy, int height, VecDigit& out) const;
             public:
+
+
+            // Return the set of non-zero coordinates inside 'window'
+            CoordSet getNonZeroes(const Rect& window) const;
+            protected: CoordSet locked_getNonZeroes(const Rect& window) const; public:
 
 
         // *** Setters
@@ -258,6 +246,10 @@ public:
             //      * Value changes sign
             bool setToZero(const Coord& xy);
             protected: bool locked_setToZero(const Coord& xy); public:
+
+            // Set to zero all digits within the given window
+            CoordSet setToZero(const Rect& window);
+            protected: CoordSet locked_setToZero(const Rect& window); public:
 
             // Set the value at coords to zero, returns subset containing those whose values changed
             CoordSet setToZero(const CoordSet& coords);

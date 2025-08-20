@@ -1,3 +1,4 @@
+// Rect.hpp  — UPDATED
 #pragma once
 
 #include "Coord.hpp"
@@ -5,6 +6,11 @@
 #include <vector>
 #include <algorithm>
 #include <limits>
+
+// NEW: needed for iterators & sets
+#include <iterator>
+#include <unordered_set>
+#include "CoordTypes.hpp" // CoordSet, VecCoord, VecVecCoord
 
 namespace mdn {
 
@@ -14,7 +20,7 @@ public:
 
     // *** Static member functions
 
-    // Returns an invalid rectangle, plays nice with growToInclude
+    // Returns an 'invalid' Rect, meaning 'empty'
     static Rect GetInvalid() {
         return Rect(
             Coord(std::numeric_limits<int>::max(), std::numeric_limits<int>::max()),
@@ -22,7 +28,7 @@ public:
         );
     }
 
-    // Return intersection of two rects. If they don't intersect, returns Rect::GetInvalid()
+    // Return intersection of two rects. If they don't intersect, returns invalid (empty)
     inline static Rect Intersection(const Rect& a, const Rect& b) {
         Coord minPt(
             std::max(a.min().x(), b.min().x()),
@@ -78,7 +84,7 @@ public:
 
     // *** Constructors
 
-    // Construct null - retuns an invalid rectangle
+    // Construct null - retuns invalid (empty)
     Rect() : Rect(GetInvalid()) {}
 
     // Construct from components
@@ -107,11 +113,11 @@ public:
     // *** Rule of five
     //  Compliant by default
 
-        Rect(const Rect&) = default;
-        Rect(Rect&&) = default;
-        Rect& operator=(const Rect&) = default;
-        Rect& operator=(Rect&&) = default;
-        ~Rect() = default;
+    Rect(const Rect&) = default;
+    Rect(Rect&&) = default;
+    Rect& operator=(const Rect&) = default;
+    Rect& operator=(Rect&&) = default;
+    ~Rect() = default;
 
 
     // *** Public member functions
@@ -222,12 +228,102 @@ public:
     std::vector<Coord> toCoordVector() const {
         std::vector<Coord> coords;
         if (!isValid()) return coords;
+        coords.reserve(size());
         for (int y = bottom(); y <= top(); ++y) {
             for (int x = left(); x <= right(); ++x) {
                 coords.emplace_back(x, y);
             }
         }
         return coords;
+    }
+
+    // Row-major iterator support (y from bottom..top, x from left..right)
+    class const_iterator {
+    public:
+        using iterator_category = std::forward_iterator_tag;
+        using value_type        = Coord;
+        using difference_type   = std::ptrdiff_t;
+        using reference         = Coord;   // returns by value (immutable w.r.t Rect)
+        using pointer           = void;
+
+        const_iterator() : r(nullptr), x(0), y(0) {}
+        const_iterator(const Rect* rect, int xi, int yi) : r(rect), x(xi), y(yi) {}
+
+        reference operator*() const { return Coord{x, y}; }
+
+        const_iterator& operator++() {
+            if (!r) return *this;
+            ++x;
+            if (x > r->right()) { x = r->left(); ++y; }
+            return *this;
+        }
+        const_iterator operator++(int) { auto tmp = *this; ++(*this); return tmp; }
+
+        bool operator==(const const_iterator& o) const { return r == o.r && x == o.x && y == o.y; }
+        bool operator!=(const const_iterator& o) const { return !(*this == o); }
+
+    private:
+        const Rect* r;
+        int x, y;
+    };
+
+    // Provide begin/end. Note: iteration yields Coord by value.
+    const_iterator begin() const {
+        if (!isValid()) return end();
+        return const_iterator(this, left(), bottom());
+    }
+    const_iterator end() const {
+        // end() is "one past last row"
+        return const_iterator(this, left(), top() + 1);
+    }
+    // Optional alias so `for (auto c : rect)` works without constness fuss.
+    using iterator = const_iterator;
+
+    // Return entire area as rows (index = y - bottom(), each row left..right)
+    [[nodiscard]] VecVecCoord asRows() const {
+        VecVecCoord result;
+        if (!isValid()) return result;
+        const int W = width();
+        const int H = height();
+        result.resize(static_cast<size_t>(H));
+        for (int row = 0; row < H; ++row) {
+            result[row].reserve(static_cast<size_t>(W));
+            const int y = bottom() + row;
+            for (int x = left(); x <= right(); ++x) {
+                result[row].emplace_back(x, y);
+            }
+        }
+        return result;
+    }
+
+    // Return entire area as columns (index = x - left(), each column bottom..top)
+    [[nodiscard]] VecVecCoord asColumns() const {
+        VecVecCoord result;
+        if (!isValid()) return result;
+        const int W = width();
+        const int H = height();
+        result.resize(static_cast<size_t>(W));
+        for (int col = 0; col < W; ++col) {
+            result[col].reserve(static_cast<size_t>(H));
+            const int x = left() + col;
+            for (int y = bottom(); y <= top(); ++y) {
+                result[col].emplace_back(x, y);
+            }
+        }
+        return result;
+    }
+
+    // NEW: return a set containing all coords inside the rect
+    [[nodiscard]] CoordSet asCoordSet() const {
+        CoordSet out;
+        if (!isValid()) return out;
+        out.reserve(static_cast<size_t>(size()));
+        for (int y = bottom(); y <= top(); ++y) {
+            for (int x = left(); x <= right(); ++x) {
+                out.emplace(x, y);
+            }
+        }
+        return out;
     }
 
     friend std::ostream& operator<<(std::ostream& os, const Rect& r) {
