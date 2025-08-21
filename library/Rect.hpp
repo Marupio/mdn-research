@@ -84,11 +84,11 @@ public:
 
     // Position classification
     enum class FrontBack {
-        Behind,
-        BackEdge,
-        Inside,
-        FrontEdge,
-        InFront
+        Behind = 0,
+        BackEdge = 1,
+        Inside = 2,
+        FrontEdge = 3,
+        InFront = 4
     };
 
     FrontBack HasCoordAt_X(const Coord& xy) const {
@@ -125,13 +125,23 @@ public:
         return FrontBack::InFront;
     }
 
+    // 0 |1|  2  |3| 4
+    //
+    // 1 | 2 |
+    // --+---+--
+    //
+    //
 
     enum class RelativePosition {
         Inside,
-        OnRightEdge,
-        OnLeftEdge,
-        OnTopEdge,
-        OnBottomEdge,
+        OnWestEdge,
+        OnEastEdge,
+        OnNorthEdge,
+        OnSouthEdge,
+        OnNorthWestCorner,
+        OnNorthEastCorner,
+        OnSouthWestCorner,
+        OnSouthEastCorner,
         East,
         NorthEast,
         North,
@@ -141,22 +151,65 @@ public:
         South,
         SouthEast
     };
-
+    //
+    //        0  1  2  3  4
+    //  0  0  0  1  2  3  4
+    //  1  5  5  6  7  8  9
+    //  2 10 10 11 12 13 14
+    //  3 15 15 16 17 18 19
+    //  4 20 20 21 22 23 24
+    //
     RelativePosition HasCoordAt(const Coord& xy) const {
         FrontBack fbX = HasCoordAt_X(xy);
         FrontBack fbY = HasCoordAt_Y(xy);
-////////////// TODOTODO ///////////////////////////////
-        switch(fbX) {
-            case FrontBack::Behind: {
-            }
-            case FrontBack::BackEdge: {
-            }
-            case FrontBack::Inside: {
-            }
-            case FrontBack::FrontEdge: {
-            }
-            case FrontBack::InFront: {
-            }
+        int xCode = static_cast<int>(fbX);
+        int yCode = static_cast<int>(fbY);
+        int code = xCode + yCode*5;
+        switch(code) {
+            case 0:
+                return RelativePosition::NorthWest;
+            case 1:
+            case 2:
+            case 3:
+                return RelativePosition::North;
+            case 4:
+                return RelativePosition::NorthEast;
+            case 5:
+            case 10:
+            case 15:
+                return RelativePosition::West;
+            case 6:
+                return RelativePosition::OnNorthWestCorner;
+            case 7:
+                return RelativePosition::OnNorthEdge;
+            case 8:
+                return RelativePosition::OnNorthEastCorner;
+            case 9:
+            case 14:
+            case 19:
+                return RelativePosition::East;
+            case 11:
+                return RelativePosition::OnWestEdge;
+            case 12:
+                return RelativePosition::Inside;
+            case 13:
+                return RelativePosition::OnEastEdge;
+            case 16:
+                return RelativePosition::OnSouthWestCorner;
+            case 17:
+                return RelativePosition::OnSouthEdge;
+            case 18:
+                return RelativePosition::OnSouthEastCorner;
+            case 20:
+                return RelativePosition::SouthWest;
+            case 21:
+            case 22:
+            case 23:
+                return RelativePosition::South;
+            case 24:
+                return RelativePosition::SouthWest;
+            default:
+
         }
     }
 
