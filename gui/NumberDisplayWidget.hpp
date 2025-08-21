@@ -21,8 +21,12 @@ public:
 protected:
     void paintEvent(QPaintEvent* event) override;
     void keyPressEvent(QKeyEvent* event) override;
+    void resizeEvent(QResizeEvent* event) override;
 
 private:
+    void ensureCursorVisible();
+    void recalcGridGeometry();
+
     const mdn::Mdn2d* m_model = nullptr;
 
     Qt::GlobalColor m_defaultColors_gridLines = Qt::gray;

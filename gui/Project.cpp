@@ -166,8 +166,8 @@ void mdn::Project::setConfig(Mdn2dConfig newConfig) {
             );
 
             if (reply == QMessageBox::Yes) {
-                for (auto& [index, mdn] : m_data) {
-                    mdn.setConfig(newConfig);
+                for (auto& [index, mdnAndSel] : m_data) {
+                    mdnAndSel.first.setConfig(newConfig);
                 }
                 m_config = newConfig;
                 return;
@@ -195,8 +195,8 @@ void mdn::Project::setConfig(Mdn2dConfig newConfig) {
             );
 
             if (reply == QMessageBox::Yes) {
-                for (auto& [index, mdn] : m_data) {
-                    mdn.setConfig(newConfig);
+                for (auto& [index, mdnAndSel] : m_data) {
+                    mdnAndSel.first.setConfig(newConfig);
                 }
                 m_config = newConfig;
                 return;
@@ -236,7 +236,7 @@ bool mdn::Project::contains(std::string name, bool warnOnFailure) const {
         }
         return false;
     }
-    const Mdn2d& num = iter->second;
+    const Mdn2d& num = (iter->second).first;
     if (num.name() != name) {
         return false;
     }
@@ -278,6 +278,28 @@ std::string mdn::Project::nameOfMdn(int i) const {
 }
 
 
+void mdn::Project::setActiveMdn(int i) {
+    if (!contains(i, true)) {
+        return;
+    }
+    auto iter = m_data.find(i);
+    DBAssert(iter != m_data.end(), "Mdn is not at expected index, " << i);
+    std::pair<Mdn2d, Selection> elem = iter->second;
+    m_activeMdn2d = &(elem.first);
+    m_activeSelection = &(elem.second);
+}
+
+
+void mdn::Project::setActiveMdn(std::string name) {
+    int i = indexOfMdn(name);
+    if (i < 0) {
+        Log_WarnQ("Failed to acquire index for Mdn2d '" << name << "'");
+        return;
+    }
+    setActiveMdn(i);
+}
+
+
 const mdn::Mdn2d* mdn::Project::getMdn(int i, bool warnOnFailure) const {
     const auto iter = m_data.find(i);
     if (iter == m_data.cend()) {
@@ -288,7 +310,7 @@ const mdn::Mdn2d* mdn::Project::getMdn(int i, bool warnOnFailure) const {
         }
         return nullptr;
     }
-    return &(iter->second);
+    return &(iter->second.first);
 }
 mdn::Mdn2d* mdn::Project::getMdn(int i, bool warnOnFailure) {
     auto iter = m_data.find(i);
@@ -300,7 +322,7 @@ mdn::Mdn2d* mdn::Project::getMdn(int i, bool warnOnFailure) {
         }
         return nullptr;
     }
-    return &(iter->second);
+    return &(iter->second.first);
 }
 
 
@@ -315,7 +337,7 @@ const mdn::Mdn2d* mdn::Project::getMdn(std::string name, bool warnOnFailure) con
         return nullptr;
     }
     int index = iter->second;
-    return &(m_data.at(index));
+    return &(m_data.at(index).first);
 }
 mdn::Mdn2d* mdn::Project::getMdn(std::string name, bool warnOnFailure) {
     auto iter = m_addressingNameToIndex.find(name);
@@ -328,7 +350,7 @@ mdn::Mdn2d* mdn::Project::getMdn(std::string name, bool warnOnFailure) {
         return nullptr;
     }
     int index = iter->second;
-    return &(m_data[index]);
+    return &(m_data[index].first);
 }
 
 
@@ -366,7 +388,8 @@ void mdn::Project::insertMdn(Mdn2d& mdn, int index) {
     if (index < 0) {
         index = maxNewIndex;
     }
-    m_data.insert({index, mdn});
+    Selection sel;
+    m_data.insert({index, {mdn, sel}});
     const std::string& origName = mdn.name();
     std::string newName;
     if (mdnNameExists(origName)) {
@@ -423,7 +446,7 @@ bool mdn::Project::moveMdn(int fromIndex, int toIndex) {
     }
     // Extract the number and erase the addressing metadata
     auto node = m_data.extract(fromIndex);
-    std::string name = node.mapped().name();
+    std::string name = node.mapped().first.name();
     node.key() = toIndex;
     m_addressingIndexToName.erase(fromIndex);
     m_addressingNameToIndex.erase(name);
@@ -481,17 +504,17 @@ bool mdn::Project::deleteMdn(const std::string& name) {
 
 
 void mdn::Project::copySelection() const {
-    const mdn::Selection& sel = selection();
-    const Mdn2d* src = sel.get();
-    if (src == nullptr) {
+    const mdn::Selection* sel = selection();
+    if (!sel) {
+        Log_WarnQ("Failed to acquire selection");
         return;
     }
-    if (!sel.rect().isValid()) {
+    const Mdn2d* src = sel->get();
+    if (!src || !sel->rect().isValid()) {
         return;
     }
-
-    Rect r = sel.rect();
-    r.fixOrdering();
+    Rect r = sel->rect();
+    // r.fixOrdering();
     encodeRectToClipboard(*src, r, QStringLiteral("rect"), QString::fromStdString(src->name()));
 }
 
@@ -518,18 +541,16 @@ void mdn::Project::cutSelection() {
 
 
 bool mdn::Project::pasteOnSelection(int index) {
-    const mdn::Selection& sel = selection();
-
-    Mdn2d* dst = nullptr;
-    if (index >= 0) {
-        dst = getMdn(index);
-    } else {
-        dst = sel.get();
+    const mdn::Selection* sel = selection();
+    if (!sel) {
+        Log_WarnQ("Failed to acquire selection");
+        return;
     }
-    if (dst == nullptr) {
-        return false;
+    Mdn2d* dst = sel->get();
+    if (!dst || !sel->rect().isValid()) {
+        return;
     }
-
+    Rect r = sel->rect();
     Clipboard::DecodedPaste p = Clipboard::decodeClipboard();
     if (!p.valid()) {
         return false;
@@ -538,13 +559,13 @@ bool mdn::Project::pasteOnSelection(int index) {
     const int W = p.width();
     const int H = p.height();
 
-    const bool haveSel = (index < 0) && sel.rect().isValid();
+    const bool haveSel = (index < 0) && sel->rect().isValid();
 
     int ax = 0;
     int ay = 0;
 
     if (haveSel) {
-        const Rect r = [&]() { Rect t = sel.rect(); t.fixOrdering(); return t; }();
+        const Rect r = [&]() { Rect t = sel->rect(); t.fixOrdering(); return t; }();
         const int SW = r.width();
         const int SH = r.height();
         if (SW == 1 && SH == 1) {
@@ -598,13 +619,15 @@ bool mdn::Project::pasteOnSelection(int index) {
 
 
 void mdn::Project::deleteSelection() {
-    const mdn::Selection& sel = selection();
-    Mdn2d* dst = sel.get();
-    if (!dst) {
+    const mdn::Selection* sel = selection();
+    if (!sel) {
+        Log_WarnQ("Failed to acquire selection");
         return;
     }
-    const Rect& rect(sel.rect());
-    dst->setToZero(rect);
+    Mdn2d* dst = sel->get();
+    if (!dst || !sel->rect().isValid()) {
+        return;
+    }
+    Rect r = sel->rect();
+    dst->setToZero(r);
 }
-
-

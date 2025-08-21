@@ -27,7 +27,13 @@ public:
 
     // *** Functions that create a new Coord instance
 
-        // Creates a new Coord, translated by the given (xIncr, yIncr)
+        // Creates a new Coord, translated by the given xyIncr or xIncr, yIncr
+        Coord translated(const Coord& incr) const {
+            Coord ret(*this);
+            ret.m_x += incr.x();
+            ret.m_y += incr.y();
+            return ret;
+        }
         Coord translated(int xIncr, int yIncr) const {
             Coord ret(*this);
             ret.m_x += xIncr;
@@ -50,7 +56,8 @@ public:
 
     // *** Functions that modify *this
 
-        // Move the Coord by the given (xIncr, yIncr)
+        // Move the Coord by the given incr or xIncr, yIncr
+        void translate(const Coord& incr) { m_x += incr.x(); m_y += incr.y(); }
         void translate(int xIncr, int yIncr) { m_x += xIncr; m_y += yIncr; }
         // Move the Coord along x by the given xIncr
         void translateX(int xIncr) { m_x += xIncr; }
@@ -172,7 +179,7 @@ enum class CardinalDirection {
 };
 
 // Convert the given cardinal direction as a Coord
-const Coord& CardinalDirectionToCoord(CardinalDirection cd) {
+inline const Coord& CardinalDirectionToCoord(CardinalDirection cd) {
     switch (cd) {
         case CardinalDirection::North:
             return COORD_NORTH;

@@ -487,7 +487,7 @@ const mdn::CoordSet& mdn::Mdn2dBase::locked_nonZeroOnCol(const Coord& xy) const 
 }
 
 
-mdn::Coord mdn::Mdn2dBase::jump(const Coord& xy, CardinalDirection cd) {
+mdn::Coord mdn::Mdn2dBase::jump(const Coord& xy, CardinalDirection cd) const {
     Log_N_Debug2_H("At " << xy);
     auto lock = lockReadOnly();
     Coord result = locked_jump(xy, cd);
@@ -496,7 +496,7 @@ mdn::Coord mdn::Mdn2dBase::jump(const Coord& xy, CardinalDirection cd) {
 }
 
 
-mdn::Coord mdn::Mdn2dBase::locked_jump(const Coord& xy, CardinalDirection cd) {
+mdn::Coord mdn::Mdn2dBase::locked_jump(const Coord& xy, CardinalDirection cd) const {
     const Coord& cdCoord(CardinalDirectionToCoord(cd));
     Log_N_Debug3_H("xy=" << xy << ", cd=" << cdCoord);
     if (cdCoord ==  COORD_ORIGIN) {
@@ -544,19 +544,48 @@ mdn::Coord mdn::Mdn2dBase::locked_jump(const Coord& xy, CardinalDirection cd) {
             default:
                 break;
         }
-        if (!towardsDigitLineOnly) {
-            // At this point it is confirmed the cursor is moving within or towards the bounds
-            // TODOTODOTODO
+    } else if (cdCoord.y() != 0) {
+        fbX = m_bounds.HasCoordAt_X(xy);
+        fbY = m_bounds.HasCoordAt_Y(xy);
+
+        switch(fbX) {
+            case Rect::FrontBack::Behind:
+            case Rect::FrontBack::InFront:
+                // To the left or right, moving vertically
+                towardsDigitLineOnly = true;
+                break;
+            default:
+                break;
+        }
+        switch (fbY) {
+            case Rect::FrontBack::Behind:
+            case Rect::FrontBack::BackEdge: {
+                if (cdCoord.y() < 0) {
+                    Log_Debug3_T("Outside bounds moving away, no movement allowed");
+                    return Coord(xy);
+                }
+                // Heading towards bounds
+                break;
+            }
+            case Rect::FrontBack::InFront:
+            case Rect::FrontBack::FrontEdge: {
+                if (cdCoord.y() > 0) {
+                    Log_Debug3_T("Outside bounds moving away, no movement allowed");
+                    return Coord(xy);
+                }
+                // Heading towards bounds
+                break;
+            }
+            default:
+                break;
         }
     }
-
-
     if (towardsDigitLineOnly) {
         // Only allow towards digit line
         // Multiply components, then 'toward digit line' is a negative coord.
         Log_N_Debug3("No digits, only allowed movement towards digit lines");
 
-        Coord xy_cd(xy.x()*cdCoord.x(), xy.y()*cdCoord.y());
+        Coord xy_cd = xy*cdCoord.x();
         if (xy_cd.x() < 0) {
             Coord result(0, xy.y());
             Log_N_Debug3_T("Towards x digit line, returning " << result);
@@ -566,51 +595,46 @@ mdn::Coord mdn::Mdn2dBase::locked_jump(const Coord& xy, CardinalDirection cd) {
             Log_N_Debug3_T("Towards y digit line, returning " << result);
             return result;
         }
+        // Not moving towards a digitLine, no movement allowed
+        Log_N_Debug3_T(
+            "Only allowed digitLine-ward movement, not correct movement input, returning " << xy
+        );
+        return xy;
     }
 
+    // Begin standard jump algorithm - move until non-zero status changes
+    bool refNonZero = locked_nonZero(xy);
+    const int sanityCheckMax = 1000;
+    int sanityCheck = sanityCheckMax;
+    // Coord xyGo(xy.translated(cdCoord));
+    Coord xyGo = xy;
+    Coord prevXy = xy;
 
-
-        std::vector<Digit> row;
-        locked_getRow(xy, row);
-
-
-
-/////////////TODOTODO//////////////
-
-
-
-    if (cdCoord.x() != 0) {
-        // x-aligned movement
-        const CoordSet& rowNonZeroes = locked_nonZeroOnRow(xy);
-        std::vector<int> stops;
-        if (m_bounds.isValid()) {
-            stops.push_back(m_bounds.left());
-            stops.push_back(m_bounds.right());
+    while (sanityCheck--> 0) {
+        prevXy = xyGo;
+        xyGo.translate(cdCoord);
+        if (locked_nonZero(xyGo) != refNonZero) {
+            if (refNonZero) {
+                // We want to return non-zero location, so, previous spot is okay
+                Log_N_Debug3_T("returning " << prevXy);
+                return prevXy;
+            } else {
+                // We want to return non-zero location, so, current spot is okay
+                Log_N_Debug3_T("returning " << xyGo);
+                return xyGo;
+            }
         }
-        if (rowNonZeroes.empty()) {
-            // No non-zeroes, movement stops at bounds edges and digit lines only
-        }
-    }
-    if (locked_nonZero(xy)) {
-        // xy is non-zero
-        if (cdCoord.x() != 0) {
-            // x-aligned movement, use m_yIndex
-            const CoordSet& rowSet = m_yIndex[xy.y()];
-
-            for (const Coord& it : rowSet)
-
+        if (!m_bounds.contains(xyGo)) {
+            break;
         }
     }
 
-// // Sparse coordinate-to-digit mapping
-// std::unordered_map<Coord, Digit> m_raw;
-
-// // Addressing
-// mutable std::map<int, CoordSet> m_xIndex;
-// mutable std::map<int, CoordSet> m_yIndex;
-
-// // Full index
-// mutable CoordSet m_index;
+    if (sanityCheck < 0) {
+        Log_N_Warn("jump algorithm exceeded " << sanityCheckMax << " iterations");
+    }
+    // No valid stops - went out-of-bounds. Return the previous position.
+    Log_N_Debug3_T("no valid stops found, went out-of-bounds, returning " << prevXy);
+    return prevXy;
 }
 
 

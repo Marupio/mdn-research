@@ -196,7 +196,6 @@ public:
             protected: const CoordSet& locked_nonZeroOnCol(const Coord& xy) const; public:
 
 
-
         // *** Navigation
 
             // Give the Coord position after jumping from xy in direction cd
@@ -205,8 +204,8 @@ public:
             //  Returns the position that is on the non-zero Coord at the boundary between zero and
             //  non-zero.  This is the behaviour of the cursor in spreadsheet apps, when moved with
             //  [ctrl]+[direction].
-            Coord jump(const Coord& xy, CardinalDirection cd);
-            protected: Coord locked_jump(const Coord& xy, CardinalDirection cd); public:
+            Coord jump(const Coord& xy, CardinalDirection cd) const;
+            protected: Coord locked_jump(const Coord& xy, CardinalDirection cd) const; public:
 
         // *** Getters
 

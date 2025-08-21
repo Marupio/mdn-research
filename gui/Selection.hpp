@@ -121,8 +121,17 @@ public:
             }
         }
         void cursorJumpUp(bool extendSelection) {
-            m_cursor1.translate();
-//////////////// TODOTODO ////////////////
+            const Mdn2d* dst = get();
+            if (!dst) {
+                Log_Warn("Failed to acquire Mdn2d");
+                return;
+            }
+            Coord postJump = dst->jump(m_cursor1, CardinalDirection::North);
+            if (postJump == m_cursor1) {
+                // No actual movement
+                return;
+            }
+            m_cursor1 = postJump;
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
             } else {
@@ -131,7 +140,17 @@ public:
             }
         }
         void cursorJumpDn(bool extendSelection) {
-            m_cursor1.translate();
+            const Mdn2d* dst = get();
+            if (!dst) {
+                Log_Warn("Failed to acquire Mdn2d");
+                return;
+            }
+            Coord postJump = dst->jump(m_cursor1, CardinalDirection::South);
+            if (postJump == m_cursor1) {
+                // No actual movement
+                return;
+            }
+            m_cursor1 = postJump;
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
             } else {
@@ -140,7 +159,17 @@ public:
             }
         }
         void cursorJumpLf(bool extendSelection) {
-            m_cursor1.translate();
+            const Mdn2d* dst = get();
+            if (!dst) {
+                Log_Warn("Failed to acquire Mdn2d");
+                return;
+            }
+            Coord postJump = dst->jump(m_cursor1, CardinalDirection::West);
+            if (postJump == m_cursor1) {
+                // No actual movement
+                return;
+            }
+            m_cursor1 = postJump;
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
             } else {
@@ -149,7 +178,17 @@ public:
             }
         }
         void cursorJumpRt(bool extendSelection) {
-            m_cursor1.translate();
+            const Mdn2d* dst = get();
+            if (!dst) {
+                Log_Warn("Failed to acquire Mdn2d");
+                return;
+            }
+            Coord postJump = dst->jump(m_cursor1, CardinalDirection::East);
+            if (postJump == m_cursor1) {
+                // No actual movement
+                return;
+            }
+            m_cursor1 = postJump;
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
             } else {

@@ -1,8 +1,12 @@
 #include "NumberDisplayWidget.hpp"
 
-#include "../library/Coord.hpp"
-#include <QPainter>
+#include <QFontMetrics>
 #include <QKeyEvent>
+#include <QPainter>
+#include <QResizeEvent>
+
+#include "../library/Coord.hpp"
+
 
 NumberDisplayWidget::NumberDisplayWidget(QWidget* parent)
     : QWidget(parent)
@@ -22,6 +26,7 @@ void NumberDisplayWidget::setViewCenter(int x, int y) {
     m_viewOriginY = y;
     update();
 }
+
 
 void NumberDisplayWidget::moveCursor(int dx, int dy) {
     m_cursorX += dx;
@@ -99,3 +104,54 @@ void NumberDisplayWidget::keyPressEvent(QKeyEvent* event) {
         case Qt::Key_Down:  moveCursor(0, 1); break;
     }
 }
+
+
+void NumberDisplayWidget::resizeEvent(QResizeEvent* e) {
+    recalcGridGeometry();
+    QWidget::resizeEvent(e);
+    update();
+}
+
+
+void NumberDisplayWidget::ensureCursorVisible() {
+    // left
+    if (m_cursorX < m_viewOriginX) {
+        m_viewOriginX = m_cursorX;
+    }
+    // right
+    if (m_cursorX >= m_viewOriginX + m_cols) {
+        m_viewOriginX = m_cursorX - (m_cols - 1);
+    }
+    // top
+    if (m_cursorY < m_viewOriginY) {
+        m_viewOriginY = m_cursorY;
+    }
+    // bottom
+    if (m_cursorY >= m_viewOriginY + m_rows) {
+        m_viewOriginY = m_cursorY - (m_rows - 1);
+    }
+}
+
+
+// void NumberDisplayWidget::moveCursor(int dx, int dy) {
+//     m_cursorX += dx;
+//     m_cursorY += dy;
+//     ensureCursorVisible();
+//     update();
+// }
+
+
+void NumberDisplayWidget::recalcGridGeometry() {
+    // Option A: keep m_cellSize fixed (20 logical px)
+    // Option B (nicer): derive from current font to keep things crisp
+    QFontMetrics fm(font());
+    int cw = fm.horizontalAdvance('0');
+    int ch = fm.height();
+    m_cellSize = std::max({m_cellSize, cw, ch}); // keep at least current, or pin to cw/ch if you prefer
+
+    const int w = width();
+    const int h = height();
+    m_cols = std::max(1, w / m_cellSize);
+    m_rows = std::max(1, h / m_cellSize);
+}
+

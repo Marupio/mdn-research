@@ -73,28 +73,28 @@ static void populateSample(Mdn2dBase& m) {
     // y = -1
     {
         auto row = makeRow({-1, 0, 1, 0, 0, 0, 0});
-        m.setRow(-1, -2, row);
+        m.setRow(Coord( -2, -1), row);
     }
     // y = 0
     {
         auto row = makeRow({0, 0, 0, 3, 0, 0, -8});
-        m.setRow( 0, -2, row);
+        m.setRow(Coord(-2, 0), row);
     }
     // y = 1
     {
         auto row = makeRow({1, 0, 0, 0, 3, 0, -8});
-        m.setRow( 1, -2, row);
+        m.setRow(Coord(-2, 1), row);
     }
     // y = 2
     {
         auto row = makeRow({2, 0, 0, 0, 0, 1, -8});
-        m.setRow( 2, -2, row);
+        m.setRow(Coord(-2, 2), row);
     }
     // y = 3  (put some negatives and alpha-range)
     {
         // {..., -3, 0, 10(a), 0, 0}
         auto row = makeRow({3, 4, 5, 6, 7, 8, 9});
-        m.setRow( 3, -2, row);
+        m.setRow(Coord(-2, 3), row);
     }
 
     // optional: set a name if your class exposes it (nice for copy “origin”)

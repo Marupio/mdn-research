@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <utility>
 
 // QT includes
 #include <QMessageBox>
@@ -33,7 +34,9 @@ protected:
     Mdn2dConfig m_config;
 
     // References to the constituent Mdn2d data, key is its tab position in the gui
-    std::unordered_map<int, Mdn2d> m_data;
+    std::unordered_map<int, std::pair<Mdn2d, Selection>> m_data;
+
+// TODOTODO FINISH WITH SELECTIONS ASSOCIATED WITH MDN2D
 
     // m_addressingNameToIndex[name] = index
     std::unordered_map<std::string, int> m_addressingNameToIndex;
@@ -41,9 +44,9 @@ protected:
     // m_addressingIndexToName[index] = name
     std::unordered_map<int, std::string> m_addressingIndexToName;
 
-    // Selection, Rect bounds of digits, and list of MDNs coser;
-    Selection m_selection;
-
+    // Current active selection and number;
+    Selection* m_activeSelection;
+    Mdn2d* m_activeMdn2d;
 
     // *** Protected member functions
 
@@ -67,22 +70,22 @@ public:
     // *** Mdn2dFramework API
 
         // Returns the framework's derived class type name as a string
-        std::string className() const override {
+        inline std::string className() const override {
             return "Project";
         }
 
         // Returns the framework's 'name', used in error messaging
-        std::string name() const override {
+        inline std::string name() const override {
             return m_name;
         }
 
         // Set the project name
-        void setName(const std::string& nameIn) override {
+        inline void setName(const std::string& nameIn) override {
             m_name = nameIn;
         }
 
         // Returns true if an Mdn2d exists with the given name, false otherwise
-        bool mdnNameExists(const std::string& nameIn) const override {
+        inline bool mdnNameExists(const std::string& nameIn) const override {
             return m_addressingNameToIndex.find(nameIn) != m_addressingNameToIndex.cend();
         }
 
@@ -101,7 +104,7 @@ public:
     // *** Project API
 
         // Accessors for m_config
-        const Mdn2dConfig& config() const {
+        inline const Mdn2dConfig& config() const {
             return m_config;
         }
 
@@ -125,6 +128,13 @@ public:
         // Return the name for the Mdn at the given tab index, empty string for bad index
         std::string nameOfMdn(int i) const;
 
+        // Number of Mdn tabs
+        inline int size() const { return m_data.size(); }
+
+        // Given mdn tab is now active
+        void setActiveMdn(int i);
+        void setActiveMdn(std::string name);
+
         // Return pointer to the i'th Mdn tab, nullptr on failure
         //  e.g.:
         //      Mdn2d* src = getMdn(fromIndex);
@@ -145,7 +155,7 @@ public:
         Mdn2d* lastMdn(bool warnOnFailure=false);
 
         // Inserts a new number at the 'end', i.e. the last index
-        void appendMdn(Mdn2d& mdn) {
+        inline void appendMdn(Mdn2d& mdn) {
             insertMdn(mdn, -1);
         }
 
@@ -193,33 +203,51 @@ public:
         //  * Page - typically [PgUp] type movement, left&right do exist, not sure required keys
         //  * NextX / PrevX - move along x to the next digit, e.g. [tab]/[shift]+[tab] buttons
         //  * NextY / PrevY - move along y to the next digit, e.g. [tab]/[shift]+[enter] buttons
-        void cursorUp(bool extendSelection) { m_selection.cursorUp(extendSelection); }
-        void cursorDn(bool extendSelection) { m_selection.cursorDn(extendSelection); }
-        void cursorLf(bool extendSelection) { m_selection.cursorLf(extendSelection); }
-        void cursorRt(bool extendSelection) { m_selection.cursorRt(extendSelection); }
-        void cursorJumpUp(bool extendSelection) { m_selection.cursorJumpUp(extendSelection); }
-        void cursorJumpDn(bool extendSelection) { m_selection.cursorJumpDn(extendSelection); }
-        void cursorJumpLf(bool extendSelection) { m_selection.cursorJumpLf(extendSelection); }
-        void cursorJumpRt(bool extendSelection) { m_selection.cursorJumpRt(extendSelection); }
-        void cursorPageUp(bool extendSelection) { m_selection.cursorPageUp(extendSelection); }
-        void cursorPageDn(bool extendSelection) { m_selection.cursorPageDn(extendSelection); }
-        void cursorPageLf(bool extendSelection) { m_selection.cursorPageLf(extendSelection); }
-        void cursorPageRt(bool extendSelection) { m_selection.cursorPageRt(extendSelection); }
-        void cursorOrigin(bool extendSelection) { m_selection.cursorOrigin(extendSelection); }
-        void cursorNextX(bool extendSelection) { m_selection.cursorNextX(extendSelection); }
-        void cursorPrevX(bool extendSelection) { m_selection.cursorPrevX(extendSelection); }
-        void cursorNextY(bool extendSelection) { m_selection.cursorNextY(extendSelection); }
-        void cursorPrevY(bool extendSelection) { m_selection.cursorPrevY(extendSelection); }
+        inline void cursorUp(bool extendSelection) { m_selection.cursorUp(extendSelection); }
+        inline void cursorDn(bool extendSelection) { m_selection.cursorDn(extendSelection); }
+        inline void cursorLf(bool extendSelection) { m_selection.cursorLf(extendSelection); }
+        inline void cursorRt(bool extendSelection) { m_selection.cursorRt(extendSelection); }
+        inline void cursorJumpUp(bool extendSelection) { m_selection.cursorJumpUp(extendSelection); }
+        inline void cursorJumpDn(bool extendSelection) { m_selection.cursorJumpDn(extendSelection); }
+        inline void cursorJumpLf(bool extendSelection) { m_selection.cursorJumpLf(extendSelection); }
+        inline void cursorJumpRt(bool extendSelection) { m_selection.cursorJumpRt(extendSelection); }
+        inline void cursorPageUp(bool extendSelection) { m_selection.cursorPageUp(extendSelection); }
+        inline void cursorPageDn(bool extendSelection) { m_selection.cursorPageDn(extendSelection); }
+        inline void cursorPageLf(bool extendSelection) { m_selection.cursorPageLf(extendSelection); }
+        inline void cursorPageRt(bool extendSelection) { m_selection.cursorPageRt(extendSelection); }
+        inline void cursorOrigin(bool extendSelection) { m_selection.cursorOrigin(extendSelection); }
+        inline void cursorNextX(bool extendSelection) { m_selection.cursorNextX(extendSelection); }
+        inline void cursorPrevX(bool extendSelection) { m_selection.cursorPrevX(extendSelection); }
+        inline void cursorNextY(bool extendSelection) { m_selection.cursorNextY(extendSelection); }
+        inline void cursorPrevY(bool extendSelection) { m_selection.cursorPrevY(extendSelection); }
 
         // Access current selection
-        const Selection& selection() const { return m_selection; }
+        inline const Selection* selection() const {
+            if (!m_activeSelection) {
+                if (size()) {
+                    // If there are tabs, complain
+                    Log_WarnQ("No tab is currently selected.");
+                }
+                return nullptr;
+            }
+            return m_activeSelection;
+        }
+        inline Selection* selection() {
+            if (!m_activeSelection) {
+                if (size()) {
+                    Log_WarnQ("No tab is currently selected.");
+                }
+                return nullptr;
+            }
+            return m_activeSelection;
+        }
 
         // Set new selection
-        void setSelection(Selection s) {
-            m_selection = std::move(s);
-            // TODO
-            // emit signal, update UI
-        }
+        // inline void setSelection(Selection s) {
+        //     m_activeSelection = std::move(s);
+        //     // TODO
+        //     // emit signal, update UI
+        // }
 
         // Encodes a rectangular slice from src as mdn-selection JSON + TSV fallbacks.
         static void encodeRectToClipboard(

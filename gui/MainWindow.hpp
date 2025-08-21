@@ -16,7 +16,7 @@
 // #include "DigitGridWidget.hpp"
 
 #include "../library/GlobalConfig.hpp"
-
+#include "../library/Mdn2d.hpp"
 
 class MainWindow : public QMainWindow {
     Q_OBJECT

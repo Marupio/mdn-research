@@ -1,11 +1,13 @@
 // Rect.hpp  — UPDATED
 #pragma once
 
-#include "Coord.hpp"
-#include "GlobalConfig.hpp"
 #include <vector>
 #include <algorithm>
 #include <limits>
+
+#include "Coord.hpp"
+#include "GlobalConfig.hpp"
+#include "Logger.hpp"
 
 // NEW: needed for iterators & sets
 #include <iterator>
@@ -92,7 +94,7 @@ public:
         InFront = 4
     };
 
-    FrontBack HasCoordAt_X(const Coord& xy) const {
+    inline FrontBack HasCoordAt_X(const Coord& xy) const {
         if (isInvalid()) {
             return FrontBack::NotApplicable;
         }
@@ -112,7 +114,7 @@ public:
         return FrontBack::InFront;
     }
 
-    FrontBack HasCoordAt_Y(const Coord& xy) const {
+    inline FrontBack HasCoordAt_Y(const Coord& xy) const {
         if (isInvalid()) {
             return FrontBack::NotApplicable;
         }
@@ -163,7 +165,7 @@ public:
     //  ^  ^ fbY x 5
     //  fbY
     // Return the relative position of xy to this Rect
-    RelativePosition HasCoordAt(const Coord& xy) const {
+    inline RelativePosition HasCoordAt(const Coord& xy) const {
         if (isInvalid()) {
             return RelativePosition::NotApplicable;
         }
