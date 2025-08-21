@@ -84,6 +84,7 @@ public:
 
     // Position classification
     enum class FrontBack {
+        NotApplicable = -1, // Rect is empty
         Behind = 0,
         BackEdge = 1,
         Inside = 2,
@@ -92,6 +93,9 @@ public:
     };
 
     FrontBack HasCoordAt_X(const Coord& xy) const {
+        if (isInvalid()) {
+            return FrontBack::NotApplicable;
+        }
         const int x = xy.x();
         int l = left();
         if (x < l) {
@@ -109,6 +113,9 @@ public:
     }
 
     FrontBack HasCoordAt_Y(const Coord& xy) const {
+        if (isInvalid()) {
+            return FrontBack::NotApplicable;
+        }
         const int y = xy.y();
         int b = bottom();
         if (y < b) {
@@ -125,14 +132,9 @@ public:
         return FrontBack::InFront;
     }
 
-    // 0 |1|  2  |3| 4
-    //
-    // 1 | 2 |
-    // --+---+--
-    //
-    //
 
     enum class RelativePosition {
+        NotApplicable, // Rect is empty
         Inside,
         OnWestEdge,
         OnEastEdge,
@@ -152,14 +154,20 @@ public:
         SouthEast
     };
     //
-    //        0  1  2  3  4
+    //        0  1  2  3  4 < fbX
     //  0  0  0  1  2  3  4
     //  1  5  5  6  7  8  9
     //  2 10 10 11 12 13 14
     //  3 15 15 16 17 18 19
     //  4 20 20 21 22 23 24
-    //
+    //  ^  ^ fbY x 5
+    //  fbY
+    // Return the relative position of xy to this Rect
     RelativePosition HasCoordAt(const Coord& xy) const {
+        if (isInvalid()) {
+            return RelativePosition::NotApplicable;
+        }
+
         FrontBack fbX = HasCoordAt_X(xy);
         FrontBack fbY = HasCoordAt_Y(xy);
         int xCode = static_cast<int>(fbX);
@@ -209,7 +217,8 @@ public:
             case 24:
                 return RelativePosition::SouthWest;
             default:
-
+                Log_Warn("Invalid relative position");
+                return RelativePosition::Inside;
         }
     }
 

@@ -502,9 +502,79 @@ mdn::Coord mdn::Mdn2dBase::locked_jump(const Coord& xy, CardinalDirection cd) {
     if (cdCoord ==  COORD_ORIGIN) {
         Log_N_Debug3_T("Not a valid cardinal direction");
     }
-    if (cdCoord.x() != 0) {
+    // When true, movement towards digit line is only allowed
+    bool towardsDigitLineOnly = false;
+    Rect::FrontBack fbX;
+    Rect::FrontBack fbY;
+    if (m_bounds.isInvalid()) {
+        Log_N_Debug3("No digits, only allowed movement towards digit lines");
+        towardsDigitLineOnly = true;
+    } else if (cdCoord.x() != 0) {
+        fbX = m_bounds.HasCoordAt_X(xy);
+        fbY = m_bounds.HasCoordAt_Y(xy);
+
+        switch(fbY) {
+            case Rect::FrontBack::Behind:
+            case Rect::FrontBack::InFront:
+                // Above or below bounds, moving sideways
+                towardsDigitLineOnly = true;
+                break;
+            default:
+                break;
+        }
+        switch (fbX) {
+            case Rect::FrontBack::Behind:
+            case Rect::FrontBack::BackEdge: {
+                if (cdCoord.x() < 0) {
+                    Log_Debug3_T("Outside bounds moving away, no movement allowed");
+                    return Coord(xy);
+                }
+                // Heading towards bounds
+                break;
+            }
+            case Rect::FrontBack::InFront:
+            case Rect::FrontBack::FrontEdge: {
+                if (cdCoord.x() > 0) {
+                    Log_Debug3_T("Outside bounds moving away, no movement allowed");
+                    return Coord(xy);
+                }
+                // Heading towards bounds
+                break;
+            }
+            default:
+                break;
+        }
+        if (!towardsDigitLineOnly) {
+            // At this point it is confirmed the cursor is moving within or towards the bounds
+            // TODOTODOTODO
+        }
+    }
+
+
+    if (towardsDigitLineOnly) {
+        // Only allow towards digit line
+        // Multiply components, then 'toward digit line' is a negative coord.
+        Log_N_Debug3("No digits, only allowed movement towards digit lines");
+
+        Coord xy_cd(xy.x()*cdCoord.x(), xy.y()*cdCoord.y());
+        if (xy_cd.x() < 0) {
+            Coord result(0, xy.y());
+            Log_N_Debug3_T("Towards x digit line, returning " << result);
+            return result;
+        } else if (xy_cd.y() < 0) {
+            Coord result(xy.x(), 0);
+            Log_N_Debug3_T("Towards y digit line, returning " << result);
+            return result;
+        }
+    }
+
+
+
         std::vector<Digit> row;
         locked_getRow(xy, row);
+
+
+
 /////////////TODOTODO//////////////
 
 
