@@ -424,6 +424,126 @@ void mdn::Mdn2dBase::locked_setName(const std::string& nameIn) {
 }
 
 
+bool mdn::Mdn2dBase::nonZero(const Coord& xy) const {
+    Log_N_Debug2_H("At " << xy);
+    auto lock = lockReadOnly();
+    bool result = locked_nonZero(xy);
+    Log_N_Debug2_T("result=" << result);
+    return result;
+}
+bool mdn::Mdn2dBase::locked_nonZero(const Coord& xy) const {
+    Log_Debug4("");
+    return m_index.find(xy) != m_index.end();
+}
+
+
+const mdn::CoordSet& mdn::Mdn2dBase::nonZeroOnRow(const Coord& xy) const {
+    Log_Debug2_H("At " << xy);
+    auto lock = lockReadOnly();
+    const CoordSet& result = locked_nonZeroOnRow(xy);
+    Log_Debug2_T("Returning " << result.size() << " non-zero values");
+    return result;
+}
+const mdn::CoordSet& mdn::Mdn2dBase::locked_nonZeroOnRow(const Coord& xy) const {
+    Log_Debug3_H("At " << xy);
+    auto it = m_yIndex.find(xy.y());
+    if (it != m_yIndex.end()) {
+        const CoordSet& coords = it->second;
+        if (Log_Showing_Debug4) {
+            std::string coordsList(Tools::setToString<Coord>(coords, ','));
+            Log_N_Debug4_T("Returning non-zero coords: " << coordsList);
+        } else {
+            Log_N_Debug3_T("Returning set containing " << coords.size() << " non-zero coords");
+        }
+        return coords;
+    }
+    Log_Debug3_T("Returning empty set");
+    return m_nullCoordSet;
+}
+
+
+const mdn::CoordSet& mdn::Mdn2dBase::nonZeroOnCol(const Coord& xy) const {
+    Log_Debug2_H("At " << xy);
+    auto lock = lockReadOnly();
+    const CoordSet& result = locked_nonZeroOnCol(xy);
+    Log_Debug2_T("Returning " << result.size() << " non-zero values");
+    return result;
+}
+const mdn::CoordSet& mdn::Mdn2dBase::locked_nonZeroOnCol(const Coord& xy) const {
+    Log_Debug3_H("At " << xy);
+    auto it = m_xIndex.find(xy.x());
+    if (it != m_xIndex.end()) {
+        const CoordSet& coords = it->second;
+        if (Log_Showing_Debug4) {
+            std::string coordsList(Tools::setToString<Coord>(coords, ','));
+            Log_N_Debug4_T("Returning non-zero coords: " << coordsList);
+        } else {
+            Log_N_Debug3_T("Returning set containing " << coords.size() << " non-zero coords");
+        }
+        return coords;
+    }
+    Log_Debug3_T("Returning empty set");
+    return m_nullCoordSet;
+}
+
+
+mdn::Coord mdn::Mdn2dBase::jump(const Coord& xy, CardinalDirection cd) {
+    Log_N_Debug2_H("At " << xy);
+    auto lock = lockReadOnly();
+    Coord result = locked_jump(xy, cd);
+    Log_N_Debug2_T("result=" << result);
+    return result;
+}
+
+
+mdn::Coord mdn::Mdn2dBase::locked_jump(const Coord& xy, CardinalDirection cd) {
+    const Coord& cdCoord(CardinalDirectionToCoord(cd));
+    Log_N_Debug3_H("xy=" << xy << ", cd=" << cdCoord);
+    if (cdCoord ==  COORD_ORIGIN) {
+        Log_N_Debug3_T("Not a valid cardinal direction");
+    }
+    if (cdCoord.x() != 0) {
+        std::vector<Digit> row;
+        locked_getRow(xy, row);
+/////////////TODOTODO//////////////
+
+
+
+    if (cdCoord.x() != 0) {
+        // x-aligned movement
+        const CoordSet& rowNonZeroes = locked_nonZeroOnRow(xy);
+        std::vector<int> stops;
+        if (m_bounds.isValid()) {
+            stops.push_back(m_bounds.left());
+            stops.push_back(m_bounds.right());
+        }
+        if (rowNonZeroes.empty()) {
+            // No non-zeroes, movement stops at bounds edges and digit lines only
+        }
+    }
+    if (locked_nonZero(xy)) {
+        // xy is non-zero
+        if (cdCoord.x() != 0) {
+            // x-aligned movement, use m_yIndex
+            const CoordSet& rowSet = m_yIndex[xy.y()];
+
+            for (const Coord& it : rowSet)
+
+        }
+    }
+
+// // Sparse coordinate-to-digit mapping
+// std::unordered_map<Coord, Digit> m_raw;
+
+// // Addressing
+// mutable std::map<int, CoordSet> m_xIndex;
+// mutable std::map<int, CoordSet> m_yIndex;
+
+// // Full index
+// mutable CoordSet m_index;
+}
+
+
 mdn::Digit mdn::Mdn2dBase::getValue(const Coord& xy) const {
     Log_N_Debug2_H("At " << xy);
     auto lock = lockReadOnly();

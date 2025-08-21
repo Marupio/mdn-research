@@ -156,7 +156,37 @@ private:
     int m_y;
 };
 
+// Coordinate expressions as constants
 constexpr Coord COORD_ORIGIN = Coord{0, 0};
+constexpr Coord COORD_NORTH = Coord{0, 1};
+constexpr Coord COORD_SOUTH = Coord{0, -1};
+constexpr Coord COORD_EAST = Coord{1, 0};
+constexpr Coord COORD_WEST = Coord{-1, 0};
+
+// Cardinal directions
+enum class CardinalDirection {
+    North,
+    South,
+    East,
+    West
+};
+
+// Convert the given cardinal direction as a Coord
+const Coord& CardinalDirectionToCoord(CardinalDirection cd) {
+    switch (cd) {
+        case CardinalDirection::North:
+            return COORD_NORTH;
+        case CardinalDirection::South:
+            return COORD_SOUTH;
+        case CardinalDirection::East:
+            return COORD_EAST;
+        case CardinalDirection::West:
+            return COORD_WEST;
+        default:
+            return COORD_ORIGIN;
+    }
+}
+
 
 } // namespace mdn
 

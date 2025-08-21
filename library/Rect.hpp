@@ -82,6 +82,83 @@ public:
     }
 
 
+    // Position classification
+    enum class FrontBack {
+        Behind,
+        BackEdge,
+        Inside,
+        FrontEdge,
+        InFront
+    };
+
+    FrontBack HasCoordAt_X(const Coord& xy) const {
+        const int x = xy.x();
+        int l = left();
+        if (x < l) {
+            return FrontBack::Behind;
+        } else if (x == l) {
+            return FrontBack::BackEdge;
+        }
+        int r = right();
+        if (x < r) {
+            return FrontBack::Inside;
+        } else if (x == r) {
+            return FrontBack::FrontEdge;
+        }
+        return FrontBack::InFront;
+    }
+
+    FrontBack HasCoordAt_Y(const Coord& xy) const {
+        const int y = xy.y();
+        int b = bottom();
+        if (y < b) {
+            return FrontBack::Behind;
+        } else if (y == b) {
+            return FrontBack::BackEdge;
+        }
+        int r = right();
+        if (y < r) {
+            return FrontBack::Inside;
+        } else if (y == r) {
+            return FrontBack::FrontEdge;
+        }
+        return FrontBack::InFront;
+    }
+
+
+    enum class RelativePosition {
+        Inside,
+        OnRightEdge,
+        OnLeftEdge,
+        OnTopEdge,
+        OnBottomEdge,
+        East,
+        NorthEast,
+        North,
+        NorthWest,
+        West,
+        SouthWest,
+        South,
+        SouthEast
+    };
+
+    RelativePosition HasCoordAt(const Coord& xy) const {
+        FrontBack fbX = HasCoordAt_X(xy);
+        FrontBack fbY = HasCoordAt_Y(xy);
+        switch(fbX) {
+            case FrontBack::Behind: {
+            }
+            case FrontBack::BackEdge: {
+            }
+            case FrontBack::Inside: {
+            }
+            case FrontBack::FrontEdge: {
+            }
+            case FrontBack::InFront: {
+            }
+        }
+    }
+
     // *** Constructors
 
     // Construct null - retuns invalid (empty)
@@ -161,14 +238,17 @@ public:
         return isValid() ? width() * height() : 0;
     }
 
+    // True if this rect has only a single coordinate
     bool isSingleCoord() const {
         return isValid() && m_min == m_max;
     }
 
+    // True if this rect encompasses two or more coordinates
     bool isMultiCoord() const {
         return isValid() && m_min != m_max;
     }
 
+    // True if c is inside or on edges
     bool contains(const Coord& c) const {
         return c.x() >= m_min.x() && c.x() <= m_max.x()
             && c.y() >= m_min.y() && c.y() <= m_max.y();

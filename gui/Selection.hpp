@@ -85,7 +85,7 @@ public:
         }
 
         void cursorUp(bool extendSelection) {
-            m_cursor1.translateY(-1);
+            m_cursor1.translateY(1);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
             } else {
@@ -94,115 +94,148 @@ public:
             }
         }
         void cursorDn(bool extendSelection) {
+            m_cursor1.translateY(-1);
             if (extendSelection) {
-                // TODO
+                m_rect.set(m_cursor0, m_cursor1, true);
             } else {
-                // TODO
+                m_cursor0 = m_cursor1;
+                m_rect.set(m_cursor0);
             }
         }
         void cursorLf(bool extendSelection) {
+            m_cursor1.translateX(-1);
             if (extendSelection) {
-                // TODO
+                m_rect.set(m_cursor0, m_cursor1, true);
             } else {
-                // TODO
+                m_cursor0 = m_cursor1;
+                m_rect.set(m_cursor0);
             }
         }
         void cursorRt(bool extendSelection) {
+            m_cursor1.translateX(1);
             if (extendSelection) {
-                // TODO
+                m_rect.set(m_cursor0, m_cursor1, true);
             } else {
-                // TODO
+                m_cursor0 = m_cursor1;
+                m_rect.set(m_cursor0);
             }
         }
         void cursorJumpUp(bool extendSelection) {
+            m_cursor1.translate();
+//////////////// TODOTODO ////////////////
             if (extendSelection) {
-                // TODO
+                m_rect.set(m_cursor0, m_cursor1, true);
             } else {
-                // TODO
+                m_cursor0 = m_cursor1;
+                m_rect.set(m_cursor0);
             }
         }
         void cursorJumpDn(bool extendSelection) {
+            m_cursor1.translate();
             if (extendSelection) {
-                // TODO
+                m_rect.set(m_cursor0, m_cursor1, true);
             } else {
-                // TODO
+                m_cursor0 = m_cursor1;
+                m_rect.set(m_cursor0);
             }
         }
         void cursorJumpLf(bool extendSelection) {
+            m_cursor1.translate();
             if (extendSelection) {
-                // TODO
+                m_rect.set(m_cursor0, m_cursor1, true);
             } else {
-                // TODO
+                m_cursor0 = m_cursor1;
+                m_rect.set(m_cursor0);
             }
         }
         void cursorJumpRt(bool extendSelection) {
+            m_cursor1.translate();
             if (extendSelection) {
-                // TODO
+                m_rect.set(m_cursor0, m_cursor1, true);
             } else {
-                // TODO
+                m_cursor0 = m_cursor1;
+                m_rect.set(m_cursor0);
             }
         }
         void cursorPageUp(bool extendSelection) {
+            m_cursor1.translate();
             if (extendSelection) {
-                // TODO
+                m_rect.set(m_cursor0, m_cursor1, true);
             } else {
-                // TODO
+                m_cursor0 = m_cursor1;
+                m_rect.set(m_cursor0);
             }
         }
         void cursorPageDn(bool extendSelection) {
+            m_cursor1.translate();
             if (extendSelection) {
-                // TODO
+                m_rect.set(m_cursor0, m_cursor1, true);
             } else {
-                // TODO
+                m_cursor0 = m_cursor1;
+                m_rect.set(m_cursor0);
             }
         }
         void cursorPageLf(bool extendSelection) {
+            m_cursor1.translate();
             if (extendSelection) {
-                // TODO
+                m_rect.set(m_cursor0, m_cursor1, true);
             } else {
-                // TODO
+                m_cursor0 = m_cursor1;
+                m_rect.set(m_cursor0);
             }
         }
         void cursorPageRt(bool extendSelection) {
+            m_cursor1.translate();
             if (extendSelection) {
-                // TODO
+                m_rect.set(m_cursor0, m_cursor1, true);
             } else {
-                // TODO
+                m_cursor0 = m_cursor1;
+                m_rect.set(m_cursor0);
             }
         }
         void cursorOrigin(bool extendSelection) {
+            m_cursor1.translate();
             if (extendSelection) {
-                // TODO
+                m_rect.set(m_cursor0, m_cursor1, true);
             } else {
-                // TODO
+                m_cursor0 = m_cursor1;
+                m_rect.set(m_cursor0);
             }
         }
         void cursorNextX(bool extendSelection) {
+            m_cursor1.translate();
             if (extendSelection) {
-                // TODO
+                m_rect.set(m_cursor0, m_cursor1, true);
             } else {
-                // TODO
+                m_cursor0 = m_cursor1;
+                m_rect.set(m_cursor0);
             }
         }
         void cursorPrevX(bool extendSelection) {
+            m_cursor1.translate();
             if (extendSelection) {
-                // TODO
+                m_rect.set(m_cursor0, m_cursor1, true);
             } else {
-                // TODO
+                m_cursor0 = m_cursor1;
+                m_rect.set(m_cursor0);
             }
         }
         void cursorNextY(bool extendSelection) {
+            m_cursor1.translate();
             if (extendSelection) {
-                // TODO
+                m_rect.set(m_cursor0, m_cursor1, true);
             } else {
-                // TODO
+                m_cursor0 = m_cursor1;
+                m_rect.set(m_cursor0);
             }
         }
         void cursorPrevY(bool extendSelection) {
+            m_cursor1.translate();
             if (extendSelection) {
-                // TODO
+                m_rect.set(m_cursor0, m_cursor1, true);
             } else {
-                // TODO
+                m_cursor0 = m_cursor1;
+                m_rect.set(m_cursor0);
             }
         }
 

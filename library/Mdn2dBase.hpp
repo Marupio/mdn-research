@@ -53,6 +53,8 @@ protected:
     // Thread safety
     mutable std::shared_mutex m_mutex;
 
+    // Empty CoordSet for functions that return references, but no reference exists for null
+    const CoordSet m_nullCoordSet;
 
     // *** Data & addressing
 
@@ -63,6 +65,8 @@ protected:
     std::unordered_map<Coord, Digit> m_raw;
 
     // Addressing
+    //  m_xIndex[x value] = CoordSet of non-zeroes in this column
+    //  m_yIdnex[y value] = Coordset of non-zeroes in this row
     mutable std::map<int, CoordSet> m_xIndex;
     mutable std::map<int, CoordSet> m_yIndex;
 
@@ -176,6 +180,33 @@ public:
             void setName(const std::string& nameIn);
             protected: void locked_setName(const std::string& nameIn); public:
 
+
+        // *** Queries
+
+            // Returns true if xy contains a non-zero digit
+            bool nonZero(const Coord& xy) const;
+            protected: bool locked_nonZero(const Coord& xy) const; public:
+
+            // Returns non-zero coordinates along the given row
+            const CoordSet& nonZeroOnRow(const Coord& xy) const;
+            protected: const CoordSet& locked_nonZeroOnRow(const Coord& xy) const; public:
+
+            // Returns non-zero coordinates along the given row
+            const CoordSet& nonZeroOnCol(const Coord& xy) const;
+            protected: const CoordSet& locked_nonZeroOnCol(const Coord& xy) const; public:
+
+
+
+        // *** Navigation
+
+            // Give the Coord position after jumping from xy in direction cd
+            //  * if xy is non-zero, finds first zero Coord in cd direction
+            //  * if xy is zero, finds first non-zero Coord in cd direction
+            //  Returns the position that is on the non-zero Coord at the boundary between zero and
+            //  non-zero.  This is the behaviour of the cursor in spreadsheet apps, when moved with
+            //  [ctrl]+[direction].
+            Coord jump(const Coord& xy, CardinalDirection cd);
+            protected: Coord locked_jump(const Coord& xy, CardinalDirection cd); public:
 
         // *** Getters
 
