@@ -145,6 +145,7 @@ public:
     RelativePosition HasCoordAt(const Coord& xy) const {
         FrontBack fbX = HasCoordAt_X(xy);
         FrontBack fbY = HasCoordAt_Y(xy);
+////////////// TODOTODO ///////////////////////////////
         switch(fbX) {
             case FrontBack::Behind: {
             }
