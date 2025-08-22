@@ -7,11 +7,11 @@
 // QT includes
 #include <QMessageBox>
 
-#include "MainWindow.hpp"
-
 #include "../library/GlobalConfig.hpp"
 #include "../library/Mdn2d.hpp"
 #include "../library/Mdn2dFramework.hpp"
+
+class MainWindow;
 
 namespace mdn {
 
@@ -35,8 +35,6 @@ protected:
 
     // References to the constituent Mdn2d data, key is its tab position in the gui
     std::unordered_map<int, std::pair<Mdn2d, Selection>> m_data;
-
-// TODOTODO FINISH WITH SELECTIONS ASSOCIATED WITH MDN2D
 
     // m_addressingNameToIndex[name] = index
     std::unordered_map<std::string, int> m_addressingNameToIndex;
@@ -99,6 +97,12 @@ public:
             const std::string& origName,
             const std::string& newName
         ) override;
+
+
+    // *** Interaction with MainWindow parent
+
+        // Apply changes in selection to MainWindow
+        void updateSelection() const;
 
 
     // *** Project API

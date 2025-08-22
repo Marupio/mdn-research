@@ -13,10 +13,13 @@
 #include <QHBoxLayout>
 #include <QWidget>
 
+#include "Project.hpp"
+
 // #include "DigitGridWidget.hpp"
 
 #include "../library/GlobalConfig.hpp"
 #include "../library/Mdn2d.hpp"
+
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -51,4 +54,5 @@ private:
     QMap<int, mdn::Mdn2d*> m_mdnMap;
     int m_nextMdnId = 0;
 
+    mdn::Project* m_activeProject = nullptr;
 };

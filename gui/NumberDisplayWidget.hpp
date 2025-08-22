@@ -18,6 +18,10 @@ public:
     void setViewCenter(int x, int y);
     void moveCursor(int dx, int dy);
 
+signals:
+    void cursorMoveRequested(int dx, int dy, Qt::KeyboardModifiers mods);
+
+
 protected:
     void paintEvent(QPaintEvent* event) override;
     void keyPressEvent(QKeyEvent* event) override;

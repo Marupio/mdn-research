@@ -35,6 +35,17 @@ void NumberDisplayWidget::moveCursor(int dx, int dy) {
 }
 
 
+void NumberDisplayWidget::keyPressEvent(QKeyEvent* e) {
+    switch (e->key()) {
+        case Qt::Key_Up:    emit cursorMoveRequested(0, -1, e->modifiers()); break;
+        case Qt::Key_Down:  emit cursorMoveRequested(0,  1, e->modifiers()); break;
+        case Qt::Key_Left:  emit cursorMoveRequested(-1, 0, e->modifiers()); break;
+        case Qt::Key_Right: emit cursorMoveRequested( 1, 0, e->modifiers()); break;
+        default: QWidget::keyPressEvent(e); return;
+    }
+}
+
+
 void NumberDisplayWidget::paintEvent(QPaintEvent* event) {
     QPainter painter(this);
     QRect widgetRect = this->rect();  // Get the full widget rectangle

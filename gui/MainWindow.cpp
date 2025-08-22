@@ -2,9 +2,9 @@
 
 #include "NumberDisplayWidget.hpp"
 
-
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
+    : QMainWindow(parent),
+    m_activeProject(new mdn::Project(this))
 {
     createMenus();
     setupLayout();

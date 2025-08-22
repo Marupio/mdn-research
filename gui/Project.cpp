@@ -14,6 +14,7 @@
 #include "../library/SignConvention.hpp"
 #include "Clipboard.hpp"
 #include "Selection.hpp"
+#include "MainWindow.hpp"
 #include "MdnQtInterface.hpp"
 
 
@@ -40,7 +41,6 @@ void mdn::Project::shiftMdnTabsRight(int start, int end, int shift) {
         QMessageBox::critical(m_parent, "shiftMdnTabsRight", err.what());
         throw err;
     }
-
     for (int tabI = end; tabI >= start; --tabI) {
         std::string curName = m_addressingIndexToName[tabI];
         int newIndex = tabI + shift;
@@ -139,6 +139,14 @@ std::string mdn::Project::requestMdnNameChange(
     // This is not needed here, caller does this
     // m_data[index].m_name = newName;
     return newName;
+}
+
+
+void mdn::Project::updateSelection() const {
+    if (!m_parent) {
+        return;
+    }
+    m_parent->updateSelection(m_activeMdn2d, m_activeSelection);
 }
 
 
