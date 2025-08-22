@@ -291,6 +291,85 @@ std::string mdn::Project::nameOfMdn(int i) const {
 }
 
 
+void mdn::Project::renameMdn(int i, std::string newName) {
+    std::string currentName = nameOfMdn(i);
+    if (currentName == newName) {
+        return;
+    }
+
+    std::string actualNameChange(requestMdnNameChange(currentName, newName));
+
+    if (actualNameChange == currentName) {
+        Log_InfoQ("Failed to change name from '" << currentName << "' to '" << newName << "'");
+    }
+    TODO
+}
+
+
+std::vector<std::string> mdn::Project::toc() const {
+    int nElems = size();
+    if (nElems != m_addressingIndexToName.size() || nElems != m_addressingNameToIndex.size()) {
+        mdn::MetaDataInvalid err("Project indexing size mismatch");
+        Log_ErrorQ(err.what());
+        throw err;
+    }
+    std::vector<std::string> result(nElems);
+    std::vector<int> check(nElems, 0);
+    std::string fail;
+    for (const auto& [index, name] : m_addressingIndexToName) {
+        if (check[index]++) {
+            fail = "More than Mdn assigned to tab " + std::to_string(index);
+            break;
+        }
+        const Mdn2d* src = getMdn(index, false);
+        if (!src) {
+            fail = "Could not acquire Mdn for tab " + std::to_string(index);
+            break;
+        }
+        std::string strName = src->name();
+        {
+            const auto iter = m_addressingIndexToName.find(index);
+            if (iter == m_addressingIndexToName.cend()) {
+                fail = "Could not locate " + strName + " in the 'indexToName' data";
+                break;
+            }
+            if (iter->second != strName) {
+                fail = "Mdn '" + strName + "' at tab " + std::to_string(index) + " is incorrectly "
+                    + "indexed as " + iter->second;
+                break;
+            }
+        }
+        {
+            const auto iter = m_addressingNameToIndex.find(strName);
+            if (iter == m_addressingNameToIndex.cend()) {
+                fail = "Could not locate " + strName + " in the 'indexToName' data";
+                break;
+            }
+            if (iter->second != index) {
+                fail = "Mdn '" + strName + "' at tab " + std::to_string(index) + " is incorrectly "
+                    + "indexed at tab " + std::to_string(iter->second);
+                break;
+            }
+        }
+        result[index] = src->name();
+    }
+    if (fail.empty()) {
+        for (int i: check) {
+            if (!i) {
+                fail = "Tab index '" + std::to_string(i) + "' does not have a name.";
+                break;
+            }
+        }
+    }
+    if (!fail.empty()) {
+        mdn::MetaDataInvalid err(fail);
+        Log_ErrorQ(err.what());
+        throw err;
+    }
+    return result;
+}
+
+
 const mdn::Mdn2d* mdn::Project::activeMdn() const {
     return m_activeMdn2d;
 }
@@ -326,6 +405,60 @@ void mdn::Project::setActiveMdn(std::string name) {
         return;
     }
     setActiveMdn(i);
+}
+
+
+const mdn::Selection* mdn::Project::getSelection(int i, bool warnOnFailure) const {
+    const auto iter = m_data.find(i);
+    if (iter == m_data.cend()) {
+        if (warnOnFailure) {
+            std::ostringstream oss;
+            oss << "Invalid index (" << i << "), expecting 0 .. " << (m_data.size() - 1);
+            QMessageBox::warning(m_parent, "getSelection", oss.str().c_str());
+        }
+        return nullptr;
+    }
+    return &(iter->second.second);
+}
+mdn::Selection* mdn::Project::getSelection(int i, bool warnOnFailure) {
+    auto iter = m_data.find(i);
+    if (iter == m_data.end()) {
+        if (warnOnFailure) {
+            std::ostringstream oss;
+            oss << "Invalid index (" << i << "), expecting 0 .. " << (m_data.size() - 1);
+            QMessageBox::warning(m_parent, "getSelection", oss.str().c_str());
+        }
+        return nullptr;
+    }
+    return &(iter->second.second);
+}
+
+
+const mdn::Selection* mdn::Project::getSelection(std::string name, bool warnOnFailure) const {
+    const auto iter = m_addressingNameToIndex.find(name);
+    if (iter == m_addressingNameToIndex.cend()) {
+        if (warnOnFailure) {
+            std::ostringstream oss;
+            oss << "Invalid Mdn name (" << name << ")";
+            QMessageBox::warning(m_parent, "getSelection", oss.str().c_str());
+        }
+        return nullptr;
+    }
+    int index = iter->second;
+    return &(m_data.at(index).second);
+}
+mdn::Selection* mdn::Project::getSelection(std::string name, bool warnOnFailure) {
+    auto iter = m_addressingNameToIndex.find(name);
+    if (iter == m_addressingNameToIndex.cend()) {
+        if (warnOnFailure) {
+            std::ostringstream oss;
+            oss << "Invalid Mdn name (" << name << ")";
+            QMessageBox::warning(m_parent, "getSelection", oss.str().c_str());
+        }
+        return nullptr;
+    }
+    int index = iter->second;
+    return &(m_data[index].second);
 }
 
 

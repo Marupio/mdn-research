@@ -27,6 +27,8 @@ class MainWindow : public QMainWindow {
 public:
     MainWindow(QWidget *parent = nullptr);
 
+    void renameActiveTab();
+
 signals:
     void newProjectRequested();
     void newMdn2dRequested();
@@ -40,7 +42,7 @@ private:
     void createMenus();
     void setupLayout();
     void createNewProject();
-    void updateTabs();
+    void createTabs();
 
     QSplitter* m_splitter = nullptr;
 
@@ -54,6 +56,4 @@ private:
     QPushButton* m_copyButton = nullptr;
 
     mdn::Project* m_project = nullptr;
-
-    std::unordered_map<int, NumberDisplayWidget*> m_tabDisplays;
 };

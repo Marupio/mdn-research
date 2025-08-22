@@ -7,6 +7,7 @@
 
 #include "../library/GlobalConfig.hpp"
 #include "../library/Mdn2d.hpp"
+#include "Selection.hpp"
 
 class NumberDisplayWidget : public QWidget {
     Q_OBJECT
@@ -15,7 +16,7 @@ public:
     NumberDisplayWidget(QWidget* parent = nullptr);
 
     void setProject(mdn::Project* proj);
-    void setModel(const mdn::Mdn2d* mdn);
+    void setModel(const mdn::Mdn2d* mdn, const mdn::Selection* sel);
     void setViewCenter(int x, int y);
     void moveCursor(int dx, int dy);
 
@@ -34,6 +35,7 @@ private:
 
     mdn::Project* m_project = nullptr;
     const mdn::Mdn2d* m_model = nullptr;
+    const mdn::Selection* m_selection = nullptr;
 
     Qt::GlobalColor m_defaultColors_gridLines = Qt::gray;
 

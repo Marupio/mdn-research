@@ -21,8 +21,9 @@ void NumberDisplayWidget::setProject(mdn::Project* proj) {
 }
 
 
-void NumberDisplayWidget::setModel(const mdn::Mdn2d* mdn) {
+void NumberDisplayWidget::setModel(const mdn::Mdn2d* mdn, const mdn::Selection* sel) {
     m_model = mdn;
+    m_selection = sel;
     update();
 }
 

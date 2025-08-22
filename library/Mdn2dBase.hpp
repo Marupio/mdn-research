@@ -30,6 +30,7 @@ class MDN_API Mdn2dBase {
     // *** Friends
     friend class Project;
 
+
     // This guy handles input and output, mostly text-related
     friend class Mdn2dIO;
 
@@ -415,41 +416,16 @@ public:
 
         // *** Direct access to underlying data
 
-    inline const std::unordered_map<Coord, Digit>&  data_raw() {
-        auto lock = lockReadOnly();
-        return locked_data_raw();
-    }
-    inline const std::unordered_map<Coord, Digit>&  locked_data_raw() {
-        return m_raw;
-    }
-    inline const std::map<int, CoordSet>&  data_xIndex() {
-        auto lock = lockReadOnly();
-        return locked_data_xIndex();
-    }
-    inline const std::map<int, CoordSet>&  locked_data_xIndex() {
-        return m_xIndex;
-    }
-    inline const std::map<int, CoordSet>&  data_yIndex() {
-        auto lock = lockReadOnly();
-        return locked_data_yIndex();
-    }
-    inline const std::map<int, CoordSet>&  locked_data_yIndex() {
-        return m_yIndex;
-    }
-    inline const CoordSet&  data_index() {
-        auto lock = lockReadOnly();
-        return locked_data_index();
-    }
-    inline const CoordSet&  locked_data_index() {
-        return m_index;
-    }
-    inline const std::unordered_map<int, MdnObserver*>&  data_observers() {
-        auto lock = lockReadOnly();
-        return locked_data_observers();
-    }
-    inline const std::unordered_map<int, MdnObserver*>&  locked_data_observers() {
-        return m_observers;
-    }
+        inline const std::unordered_map<Coord, Digit>&  data_raw();
+        inline const std::unordered_map<Coord, Digit>&  locked_data_raw();
+        inline const std::map<int, CoordSet>&  data_xIndex();
+        inline const std::map<int, CoordSet>&  locked_data_xIndex();
+        inline const std::map<int, CoordSet>&  data_yIndex();
+        inline const std::map<int, CoordSet>&  locked_data_yIndex();
+        inline const CoordSet&  data_index();
+        inline const CoordSet&  locked_data_index();
+        inline const std::unordered_map<int, MdnObserver*>&  data_observers();
+        inline const std::unordered_map<int, MdnObserver*>&  locked_data_observers();
 
 
         // *** Other functionality

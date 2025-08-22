@@ -15,3 +15,6 @@ GUI library
 Why not track that here also
 
 * Change the namespaces from simply mdn to mdn::gui
+* Add a Project::verify() function to check metadata is consistent
+* Add a getMdnAndSelection function, make getSelection's and getMdn's use it
+

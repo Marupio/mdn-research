@@ -1,5 +1,8 @@
 #include "MainWindow.hpp"
 
+#include <QInputDialog>
+
+#include "MdnQtInterface.hpp"
 #include "NumberDisplayWidget.hpp"
 
 MainWindow::MainWindow(QWidget *parent)
@@ -9,6 +12,31 @@ MainWindow::MainWindow(QWidget *parent)
     createMenus();
     setupLayout();
     setWindowTitle("MDN Editor");
+}
+
+
+void MainWindow::renameActiveTab() {
+    int index = m_tabWidget->currentIndex();
+    auto* ndw = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(index));
+
+    bool ok = false;
+    QString newName = QInputDialog::getText(
+        this,
+        "Rename",
+        "MDN name:",
+        QLineEdit::Normal,
+        QString::fromStdString(m_project->nameOfMdn(index)),
+        &ok
+    );
+    if (!ok) return;
+
+    // 2) Ask Project to rename (so it can update maps + call mdn.setName())
+    TODO
+    // I think we need to use setName in the mdn, and suffer what it returns
+    std::string approved = m_project->rename(index, newName.toStdString());
+
+    // 3) Reflect the (possibly modified) approved name back to the UI
+    m_tabWidget->setTabText(index, QString::fromStdString(approved));
 }
 
 
@@ -111,20 +139,21 @@ void MainWindow::createNewProject() {
 }
 
 
-void MainWindow::updateTabs() {
+void MainWindow::createTabs() {
     if (!m_project) {
         // Nothing to do
         return;
     }
 
-    for (auto& [idx, pair] : project->data()) {
-        const auto& mdn = pair.first;
-        auto* w = new NumberDisplayWidget;
-        w->setModel(&mdn, &pair.second);              // your setter; bind read-only model + selection
-        w->setProject(project);                        // if you call back for cursor ops
-        int tab = m_tabWidget->addTab(w, QString::fromStdString(mdn.name()));
-        // Optional: remember idx on the widget so you can get back to Project’s index later
-        w->setProperty("projIndex", idx);
+    const std::unordered_map<int, std::string>& tabNames(m_project->data_addressingIndexToName());
+    std::vector<std::string> names(m_project->toc());
+    for (int index = 0; index < names.size(); ++index) {
+        mdn::Mdn2d* src = m_project->getMdn(index, true);
+        mdn::Selection* sel = m_project->getSelection(index);
+        QString qname = mdn::MdnQtInterface::toQString(names[index]);
+        auto* ndw = new NumberDisplayWidget;
+        ndw->setProject(m_project);
+        ndw->setModel(src, sel);
+        int tab = m_tabWidget->addTab(ndw, qname);
     }
-
 }

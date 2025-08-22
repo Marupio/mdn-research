@@ -1473,6 +1473,43 @@ const mdn::Rect& mdn::Mdn2dBase::locked_bounds() const {
 }
 
 
+const std::unordered_map<mdn::Coord, mdn::Digit>&  mdn::Mdn2dBase::data_raw() {
+    auto lock = lockReadOnly();
+    return locked_data_raw();
+}
+const std::unordered_map<mdn::Coord, mdn::Digit>&  mdn::Mdn2dBase::locked_data_raw() {
+    return m_raw;
+}
+const std::map<int, mdn::CoordSet>&  mdn::Mdn2dBase::data_xIndex() {
+    auto lock = lockReadOnly();
+    return locked_data_xIndex();
+}
+const std::map<int, mdn::CoordSet>&  mdn::Mdn2dBase::locked_data_xIndex() {
+    return m_xIndex;
+}
+const std::map<int, mdn::CoordSet>&  mdn::Mdn2dBase::data_yIndex() {
+    auto lock = lockReadOnly();
+    return locked_data_yIndex();
+}
+const std::map<int, mdn::CoordSet>&  mdn::Mdn2dBase::locked_data_yIndex() {
+    return m_yIndex;
+}
+const mdn::CoordSet&  mdn::Mdn2dBase::data_index() {
+    auto lock = lockReadOnly();
+    return locked_data_index();
+}
+const mdn::CoordSet&  mdn::Mdn2dBase::locked_data_index() {
+    return m_index;
+}
+const std::unordered_map<int, mdn::MdnObserver*>&  mdn::Mdn2dBase::data_observers() {
+    auto lock = lockReadOnly();
+    return locked_data_observers();
+}
+const std::unordered_map<int, mdn::MdnObserver*>&  mdn::Mdn2dBase::locked_data_observers() {
+    return m_observers;
+}
+
+
 int mdn::Mdn2dBase::getPrecision() const {
     auto lock = lockReadOnly();
     Log_N_Debug2_H("");

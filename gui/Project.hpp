@@ -105,6 +105,17 @@ public:
         // Apply changes in selection to MainWindow
         void updateSelection() const;
 
+        // Direct access to underlying data
+        const std::unordered_map<int, std::pair<Mdn2d, Selection>>& data_data() const {
+            return m_data;
+        }
+        const std::unordered_map<std::string, int>& data_addressingNameToIndex() const {
+            return m_addressingNameToIndex;
+        }
+        const std::unordered_map<int, std::string>& data_addressingIndexToName() const {
+            return m_addressingIndexToName;
+        }
+
 
     // *** Project API
 
@@ -133,8 +144,15 @@ public:
         // Return the name for the Mdn at the given tab index, empty string for bad index
         std::string nameOfMdn(int i) const;
 
+        // Change the name of the given mdn tab
+        void renameMdn(int i, std::string newName);
+
         // Number of Mdn tabs
         inline int size() const { return m_data.size(); }
+
+        // Return a toc of Mdn names, listed by tab index
+        //  This function also checks the metadata all agree
+        std::vector<std::string> toc() const;
 
         const Mdn2d* activeMdn() const;
         Mdn2d* activeMdn();
@@ -145,6 +163,15 @@ public:
         // Given mdn tab is now active
         void setActiveMdn(int i);
         void setActiveMdn(std::string name);
+
+
+        // Get selection associated with i'th tab
+        const Selection* getSelection(int i, bool warnOnFailure=false) const;
+        Selection* getSelection(int i, bool warnOnFailure=false);
+
+        // Get selection associated with given tab name
+        const Selection* getSelection(std::string name, bool warnOnFailure=false) const;
+        Selection* getSelection(std::string name, bool warnOnFailure=false);
 
         // Return pointer to the i'th Mdn tab, nullptr on failure
         //  e.g.:
