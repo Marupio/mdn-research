@@ -15,6 +15,12 @@ NumberDisplayWidget::NumberDisplayWidget(QWidget* parent)
 }
 
 
+void NumberDisplayWidget::setProject(mdn::Project* proj) {
+    m_project = proj;
+    update();
+}
+
+
 void NumberDisplayWidget::setModel(const mdn::Mdn2d* mdn) {
     m_model = mdn;
     update();
@@ -35,12 +41,27 @@ void NumberDisplayWidget::moveCursor(int dx, int dy) {
 }
 
 
+// void NumberDisplayWidget::keyPressEvent(QKeyEvent* e) {
+//     switch (e->key()) {
+//         case Qt::Key_Up:    emit cursorMoveRequested(0, -1, e->modifiers()); break;
+//         case Qt::Key_Down:  emit cursorMoveRequested(0,  1, e->modifiers()); break;
+//         case Qt::Key_Left:  emit cursorMoveRequested(-1, 0, e->modifiers()); break;
+//         case Qt::Key_Right: emit cursorMoveRequested( 1, 0, e->modifiers()); break;
+//         default: QWidget::keyPressEvent(e); return;
+//     }
+// }
 void NumberDisplayWidget::keyPressEvent(QKeyEvent* e) {
+    const bool extend = e->modifiers().testFlag(Qt::ShiftModifier);
     switch (e->key()) {
-        case Qt::Key_Up:    emit cursorMoveRequested(0, -1, e->modifiers()); break;
-        case Qt::Key_Down:  emit cursorMoveRequested(0,  1, e->modifiers()); break;
-        case Qt::Key_Left:  emit cursorMoveRequested(-1, 0, e->modifiers()); break;
-        case Qt::Key_Right: emit cursorMoveRequested( 1, 0, e->modifiers()); break;
+        case Qt::Key_Up:        m_project->cursorUp(extend);        break;
+        case Qt::Key_Down:      m_project->cursorDn(extend);        break;
+        case Qt::Key_Left:      m_project->cursorLf(extend);        break;
+        case Qt::Key_Right:     m_project->cursorRt(extend);        break;
+        case Qt::Key_PageUp:    m_project->cursorPageUp(extend);    break;
+        case Qt::Key_PageDown:  m_project->cursorPageDn(extend);    break;
+        case Qt::Key_PageLeft:  m_project->cursorPageLf(extend);    break;
+        case Qt::Key_PageRight: m_project->cursorPageRt(extend);    break;
+        case Qt::Key_Home:      m_project->cursorOrigin(extend);    break;
         default: QWidget::keyPressEvent(e); return;
     }
 }

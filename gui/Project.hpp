@@ -7,6 +7,7 @@
 // QT includes
 #include <QMessageBox>
 
+#include "Selection.hpp"
 #include "../library/GlobalConfig.hpp"
 #include "../library/Mdn2d.hpp"
 #include "../library/Mdn2dFramework.hpp"
@@ -135,6 +136,12 @@ public:
         // Number of Mdn tabs
         inline int size() const { return m_data.size(); }
 
+        const Mdn2d* activeMdn() const;
+        Mdn2d* activeMdn();
+
+        const Selection* activeSelection() const;
+        mdn::Selection* activeSelection();
+
         // Given mdn tab is now active
         void setActiveMdn(int i);
         void setActiveMdn(std::string name);
@@ -207,23 +214,74 @@ public:
         //  * Page - typically [PgUp] type movement, left&right do exist, not sure required keys
         //  * NextX / PrevX - move along x to the next digit, e.g. [tab]/[shift]+[tab] buttons
         //  * NextY / PrevY - move along y to the next digit, e.g. [tab]/[shift]+[enter] buttons
-        inline void cursorUp(bool extendSelection) { m_selection.cursorUp(extendSelection); }
-        inline void cursorDn(bool extendSelection) { m_selection.cursorDn(extendSelection); }
-        inline void cursorLf(bool extendSelection) { m_selection.cursorLf(extendSelection); }
-        inline void cursorRt(bool extendSelection) { m_selection.cursorRt(extendSelection); }
-        inline void cursorJumpUp(bool extendSelection) { m_selection.cursorJumpUp(extendSelection); }
-        inline void cursorJumpDn(bool extendSelection) { m_selection.cursorJumpDn(extendSelection); }
-        inline void cursorJumpLf(bool extendSelection) { m_selection.cursorJumpLf(extendSelection); }
-        inline void cursorJumpRt(bool extendSelection) { m_selection.cursorJumpRt(extendSelection); }
-        inline void cursorPageUp(bool extendSelection) { m_selection.cursorPageUp(extendSelection); }
-        inline void cursorPageDn(bool extendSelection) { m_selection.cursorPageDn(extendSelection); }
-        inline void cursorPageLf(bool extendSelection) { m_selection.cursorPageLf(extendSelection); }
-        inline void cursorPageRt(bool extendSelection) { m_selection.cursorPageRt(extendSelection); }
-        inline void cursorOrigin(bool extendSelection) { m_selection.cursorOrigin(extendSelection); }
-        inline void cursorNextX(bool extendSelection) { m_selection.cursorNextX(extendSelection); }
-        inline void cursorPrevX(bool extendSelection) { m_selection.cursorPrevX(extendSelection); }
-        inline void cursorNextY(bool extendSelection) { m_selection.cursorNextY(extendSelection); }
-        inline void cursorPrevY(bool extendSelection) { m_selection.cursorPrevY(extendSelection); }
+        inline void cursorUp(bool extendSelection) {
+            Selection* sel = selection();
+            if (sel) sel->cursorUp(extendSelection);
+        }
+        inline void cursorDn(bool extendSelection) {
+            Selection* sel = selection();
+            if (sel) sel->cursorDn(extendSelection);
+        }
+        inline void cursorLf(bool extendSelection) {
+            Selection* sel = selection();
+            if (sel) sel->cursorLf(extendSelection);
+        }
+        inline void cursorRt(bool extendSelection) {
+            Selection* sel = selection();
+            if (sel) sel->cursorRt(extendSelection);
+        }
+        inline void cursorJumpUp(bool extendSelection) {
+            Selection* sel = selection();
+            if (sel) sel->cursorJumpUp(extendSelection);
+        }
+        inline void cursorJumpDn(bool extendSelection) {
+            Selection* sel = selection();
+            if (sel) sel->cursorJumpDn(extendSelection);
+        }
+        inline void cursorJumpLf(bool extendSelection) {
+            Selection* sel = selection();
+            if (sel) sel->cursorJumpLf(extendSelection);
+        }
+        inline void cursorJumpRt(bool extendSelection) {
+            Selection* sel = selection();
+            if (sel) sel->cursorJumpRt(extendSelection);
+        }
+        inline void cursorPageUp(bool extendSelection) {
+            Selection* sel = selection();
+            if (sel) sel->cursorPageUp(extendSelection);
+        }
+        inline void cursorPageDn(bool extendSelection) {
+            Selection* sel = selection();
+            if (sel) sel->cursorPageDn(extendSelection);
+        }
+        inline void cursorPageLf(bool extendSelection) {
+            Selection* sel = selection();
+            if (sel) sel->cursorPageLf(extendSelection);
+        }
+        inline void cursorPageRt(bool extendSelection) {
+            Selection* sel = selection();
+            if (sel) sel->cursorPageRt(extendSelection);
+        }
+        inline void cursorOrigin(bool extendSelection) {
+            Selection* sel = selection();
+            if (sel) sel->cursorOrigin(extendSelection);
+        }
+        inline void cursorNextX(bool extendSelection) {
+            Selection* sel = selection();
+            if (sel) sel->cursorNextX(extendSelection);
+        }
+        inline void cursorPrevX(bool extendSelection) {
+            Selection* sel = selection();
+            if (sel) sel->cursorPrevX(extendSelection);
+        }
+        inline void cursorNextY(bool extendSelection) {
+            Selection* sel = selection();
+            if (sel) sel->cursorNextY(extendSelection);
+        }
+        inline void cursorPrevY(bool extendSelection) {
+            Selection* sel = selection();
+            if (sel) sel->cursorPrevY(extendSelection);
+        }
 
         // Access current selection
         inline const Selection* selection() const {

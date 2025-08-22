@@ -39,6 +39,8 @@ signals:
 private:
     void createMenus();
     void setupLayout();
+    void createNewProject();
+    void updateTabs();
 
     QSplitter* m_splitter = nullptr;
 
@@ -51,8 +53,7 @@ private:
     QPushButton* m_submitButton = nullptr;
     QPushButton* m_copyButton = nullptr;
 
-    QMap<int, mdn::Mdn2d*> m_mdnMap;
-    int m_nextMdnId = 0;
+    mdn::Project* m_project = nullptr;
 
-    mdn::Project* m_activeProject = nullptr;
+    std::unordered_map<int, NumberDisplayWidget*> m_tabDisplays;
 };

@@ -14,6 +14,7 @@ class NumberDisplayWidget : public QWidget {
 public:
     NumberDisplayWidget(QWidget* parent = nullptr);
 
+    void setProject(mdn::Project* proj);
     void setModel(const mdn::Mdn2d* mdn);
     void setViewCenter(int x, int y);
     void moveCursor(int dx, int dy);
@@ -31,6 +32,7 @@ private:
     void ensureCursorVisible();
     void recalcGridGeometry();
 
+    mdn::Project* m_project = nullptr;
     const mdn::Mdn2d* m_model = nullptr;
 
     Qt::GlobalColor m_defaultColors_gridLines = Qt::gray;

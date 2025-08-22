@@ -197,6 +197,7 @@ public:
             }
         }
         void cursorPageUp(bool extendSelection) {
+            // Missing information - need to find out how much a page movement is
             m_cursor1.translate();
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
@@ -206,6 +207,7 @@ public:
             }
         }
         void cursorPageDn(bool extendSelection) {
+            // Missing information - need to find out how much a page movement is
             m_cursor1.translate();
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
@@ -215,6 +217,7 @@ public:
             }
         }
         void cursorPageLf(bool extendSelection) {
+            // Missing information - need to find out how much a page movement is
             m_cursor1.translate();
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
@@ -224,6 +227,7 @@ public:
             }
         }
         void cursorPageRt(bool extendSelection) {
+            // Missing information - need to find out how much a page movement is
             m_cursor1.translate();
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
@@ -233,7 +237,7 @@ public:
             }
         }
         void cursorOrigin(bool extendSelection) {
-            m_cursor1.translate();
+            m_cursor1 = COORD_ORIGIN;
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
             } else {
@@ -242,7 +246,7 @@ public:
             }
         }
         void cursorNextX(bool extendSelection) {
-            m_cursor1.translate();
+            m_cursor1.translate(1, 0);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
             } else {
@@ -251,7 +255,7 @@ public:
             }
         }
         void cursorPrevX(bool extendSelection) {
-            m_cursor1.translate();
+            m_cursor1.translate(-1, 0);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
             } else {
@@ -260,7 +264,7 @@ public:
             }
         }
         void cursorNextY(bool extendSelection) {
-            m_cursor1.translate();
+            m_cursor1.translate(0, 1);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
             } else {
@@ -269,7 +273,7 @@ public:
             }
         }
         void cursorPrevY(bool extendSelection) {
-            m_cursor1.translate();
+            m_cursor1.translate(0, -1);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
             } else {

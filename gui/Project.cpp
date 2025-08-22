@@ -99,11 +99,15 @@ mdn::Project::Project(MainWindow* parent, std::string name, int nStartMdn):
     if (m_name.empty()) {
         m_name = "untitled-" + std::to_string(m_untitledNumber++);
     }
+    if (nStartMdn == 0) {
+        nStartMdn += 1;
+    }
     for (int i = 0; i < nStartMdn; ++i) {
         std::string nextName = Mdn2d::static_generateNextName();
         Mdn2d newMdn = Mdn2d::NewInstance(m_config, nextName);
         appendMdn(newMdn);
     }
+    setActiveMdn(0);
 }
 
 
@@ -146,7 +150,8 @@ void mdn::Project::updateSelection() const {
     if (!m_parent) {
         return;
     }
-    m_parent->updateSelection(m_activeMdn2d, m_activeSelection);
+    // Not yet implemented:
+    // m_parent->updateSelection(m_activeMdn2d, m_activeSelection);
 }
 
 
@@ -283,6 +288,22 @@ std::string mdn::Project::nameOfMdn(int i) const {
         return "";
     }
     return iter->second;
+}
+
+
+const mdn::Mdn2d* mdn::Project::activeMdn() const {
+    return m_activeMdn2d;
+}
+mdn::Mdn2d* mdn::Project::activeMdn() {
+    return m_activeMdn2d;
+}
+
+
+const mdn::Selection* mdn::Project::activeSelection() const {
+    return m_activeSelection;
+}
+mdn::Selection* mdn::Project::activeSelection() {
+    return m_activeSelection;
 }
 
 
