@@ -34,8 +34,8 @@ private:
     void recalcGridGeometry();
 
     mdn::Project* m_project = nullptr;
-    const mdn::Mdn2d* m_model = nullptr;
-    const mdn::Selection* m_selection = nullptr;
+    mdn::Mdn2d* m_model = nullptr;
+    mdn::Selection* m_selection = nullptr;
 
     Qt::GlobalColor m_defaultColors_gridLines = Qt::gray;
 

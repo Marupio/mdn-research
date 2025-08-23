@@ -407,20 +407,21 @@ const std::string& mdn::Mdn2dBase::locked_name() const {
 }
 
 
-void mdn::Mdn2dBase::setName(const std::string& nameIn) {
+std::string mdn::Mdn2dBase::setName(const std::string& nameIn) {
     auto lock = lockWriteable();
     Log_N_Debug2("nameIn=" << nameIn);
-    locked_setName(nameIn);
+    return locked_setName(nameIn);
 }
 
 
-void mdn::Mdn2dBase::locked_setName(const std::string& nameIn) {
+std::string mdn::Mdn2dBase::locked_setName(const std::string& nameIn) {
     std::string fwName = m_config.master().requestMdnNameChange(m_name, nameIn);
     Log_Debug3(
         "Attempting to change name from '" << m_name << "' to '" << nameIn << "', with framework"
         << " final approval as '" << fwName << "'"
     );
     m_name = fwName;
+    return fwName;
 }
 
 

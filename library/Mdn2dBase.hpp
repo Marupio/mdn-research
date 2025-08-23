@@ -178,8 +178,8 @@ public:
             protected: const std::string& locked_name() const; public:
 
             // Set this number's 'name', deferring to framework for approval
-            void setName(const std::string& nameIn);
-            protected: void locked_setName(const std::string& nameIn); public:
+            std::string setName(const std::string& nameIn);
+            protected: std::string locked_setName(const std::string& nameIn); public:
 
 
         // *** Queries

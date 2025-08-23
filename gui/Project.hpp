@@ -94,6 +94,8 @@ public:
         //      * Information: if newName already exists (i.e. failed to rename)
         //  Exceptions
         //      * InvalidArgument: if origName does not exist (i.e. no number to rename)
+        // TODO: fix access
+        // *** NOT FOR PUBLIC USE *** Use renameMdn instead.
         std::string requestMdnNameChange(
             const std::string& origName,
             const std::string& newName
@@ -145,7 +147,7 @@ public:
         std::string nameOfMdn(int i) const;
 
         // Change the name of the given mdn tab
-        void renameMdn(int i, std::string newName);
+        std::string renameMdn(int i, const std::string& newName);
 
         // Number of Mdn tabs
         inline int size() const { return m_data.size(); }
@@ -164,10 +166,15 @@ public:
         void setActiveMdn(int i);
         void setActiveMdn(std::string name);
 
-
         // Get selection associated with i'th tab
         const Selection* getSelection(int i, bool warnOnFailure=false) const;
         Selection* getSelection(int i, bool warnOnFailure=false);
+
+        // Get an entry of contained data (Mdn2d and Selection together)
+        const std::pair<Mdn2d, Selection>* at(int i, bool warnOnFailure=false) const;
+        std::pair<Mdn2d, Selection>* at(int i, bool warnOnFailure=false);
+        const std::pair<Mdn2d, Selection>* at(std::string name, bool warnOnFailure=false) const;
+        std::pair<Mdn2d, Selection>* at(std::string name, bool warnOnFailure=false);
 
         // Get selection associated with given tab name
         const Selection* getSelection(std::string name, bool warnOnFailure=false) const;
@@ -210,8 +217,8 @@ public:
         //  Messaging
         //      * Warning: if index out of range or name does not exist
         //          Recover: returns empty string, takes no other action
-        std::string duplicateMdn(int index);
-        std::string duplicateMdn(const std::string& name);
+        std::pair<int, std::string> duplicateMdn(int index);
+        std::pair<int, std::string> duplicateMdn(const std::string& name);
 
         // Move Mdn2d at 'fromIndex' or given name to  'toIndex'; if toIndex == -1, moves it to the
         //  end.  Returns true or false based on success of operation.
@@ -233,81 +240,11 @@ public:
 
     // Selection actions
 
-        // Movement - moves the cursor location
-        //  * extendSelection - when true, cursor movement affects the size of the selected
-        //      rectangular region
-        //  * Up/Down/Left/Right - typically arrow key type movements
-        //  * Jump - typically [ctrl]+[arrow] - jump to next zero/non-zero boundary
-        //  * Page - typically [PgUp] type movement, left&right do exist, not sure required keys
-        //  * NextX / PrevX - move along x to the next digit, e.g. [tab]/[shift]+[tab] buttons
-        //  * NextY / PrevY - move along y to the next digit, e.g. [tab]/[shift]+[enter] buttons
-        inline void cursorUp(bool extendSelection) {
-            Selection* sel = selection();
-            if (sel) sel->cursorUp(extendSelection);
-        }
-        inline void cursorDn(bool extendSelection) {
-            Selection* sel = selection();
-            if (sel) sel->cursorDn(extendSelection);
-        }
-        inline void cursorLf(bool extendSelection) {
-            Selection* sel = selection();
-            if (sel) sel->cursorLf(extendSelection);
-        }
-        inline void cursorRt(bool extendSelection) {
-            Selection* sel = selection();
-            if (sel) sel->cursorRt(extendSelection);
-        }
-        inline void cursorJumpUp(bool extendSelection) {
-            Selection* sel = selection();
-            if (sel) sel->cursorJumpUp(extendSelection);
-        }
-        inline void cursorJumpDn(bool extendSelection) {
-            Selection* sel = selection();
-            if (sel) sel->cursorJumpDn(extendSelection);
-        }
-        inline void cursorJumpLf(bool extendSelection) {
-            Selection* sel = selection();
-            if (sel) sel->cursorJumpLf(extendSelection);
-        }
-        inline void cursorJumpRt(bool extendSelection) {
-            Selection* sel = selection();
-            if (sel) sel->cursorJumpRt(extendSelection);
-        }
-        inline void cursorPageUp(bool extendSelection) {
-            Selection* sel = selection();
-            if (sel) sel->cursorPageUp(extendSelection);
-        }
-        inline void cursorPageDn(bool extendSelection) {
-            Selection* sel = selection();
-            if (sel) sel->cursorPageDn(extendSelection);
-        }
-        inline void cursorPageLf(bool extendSelection) {
-            Selection* sel = selection();
-            if (sel) sel->cursorPageLf(extendSelection);
-        }
-        inline void cursorPageRt(bool extendSelection) {
-            Selection* sel = selection();
-            if (sel) sel->cursorPageRt(extendSelection);
-        }
-        inline void cursorOrigin(bool extendSelection) {
-            Selection* sel = selection();
-            if (sel) sel->cursorOrigin(extendSelection);
-        }
-        inline void cursorNextX(bool extendSelection) {
-            Selection* sel = selection();
-            if (sel) sel->cursorNextX(extendSelection);
-        }
-        inline void cursorPrevX(bool extendSelection) {
-            Selection* sel = selection();
-            if (sel) sel->cursorPrevX(extendSelection);
-        }
-        inline void cursorNextY(bool extendSelection) {
-            Selection* sel = selection();
-            if (sel) sel->cursorNextY(extendSelection);
-        }
-        inline void cursorPrevY(bool extendSelection) {
-            Selection* sel = selection();
-            if (sel) sel->cursorPrevY(extendSelection);
+        // Set page up/down and page left/right distances (in digits)
+        inline void setPageStep(int dxCols, int dyRows) {
+            if (m_activeSelection) {
+                m_activeSelection->setPageStep(dxCols, dyRows);
+            }
         }
 
         // Access current selection

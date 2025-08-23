@@ -20,7 +20,15 @@ class Selection : public MdnObserver {
     Coord m_cursor0;
     Coord m_cursor1;
 
+    // columns per page (>=1)
+    int m_pageDx = 1;
+
+    // rows per page (>=1)
+    int m_pageDy = 1;
+
+
 public:
+
 
     // Accessors
     const Rect& rect() const { return m_rect; }
@@ -32,6 +40,11 @@ public:
 
     const Coord& cursor0() const { return m_cursor0; }
     const Coord& cursor1() const { return m_cursor1; }
+
+    inline void setPageStep(int dx, int dy) {
+        m_pageDx = std::max(1, dx);
+        m_pageDy = std::max(1, dy);
+    }
 
 
     // * Selection queries
@@ -198,7 +211,7 @@ public:
         }
         void cursorPageUp(bool extendSelection) {
             // Missing information - need to find out how much a page movement is
-            m_cursor1.translate();
+            m_cursor1.translate(m_pageDy);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
             } else {
@@ -208,7 +221,7 @@ public:
         }
         void cursorPageDn(bool extendSelection) {
             // Missing information - need to find out how much a page movement is
-            m_cursor1.translate();
+            m_cursor1.translate(-m_pageDy);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
             } else {
@@ -218,7 +231,7 @@ public:
         }
         void cursorPageLf(bool extendSelection) {
             // Missing information - need to find out how much a page movement is
-            m_cursor1.translate();
+            m_cursor1.translate(-m_pageDx);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
             } else {
@@ -228,7 +241,7 @@ public:
         }
         void cursorPageRt(bool extendSelection) {
             // Missing information - need to find out how much a page movement is
-            m_cursor1.translate();
+            m_cursor1.translate(m_pageDx);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
             } else {

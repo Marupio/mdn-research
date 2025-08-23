@@ -291,18 +291,10 @@ std::string mdn::Project::nameOfMdn(int i) const {
 }
 
 
-void mdn::Project::renameMdn(int i, std::string newName) {
-    std::string currentName = nameOfMdn(i);
-    if (currentName == newName) {
-        return;
-    }
-
-    std::string actualNameChange(requestMdnNameChange(currentName, newName));
-
-    if (actualNameChange == currentName) {
-        Log_InfoQ("Failed to change name from '" << currentName << "' to '" << newName << "'");
-    }
-    TODO
+std::string mdn::Project::renameMdn(int i, const std::string& newName) {
+    Mdn2d* tgt = getMdn(i);
+    std::string currentName = tgt->name();
+    return tgt->setName(newName);
 }
 
 
@@ -395,6 +387,7 @@ void mdn::Project::setActiveMdn(int i) {
     std::pair<Mdn2d, Selection> elem = iter->second;
     m_activeMdn2d = &(elem.first);
     m_activeSelection = &(elem.second);
+
 }
 
 
@@ -408,111 +401,92 @@ void mdn::Project::setActiveMdn(std::string name) {
 }
 
 
-const mdn::Selection* mdn::Project::getSelection(int i, bool warnOnFailure) const {
+const std::pair<mdn::Mdn2d, mdn::Selection>* mdn::Project::at(int i, bool warnOnFailure) const {
     const auto iter = m_data.find(i);
     if (iter == m_data.cend()) {
         if (warnOnFailure) {
             std::ostringstream oss;
             oss << "Invalid index (" << i << "), expecting 0 .. " << (m_data.size() - 1);
-            QMessageBox::warning(m_parent, "getSelection", oss.str().c_str());
+            QMessageBox::warning(m_parent, "at", oss.str().c_str());
         }
         return nullptr;
     }
-    return &(iter->second.second);
+    return &(iter->second);
 }
-mdn::Selection* mdn::Project::getSelection(int i, bool warnOnFailure) {
+
+
+std::pair<mdn::Mdn2d, mdn::Selection>* mdn::Project::at(int i, bool warnOnFailure) {
     auto iter = m_data.find(i);
     if (iter == m_data.end()) {
         if (warnOnFailure) {
             std::ostringstream oss;
             oss << "Invalid index (" << i << "), expecting 0 .. " << (m_data.size() - 1);
-            QMessageBox::warning(m_parent, "getSelection", oss.str().c_str());
+            QMessageBox::warning(m_parent, "at", oss.str().c_str());
         }
         return nullptr;
     }
-    return &(iter->second.second);
+    return &(iter->second);
+}
+const std::pair<mdn::Mdn2d, mdn::Selection>* mdn::Project::at(
+    std::string name,
+    bool warnOnFailure
+) const {
+    const auto iter = m_addressingNameToIndex.find(name);
+    if (iter == m_addressingNameToIndex.cend()) {
+        if (warnOnFailure) {
+            std::ostringstream oss;
+            oss << "Invalid Mdn name (" << name << ")";
+            QMessageBox::warning(m_parent, "at", oss.str().c_str());
+        }
+        return nullptr;
+    }
+    int index = iter->second;
+    return &(m_data.at(index));
+}
+std::pair<mdn::Mdn2d, mdn::Selection>* mdn::Project::at(std::string name, bool warnOnFailure) {
+    auto iter = m_addressingNameToIndex.find(name);
+    if (iter == m_addressingNameToIndex.cend()) {
+        if (warnOnFailure) {
+            std::ostringstream oss;
+            oss << "Invalid Mdn name (" << name << ")";
+            QMessageBox::warning(m_parent, "at", oss.str().c_str());
+        }
+        return nullptr;
+    }
+    int index = iter->second;
+    return &(m_data[index]);
+}
+
+
+const mdn::Selection* mdn::Project::getSelection(int i, bool warnOnFailure) const {
+    return &at(i, warnOnFailure)->second;
+}
+mdn::Selection* mdn::Project::getSelection(int i, bool warnOnFailure) {
+    return &at(i, warnOnFailure)->second;
 }
 
 
 const mdn::Selection* mdn::Project::getSelection(std::string name, bool warnOnFailure) const {
-    const auto iter = m_addressingNameToIndex.find(name);
-    if (iter == m_addressingNameToIndex.cend()) {
-        if (warnOnFailure) {
-            std::ostringstream oss;
-            oss << "Invalid Mdn name (" << name << ")";
-            QMessageBox::warning(m_parent, "getSelection", oss.str().c_str());
-        }
-        return nullptr;
-    }
-    int index = iter->second;
-    return &(m_data.at(index).second);
+    return &at(name, warnOnFailure)->second;
 }
 mdn::Selection* mdn::Project::getSelection(std::string name, bool warnOnFailure) {
-    auto iter = m_addressingNameToIndex.find(name);
-    if (iter == m_addressingNameToIndex.cend()) {
-        if (warnOnFailure) {
-            std::ostringstream oss;
-            oss << "Invalid Mdn name (" << name << ")";
-            QMessageBox::warning(m_parent, "getSelection", oss.str().c_str());
-        }
-        return nullptr;
-    }
-    int index = iter->second;
-    return &(m_data[index].second);
+    return &at(name, warnOnFailure)->second;
 }
 
 
 const mdn::Mdn2d* mdn::Project::getMdn(int i, bool warnOnFailure) const {
-    const auto iter = m_data.find(i);
-    if (iter == m_data.cend()) {
-        if (warnOnFailure) {
-            std::ostringstream oss;
-            oss << "Invalid index (" << i << "), expecting 0 .. " << (m_data.size() - 1);
-            QMessageBox::warning(m_parent, "getMdn", oss.str().c_str());
-        }
-        return nullptr;
-    }
-    return &(iter->second.first);
+    return &at(i, warnOnFailure)->first;
 }
 mdn::Mdn2d* mdn::Project::getMdn(int i, bool warnOnFailure) {
-    auto iter = m_data.find(i);
-    if (iter == m_data.end()) {
-        if (warnOnFailure) {
-            std::ostringstream oss;
-            oss << "Invalid index (" << i << "), expecting 0 .. " << (m_data.size() - 1);
-            QMessageBox::warning(m_parent, "getMdn", oss.str().c_str());
-        }
-        return nullptr;
-    }
-    return &(iter->second.first);
+    return &at(i, warnOnFailure)->first;
 }
 
 
 const mdn::Mdn2d* mdn::Project::getMdn(std::string name, bool warnOnFailure) const {
-    const auto iter = m_addressingNameToIndex.find(name);
-    if (iter == m_addressingNameToIndex.cend()) {
-        if (warnOnFailure) {
-            std::ostringstream oss;
-            oss << "Invalid Mdn name (" << name << ")";
-            QMessageBox::warning(m_parent, "getMdn", oss.str().c_str());
-        }
-        return nullptr;
-    }
-    int index = iter->second;
-    return &(m_data.at(index).first);
+    return &at(name, warnOnFailure)->first;
 }
 mdn::Mdn2d* mdn::Project::getMdn(std::string name, bool warnOnFailure) {
-    auto iter = m_addressingNameToIndex.find(name);
-    if (iter == m_addressingNameToIndex.cend()) {
-        if (warnOnFailure) {
-            std::ostringstream oss;
-            oss << "Invalid Mdn name (" << name << ")";
-            QMessageBox::warning(m_parent, "getMdn", oss.str().c_str());
-        }
-        return nullptr;
-    }
-    int index = iter->second;
-    return &(m_data[index].first);
+    return &at(name, warnOnFailure)->first;
 }
 
 
@@ -575,26 +549,26 @@ void mdn::Project::insertMdn(Mdn2d& mdn, int index) {
 }
 
 
-std::string mdn::Project::duplicateMdn(int index) {
+std::pair<int, std::string> mdn::Project::duplicateMdn(int index) {
     Mdn2d* src = getMdn(index, true);
     if (!src) {
-        return "";
+        return std::pair<int, std::string>(-1, "");
     }
     Mdn2d dup = Mdn2d::Duplicate(*src);
     insertMdn(dup, index + 1);
-    return dup.name();
+    return std::pair<int, std::string>(index+1, dup.name());
 }
 
 
-std::string mdn::Project::duplicateMdn(const std::string& name) {
+std::pair<int, std::string> mdn::Project::duplicateMdn(const std::string& name) {
     Mdn2d* src = getMdn(name, true);
     if (!src) {
-        return "";
+        return std::pair<int, std::string>(-1, "");
     }
     int index = indexOfMdn(name);
     Mdn2d dup = Mdn2d::Duplicate(*src);
     insertMdn(dup, index + 1);
-    return dup.name();
+    return std::pair<int, std::string>(index+1, dup.name());
 }
 
 

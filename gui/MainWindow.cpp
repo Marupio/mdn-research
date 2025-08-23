@@ -1,6 +1,7 @@
 #include "MainWindow.hpp"
 
 #include <QInputDialog>
+#include <QTabBar>
 
 #include "MdnQtInterface.hpp"
 #include "NumberDisplayWidget.hpp"
@@ -15,28 +16,146 @@ MainWindow::MainWindow(QWidget *parent)
 }
 
 
-void MainWindow::renameActiveTab() {
-    int index = m_tabWidget->currentIndex();
-    auto* ndw = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(index));
+void MainWindow::renameTab(int index) {
+    const std::string origName = m_project->nameOfMdn(index);
+    QString origNameQ = mdn::MdnQtInterface::toQString(origName);
 
     bool ok = false;
-    QString newName = QInputDialog::getText(
+    QString newNameQ = QInputDialog::getText(
         this,
         "Rename",
         "MDN name:",
         QLineEdit::Normal,
-        QString::fromStdString(m_project->nameOfMdn(index)),
+        origNameQ,
         &ok
     );
-    if (!ok) return;
+    if (!ok) {
+        // User changed their mind
+        return;
+    }
+    std::string newName = mdn::MdnQtInterface::fromQString(newNameQ);
 
-    // 2) Ask Project to rename (so it can update maps + call mdn.setName())
-    TODO
-    // I think we need to use setName in the mdn, and suffer what it returns
-    std::string approved = m_project->rename(index, newName.toStdString());
+    if (newName == origName) {
+        // Nothing to do
+        return;
+    }
 
-    // 3) Reflect the (possibly modified) approved name back to the UI
-    m_tabWidget->setTabText(index, QString::fromStdString(approved));
+    std::string approvedName = m_project->renameMdn(index, newName);
+    if (approvedName == origName) {
+        Log_InfoQ("Failed to change name from '" << origName << "' to '" << newName << "'");
+        return;
+    }
+    QString approvedNameQ = mdn::MdnQtInterface::toQString(approvedName);
+    m_tabWidget->setTabText(index, approvedNameQ);
+
+    if (approvedName == newName) {
+        // User got what they expect, say no more
+        return;
+    }
+
+    // Name changed, but not to what user asked for - this warrants a text box
+    Log_InfoQ(
+        "Could not change '" << origName << "' to '" << newName << "', name already exists. "
+        << "Using '" << approvedName << "' instead."
+    );
+}
+
+
+void MainWindow::duplicateTab(int index)
+{
+    // 1) Ask Project to create a new model from this one
+    std::pair<int, std::string>newIdName = m_project->duplicateMdn(index);
+    int newIndex = newIdName.first;
+    std::string newName = newIdName.second;
+
+    // 2) Create a view for it
+    std::pair<mdn::Mdn2d, mdn::Selection>* entry = m_project->at(newIndex);
+    auto* w = new NumberDisplayWidget;
+    w->setModel(&entry->first, &entry->second);
+    w->setProject(m_project);
+
+    // 3) Insert UI tab right after the source
+    // int insertAt = index + 1;
+    int newTab = m_tabWidget->insertTab(newIndex, w, QString::fromStdString(newName));
+    m_tabWidget->setCurrentIndex(newTab);
+    w->setFocus();
+}
+
+
+void MainWindow::copyTabToClipboard(int index)
+{
+    auto* entry = m_project->at(index);
+    // Deep copy the model using your library's Duplicate
+    m_tabClipboard.mdn = mdn::Mdn2dBase::Duplicate(entry->first);
+    m_tabClipboard.sel = entry->second;  // shallow copy is fine if Selection owns plain data
+    m_tabClipboard.name = entry->first.name();
+    m_tabClipboard.has = true;
+}
+
+
+void MainWindow::pasteTab(int insertAt)
+{
+    if (!m_tabClipboard.has) return;
+
+// TODOTODO I DON'T KNOW ABOUT THIS ONE
+    // 1) Ask Project to add a new model “from clipboard”
+    int newProjIdx = m_project->addFromClipboard(m_tabClipboard.mdn, m_tabClipboard.sel, m_tabClipboard.name);
+    auto* entry = m_project->at(newProjIdx);
+
+    // 2) Create a view + insert UI tab
+    auto* w = new NumberDisplayWidget;
+    w->setModel(&entry->first, &entry->second);
+    w->setProject(m_project);
+    w->setProperty("projIndex", newProjIdx);
+
+    insertAt = std::clamp(insertAt, 0, m_tabWidget->count());
+    int newTab = m_tabWidget->insertTab(insertAt, w, QString::fromStdString(entry->first.name()));
+    m_tabWidget->setCurrentIndex(newTab);
+    w->setFocus();
+}
+
+void MainWindow::onTabContextMenu(const QPoint& pos)
+{
+    QTabBar* bar = m_tabWidget->tabBar();
+    const int index = bar->tabAt(pos);
+    if (index < 0) return;
+
+    QWidget* tabPage = m_tabWidget->widget(index);
+    auto* view = qobject_cast<NumberDisplayWidget*>(tabPage);
+    if (!view) return;
+
+    QMenu menu(this);
+    QAction* actDuplicate = menu.addAction("Duplicate");
+    QAction* actCopy      = menu.addAction("Copy");
+    QAction* actPaste     = menu.addAction("Paste");
+    QAction* actMoveLeft  = menu.addAction("Move Left");
+    QAction* actMoveRight = menu.addAction("Move Right");
+    menu.addSeparator();
+    QAction* actDelete    = menu.addAction("Delete");
+
+    actPaste->setEnabled(m_tabClipboard.has);
+
+    QAction* picked = menu.exec(bar->mapToGlobal(pos));
+    if (!picked) return;
+
+    if (picked == actDuplicate) {
+        duplicateTab(index);
+    } else if (picked == actCopy) {
+        copyTabToClipboard();
+    } else if (picked == actPaste) {
+        pasteTab(index + 1);               // insert after current tab
+    } else if (picked == actMoveLeft) {
+        const int to = std::max(0, index - 1);
+        if (to != index) onTabMoved(index, to);  // reuse your mover
+        // QTabWidget move for UI:
+        m_tabWidget->tabBar()->moveTab(index, to);
+    } else if (picked == actMoveRight) {
+        const int to = std::min(index + 1, m_tabWidget->count() - 1);
+        if (to != index) onTabMoved(index, to);
+        m_tabWidget->tabBar()->moveTab(index, to);
+    } else if (picked == actDelete) {
+        onTabCloseRequested(index);           // reuse your close handler
+    }
 }
 
 
@@ -86,24 +205,25 @@ void MainWindow::setupLayout() {
     // Top half - Mdn2d tab widget
     m_tabWidget = new QTabWidget(this);
     m_tabWidget->setTabPosition(QTabWidget::South);
+    auto* bar = m_tabWidget->tabBar();
+    bar->setMovable(true);
+    connect(
+        bar,
+        &QTabBar::tabMoved,
+        this,
+        &MainWindow::onTabMoved
+    );
+    bar->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(
+        bar,
+        &QTabBar::customContextMenuRequested,
+        this,
+        &MainWindow::onTabContextMenu
+    );
 
     // For now, Project will be held by MainWindow
     createNewProject();
-
-    // Create one dummy tab to start
-    m_display = new NumberDisplayWidget(this);
-
-    m_display->setProject(m_project);
-    m_display->setModel(m_project->activeMdn());
-
-    auto* mdn = new mdn::Mdn2d();
-    m_display->setModel(mdn);
-
-
-
-    m_tabWidget->addTab(m_display, QString("Mdn%1").arg(m_nextMdnId++));
-    m_mdnMap[m_nextMdnId] = mdn;
-    m_tabWidget->addTab(m_display, QString("Mdn%1").arg(m_nextMdnId++));
+    createTabs();
 
     // Bottom half - command history + input
     QWidget* commandPane = new QWidget(this);
@@ -156,4 +276,11 @@ void MainWindow::createTabs() {
         ndw->setModel(src, sel);
         int tab = m_tabWidget->addTab(ndw, qname);
     }
+}
+
+
+void MainWindow::onTabMoved(int from, int to) {
+    // Update your Project's index/name maps to reflect the new order.
+    // Qt only reorders the visual tabs — your m_data still needs to match.
+    m_project->moveMdn(from, to);
 }

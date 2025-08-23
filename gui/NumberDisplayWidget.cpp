@@ -6,6 +6,7 @@
 #include <QResizeEvent>
 
 #include "../library/Coord.hpp"
+#include "Project.hpp"
 
 
 NumberDisplayWidget::NumberDisplayWidget(QWidget* parent)
@@ -42,29 +43,82 @@ void NumberDisplayWidget::moveCursor(int dx, int dy) {
 }
 
 
-// void NumberDisplayWidget::keyPressEvent(QKeyEvent* e) {
-//     switch (e->key()) {
-//         case Qt::Key_Up:    emit cursorMoveRequested(0, -1, e->modifiers()); break;
-//         case Qt::Key_Down:  emit cursorMoveRequested(0,  1, e->modifiers()); break;
-//         case Qt::Key_Left:  emit cursorMoveRequested(-1, 0, e->modifiers()); break;
-//         case Qt::Key_Right: emit cursorMoveRequested( 1, 0, e->modifiers()); break;
-//         default: QWidget::keyPressEvent(e); return;
-//     }
-// }
 void NumberDisplayWidget::keyPressEvent(QKeyEvent* e) {
-    const bool extend = e->modifiers().testFlag(Qt::ShiftModifier);
-    switch (e->key()) {
-        case Qt::Key_Up:        m_project->cursorUp(extend);        break;
-        case Qt::Key_Down:      m_project->cursorDn(extend);        break;
-        case Qt::Key_Left:      m_project->cursorLf(extend);        break;
-        case Qt::Key_Right:     m_project->cursorRt(extend);        break;
-        case Qt::Key_PageUp:    m_project->cursorPageUp(extend);    break;
-        case Qt::Key_PageDown:  m_project->cursorPageDn(extend);    break;
-        case Qt::Key_PageLeft:  m_project->cursorPageLf(extend);    break;
-        case Qt::Key_PageRight: m_project->cursorPageRt(extend);    break;
-        case Qt::Key_Home:      m_project->cursorOrigin(extend);    break;
-        default: QWidget::keyPressEvent(e); return;
+    if (!m_selection || !m_project) {
+        Log_Warn("NumberDisplayWidget key press event handling with no valid project or selection");
+        QWidget::keyPressEvent(e);
+        return;
     }
+    const Qt::KeyboardModifiers mods = e->modifiers();
+    const bool shift  = mods.testFlag(Qt::ShiftModifier);
+    const bool ctrl   = mods.testFlag(Qt::ControlModifier);
+    const bool alt    = mods.testFlag(Qt::AltModifier);
+    const bool extend = shift;
+
+    // Navigation keys:
+    switch (e->key()) {
+        // ---- Arrow keys ----
+        case Qt::Key_Up:
+            if (ctrl) m_selection->cursorJumpUp(extend);
+            else      m_selection->cursorUp(extend);
+            e->accept(); return;
+
+        case Qt::Key_Down:
+            if (ctrl) m_selection->cursorJumpDn(extend);
+            else      m_selection->cursorDn(extend);
+            e->accept(); return;
+
+        case Qt::Key_Left:
+            if (ctrl) m_selection->cursorJumpLf(extend);
+            else      m_selection->cursorLf(extend);
+            e->accept(); return;
+
+        case Qt::Key_Right:
+            if (ctrl) m_selection->cursorJumpRt(extend);
+            else      m_selection->cursorRt(extend);
+            e->accept(); return;
+
+        // ---- Paging ----
+        case Qt::Key_PageUp:
+            if (alt)  m_selection->cursorPageLf(extend);
+            else      m_selection->cursorPageUp(extend);
+            e->accept(); return;
+
+        case Qt::Key_PageDown:
+            if (alt)  m_selection->cursorPageRt(extend);
+            else      m_selection->cursorPageDn(extend);
+            e->accept(); return;
+
+        // ---- Origin ----
+        case Qt::Key_Home:
+            m_selection->cursorOrigin(extend);
+            e->accept(); return;
+
+        // ---- Next / Prev by “entry” convention ----
+        // Enter / Return: move along Y (down by default)
+        case Qt::Key_Return:
+        case Qt::Key_Enter:
+            if (shift) m_selection->cursorPrevY(false);
+            else       m_selection->cursorNextY(false);
+            e->accept(); return;
+
+        // Tab: move along X (right by default)
+        case Qt::Key_Tab:
+            if (shift) m_selection->cursorPrevX(false);
+            else       m_selection->cursorNextX(false);
+            e->accept(); return;
+
+        // Shift+Tab comes in as Key_Backtab on some platforms
+        case Qt::Key_Backtab:
+            m_selection->cursorPrevX(false);
+            e->accept(); return;
+
+        default:
+            break;
+    }
+
+    // Fallback for anything we don't handle
+    QWidget::keyPressEvent(e);
 }
 
 
@@ -186,5 +240,9 @@ void NumberDisplayWidget::recalcGridGeometry() {
     const int h = height();
     m_cols = std::max(1, w / m_cellSize);
     m_rows = std::max(1, h / m_cellSize);
+
+    int pageCols = std::max(1, m_cols - 1);
+    int pageRows = std::max(1, m_rows - 1);
+    m_project->setPageStep(pageCols, pageRows);
 }
 

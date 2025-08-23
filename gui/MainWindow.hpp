@@ -27,8 +27,6 @@ class MainWindow : public QMainWindow {
 public:
     MainWindow(QWidget *parent = nullptr);
 
-    void renameActiveTab();
-
 signals:
     void newProjectRequested();
     void newMdn2dRequested();
@@ -38,11 +36,27 @@ signals:
     void saveMdn2dRequested();
     void closeProjectRequested();
 
+private slots:
+    void onTabContextMenu(const QPoint& pos);
+
 private:
     void createMenus();
     void setupLayout();
     void createNewProject();
     void createTabs();
+    void onTabMoved(int from, int to);
+
+    void renameTab(int index);
+    void duplicateTab(int index);
+    void copyTabToClipboard(int index);
+    void pasteTab(int insertAt);
+
+    struct TabClipboard {
+        bool has = false;
+        mdn::Mdn2d mdn;     // deep copy lives here
+        mdn::Selection sel; // copy selection also
+        std::string name;
+    } m_tabClipboard;
 
     QSplitter* m_splitter = nullptr;
 
