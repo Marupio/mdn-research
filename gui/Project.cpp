@@ -637,8 +637,6 @@ bool mdn::Project::deleteMdn(const std::string& name) {
 }
 
 
-
-
 void mdn::Project::copySelection() const {
     const mdn::Selection* sel = selection();
     if (!sel) {

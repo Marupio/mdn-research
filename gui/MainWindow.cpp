@@ -82,37 +82,23 @@ void MainWindow::duplicateTab(int index)
 }
 
 
-void MainWindow::copyTabToClipboard(int index)
+void MainWindow::copyTab(int index)
 {
-    auto* entry = m_project->at(index);
-    // Deep copy the model using your library's Duplicate
-    m_tabClipboard.mdn = mdn::Mdn2dBase::Duplicate(entry->first);
-    m_tabClipboard.sel = entry->second;  // shallow copy is fine if Selection owns plain data
-    m_tabClipboard.name = entry->first.name();
-    m_tabClipboard.has = true;
+    if (!m_project) {
+        return;
+    }
+    m_project->copyMdn(index);
 }
 
 
 void MainWindow::pasteTab(int insertAt)
 {
-    if (!m_tabClipboard.has) return;
-
-// TODOTODO I DON'T KNOW ABOUT THIS ONE
-    // 1) Ask Project to add a new model “from clipboard”
-    int newProjIdx = m_project->addFromClipboard(m_tabClipboard.mdn, m_tabClipboard.sel, m_tabClipboard.name);
-    auto* entry = m_project->at(newProjIdx);
-
-    // 2) Create a view + insert UI tab
-    auto* w = new NumberDisplayWidget;
-    w->setModel(&entry->first, &entry->second);
-    w->setProject(m_project);
-    w->setProperty("projIndex", newProjIdx);
-
-    insertAt = std::clamp(insertAt, 0, m_tabWidget->count());
-    int newTab = m_tabWidget->insertTab(insertAt, w, QString::fromStdString(entry->first.name()));
-    m_tabWidget->setCurrentIndex(newTab);
-    w->setFocus();
+    if (!m_project) {
+        return;
+    }
+    m_project->pasteOnSelection(insertAt);
 }
+
 
 void MainWindow::onTabContextMenu(const QPoint& pos)
 {
@@ -133,7 +119,10 @@ void MainWindow::onTabContextMenu(const QPoint& pos)
     menu.addSeparator();
     QAction* actDelete    = menu.addAction("Delete");
 
-    actPaste->setEnabled(m_tabClipboard.has);
+    // Enable/disable niceties
+    actMoveLeft->setEnabled(index > 0);
+    actMoveRight->setEnabled(index < m_tabWidget->count() - 1);
+    // Paste stays enabled; your Project::pasteOnSelection() validates scope and will warn if invalid.
 
     QAction* picked = menu.exec(bar->mapToGlobal(pos));
     if (!picked) return;
@@ -141,14 +130,16 @@ void MainWindow::onTabContextMenu(const QPoint& pos)
     if (picked == actDuplicate) {
         duplicateTab(index);
     } else if (picked == actCopy) {
-        copyTabToClipboard();
+        m_project->copyMdn(index);
     } else if (picked == actPaste) {
         pasteTab(index + 1);               // insert after current tab
     } else if (picked == actMoveLeft) {
-        const int to = std::max(0, index - 1);
-        if (to != index) onTabMoved(index, to);  // reuse your mover
-        // QTabWidget move for UI:
-        m_tabWidget->tabBar()->moveTab(index, to);
+        bool moveMdn(int fromIndex, int toIndex);
+        m_project->moveMdn(index, index-1);
+        // const int to = std::max(0, index - 1);
+        // if (to != index) onTabMoved(index, to);  // reuse your mover
+        // // QTabWidget move for UI:
+        // m_tabWidget->tabBar()->moveTab(index, to);
     } else if (picked == actMoveRight) {
         const int to = std::min(index + 1, m_tabWidget->count() - 1);
         if (to != index) onTabMoved(index, to);

@@ -227,8 +227,14 @@ public:
         //          Recover: returns false
         //      * Warning: if toIndex is out of range
         //          Recover: places number at the end
+        //  This is not the same as a tab moving - this is swapping the contents of tabs
         bool moveMdn(int fromIndex, int toIndex);
         bool moveMdn(const std::string& name, int toIndex);
+
+        // Tabs have swapped position, meaning the widgets with their data pointers have moved.  No
+        //  need to move data around, just need to change indexing
+        void swapIndexing(int fromIndex, int toIndex);
+
 
         // deleteMdn the Mdn2d at the given index or given name, shifting all higher entries one lower
         //  Messaging
@@ -237,6 +243,11 @@ public:
         bool deleteMdn(int index);
         bool deleteMdn(const std::string& name);
 
+        int addFromClipboard(
+            const mdn::Mdn2d& mdnCopy,
+            const Selection& selCopy,
+            const std::string& nameHint
+        );
 
     // Selection actions
 

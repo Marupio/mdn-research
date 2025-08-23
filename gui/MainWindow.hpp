@@ -48,15 +48,8 @@ private:
 
     void renameTab(int index);
     void duplicateTab(int index);
-    void copyTabToClipboard(int index);
+    void copyTab(int index);
     void pasteTab(int insertAt);
-
-    struct TabClipboard {
-        bool has = false;
-        mdn::Mdn2d mdn;     // deep copy lives here
-        mdn::Selection sel; // copy selection also
-        std::string name;
-    } m_tabClipboard;
 
     QSplitter* m_splitter = nullptr;
 
