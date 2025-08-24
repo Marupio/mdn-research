@@ -301,7 +301,12 @@ std::string mdn::Project::renameMdn(int i, const std::string& newName) {
 std::vector<std::string> mdn::Project::toc() const {
     int nElems = size();
     if (nElems != m_addressingIndexToName.size() || nElems != m_addressingNameToIndex.size()) {
-        mdn::MetaDataInvalid err("Project indexing size mismatch");
+        mdn::MetaDataInvalid err(
+            "Project indexing size mismatch, (" +
+                std::to_string(nElems) + "," +
+                std::to_string(m_addressingIndexToName.size()) + "," +
+                std::to_string(m_addressingNameToIndex.size()) + ")"
+        );
         Log_ErrorQ(err.what());
         throw err;
     }
@@ -621,6 +626,7 @@ bool mdn::Project::deleteMdn(int index) {
     m_addressingIndexToName.erase(index);
     m_addressingNameToIndex.erase(name);
     shiftMdnTabsLeft(index+1);
+    return true;
 }
 
 
@@ -634,6 +640,7 @@ bool mdn::Project::deleteMdn(const std::string& name) {
     m_addressingIndexToName.erase(index);
     m_addressingNameToIndex.erase(name);
     shiftMdnTabsLeft(index+1);
+    return true;
 }
 
 
@@ -649,7 +656,9 @@ void mdn::Project::copySelection() const {
     }
     Rect r = sel->rect();
     // r.fixOrdering();
-    encodeRectToClipboard(*src, r, QStringLiteral("rect"), QString::fromStdString(src->name()));
+    mdn::Clipboard::encodeRectToClipboard(
+        *src, r, QStringLiteral("rect"), QString::fromStdString(src->name())
+    );
 }
 
 
@@ -664,7 +673,9 @@ void mdn::Project::copyMdn(int index) const {
     }
 
     const Rect b = src->bounds();
-    encodeRectToClipboard(*src, b, QStringLiteral("mdn"), QString::fromStdString(src->name()));
+    mdn::Clipboard::encodeRectToClipboard(
+        *src, b, QStringLiteral("mdn"), QString::fromStdString(src->name())
+    );
 }
 
 
@@ -678,11 +689,11 @@ bool mdn::Project::pasteOnSelection(int index) {
     const mdn::Selection* sel = selection();
     if (!sel) {
         Log_WarnQ("Failed to acquire selection");
-        return;
+        return false;
     }
     Mdn2d* dst = sel->get();
     if (!dst || !sel->rect().isValid()) {
-        return;
+        return false;
     }
     Rect r = sel->rect();
     Clipboard::DecodedPaste p = Clipboard::decodeClipboard();
@@ -759,9 +770,13 @@ void mdn::Project::deleteSelection() {
         return;
     }
     Mdn2d* dst = sel->get();
-    if (!dst || !sel->rect().isValid()) {
+    if (!dst) {
         return;
     }
     Rect r = sel->rect();
-    dst->setToZero(r);
+    if (r.empty()) {
+        deleteMdn(dst->name());
+    } else {
+        dst->setToZero(r);
+    }
 }

@@ -274,6 +274,11 @@ public:
         return !isValid();
     }
 
+    // Returns true if the Rect is "empty", i.e. isInvalid - this is synonymous
+    bool empty() const {
+        return !isValid();
+    }
+
     // Treats each component independently, ensures min and max are in the correct variable
     void fixOrdering() {
         if (m_min.x() > m_max.x()) std::swap(m_min.x(), m_max.x());

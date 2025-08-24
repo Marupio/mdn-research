@@ -16,7 +16,7 @@ public:
     NumberDisplayWidget(QWidget* parent = nullptr);
 
     void setProject(mdn::Project* proj);
-    void setModel(const mdn::Mdn2d* mdn, const mdn::Selection* sel);
+    void setModel(mdn::Mdn2d* mdn, mdn::Selection* sel);
     void setViewCenter(int x, int y);
     void moveCursor(int dx, int dy);
 

@@ -37,7 +37,7 @@ public:
 
     static DecodedPaste decodeClipboard();
 
-    void encodeRectToClipboard(
+    static void encodeRectToClipboard(
         const Mdn2d& src,
         const Rect& r,
         const QString& scope,

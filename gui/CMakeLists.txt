@@ -21,13 +21,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(mdn_gui
+    Clipboard.cpp Clipboard.hpp
     main.cpp
-    MainWindow.cpp
-    MainWindow.hpp
-    NumberDisplayWidget.cpp
-    NumberDisplayWidget.hpp
+    MainWindow.cpp MainWindow.hpp
     MdnMainWindow.hpp MdnMainWindow.cpp MdnMainWindow.ui
+    NumberDisplayWidget.cpp NumberDisplayWidget.hpp
     OperationHistory.ui
+    Project.hpp Project.cpp
 )
 
 target_link_libraries(mdn_gui PRIVATE ${QT_LIBS} mdn)

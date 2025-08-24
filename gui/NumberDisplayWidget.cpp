@@ -22,7 +22,7 @@ void NumberDisplayWidget::setProject(mdn::Project* proj) {
 }
 
 
-void NumberDisplayWidget::setModel(const mdn::Mdn2d* mdn, const mdn::Selection* sel) {
+void NumberDisplayWidget::setModel(mdn::Mdn2d* mdn, mdn::Selection* sel) {
     m_model = mdn;
     m_selection = sel;
     update();
@@ -179,16 +179,6 @@ void NumberDisplayWidget::paintEvent(QPaintEvent* event) {
         axisPen.setWidth(origWidth);
         axisPen.setColor(m_defaultColors_gridLines);
         painter.setPen(axisPen);
-    }
-}
-
-
-void NumberDisplayWidget::keyPressEvent(QKeyEvent* event) {
-    switch (event->key()) {
-        case Qt::Key_Left:  moveCursor(-1, 0); break;
-        case Qt::Key_Right: moveCursor(1, 0); break;
-        case Qt::Key_Up:    moveCursor(0, -1); break;
-        case Qt::Key_Down:  moveCursor(0, 1); break;
     }
 }
 

@@ -9,6 +9,7 @@
 #include <QString>
 #include <QPoint>
 #include <QRect>
+#include <QJsonObject>
 
 #include "../library/Coord.hpp"
 #include "../library/Rect.hpp"

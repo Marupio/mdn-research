@@ -286,11 +286,6 @@ public:
         //     // emit signal, update UI
         // }
 
-        // Encodes a rectangular slice from src as mdn-selection JSON + TSV fallbacks.
-        static void encodeRectToClipboard(
-            const Mdn2d& src, const Rect& r, const QString& scope, const QString& originMdnName
-        );
-
         // Copy whole MDN from a tab context (scope:"mdn").
         void copyMdn(int index) const;
 
@@ -336,7 +331,8 @@ public:
         //  A-1 - Mdn -> Mdn
         bool pasteOnSelection(int index=-1);
 
-        // Perform 'delete' operation on the selection
+        // Perform 'delete' operation on the selection, does not delete the Selection object, rather
+        //  deletes the data enclosed by the selection.
         void deleteSelection();
 
 };

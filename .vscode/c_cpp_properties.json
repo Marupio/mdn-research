@@ -30,7 +30,7 @@
             "/home/dave/QT/6.8.1/gcc_64/include/QtCore",
             "/home/dave/QT/6.8.1/gcc_64/include/QtGui"
           ],
-          "defines": ["QT_WIDGETS_LIB", "QT_GUI_LIB", "QT_CORE_LIB", "MDN_DEBUG"],
+          "defines": ["QT_WIDGETS_LIB", "QT_GUI_LIB", "QT_CORE_LIB", "MDN_DEBUG", "MDN_LOGS"],
           "compilerPath": "/usr/bin/g++",
           "cStandard": "c17",
           "cppStandard": "c++17",

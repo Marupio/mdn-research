@@ -44,12 +44,14 @@ private:
     void setupLayout();
     void createNewProject();
     void createTabs();
-    void onTabMoved(int from, int to);
 
+    void onTabMoved(int from, int to);
+    void onTabCloseRequested(int index);
     void renameTab(int index);
     void duplicateTab(int index);
     void copyTab(int index);
     void pasteTab(int insertAt);
+    void syncTabsToProject();
 
     QSplitter* m_splitter = nullptr;
 

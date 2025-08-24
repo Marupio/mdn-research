@@ -130,15 +130,15 @@ private:
 //  formatted prefix to each log entry:
 //      [Mdn2dBase.cpp:598,setValue]
 #define InternalLoggerFileRef \
-        "[" + Tools::removePath(__FILE__) + ":" + std::to_string(__LINE__) + "," + \
+        "[" + mdn::Tools::removePath(__FILE__) + ":" + std::to_string(__LINE__) + "," + \
         __func__ + "] "
 
 #define Internal_AssertStart(expression, messageIfFailed) \
     if (!(expression)) { \
         std::ostringstream oss; \
         oss << InternalLoggerFileRef << messageIfFailed << std::endl; \
-        FailedAssertion err = FailedAssertion(oss.str().c_str()); \
-        Logger& loginst = Logger::instance(); \
+        mdn::FailedAssertion err = mdn::FailedAssertion(oss.str().c_str()); \
+        mdn::Logger& loginst = mdn::Logger::instance(); \
         loginst.error(err.what());
 
 // The library is independent of GUI frameworks, but here exists a macro allowing a QMessageBox,
@@ -176,17 +176,17 @@ private:
         std::string fileRef( \
             FILE_REF \
         ); \
-        Logger& loginst = Logger::instance(); \
+        mdn::Logger& loginst = mdn::Logger::instance(); \
         oss << loginst.indent() << fileRef << message; \
         loginst.level(oss.str());
 
-    #define InternalLoggerEchoToQ QMessageBox("Logger", oss.str().c_str()); }
+    #define InternalLoggerEchoToQ QMessageBox::information(nullptr, "Logger", oss.str().c_str()); }
 
     // Internal use - As above, but with indentation:
     //      [        |Mdn2dBase.cpp:598,setValue]
     #define InternalIdentedLoggerFileRef \
-            "[" + std::to_string(Logger::instance().getIndent()) + "|" \
-            + Tools::removePath(__FILE__) + ":" + std::to_string(__LINE__) + "," + \
+            "[" + std::to_string(mdn::Logger::instance().getIndent()) + "|" \
+            + mdn::Tools::removePath(__FILE__) + ":" + std::to_string(__LINE__) + "," + \
             __func__ + "] "
 
     // Internal use - appends m_name, an object's member variable, to the end of the file ref:
@@ -235,11 +235,11 @@ private:
             msgStr = oss.str(); \
         } \
         if (msgStr.empty()) { \
-            Logger::instance().increaseIndent(); \
+            mdn::Logger::instance().increaseIndent(); \
             LOGGER_MACRO(msgStr, level); \
         } else { \
             LOGGER_MACRO("", level); \
-            Logger::instance().increaseIndent(); \
+            mdn::Logger::instance().increaseIndent(); \
             LOGGER_MACRO(msgStr, level); \
         } \
     }

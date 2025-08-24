@@ -16,6 +16,191 @@ MainWindow::MainWindow(QWidget *parent)
 }
 
 
+void MainWindow::onTabContextMenu(const QPoint& pos)
+{
+    QTabBar* bar = m_tabWidget->tabBar();
+    const int index = bar->tabAt(pos);
+    if (index < 0) return;
+
+    QWidget* tabPage = m_tabWidget->widget(index);
+    auto* view = qobject_cast<NumberDisplayWidget*>(tabPage);
+    if (!view) return;
+
+    QMenu menu(this);
+    QAction* actDuplicate = menu.addAction("Duplicate");
+    QAction* actCopy      = menu.addAction("Copy");
+    QAction* actPaste     = menu.addAction("Paste");
+    // QAction* actMoveLeft  = menu.addAction("Move Left");
+    // QAction* actMoveRight = menu.addAction("Move Right");
+    menu.addSeparator();
+    QAction* actDelete    = menu.addAction("Delete");
+
+    // Enable/disable niceties
+    // actMoveLeft->setEnabled(index > 0);
+    // actMoveRight->setEnabled(index < m_tabWidget->count() - 1);
+    // Paste stays enabled; your Project::pasteOnSelection() validates scope and will warn if invalid.
+
+    QAction* picked = menu.exec(bar->mapToGlobal(pos));
+    if (!picked) return;
+
+    if (picked == actDuplicate) {
+        duplicateTab(index);
+    } else if (picked == actCopy) {
+        m_project->copyMdn(index);
+    } else if (picked == actPaste) {
+        pasteTab(index + 1);               // insert after current tab
+    // } else if (picked == actMoveLeft) {
+    //     bool moveMdn(int fromIndex, int toIndex);
+    //     m_project->moveMdn(index, index-1);
+    //     // const int to = std::max(0, index - 1);
+    //     // if (to != index) onTabMoved(index, to);  // reuse your mover
+    //     // // QTabWidget move for UI:
+    //     // m_tabWidget->tabBar()->moveTab(index, to);
+    // } else if (picked == actMoveRight) {
+    //     const int to = std::min(index + 1, m_tabWidget->count() - 1);
+    //     if (to != index) onTabMoved(index, to);
+    //     m_tabWidget->tabBar()->moveTab(index, to);
+    } else if (picked == actDelete) {
+        onTabCloseRequested(index);           // reuse your close handler
+    }
+}
+
+
+void MainWindow::createMenus() {
+    QMenu* fileMenu = menuBar()->addMenu("&File");
+    fileMenu->addAction("New Project", this, &MainWindow::newProjectRequested);
+    fileMenu->addAction("New Mdn2d", this, &MainWindow::newMdn2dRequested);
+    fileMenu->addSeparator();
+    fileMenu->addAction("Open Project", this, &MainWindow::openProjectRequested);
+    fileMenu->addAction("Open Mdn2d", this, &MainWindow::openMdn2dRequested);
+    fileMenu->addSeparator();
+    fileMenu->addAction("Save Project", this, &MainWindow::saveProjectRequested);
+    fileMenu->addAction("Save Mdn2d", this, &MainWindow::saveMdn2dRequested);
+    fileMenu->addSeparator();
+    fileMenu->addAction("Close Project", this, &MainWindow::closeProjectRequested);
+    fileMenu->addAction("Exit", this, &MainWindow::close);
+
+    QMenu* editMenu = menuBar()->addMenu("&Edit");
+    editMenu->addAction("Undo");
+    editMenu->addAction("Redo");
+    editMenu->addSeparator();
+    editMenu->addAction("Select All");
+    editMenu->addAction("Select Row");
+    editMenu->addAction("Select Column");
+    editMenu->addAction("Select Box");
+    editMenu->addSeparator();
+    editMenu->addAction("Properties");
+    editMenu->addSeparator();
+    editMenu->addAction("Copy");
+    editMenu->addAction("Cut");
+    editMenu->addAction("Paste");
+    editMenu->addSeparator();
+    editMenu->addAction("Delete");
+
+    QMenu* toolsMenu = menuBar()->addMenu("&Tools");
+    // Placeholder for future items
+
+    QMenu* helpMenu = menuBar()->addMenu("&Help");
+    helpMenu->addAction("Get Help");
+    helpMenu->addAction("Donate");
+    helpMenu->addAction("About");
+}
+
+
+void MainWindow::setupLayout() {
+    m_splitter = new QSplitter(Qt::Vertical, this);
+
+    // Top half - Mdn2d tab widget
+    m_tabWidget = new QTabWidget(this);
+    m_tabWidget->setTabPosition(QTabWidget::South);
+    auto* bar = m_tabWidget->tabBar();
+    bar->setMovable(true);
+    connect(
+        bar,                        // sender
+        &QTabBar::tabMoved,         // signal
+        this,                       // receiver
+        &MainWindow::onTabMoved     // method
+    );
+    bar->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(
+        bar,
+        &QTabBar::customContextMenuRequested,
+        this,
+        &MainWindow::onTabContextMenu
+    );
+
+    // For now, Project will be held by MainWindow
+    createNewProject();
+    createTabs();
+
+    // Bottom half - command history + input
+    QWidget* commandPane = new QWidget(this);
+    QVBoxLayout* cmdLayout = new QVBoxLayout(commandPane);
+    m_commandHistory = new QTextEdit(commandPane);
+    m_commandHistory->setReadOnly(true);
+    QHBoxLayout* inputLayout = new QHBoxLayout();
+    m_commandInput = new QLineEdit(commandPane);
+    m_submitButton = new QPushButton("Submit", commandPane);
+    m_copyButton = new QPushButton("Copy", commandPane);
+    inputLayout->addWidget(m_commandInput);
+    inputLayout->addWidget(m_submitButton);
+    inputLayout->addWidget(m_copyButton);
+    cmdLayout->addWidget(m_commandHistory);
+    cmdLayout->addLayout(inputLayout);
+
+    m_splitter->addWidget(m_tabWidget);
+    m_splitter->addWidget(commandPane);
+    m_splitter->setStretchFactor(0, 3);
+    m_splitter->setStretchFactor(1, 1);
+
+    setCentralWidget(m_splitter);
+}
+
+
+void MainWindow::createNewProject() {
+    if (m_project) {
+        delete m_project;
+        m_project = nullptr;
+    }
+    m_project = new mdn::Project(this);
+
+}
+
+
+void MainWindow::createTabs() {
+    if (!m_project) {
+        // Nothing to do
+        return;
+    }
+
+    const std::unordered_map<int, std::string>& tabNames(m_project->data_addressingIndexToName());
+    std::vector<std::string> names(m_project->toc());
+    for (int index = 0; index < names.size(); ++index) {
+        mdn::Mdn2d* src = m_project->getMdn(index, true);
+        mdn::Selection* sel = m_project->getSelection(index);
+        QString qname = mdn::MdnQtInterface::toQString(names[index]);
+        auto* ndw = new NumberDisplayWidget;
+        ndw->setProject(m_project);
+        ndw->setModel(src, sel);
+        int tab = m_tabWidget->addTab(ndw, qname);
+    }
+}
+
+
+void MainWindow::onTabMoved(int from, int to) {
+    m_project->moveMdn(from, to);
+    syncTabsToProject();
+}
+
+
+void MainWindow::onTabCloseRequested(int index) {
+    if (!m_project) {
+        return;
+    }
+    m_project->deleteMdn(index);
+}
+
+
 void MainWindow::renameTab(int index) {
     const std::string origName = m_project->nameOfMdn(index);
     QString origNameQ = mdn::MdnQtInterface::toQString(origName);
@@ -100,178 +285,22 @@ void MainWindow::pasteTab(int insertAt)
 }
 
 
-void MainWindow::onTabContextMenu(const QPoint& pos)
-{
-    QTabBar* bar = m_tabWidget->tabBar();
-    const int index = bar->tabAt(pos);
-    if (index < 0) return;
-
-    QWidget* tabPage = m_tabWidget->widget(index);
-    auto* view = qobject_cast<NumberDisplayWidget*>(tabPage);
-    if (!view) return;
-
-    QMenu menu(this);
-    QAction* actDuplicate = menu.addAction("Duplicate");
-    QAction* actCopy      = menu.addAction("Copy");
-    QAction* actPaste     = menu.addAction("Paste");
-    QAction* actMoveLeft  = menu.addAction("Move Left");
-    QAction* actMoveRight = menu.addAction("Move Right");
-    menu.addSeparator();
-    QAction* actDelete    = menu.addAction("Delete");
-
-    // Enable/disable niceties
-    actMoveLeft->setEnabled(index > 0);
-    actMoveRight->setEnabled(index < m_tabWidget->count() - 1);
-    // Paste stays enabled; your Project::pasteOnSelection() validates scope and will warn if invalid.
-
-    QAction* picked = menu.exec(bar->mapToGlobal(pos));
-    if (!picked) return;
-
-    if (picked == actDuplicate) {
-        duplicateTab(index);
-    } else if (picked == actCopy) {
-        m_project->copyMdn(index);
-    } else if (picked == actPaste) {
-        pasteTab(index + 1);               // insert after current tab
-    } else if (picked == actMoveLeft) {
-        bool moveMdn(int fromIndex, int toIndex);
-        m_project->moveMdn(index, index-1);
-        // const int to = std::max(0, index - 1);
-        // if (to != index) onTabMoved(index, to);  // reuse your mover
-        // // QTabWidget move for UI:
-        // m_tabWidget->tabBar()->moveTab(index, to);
-    } else if (picked == actMoveRight) {
-        const int to = std::min(index + 1, m_tabWidget->count() - 1);
-        if (to != index) onTabMoved(index, to);
-        m_tabWidget->tabBar()->moveTab(index, to);
-    } else if (picked == actDelete) {
-        onTabCloseRequested(index);           // reuse your close handler
-    }
-}
-
-
-void MainWindow::createMenus() {
-    QMenu* fileMenu = menuBar()->addMenu("&File");
-    fileMenu->addAction("New Project", this, &MainWindow::newProjectRequested);
-    fileMenu->addAction("New Mdn2d", this, &MainWindow::newMdn2dRequested);
-    fileMenu->addSeparator();
-    fileMenu->addAction("Open Project", this, &MainWindow::openProjectRequested);
-    fileMenu->addAction("Open Mdn2d", this, &MainWindow::openMdn2dRequested);
-    fileMenu->addSeparator();
-    fileMenu->addAction("Save Project", this, &MainWindow::saveProjectRequested);
-    fileMenu->addAction("Save Mdn2d", this, &MainWindow::saveMdn2dRequested);
-    fileMenu->addSeparator();
-    fileMenu->addAction("Close Project", this, &MainWindow::closeProjectRequested);
-    fileMenu->addAction("Exit", this, &MainWindow::close);
-
-    QMenu* editMenu = menuBar()->addMenu("&Edit");
-    editMenu->addAction("Undo");
-    editMenu->addAction("Redo");
-    editMenu->addSeparator();
-    editMenu->addAction("Select All");
-    editMenu->addAction("Select Row");
-    editMenu->addAction("Select Column");
-    editMenu->addAction("Select Box");
-    editMenu->addSeparator();
-    editMenu->addAction("Properties");
-    editMenu->addSeparator();
-    editMenu->addAction("Copy");
-    editMenu->addAction("Cut");
-    editMenu->addAction("Paste");
-    editMenu->addSeparator();
-    editMenu->addAction("Delete");
-
-    QMenu* toolsMenu = menuBar()->addMenu("&Tools");
-    // Placeholder for future items
-
-    QMenu* helpMenu = menuBar()->addMenu("&Help");
-    helpMenu->addAction("Get Help");
-    helpMenu->addAction("Donate");
-    helpMenu->addAction("About");
-}
-
-void MainWindow::setupLayout() {
-    m_splitter = new QSplitter(Qt::Vertical, this);
-
-    // Top half - Mdn2d tab widget
-    m_tabWidget = new QTabWidget(this);
-    m_tabWidget->setTabPosition(QTabWidget::South);
-    auto* bar = m_tabWidget->tabBar();
-    bar->setMovable(true);
-    connect(
-        bar,
-        &QTabBar::tabMoved,
-        this,
-        &MainWindow::onTabMoved
-    );
-    bar->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(
-        bar,
-        &QTabBar::customContextMenuRequested,
-        this,
-        &MainWindow::onTabContextMenu
-    );
-
-    // For now, Project will be held by MainWindow
-    createNewProject();
-    createTabs();
-
-    // Bottom half - command history + input
-    QWidget* commandPane = new QWidget(this);
-    QVBoxLayout* cmdLayout = new QVBoxLayout(commandPane);
-    m_commandHistory = new QTextEdit(commandPane);
-    m_commandHistory->setReadOnly(true);
-    QHBoxLayout* inputLayout = new QHBoxLayout();
-    m_commandInput = new QLineEdit(commandPane);
-    m_submitButton = new QPushButton("Submit", commandPane);
-    m_copyButton = new QPushButton("Copy", commandPane);
-    inputLayout->addWidget(m_commandInput);
-    inputLayout->addWidget(m_submitButton);
-    inputLayout->addWidget(m_copyButton);
-    cmdLayout->addWidget(m_commandHistory);
-    cmdLayout->addLayout(inputLayout);
-
-    m_splitter->addWidget(m_tabWidget);
-    m_splitter->addWidget(commandPane);
-    m_splitter->setStretchFactor(0, 3);
-    m_splitter->setStretchFactor(1, 1);
-
-    setCentralWidget(m_splitter);
-}
-
-
-void MainWindow::createNewProject() {
-    if (m_project) {
-        delete m_project;
-        m_project = nullptr;
-    }
-    m_project = new mdn::Project(this);
-
-}
-
-
-void MainWindow::createTabs() {
+void MainWindow::syncTabsToProject() {
     if (!m_project) {
-        // Nothing to do
         return;
     }
+    const int n = m_tabWidget->count();
+    for (int i = 0; i < n; ++i) {
+        auto* view = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(i));
+        if (!view) {
+            continue;
+        }
 
-    const std::unordered_map<int, std::string>& tabNames(m_project->data_addressingIndexToName());
-    std::vector<std::string> names(m_project->toc());
-    for (int index = 0; index < names.size(); ++index) {
-        mdn::Mdn2d* src = m_project->getMdn(index, true);
-        mdn::Selection* sel = m_project->getSelection(index);
-        QString qname = mdn::MdnQtInterface::toQString(names[index]);
-        auto* ndw = new NumberDisplayWidget;
-        ndw->setProject(m_project);
-        ndw->setModel(src, sel);
-        int tab = m_tabWidget->addTab(ndw, qname);
+        std::pair<mdn::Mdn2d, mdn::Selection>* entry = m_project->at(i);
+        mdn::Mdn2d& srcNum(entry->first);
+        mdn::Selection& srcSel(entry->second);
+
+        view->setModel(&srcNum, &srcSel);
+        m_tabWidget->setTabText(i, QString::fromStdString(srcNum.name())); // add mdnName(int)
     }
-}
-
-
-void MainWindow::onTabMoved(int from, int to) {
-    // Update your Project's index/name maps to reflect the new order.
-    // Qt only reorders the visual tabs — your m_data still needs to match.
-    m_project->moveMdn(from, to);
 }
