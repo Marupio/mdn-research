@@ -43,9 +43,13 @@ protected:
     // m_addressingIndexToName[index] = name
     std::unordered_map<int, std::string> m_addressingIndexToName;
 
-    // Current active selection and number;
+    // Current active tab data
     Selection* m_activeSelection;
     Mdn2d* m_activeMdn2d;
+
+    //  TODO - Use this active data element instead of individuals above
+    // std::pair<Mdn2d, Selection>* m_activePair;
+
 
     // *** Protected member functions
 

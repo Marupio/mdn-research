@@ -12,6 +12,7 @@
 #include "../library/MdnException.hpp"
 #include "../library/Rect.hpp"
 #include "../library/SignConvention.hpp"
+#include "../library/Tools.hpp"
 #include "Clipboard.hpp"
 #include "Selection.hpp"
 #include "MainWindow.hpp"
@@ -21,6 +22,7 @@
 int mdn::Project::m_untitledNumber = 0;
 
 void mdn::Project::shiftMdnTabsRight(int start, int end, int shift) {
+    Log_Debug3_H("start=" << start << ",end=" << end << ",shift=" << shift);
     int lastI = m_data.size() - 1;
     if (end > lastI || end < 0) {
         end = lastI;
@@ -30,15 +32,17 @@ void mdn::Project::shiftMdnTabsRight(int start, int end, int shift) {
         start = end;
         end = tmp;
     }
+    Log_Debug3("updated values:start=" << start << ",end=" << end << ",shift=" << shift);
     if (start > lastI) {
         // Already at the end
+        Log_Debug3_T("No work needed");
         return;
     }
     if (shift <= 0) {
         InvalidArgument err = InvalidArgument(
             "Tab shift (" + std::to_string(shift) + ") cannot be zero or negative."
         );
-        QMessageBox::critical(m_parent, "shiftMdnTabsRight", err.what());
+        Log_ErrorQ(err.what());
         throw err;
     }
     for (int tabI = end; tabI >= start; --tabI) {
@@ -46,17 +50,21 @@ void mdn::Project::shiftMdnTabsRight(int start, int end, int shift) {
         int newIndex = tabI + shift;
         m_addressingIndexToName.erase(tabI);
         m_addressingIndexToName.insert({newIndex, curName});
-
+        Log_Debug4(
+            "Moving {'" << curName << "', " << tabI << "}, to "
+                << "{'" << curName << "', " << newIndex << "}"
+        );
         auto node = m_data.extract(tabI);
         node.key() = newIndex;
         m_data.insert(std::move(node));
-
         m_addressingNameToIndex[curName] = newIndex;
     }
+    Log_Debug3_T("");
 }
 
 
 void mdn::Project::shiftMdnTabsLeft(int start, int end, int shift) {
+    Log_Debug3_H("start=" << start << ",end=" << end << ",shift=" << shift);
     int lastI = m_data.size() - 1;
     if (end > lastI || end < 0) {
         end = lastI;
@@ -66,15 +74,17 @@ void mdn::Project::shiftMdnTabsLeft(int start, int end, int shift) {
         start = end;
         end = tmp;
     }
+    Log_Debug3("updated values:start=" << start << ",end=" << end << ",shift=" << shift);
     if (start > lastI) {
         // Already at the end
+        Log_Debug3_T("No work needed");
         return;
     }
     if (shift <= 0) {
         InvalidArgument err = InvalidArgument(
             "Tab shift (" + std::to_string(shift) + ") cannot be zero or negative."
         );
-        QMessageBox::critical(m_parent, "shiftMdnTabsRight", err.what());
+        Log_ErrorQ(err.what());
         throw err;
     }
     for (int tabI = start + shift; tabI <= end; ++tabI) {
@@ -82,6 +92,10 @@ void mdn::Project::shiftMdnTabsLeft(int start, int end, int shift) {
         int newIndex = tabI - shift;
         m_addressingIndexToName.erase(tabI);
         m_addressingIndexToName.insert({newIndex, curName});
+        Log_Debug4(
+            "Moving {'" << curName << "', " << tabI << "}, to "
+                << "{'" << curName << "', " << newIndex << "}"
+        );
 
         auto node = m_data.extract(tabI);
         node.key() = newIndex;
@@ -89,6 +103,7 @@ void mdn::Project::shiftMdnTabsLeft(int start, int end, int shift) {
 
         m_addressingNameToIndex[curName] = newIndex;
     }
+    Log_Debug3_T("");
 }
 
 
@@ -99,15 +114,22 @@ mdn::Project::Project(MainWindow* parent, std::string name, int nStartMdn):
     if (m_name.empty()) {
         m_name = "untitled-" + std::to_string(m_untitledNumber++);
     }
+    Log_Debug2_H(
+        "parent " << (parent ? "not null" : "null") << ",name=" << name << ",nStart=" << nStartMdn
+    );
     if (nStartMdn == 0) {
         nStartMdn += 1;
     }
     for (int i = 0; i < nStartMdn; ++i) {
         std::string nextName = Mdn2d::static_generateNextName();
         Mdn2d newMdn = Mdn2d::NewInstance(m_config, nextName);
+        Log_Debug4(
+            "Using name '" << nextName << "', built mdn(confirm:'" << newMdn.name() << ",)"
+        );
         appendMdn(newMdn);
     }
     setActiveMdn(0);
+    Log_Debug2_T("");
 }
 
 
@@ -115,33 +137,37 @@ std::string mdn::Project::requestMdnNameChange(
     const std::string& origName,
     const std::string& newName
 ) {
+    Log_Debug3_H("origName='" << origName << "',newName='" << newName << "'");
     if (origName == newName) {
         // Nothing to change
+        Log_Debug3_T("Nothing to change, returning '" << newName << "'");
         return newName;
     }
     if (!mdnNameExists(origName)) {
         InvalidArgument err = InvalidArgument("No Mdn2d named '" + origName + "' exists.");
-        QMessageBox::critical(m_parent, "Name Missing", err.what());
+        Log_ErrorQ(err.what());
         throw err;
     }
     if (mdnNameExists(newName)) {
         std::ostringstream oss;
-        oss << "Cannot rename '" << origName << "' as '" << newName
-            << "'. Name already exists." << std::endl;
-        QMessageBox::information(
-            m_parent,
-            "Project ",
-            oss.str().c_str()
+        Log_InfoQ(
+            "Cannot rename '" << origName << "' as '" << newName << "'. Name already exists."
         );
+        Log_Debug3_T("Cannot rename, returning '" << origName << "'");
         return origName;
     }
     int index = m_addressingNameToIndex[origName];
     m_addressingNameToIndex.erase(origName);
     m_addressingNameToIndex.insert({newName, index});
     m_addressingIndexToName[index] = newName;
+    Log_Debug4(
+        "Renaming {'" << origName << "'," << index << "}, as "
+            << "{'" << newName << "'," << index << "}"
+    );
 
     // This is not needed here, caller does this
     // m_data[index].m_name = newName;
+    Log_Debug3_T("Returning '" << newName << "'");
     return newName;
 }
 
@@ -150,23 +176,35 @@ void mdn::Project::updateSelection() const {
     if (!m_parent) {
         return;
     }
+    AssertQ(false, "This function is not implemented");
     // Not yet implemented:
     // m_parent->updateSelection(m_activeMdn2d, m_activeSelection);
 }
 
 
 void mdn::Project::setConfig(Mdn2dConfig newConfig) {
+    Log_Debug2_H("newConfig=" << newConfig);
     if (m_data.empty()) {
         m_config = newConfig;
+        Log_Debug2_T("No impact");
         return;
     }
     // For now, assume config is the same across all Mdn2d's
     Mdn2d* first = firstMdn();
     AssertQ(first, "Failed to acquire firstMdn()");
     Mdn2dConfigImpact impact = first->assessConfigChange(newConfig);
+    if (Log_Showing_Debug4) {
+        Log_Debug4(
+            "Config change impact: " << Mdn2dConfigImpactToName(impact) << ", i.e. "
+                << Mdn2dConfigImpactToDescription(impact)
+        );
+    } else if (Log_Showing_Debug3) {
+        Log_Debug3("Config change impact: " << Mdn2dConfigImpactToName(impact));
+    }
     switch (impact) {
         case Mdn2dConfigImpact::NoImpact: {
             m_config = newConfig;
+            Log_Debug2_T("No impact");
             return;
         }
         case Mdn2dConfigImpact::AllDigitsCleared: {
@@ -183,9 +221,11 @@ void mdn::Project::setConfig(Mdn2dConfig newConfig) {
                     mdnAndSel.first.setConfig(newConfig);
                 }
                 m_config = newConfig;
+                Log_Debug2_T("User approved");
                 return;
             } else {
                 // User cancelled
+                Log_Debug2_T("User cancelled");
                 return;
             }
             break;
@@ -212,9 +252,11 @@ void mdn::Project::setConfig(Mdn2dConfig newConfig) {
                     mdnAndSel.first.setConfig(newConfig);
                 }
                 m_config = newConfig;
+                Log_Debug2_T("User confirmed");
                 return;
             } else {
                 // User cancelled
+                Log_Debug2_T("User changed mind");
                 return;
             }
         }
@@ -225,50 +267,52 @@ void mdn::Project::setConfig(Mdn2dConfig newConfig) {
             throw err;
         }
     }
+    Log_Debug2_T("");
 }
 
 
 bool mdn::Project::contains(std::string name, bool warnOnFailure) const {
+    Log_Debug3_H("name='" << name << "', warn=" << warnOnFailure);
     int index = indexOfMdn(name);
     if (index < 0) {
         if (warnOnFailure) {
-            std::ostringstream oss;
-            oss << "Mdn2d with name '" << name << "' does not exist.";
-            QMessageBox::warning(m_parent, "contains", oss.str().c_str());
-            return false;
+            Log_WarnQ("Mdn2d with name '" << name << "' does not exist.");
         }
+        Log_Debug3_T("Returning false");
         return false;
     }
     const auto iter = m_data.find(index);
     if (iter == m_data.cend()) {
         if (warnOnFailure) {
-            std::ostringstream oss;
-            oss << "Mdn2d with name '" << name << "' exists in addressing but not in data.";
-            QMessageBox::warning(m_parent, "contains", oss.str().c_str());
-            return false;
+            Log_WarnQ("Mdn2d with name '" << name << "' exists in addressing but not in data.");
         }
+        Log_Debug3_T("Returning false");
         return false;
     }
     const Mdn2d& num = (iter->second).first;
     if (num.name() != name) {
+        Log_Debug3_T("Returning false");
         return false;
     }
+    Log_Debug3_T("Returning true");
     return true;
 }
 
 
 bool mdn::Project::contains(int i, bool warnOnFailure) const {
+    Log_Debug3_H("i=" << i << ",warnOnFailure=" << warnOnFailure);
     const auto iter = m_data.find(i);
     if (iter == m_data.cend()) {
         if (warnOnFailure) {
-            std::ostringstream oss;
-            oss << "Invalid index (" << i << "), expecting 0 .. " << (m_data.size() - 1);
-            QMessageBox::warning(m_parent, "contains", oss.str().c_str());
+            Log_WarnQ("Invalid index (" << i << "), expecting 0 .. " << (m_data.size() - 1));
+            Log_Debug3_T("Returning false");
             return false;
         }
 
+        Log_Debug3_T("Returning false");
         return false;
     }
+    Log_Debug3_T("Returning true");
     return true;
 }
 
@@ -276,8 +320,10 @@ bool mdn::Project::contains(int i, bool warnOnFailure) const {
 int mdn::Project::indexOfMdn(std::string name) const {
     const auto iter = m_addressingNameToIndex.find(name);
     if (iter == m_addressingNameToIndex.cend()) {
+        Log_Debug3("indexOf(" << name << ")= not found, returning -1");
         return -1;
     }
+    Log_Debug3("indexOf(" << name << ")=" << iter->second);
     return iter->second;
 }
 
@@ -285,20 +331,26 @@ int mdn::Project::indexOfMdn(std::string name) const {
 std::string mdn::Project::nameOfMdn(int i) const {
     const auto iter = m_addressingIndexToName.find(i);
     if (iter == m_addressingIndexToName.cend()) {
+        Log_Debug3("nameOf(" << i << ")= not found, returning empty string");
         return "";
     }
+    Log_Debug3("nameOf(" << i << ")=" << iter->second);
     return iter->second;
 }
 
 
 std::string mdn::Project::renameMdn(int i, const std::string& newName) {
+    Log_Debug2_H("renaming " << i << " to '" << newName << "'");
     Mdn2d* tgt = getMdn(i);
     std::string currentName = tgt->name();
-    return tgt->setName(newName);
+    std::string actualName = tgt->setName(newName);
+    Log_Debug2_T("Framework said use '" << actualName << "' - returning this value");
+    return actualName;
 }
 
 
 std::vector<std::string> mdn::Project::toc() const {
+    Log_Debug2_H("");
     int nElems = size();
     if (nElems != m_addressingIndexToName.size() || nElems != m_addressingNameToIndex.size()) {
         mdn::MetaDataInvalid err(
@@ -361,30 +413,43 @@ std::vector<std::string> mdn::Project::toc() const {
     if (!fail.empty()) {
         mdn::MetaDataInvalid err(fail);
         Log_ErrorQ(err.what());
+        Log_Debug2_T("Throwing error");
         throw err;
+    }
+    if (Log_Showing_Debug3) {
+        std::string rstr(mdn::Tools::vectorToString<std::string>(result, ',', false));
+        Log_Debug3_T("returning list of names: [" << rstr << "]");
+    } else {
+        Log_Debug2_T("returning " << result.size() << " names");
     }
     return result;
 }
 
 
 const mdn::Mdn2d* mdn::Project::activeMdn() const {
+    Log_Debug3("");
     return m_activeMdn2d;
 }
 mdn::Mdn2d* mdn::Project::activeMdn() {
+    Log_Debug3("");
     return m_activeMdn2d;
 }
 
 
 const mdn::Selection* mdn::Project::activeSelection() const {
+    Log_Debug3("");
     return m_activeSelection;
 }
 mdn::Selection* mdn::Project::activeSelection() {
+    Log_Debug3("");
     return m_activeSelection;
 }
 
 
 void mdn::Project::setActiveMdn(int i) {
+    Log_Debug2_H("index=" << i);
     if (!contains(i, true)) {
+        Log_Debug2_T("not valid");
         return;
     }
     auto iter = m_data.find(i);
@@ -392,128 +457,150 @@ void mdn::Project::setActiveMdn(int i) {
     std::pair<Mdn2d, Selection> elem = iter->second;
     m_activeMdn2d = &(elem.first);
     m_activeSelection = &(elem.second);
-
+    Log_Debug2_T("success");
 }
 
 
 void mdn::Project::setActiveMdn(std::string name) {
+    Log_Debug2_H("name='" << name << "'");
     int i = indexOfMdn(name);
     if (i < 0) {
         Log_WarnQ("Failed to acquire index for Mdn2d '" << name << "'");
+        Log_Debug2_T("");
         return;
     }
     setActiveMdn(i);
+    Log_Debug2_T("");
 }
 
 
 const std::pair<mdn::Mdn2d, mdn::Selection>* mdn::Project::at(int i, bool warnOnFailure) const {
+    Log_Debug3_H("i=" << i << ", warnOnFailure=" << warnOnFailure);
     const auto iter = m_data.find(i);
     if (iter == m_data.cend()) {
         if (warnOnFailure) {
-            std::ostringstream oss;
-            oss << "Invalid index (" << i << "), expecting 0 .. " << (m_data.size() - 1);
-            QMessageBox::warning(m_parent, "at", oss.str().c_str());
+            Log_WarnQ("Invalid index (" << i << "), expecting 0 .. " << (m_data.size() - 1));
         }
+        Log_Debug3_T("returning nullptr");
         return nullptr;
     }
+    Log_Debug3_T("returning valid entry");
     return &(iter->second);
 }
 
 
 std::pair<mdn::Mdn2d, mdn::Selection>* mdn::Project::at(int i, bool warnOnFailure) {
+    Log_Debug3_H("i=" << i << ", warnOnFailure=" << warnOnFailure);
     auto iter = m_data.find(i);
     if (iter == m_data.end()) {
         if (warnOnFailure) {
-            std::ostringstream oss;
-            oss << "Invalid index (" << i << "), expecting 0 .. " << (m_data.size() - 1);
-            QMessageBox::warning(m_parent, "at", oss.str().c_str());
+            Log_WarnQ("Invalid index (" << i << "), expecting 0 .. " << (m_data.size() - 1));
         }
+        Log_Debug3_T("returning nullptr");
         return nullptr;
     }
+    Log_Debug3_T("returning valid entry");
     return &(iter->second);
 }
 const std::pair<mdn::Mdn2d, mdn::Selection>* mdn::Project::at(
     std::string name,
     bool warnOnFailure
 ) const {
+    Log_Debug3_H("name=" << name << ", warnOnFailure=" << warnOnFailure);
     const auto iter = m_addressingNameToIndex.find(name);
     if (iter == m_addressingNameToIndex.cend()) {
         if (warnOnFailure) {
-            std::ostringstream oss;
-            oss << "Invalid Mdn name (" << name << ")";
-            QMessageBox::warning(m_parent, "at", oss.str().c_str());
+            Log_WarnQ("Invalid name (" << name << ")");
         }
+        Log_Debug3_T("returning nullptr");
         return nullptr;
     }
     int index = iter->second;
+    Log_Debug3_T("returning valid entry");
     return &(m_data.at(index));
 }
 std::pair<mdn::Mdn2d, mdn::Selection>* mdn::Project::at(std::string name, bool warnOnFailure) {
+    Log_Debug3_H("name=" << name << ", warnOnFailure=" << warnOnFailure);
     auto iter = m_addressingNameToIndex.find(name);
     if (iter == m_addressingNameToIndex.cend()) {
         if (warnOnFailure) {
             std::ostringstream oss;
-            oss << "Invalid Mdn name (" << name << ")";
+            Log_WarnQ("Invalid Mdn name (" << name << ")");
             QMessageBox::warning(m_parent, "at", oss.str().c_str());
         }
+        Log_Debug3_T("returning nullptr");
         return nullptr;
     }
     int index = iter->second;
+    Log_Debug3_T("returning valid entry");
     return &(m_data[index]);
 }
 
 
 const mdn::Selection* mdn::Project::getSelection(int i, bool warnOnFailure) const {
+    Log_Debug3("");
     return &at(i, warnOnFailure)->second;
 }
 mdn::Selection* mdn::Project::getSelection(int i, bool warnOnFailure) {
+    Log_Debug3("");
     return &at(i, warnOnFailure)->second;
 }
 
 
 const mdn::Selection* mdn::Project::getSelection(std::string name, bool warnOnFailure) const {
+    Log_Debug3("");
     return &at(name, warnOnFailure)->second;
 }
 mdn::Selection* mdn::Project::getSelection(std::string name, bool warnOnFailure) {
+    Log_Debug3("");
     return &at(name, warnOnFailure)->second;
 }
 
 
 const mdn::Mdn2d* mdn::Project::getMdn(int i, bool warnOnFailure) const {
+    Log_Debug3("");
     return &at(i, warnOnFailure)->first;
 }
 mdn::Mdn2d* mdn::Project::getMdn(int i, bool warnOnFailure) {
+    Log_Debug3("");
     return &at(i, warnOnFailure)->first;
 }
 
 
 const mdn::Mdn2d* mdn::Project::getMdn(std::string name, bool warnOnFailure) const {
+    Log_Debug3("");
     return &at(name, warnOnFailure)->first;
 }
 mdn::Mdn2d* mdn::Project::getMdn(std::string name, bool warnOnFailure) {
+    Log_Debug3("");
     return &at(name, warnOnFailure)->first;
 }
 
 
 const mdn::Mdn2d* mdn::Project::firstMdn(bool warnOnFailure) const {
+    Log_Debug3("");
     return getMdn(0, warnOnFailure);
 }
 mdn::Mdn2d* mdn::Project::firstMdn(bool warnOnFailure) {
+    Log_Debug3("");
     return getMdn(0, warnOnFailure);
 }
 
 
 const mdn::Mdn2d* mdn::Project::lastMdn(bool warnOnFailure) const {
+    Log_Debug3("");
     int lastI = m_data.size() - 1;
     return getMdn(lastI, warnOnFailure);
 }
 mdn::Mdn2d* mdn::Project::lastMdn(bool warnOnFailure) {
+    Log_Debug3("");
     int lastI = m_data.size() - 1;
     return getMdn(lastI, warnOnFailure);
 }
 
 
 void mdn::Project::insertMdn(Mdn2d& mdn, int index) {
+    Log_Debug2_H("inserting mdn(" << mdn.name() << ") at " << index);
     // For warning messages
     std::ostringstream oss;
 
@@ -540,49 +627,74 @@ void mdn::Project::insertMdn(Mdn2d& mdn, int index) {
         }
         oss << "Mdn '" << origName << "' already exists. Renaming new Mdn to '" << newName << "'.";
         warnings += 1;
+    } else {
+        newName = origName;
     }
     if (!oss.str().empty()) {
-        QMessageBox::warning(m_parent, "insertMdn", oss.str().c_str());
+        Log_WarnQ(oss.str());
     }
 
     // Shift addressing over
     if (index < maxNewIndex) {
         shiftMdnTabsRight(index);
     }
+    Log_Debug4("Inserting {'" << newName << "'," << index << "} to indices");
     m_addressingNameToIndex.insert({newName, index});
     m_addressingIndexToName.insert({index, newName});
+    Log_Debug2_T("");
 }
 
 
 std::pair<int, std::string> mdn::Project::duplicateMdn(int index) {
+    Log_Debug2_H("duplicating mdn at " << index);
     Mdn2d* src = getMdn(index, true);
     if (!src) {
+        Log_Debug2_T("not a valid index");
         return std::pair<int, std::string>(-1, "");
     }
     Mdn2d dup = Mdn2d::Duplicate(*src);
     insertMdn(dup, index + 1);
-    return std::pair<int, std::string>(index+1, dup.name());
+    std::pair<int, std::string> result(index+1, dup.name());
+    if (Log_Showing_Debug3) {
+        std::string strRes(mdn::Tools::pairToString<int, std::string>(result, ","));
+        Log_Debug3_T("Returning " << strRes);
+    } else {
+        Log_Debug2_T("Success");
+    }
+    return result;
 }
 
 
 std::pair<int, std::string> mdn::Project::duplicateMdn(const std::string& name) {
+    Log_Debug2_H("Duplicating '" << name << "'");
     Mdn2d* src = getMdn(name, true);
     if (!src) {
+        Log_Debug2_T("Not a valid name");
         return std::pair<int, std::string>(-1, "");
     }
     int index = indexOfMdn(name);
     Mdn2d dup = Mdn2d::Duplicate(*src);
     insertMdn(dup, index + 1);
-    return std::pair<int, std::string>(index+1, dup.name());
+    std::pair<int, std::string> result(index+1, dup.name());
+    if (Log_Showing_Debug3) {
+        std::string strRes(mdn::Tools::pairToString<int, std::string>(result, ","));
+        Log_Debug3_T("Returning " << strRes);
+    } else {
+        Log_Debug2_T("Success");
+    }
+    return result;
 }
 
 
 bool mdn::Project::moveMdn(int fromIndex, int toIndex) {
+    Log_Debug2_H("from " << fromIndex << " to " << toIndex);
     if (fromIndex == toIndex) {
         // Nothing to do
+        Log_Debug2_T("Nothing to do, returning true");
         return true;
     }
     if (!contains(fromIndex, true)) {
+        Log_Debug2_T("Not a valid fromIndex, returning false");
         return false;
     }
     // Extract the number and erase the addressing metadata
@@ -599,39 +711,51 @@ bool mdn::Project::moveMdn(int fromIndex, int toIndex) {
         shiftMdnTabsLeft(fromIndex + 1, toIndex - 1);
     }
     m_data.insert(std::move(node));
+    Log_Debug4(
+        "Moving {'" << name << "'," << fromIndex << "} to {'" << name << "'," << toIndex << "}"
+    );
     m_addressingIndexToName.insert({toIndex, name});
     m_addressingNameToIndex.insert({name, toIndex});
+    Log_Debug2_T("Success, returning true");
     return true;
 }
 
 
 bool mdn::Project::moveMdn(const std::string& name, int toIndex) {
+    Log_Debug2_H("Moving '" << name << "' to " << toIndex);
     int fromIndex = indexOfMdn(name);
     if (fromIndex < 0) {
-        std::ostringstream oss;
-        oss << "Mdn2d with name '" << name << "' does not exist.";
-        QMessageBox::warning(m_parent, "moveMdn", oss.str().c_str());
+        Log_WarnQ("Mdn2d with name '" << name << "' does not exist.");
+        Log_Debug2_T("Returning false");
         return false;
     }
-    return moveMdn(fromIndex, toIndex);
+    bool result = moveMdn(fromIndex, toIndex);
+    Log_Debug2_T("Returning " << result);
+    return result;
 }
 
 
 bool mdn::Project::deleteMdn(int index) {
+    Log_Debug2_H("deleting " << index);
     if (!contains(index, true)) {
+        Log_Debug2_T("Not a valid index, returning false");
         return false;
     }
     std::string name = nameOfMdn(index);
     m_data.erase(index);
     m_addressingIndexToName.erase(index);
     m_addressingNameToIndex.erase(name);
+    Log_Debug4("Deleting {'" << name << "'," << index << "}");
     shiftMdnTabsLeft(index+1);
+    Log_Debug2_T("Success, returning true");
     return true;
 }
 
 
 bool mdn::Project::deleteMdn(const std::string& name) {
+    Log_Debug2_H("Deleting '" << name << "'");
     if (!contains(name, true)) {
+        Log_Debug2_T("Not a valid name, returning false");
         return false;
     }
     int index = indexOfMdn(name);
@@ -639,19 +763,24 @@ bool mdn::Project::deleteMdn(const std::string& name) {
     m_data.erase(index);
     m_addressingIndexToName.erase(index);
     m_addressingNameToIndex.erase(name);
+    Log_Debug4("Deleting {'" << name << "'," << index << "}");
     shiftMdnTabsLeft(index+1);
+    Log_Debug2_T("Success, returning true");
     return true;
 }
 
 
 void mdn::Project::copySelection() const {
+    Log_Debug2_H("");
     const mdn::Selection* sel = selection();
     if (!sel) {
         Log_WarnQ("Failed to acquire selection");
+        Log_Debug2_T("Failed");
         return;
     }
     const Mdn2d* src = sel->get();
     if (!src || !sel->rect().isValid()) {
+        Log_Debug2_T("Selection has no rectangular selection, cannot continue");
         return;
     }
     Rect r = sel->rect();
@@ -659,16 +788,20 @@ void mdn::Project::copySelection() const {
     mdn::Clipboard::encodeRectToClipboard(
         *src, r, QStringLiteral("rect"), QString::fromStdString(src->name())
     );
+    Log_Debug2_T("Success");
 }
 
 
 void mdn::Project::copyMdn(int index) const {
+    Log_Debug2_H("copying " << index);
     const Mdn2d* src = getMdn(index);
     if (src == nullptr) {
+        Log_Debug2_T("Not a valid index");
         return;
     }
     if (!src->hasBounds()) {
         // Nothing to copy (empty MDN)
+        Log_Debug2_T("src has no digits");
         return;
     }
 
@@ -676,26 +809,48 @@ void mdn::Project::copyMdn(int index) const {
     mdn::Clipboard::encodeRectToClipboard(
         *src, b, QStringLiteral("mdn"), QString::fromStdString(src->name())
     );
+    Log_Debug2_T("Success");
 }
 
 
 void mdn::Project::cutSelection() {
+    Log_Debug2_H("");
     copySelection();
     deleteSelection();
+    Log_Debug2_T("");
 }
 
 
 bool mdn::Project::pasteOnSelection(int index) {
+    //  Source scope (data on the clipboard)
+    //  A) "mdn"  - defines an entire Mdn for pasting
+    //  B) "rect" - defines a specific area on a specific Mdn
+    //
+    //  Destination scope (data currently selected, m_selection)
+    //  1. selection.hasMdnOnly    - target is the entire Mdn, (index >= 0)
+    //  -- selection.hasRectOnly   - invalid - need a Mdn for actual operation
+    //  2. selection.hasMdnAndRect - target is the specific area on the selected Mdn
+    //
+    //  CASES:
+    //  A-1 - Mdn  -> Mdn       - replace entire target Mdn with source Mdn
+    //  A-2 - Mdn  -> Mdn+Rect  - Not valid (user error - tell user invalid data to paste here)
+    //  B-1 - Rect -> Mdn       - replace same rect (absolute) on target with source
+    //  B-2 - Rect -> Mdn+Rect  - replace same rect (relative) on target with source, size check
+    //      required: if target is 1x1, paste okay, use that as bottom left anchor, otherwise
+    //      the size must match exactly
+    Log_Debug2_H("Pasting, with mdn index=" << index);
     const mdn::Selection* sel = selection();
     if (!sel) {
         Log_WarnQ("Failed to acquire selection");
+        Log_Debug2_T("Returning false");
         return false;
     }
     Mdn2d* dst = sel->get();
-    if (!dst || !sel->rect().isValid()) {
+    if (!dst) { // || !sel->rect().isValid()) {
+        Log_Debug2_T("No valid destination");
         return false;
     }
-    Rect r = sel->rect();
+    Rect selRect = sel->rect();
     Clipboard::DecodedPaste p = Clipboard::decodeClipboard();
     if (!p.valid()) {
         return false;
@@ -704,33 +859,40 @@ bool mdn::Project::pasteOnSelection(int index) {
     const int W = p.width();
     const int H = p.height();
 
-    const bool haveSel = (index < 0) && sel->rect().isValid();
-
     int ax = 0;
     int ay = 0;
 
-    if (haveSel) {
-        const Rect r = [&]() { Rect t = sel->rect(); t.fixOrdering(); return t; }();
-        const int SW = r.width();
-        const int SH = r.height();
+    // TODO - this set of nested conditionals look buggy.
+    //  e.g. when clipboard data is scope type 'mdn', we are still checking for a valid rect
+    if (selRect.isValid()) {
+        // Destination scope 2, case = ?-2
+        const int SW = selRect.width();
+        const int SH = selRect.height();
+        Log_Debug3("Paste Type ?-2, i.e. destination selection has a valid rect");
         if (SW == 1 && SH == 1) {
-            ax = r.left();
-            ay = r.bottom();
+            ax = selRect.left();
+            ay = selRect.bottom();
         } else if (SW == W && SH == H) {
-            ax = r.left();
-            ay = r.bottom();
+            ax = selRect.left();
+            ay = selRect.bottom();
         } else {
             // Size mismatch in grid context
-            QMessageBox::warning(
-                nullptr,
-                QStringLiteral("Paste size mismatch"),
-                QString("Selection %1x%2 vs data %3x%4").arg(SW).arg(SH).arg(W).arg(H)
+            Log_WarnQ(
+                "Paste data (" << SW << "x" << SH << ") incompatible with current selection ("
+                    << W << "x" << H
             );
+            Log_Debug2_T("Returning false");
             return false;
         }
+        Log_Debug2(
+            "Paste Type [?]-1, src=[???]; dst=selection(mdn), "
+                    << "a(" << ax << "," << ay << ")"
+        );
     } else {
-        // Tab context (no valid selection rect)
+        // Destination scope 1, case = ?-1
         if (p.scope == QLatin1String("rect")) {
+            // Source scope B
+            // ~~~ CASE B-1 ~~~
             if (p.srcRect.isValid()) {
                 ax = p.srcRect.left();
                 ay = p.srcRect.bottom();
@@ -738,6 +900,10 @@ bool mdn::Project::pasteOnSelection(int index) {
                 ax = 0;
                 ay = 0;
             }
+            Log_Debug2(
+                "Paste Type B-1, src=clipboard(mdn+rect); dst=selection(mdn), "
+                    << "a(" << ax << "," << ay << ")"
+            );
         } else if (p.scope == QLatin1String("mdn")) {
             dst->clear();
             if (p.srcRect.isValid()) {
@@ -747,6 +913,10 @@ bool mdn::Project::pasteOnSelection(int index) {
                 ax = 0;
                 ay = 0;
             }
+            Log_Debug2(
+                "Paste Type A-1, src=clipboard(mdn); dst=selection(mdn), "
+                    << "a(" << ax << "," << ay << ")"
+            );
         } else {
             // Unknown scope: conservative default
             ax = 0;
@@ -755,28 +925,38 @@ bool mdn::Project::pasteOnSelection(int index) {
     }
 
     // Overwrite rows (zeros in payload clear cells)
-    for (int r = 0; r < H; ++r) {
-        dst->setRow(Coord(ax, ay + r), p.rows[size_t(r)]);
+    for (int rowI = 0; rowI < H; ++rowI) {
+        dst->setRow(Coord(ax, ay + rowI), p.rows[size_t(rowI)]);
     }
-
+    Log_Debug2_T("");
     return true;
 }
 
 
 void mdn::Project::deleteSelection() {
+    Log_Debug2_H("");
     const mdn::Selection* sel = selection();
     if (!sel) {
         Log_WarnQ("Failed to acquire selection");
+        Log_Debug2_T("No selection to delete");
         return;
     }
     Mdn2d* dst = sel->get();
     if (!dst) {
+        Log_Debug2_T("No target mdn2d");
         return;
     }
     Rect r = sel->rect();
     if (r.empty()) {
         deleteMdn(dst->name());
+        Log_Debug2_T("Success, deleted entire Mdn");
     } else {
-        dst->setToZero(r);
+        CoordSet changed(dst->setToZero(r));
+        if (Log_Showing_Debug3) {
+            std::string coordsList(mdn::Tools::setToString<Coord>(changed, ','));
+            Log_Debug3_T("Zeroed coords: " << coordsList);
+        } else {
+            Log_Debug2_T("Zeroed " << changed.size() << " digits");
+        }
     }
 }

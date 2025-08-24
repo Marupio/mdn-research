@@ -180,7 +180,12 @@ private:
         oss << loginst.indent() << fileRef << message; \
         loginst.level(oss.str());
 
-    #define InternalLoggerEchoToQ QMessageBox::information(nullptr, "Logger", oss.str().c_str()); }
+    #define InternalLoggerEchoToQinfo \
+        QMessageBox::information(nullptr, "Logger", oss.str().c_str()); }
+    #define InternalLoggerEchoToQwarn \
+        QMessageBox::warning(nullptr, "Logger", oss.str().c_str()); }
+    #define InternalLoggerEchoToQcrit \
+        QMessageBox::critical(nullptr, "Logger", oss.str().c_str()); }
 
     // Internal use - As above, but with indentation:
     //      [        |Mdn2dBase.cpp:598,setValue]
@@ -205,10 +210,26 @@ private:
     // Standard log message:
     //  No header / footer indent / unindent
     //  File ref with object name
-    //  Echo to QMessageBox
-    #define InternalLoggerNamedQ(message, level) \
+    //  Echo to QMessageBox::information
+    #define InternalLoggerNamedQinfo(message, level) \
         InternalLoggerAssembleFunction( InternalLoggerNamedFileRef, message, level ) \
-        InternalLoggerEchoToQ
+        InternalLoggerEchoToQinfo
+
+    // Standard log message:
+    //  No header / footer indent / unindent
+    //  File ref with object name
+    //  Echo to QMessageBox::warning
+    #define InternalLoggerNamedQwarn(message, level) \
+        InternalLoggerAssembleFunction( InternalLoggerNamedFileRef, message, level ) \
+        InternalLoggerEchoToQwarn
+
+    // Standard log message:
+    //  No header / footer indent / unindent
+    //  File ref with object name
+    //  Echo to QMessageBox::critical
+    #define InternalLoggerNamedQcrit(message, level) \
+        InternalLoggerAssembleFunction( InternalLoggerNamedFileRef, message, level ) \
+        InternalLoggerEchoToQcrit
 
     // Standard log message:
     //  No header / footer indent / unindent
@@ -220,10 +241,26 @@ private:
     // Standard log message:
     //  No header / footer indent / unindent
     //  File ref with no object name
-    //  Echo to QMessageBox
-    #define InternalLoggerAnonymousQ(message, level) \
+    //  Echo to QMessageBox::information
+    #define InternalLoggerAnonymousQinfo(message, level) \
         InternalLoggerAssembleFunction( InternalIdentedLoggerFileRef, message, level ) \
-        InternalLoggerEchoToQ
+        InternalLoggerEchoToQinfo
+
+    // Standard log message:
+    //  No header / footer indent / unindent
+    //  File ref with no object name
+    //  Echo to QMessageBox::warning
+    #define InternalLoggerAnonymousQwarn(message, level) \
+        InternalLoggerAssembleFunction( InternalIdentedLoggerFileRef, message, level ) \
+        InternalLoggerEchoToQwarn
+
+    // Standard log message:
+    //  No header / footer indent / unindent
+    //  File ref with no object name
+    //  Echo to QMessageBox::critical
+    #define InternalLoggerAnonymousQcrit(message, level) \
+        InternalLoggerAssembleFunction( InternalIdentedLoggerFileRef, message, level ) \
+        InternalLoggerEchoToQcrit
 
 
     // Internal use - Wrapper for producing a header message that increases the indentation level
@@ -300,13 +337,13 @@ private:
     #define Log_Error(message) InternalLoggerAnonymous(message, error)
 
     // Anonymous, no changes in indentation, echo to QMessageBox
-    #define Log_Debug4Q(message) InternalLoggerAnonymousQ(message, debug4)
-    #define Log_Debug3Q(message) InternalLoggerAnonymousQ(message, debug3)
-    #define Log_Debug2Q(message) InternalLoggerAnonymousQ(message, debug2)
-    #define Log_DebugQ(message) InternalLoggerAnonymousQ(message, debug)
-    #define Log_InfoQ(message) InternalLoggerAnonymousQ(message, info)
-    #define Log_WarnQ(message) InternalLoggerAnonymousQ(message, warn)
-    #define Log_ErrorQ(message) InternalLoggerAnonymousQ(message, error)
+    #define Log_Debug4Q(message) InternalLoggerAnonymousQinfo(message, debug4)
+    #define Log_Debug3Q(message) InternalLoggerAnonymousQinfo(message, debug3)
+    #define Log_Debug2Q(message) InternalLoggerAnonymousQinfo(message, debug2)
+    #define Log_DebugQ(message) InternalLoggerAnonymousQinfo(message, debug)
+    #define Log_InfoQ(message) InternalLoggerAnonymousQinfo(message, info)
+    #define Log_WarnQ(message) InternalLoggerAnonymousQwarn(message, warn)
+    #define Log_ErrorQ(message) InternalLoggerAnonymousQcrit(message, error)
 
     // Anonymous, headers - increase in indentation
     #define Log_Debug4_H(message) InternalLoggerAnonymousHeader(message, debug4)
@@ -330,13 +367,13 @@ private:
     #define Log_N_Error(message) InternalLoggerNamed(message, error)
 
     // Named, no changes in indentation, echo to QMessageBox
-    #define Log_N_Debug4Q(message) InternalLoggerNamedQ(message, debug4)
-    #define Log_N_Debug3Q(message) InternalLoggerNamedQ(message, debug3)
-    #define Log_N_Debug2Q(message) InternalLoggerNamedQ(message, debug2)
-    #define Log_N_DebugQ(message) InternalLoggerNamedQ(message, debug)
-    #define Log_N_InfoQ(message) InternalLoggerNamedQ(message, info)
-    #define Log_N_WarnQ(message) InternalLoggerNamedQ(message, warn)
-    #define Log_N_ErrorQ(message) InternalLoggerNamedQ(message, error)
+    #define Log_N_Debug4Q(message) InternalLoggerNamedQinfo(message, debug4)
+    #define Log_N_Debug3Q(message) InternalLoggerNamedQinfo(message, debug3)
+    #define Log_N_Debug2Q(message) InternalLoggerNamedQinfo(message, debug2)
+    #define Log_N_DebugQ(message) InternalLoggerNamedQinfo(message, debug)
+    #define Log_N_InfoQ(message) InternalLoggerNamedQinfo(message, info)
+    #define Log_N_WarnQ(message) InternalLoggerNamedQwarn(message, warn)
+    #define Log_N_ErrorQ(message) InternalLoggerNamedQcrit(message, error)
 
     // Named, headers - increase in indentation
     #define Log_N_Debug4_H(message) InternalLoggerNamedHeader(message, debug4)

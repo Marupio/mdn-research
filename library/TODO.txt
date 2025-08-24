@@ -15,6 +15,10 @@ GUI library
 Why not track that here also
 
 * Change the namespaces from simply mdn to mdn::gui
-* Add a Project::verify() function to check metadata is consistent
-* Add a getMdnAndSelection function, make getSelection's and getMdn's use it
+* Change Project's internal data treatment to use pair<Mdn,Selection>, instead of individuals
++ Add a Project::verify() function to check metadata is consistent
+    It's in 'toc'
++ Add a getMdnAndSelection function, make getSelection's and getMdn's use it
+    It's called 'at'
+
 
