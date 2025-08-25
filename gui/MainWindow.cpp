@@ -29,7 +29,7 @@ void MainWindow::onTabContextMenu(const QPoint& pos)
         return;
     }
     QWidget* tabPage = m_tabWidget->widget(index);
-    auto* view = qobject_cast<NumberDisplayWidget*>(tabPage);
+    auto* view = qobject_cast<mdn::gui::NumberDisplayWidget*>(tabPage);
     if (!view) {
         Log_Debug3_T("");
         return;
@@ -200,7 +200,7 @@ void MainWindow::createTabs() {
         mdn::Mdn2d* src = m_project->getMdn(index, true);
         mdn::Selection* sel = m_project->getSelection(index);
         QString qname = mdn::MdnQtInterface::toQString(names[index]);
-        auto* ndw = new NumberDisplayWidget;
+        auto* ndw = new mdn::gui::NumberDisplayWidget;
         ndw->setProject(m_project);
         ndw->setModel(src, sel);
         int tab = m_tabWidget->addTab(ndw, qname);
@@ -284,7 +284,7 @@ void MainWindow::duplicateTab(int index)
 
     // 2) Create a view for it
     std::pair<mdn::Mdn2d, mdn::Selection>* entry = m_project->at(newIndex);
-    auto* w = new NumberDisplayWidget;
+    auto* w = new mdn::gui::NumberDisplayWidget;
     w->setModel(&entry->first, &entry->second);
     w->setProject(m_project);
 
@@ -329,7 +329,7 @@ void MainWindow::syncTabsToProject() {
     }
     const int n = m_tabWidget->count();
     for (int i = 0; i < n; ++i) {
-        auto* view = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(i));
+        auto* view = qobject_cast<mdn::gui::NumberDisplayWidget*>(m_tabWidget->widget(i));
         if (!view) {
             continue;
         }
