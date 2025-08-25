@@ -108,7 +108,12 @@ void mdn::gui::NumberDisplayWidget::paintEvent(QPaintEvent* event) {
 
     for (int vy = 0; vy < m_rows; ++vy) {
         for (int vx = 0; vx < m_cols; ++vx) {
-            const mdn::Coord xy(m_viewOriginX + vx, m_viewOriginY + vy);
+            // Convert view cell (vx,vy) to model coordinate (x,y).
+            // Screen row 0 is the top row. Model y+ goes up.
+            const int modelX = m_viewOriginX + vx;
+            const int modelY = m_viewOriginY + (m_rows - 1 - vy);
+
+            const mdn::Coord xy(modelX, modelY);
             const int digit = static_cast<int>(m_model->getValue(xy));
 
             const QRect cell(vx * m_cellSize, vy * m_cellSize, m_cellSize, m_cellSize);
@@ -311,17 +316,20 @@ void mdn::gui::NumberDisplayWidget::recalcGridGeometry() {
 
 
 void mdn::gui::NumberDisplayWidget::ensureCursorVisible() {
+    // Horizontal: model x+ goes right (no inversion)
     if (m_cursorX < m_viewOriginX) {
         m_viewOriginX = m_cursorX;
     }
     if (m_cursorX >= m_viewOriginX + m_cols) {
         m_viewOriginX = m_cursorX - (m_cols - 1);
     }
-    if (m_cursorY < m_viewOriginY) {
-        m_viewOriginY = m_cursorY;
-    }
+
+    // Vertical: model y+ goes up, top of view shows higher model y
     if (m_cursorY >= m_viewOriginY + m_rows) {
         m_viewOriginY = m_cursorY - (m_rows - 1);
+    }
+    if (m_cursorY < m_viewOriginY) {
+        m_viewOriginY = m_cursorY;
     }
 }
 
@@ -329,11 +337,15 @@ void mdn::gui::NumberDisplayWidget::ensureCursorVisible() {
 void mdn::gui::NumberDisplayWidget::drawAxes(QPainter& painter, const QRect& widgetRect) {
     // X axis in view?
     if (m_viewOriginY <= 0 && 0 < m_viewOriginY + m_rows) {
-        const int yOriginPx = -m_viewOriginY * m_cellSize;
+        const int yIndex = m_viewOriginY + (m_rows - 1) - 0;
+        const int yOriginPx = yIndex * m_cellSize;
+
         QPen axis = m_theme.axisPen;
         const int prevW = painter.pen().width();
         painter.setPen(axis);
+
         painter.drawLine(0, yOriginPx, widgetRect.width(), yOriginPx);
+
         axis.setWidth(prevW);
         painter.setPen(axis);
     }
@@ -341,13 +353,17 @@ void mdn::gui::NumberDisplayWidget::drawAxes(QPainter& painter, const QRect& wid
     // Y axis in view?
     if (m_viewOriginX <= 0 && 0 < m_viewOriginX + m_cols) {
         const int xOriginPx = -m_viewOriginX * m_cellSize;
+
         QPen axis = m_theme.axisPen;
         const int prevW = painter.pen().width();
         painter.setPen(axis);
+
         painter.drawLine(xOriginPx, 0, xOriginPx, widgetRect.height());
+
         axis.setWidth(prevW);
         painter.setPen(axis);
     }
+
     if (hasFocus()) {
         QPen ring(QColor(70,120,255), 2);
         painter.setPen(ring);

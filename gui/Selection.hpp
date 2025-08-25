@@ -220,7 +220,7 @@ public:
         void cursorPageUp(bool extendSelection) {
             Log_Debug("cursorPageUp, extend=" << extendSelection);
             // Missing information - need to find out how much a page movement is
-            m_cursor1.translate(m_pageDy);
+            m_cursor1.translateY(m_pageDy);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
             } else {
@@ -231,7 +231,7 @@ public:
         void cursorPageDn(bool extendSelection) {
             Log_Debug("cursorPageDn, extend=" << extendSelection);
             // Missing information - need to find out how much a page movement is
-            m_cursor1.translate(-m_pageDy);
+            m_cursor1.translateY(-m_pageDy);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
             } else {
@@ -242,7 +242,7 @@ public:
         void cursorPageLf(bool extendSelection) {
             Log_Debug("cursorPageLf, extend=" << extendSelection);
             // Missing information - need to find out how much a page movement is
-            m_cursor1.translate(-m_pageDx);
+            m_cursor1.translateX(-m_pageDx);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
             } else {
@@ -253,7 +253,7 @@ public:
         void cursorPageRt(bool extendSelection) {
             Log_Debug("cursorPageRt, extend=" << extendSelection);
             // Missing information - need to find out how much a page movement is
-            m_cursor1.translate(m_pageDx);
+            m_cursor1.translateX(m_pageDx);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
             } else {
