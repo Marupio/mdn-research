@@ -36,11 +36,11 @@ void NumberDisplayWidget::setViewCenter(int x, int y) {
 }
 
 
-void NumberDisplayWidget::moveCursor(int dx, int dy) {
-    m_cursorX += dx;
-    m_cursorY += dy;
-    update();
-}
+// void NumberDisplayWidget::moveCursor(int dx, int dy) {
+//     m_cursorX += dx;
+//     m_cursorY += dy;
+//     update();
+// }
 
 
 void NumberDisplayWidget::keyPressEvent(QKeyEvent* e) {
@@ -127,16 +127,29 @@ void NumberDisplayWidget::paintEvent(QPaintEvent* event) {
     QRect widgetRect = this->rect();  // Get the full widget rectangle
     painter.setFont(QFont("Courier", 10)); // monospaced font
     painter.setPen(m_defaultColors_gridLines);
+    AssertQ(
+        (m_selection != nullptr) && (m_model != nullptr),
+        "Model and Selection are not set"
+    );
 
+    const mdn::Rect& r = m_selection->rect();
+    const mdn::Coord& c0 = m_selection->cursor0();
+    const mdn::Coord& c1 = m_selection->cursor1();
     for (int y = 0; y < m_rows; ++y) {
         for (int x = 0; x < m_cols; ++x) {
-            int currentX = m_viewOriginX + x;
-            int currentY = m_viewOriginY + y;
-            const int digit = m_model ? m_model->getValue({currentX, currentY}) : 0;
+            mdn::Coord xy(m_viewOriginX + x, m_viewOriginY + y);
+            const int digit = static_cast<int>(m_model->getValue(xy));
 
             QRect cell(x * m_cellSize, y * m_cellSize, m_cellSize, m_cellSize);
-            if (currentX == m_cursorX && currentY == m_cursorY) {
+            if (xy == c1) {
+                // Apply cursor cell style
                 painter.fillRect(cell, Qt::yellow);
+            } else if (xy == c0) {
+                // Apply anchor cell style
+                painter.fillRect(cell, Qt::lightGray);
+            } else if (r.contains(xy)) {
+                // Apply selection rectangle cell style
+                // ???
             }
             painter.drawRect(cell);
 
@@ -144,7 +157,7 @@ void NumberDisplayWidget::paintEvent(QPaintEvent* event) {
             painter.drawText(cell, Qt::AlignCenter, text);
 
             // Highlight origin
-            if (currentX == 0 && currentY == 0) {
+            if (xy == mdn::COORD_ORIGIN) {
                 painter.setPen(Qt::red);
                 painter.drawRect(cell.adjusted(1, 1, -1, -1));
                 painter.setPen(m_defaultColors_gridLines);
@@ -192,30 +205,26 @@ void NumberDisplayWidget::resizeEvent(QResizeEvent* e) {
 
 void NumberDisplayWidget::ensureCursorVisible() {
     // left
-    if (m_cursorX < m_viewOriginX) {
-        m_viewOriginX = m_cursorX;
+    int cursorX = m_selection->cursor1().x();
+    int cursorY = m_selection->cursor1().y();
+    if (cursorX < m_viewOriginX) {
+        m_viewOriginX = cursorX;
     }
     // right
-    if (m_cursorX >= m_viewOriginX + m_cols) {
-        m_viewOriginX = m_cursorX - (m_cols - 1);
+    if (cursorX >= m_viewOriginX + m_cols) {
+        m_viewOriginX = cursorX - (m_cols - 1);
     }
     // top
-    if (m_cursorY < m_viewOriginY) {
-        m_viewOriginY = m_cursorY;
+    if (cursorY < m_viewOriginY) {
+        m_viewOriginY = cursorY;
     }
     // bottom
-    if (m_cursorY >= m_viewOriginY + m_rows) {
-        m_viewOriginY = m_cursorY - (m_rows - 1);
+    if (cursorY >= m_viewOriginY + m_rows) {
+        m_viewOriginY = cursorY - (m_rows - 1);
     }
+    ensureCursorVisible();
+    update();
 }
-
-
-// void NumberDisplayWidget::moveCursor(int dx, int dy) {
-//     m_cursorX += dx;
-//     m_cursorY += dy;
-//     ensureCursorVisible();
-//     update();
-// }
 
 
 void NumberDisplayWidget::recalcGridGeometry() {
@@ -228,8 +237,8 @@ void NumberDisplayWidget::recalcGridGeometry() {
 
     const int w = width();
     const int h = height();
-    m_cols = std::max(1, w / m_cellSize);
-    m_rows = std::max(1, h / m_cellSize);
+    m_cols = std::max(1, w / m_cellSize) + 1;
+    m_rows = std::max(1, h / m_cellSize) + 1;
 
     int pageCols = std::max(1, m_cols - 1);
     int pageRows = std::max(1, m_rows - 1);

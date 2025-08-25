@@ -45,11 +45,11 @@ private:
     // Y coordinate, in digit position, of top-left cell in view
     int m_viewOriginY = -16;
 
-    // X digit coordinate of the cursor location
-    int m_cursorX = 0;
-
-    // Y digit coordinate of the cursor location
-    int m_cursorY = 0;
+    // // X digit coordinate of the cursor location
+    // int m_cursorX = 0;
+    //
+    // // Y digit coordinate of the cursor location
+    // int m_cursorY = 0;
 
     // Number of columns in view
     int m_cols = 32;

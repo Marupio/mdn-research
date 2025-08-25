@@ -203,19 +203,15 @@ mdn::Mdn2dBase& mdn::Mdn2dBase::operator=(const Mdn2dBase& other) {
 }
 
 
-mdn::Mdn2dBase::Mdn2dBase(Mdn2dBase&& other, std::string nameIn) noexcept :
+mdn::Mdn2dBase::Mdn2dBase(Mdn2dBase&& other) noexcept :
     m_config(other.m_config),
-    m_name(nameIn),
+    m_name(other.m_name),
     m_modified(false),
     m_event(0)
 {
     auto lock = other.lockReadOnly();
-    Log_Debug3_H("move-copy ctor, copying " << other.m_name << ", newName=" << nameIn);
-    if (m_name.empty()) {
-        Log_Debug4("nameIn empty, generating new name from " << other.m_name);
-        m_name = static_generateCopyName(other.m_name);
-        Log_Debug3("changed name to " << m_name);
-    }
+    Log_Debug3_H("move-copy ctor, copying " << other.m_name);
+
     m_raw = std::move(other.m_raw);
     m_xIndex = std::move(other.m_xIndex);
     m_yIndex = std::move(other.m_yIndex);

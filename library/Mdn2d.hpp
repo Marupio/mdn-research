@@ -31,7 +31,7 @@ public:
             Mdn2d& operator=(const Mdn2d& other);
 
             // Move operator
-            Mdn2d(Mdn2d&& other, std::string nameIn="") noexcept;
+            Mdn2d(Mdn2d&& other) noexcept;
 
             // Move assignment operator
             Mdn2d& operator=(Mdn2d&& other) noexcept;

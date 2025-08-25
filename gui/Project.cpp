@@ -617,7 +617,10 @@ void mdn::Project::insertMdn(Mdn2d& mdn, int index) {
         index = maxNewIndex;
     }
     Selection sel;
-    m_data.insert({index, {mdn, sel}});
+    Log_Debug3("insert dispatch");
+    m_data.try_emplace(index, std::move(mdn), std::move(sel));
+    // m_data.insert({index, {mdn, sel}});
+    Log_Debug3("insert return");
     const std::string& origName = mdn.name();
     std::string newName;
     if (mdnNameExists(origName)) {

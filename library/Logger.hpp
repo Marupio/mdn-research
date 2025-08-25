@@ -297,7 +297,7 @@ private:
     // Internal use - Wrapper for producing a footer message that decreases the indentation level
     #define InternalLoggerFooterWrapper(LOGGER_MACRO, message, level) { \
         LOGGER_MACRO(message, level); \
-        Logger::instance().decreaseIndent(); \
+        mdn::Logger::instance().decreaseIndent(); \
     }
 
     // Standard log message:

@@ -5,28 +5,37 @@
 
 #include "MdnQtInterface.hpp"
 #include "NumberDisplayWidget.hpp"
+#include "../library/Logger.hpp"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
-    m_project(new mdn::Project(this))
+    m_project(nullptr)
 {
+    Log_Debug2_H("Constructing MainWindow")
     createMenus();
     setupLayout();
     setWindowTitle("MDN Editor");
+    Log_Debug2_H("");
 }
 
 
 void MainWindow::onTabContextMenu(const QPoint& pos)
 {
+    Log_Debug3_H("");
     QTabBar* bar = m_tabWidget->tabBar();
     const int index = bar->tabAt(pos);
-    if (index < 0) return;
-
+    if (index < 0) {
+        Log_Debug3_T("");
+        return;
+    }
     QWidget* tabPage = m_tabWidget->widget(index);
     auto* view = qobject_cast<NumberDisplayWidget*>(tabPage);
-    if (!view) return;
-
+    if (!view) {
+        Log_Debug3_T("");
+        return;
+    }
     QMenu menu(this);
+    QAction* actRename    = menu.addAction("Rename");
     QAction* actDuplicate = menu.addAction("Duplicate");
     QAction* actCopy      = menu.addAction("Copy");
     QAction* actPaste     = menu.addAction("Paste");
@@ -41,9 +50,13 @@ void MainWindow::onTabContextMenu(const QPoint& pos)
     // Paste stays enabled; your Project::pasteOnSelection() validates scope and will warn if invalid.
 
     QAction* picked = menu.exec(bar->mapToGlobal(pos));
-    if (!picked) return;
-
-    if (picked == actDuplicate) {
+    if (!picked) {
+        Log_Debug3_T("");
+        return;
+    }
+    if (picked == actRename) {
+        renameTab(index);
+    } else if (picked == actDuplicate) {
         duplicateTab(index);
     } else if (picked == actCopy) {
         m_project->copyMdn(index);
@@ -63,10 +76,12 @@ void MainWindow::onTabContextMenu(const QPoint& pos)
     } else if (picked == actDelete) {
         onTabCloseRequested(index);           // reuse your close handler
     }
+    Log_Debug3_T("");
 }
 
 
 void MainWindow::createMenus() {
+    Log_Debug3_H("");
     QMenu* fileMenu = menuBar()->addMenu("&File");
     fileMenu->addAction("New Project", this, &MainWindow::newProjectRequested);
     fileMenu->addAction("New Mdn2d", this, &MainWindow::newMdn2dRequested);
@@ -104,10 +119,12 @@ void MainWindow::createMenus() {
     helpMenu->addAction("Get Help");
     helpMenu->addAction("Donate");
     helpMenu->addAction("About");
+    Log_Debug3_T("");
 }
 
 
 void MainWindow::setupLayout() {
+    Log_Debug3_H("")
     m_splitter = new QSplitter(Qt::Vertical, this);
 
     // Top half - Mdn2d tab widget
@@ -154,22 +171,26 @@ void MainWindow::setupLayout() {
     m_splitter->setStretchFactor(1, 1);
 
     setCentralWidget(m_splitter);
+    Log_Debug3_T("");
 }
 
 
 void MainWindow::createNewProject() {
+    Log_Debug3_H("");
     if (m_project) {
         delete m_project;
         m_project = nullptr;
     }
     m_project = new mdn::Project(this);
-
+    Log_Debug3_T("");
 }
 
 
 void MainWindow::createTabs() {
+    Log_Debug3_H("");
     if (!m_project) {
         // Nothing to do
+        Log_Debug3_T("No project");
         return;
     }
 
@@ -184,24 +205,31 @@ void MainWindow::createTabs() {
         ndw->setModel(src, sel);
         int tab = m_tabWidget->addTab(ndw, qname);
     }
+    Log_Debug3_T("");
 }
 
 
 void MainWindow::onTabMoved(int from, int to) {
+    Log_Debug3_H("from " << from << " to " << to);
     m_project->moveMdn(from, to);
     syncTabsToProject();
+    Log_Debug3_T("");
 }
 
 
 void MainWindow::onTabCloseRequested(int index) {
+    Log_Debug3_H("");
     if (!m_project) {
+        Log_Debug3_T("No project");
         return;
     }
     m_project->deleteMdn(index);
+    Log_Debug3_T("");
 }
 
 
 void MainWindow::renameTab(int index) {
+    Log_Debug3_H("index=" << index);
     const std::string origName = m_project->nameOfMdn(index);
     QString origNameQ = mdn::MdnQtInterface::toQString(origName);
 
@@ -215,13 +243,13 @@ void MainWindow::renameTab(int index) {
         &ok
     );
     if (!ok) {
-        // User changed their mind
+        Log_Debug3_T("User changed their mind");
         return;
     }
     std::string newName = mdn::MdnQtInterface::fromQString(newNameQ);
 
     if (newName == origName) {
-        // Nothing to do
+        Log_Debug3_T("Nothing to do");
         return;
     }
 
@@ -234,7 +262,7 @@ void MainWindow::renameTab(int index) {
     m_tabWidget->setTabText(index, approvedNameQ);
 
     if (approvedName == newName) {
-        // User got what they expect, say no more
+        Log_Debug3_T("User got what they expect, say no more");
         return;
     }
 
@@ -248,6 +276,7 @@ void MainWindow::renameTab(int index) {
 
 void MainWindow::duplicateTab(int index)
 {
+    Log_Debug3_H("index=" << index);
     // 1) Ask Project to create a new model from this one
     std::pair<int, std::string>newIdName = m_project->duplicateMdn(index);
     int newIndex = newIdName.first;
@@ -264,29 +293,38 @@ void MainWindow::duplicateTab(int index)
     int newTab = m_tabWidget->insertTab(newIndex, w, QString::fromStdString(newName));
     m_tabWidget->setCurrentIndex(newTab);
     w->setFocus();
+    Log_Debug3_T("");
 }
 
 
 void MainWindow::copyTab(int index)
 {
+    Log_Debug3_H("index=" << index);
     if (!m_project) {
+        Log_Debug3_T("No project");
         return;
     }
     m_project->copyMdn(index);
+    Log_Debug3_T("");
 }
 
 
 void MainWindow::pasteTab(int insertAt)
 {
+    Log_Debug3_H("");
     if (!m_project) {
+        Log_Debug3_T("");
         return;
     }
     m_project->pasteOnSelection(insertAt);
+    Log_Debug3_T("");
 }
 
 
 void MainWindow::syncTabsToProject() {
+    Log_Debug3_H("");
     if (!m_project) {
+        Log_Debug3_T("No project");
         return;
     }
     const int n = m_tabWidget->count();
@@ -303,4 +341,5 @@ void MainWindow::syncTabsToProject() {
         view->setModel(&srcNum, &srcSel);
         m_tabWidget->setTabText(i, QString::fromStdString(srcNum.name())); // add mdnName(int)
     }
+    Log_Debug3_T("");
 }

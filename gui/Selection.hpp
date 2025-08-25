@@ -98,6 +98,7 @@ public:
         }
 
         void cursorUp(bool extendSelection) {
+            Log_Debug("cursorUp, extend=" << extendSelection);
             m_cursor1.translateY(1);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
@@ -107,6 +108,7 @@ public:
             }
         }
         void cursorDn(bool extendSelection) {
+            Log_Debug("cursorDn, extend=" << extendSelection);
             m_cursor1.translateY(-1);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
@@ -116,6 +118,7 @@ public:
             }
         }
         void cursorLf(bool extendSelection) {
+            Log_Debug("cursorLf, extend=" << extendSelection);
             m_cursor1.translateX(-1);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
@@ -125,6 +128,7 @@ public:
             }
         }
         void cursorRt(bool extendSelection) {
+            Log_Debug("cursorRt, extend=" << extendSelection);
             m_cursor1.translateX(1);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
@@ -134,6 +138,7 @@ public:
             }
         }
         void cursorJumpUp(bool extendSelection) {
+            Log_Debug("cursorJumpUp, extend=" << extendSelection);
             const Mdn2d* dst = get();
             if (!dst) {
                 Log_Warn("Failed to acquire Mdn2d");
@@ -153,6 +158,7 @@ public:
             }
         }
         void cursorJumpDn(bool extendSelection) {
+            Log_Debug("cursorJumpDn, extend=" << extendSelection);
             const Mdn2d* dst = get();
             if (!dst) {
                 Log_Warn("Failed to acquire Mdn2d");
@@ -172,6 +178,7 @@ public:
             }
         }
         void cursorJumpLf(bool extendSelection) {
+            Log_Debug("cursorJumpLf, extend=" << extendSelection);
             const Mdn2d* dst = get();
             if (!dst) {
                 Log_Warn("Failed to acquire Mdn2d");
@@ -191,6 +198,7 @@ public:
             }
         }
         void cursorJumpRt(bool extendSelection) {
+            Log_Debug("cursorJumpRt, extend=" << extendSelection);
             const Mdn2d* dst = get();
             if (!dst) {
                 Log_Warn("Failed to acquire Mdn2d");
@@ -210,6 +218,7 @@ public:
             }
         }
         void cursorPageUp(bool extendSelection) {
+            Log_Debug("cursorPageUp, extend=" << extendSelection);
             // Missing information - need to find out how much a page movement is
             m_cursor1.translate(m_pageDy);
             if (extendSelection) {
@@ -220,6 +229,7 @@ public:
             }
         }
         void cursorPageDn(bool extendSelection) {
+            Log_Debug("cursorPageDn, extend=" << extendSelection);
             // Missing information - need to find out how much a page movement is
             m_cursor1.translate(-m_pageDy);
             if (extendSelection) {
@@ -230,6 +240,7 @@ public:
             }
         }
         void cursorPageLf(bool extendSelection) {
+            Log_Debug("cursorPageLf, extend=" << extendSelection);
             // Missing information - need to find out how much a page movement is
             m_cursor1.translate(-m_pageDx);
             if (extendSelection) {
@@ -240,6 +251,7 @@ public:
             }
         }
         void cursorPageRt(bool extendSelection) {
+            Log_Debug("cursorPageRt, extend=" << extendSelection);
             // Missing information - need to find out how much a page movement is
             m_cursor1.translate(m_pageDx);
             if (extendSelection) {
@@ -250,6 +262,7 @@ public:
             }
         }
         void cursorOrigin(bool extendSelection) {
+            Log_Debug("cursorOrigin, extend=" << extendSelection);
             m_cursor1 = COORD_ORIGIN;
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
@@ -259,6 +272,7 @@ public:
             }
         }
         void cursorNextX(bool extendSelection) {
+            Log_Debug("cursorNextX, extend=" << extendSelection);
             m_cursor1.translate(1, 0);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
@@ -268,6 +282,7 @@ public:
             }
         }
         void cursorPrevX(bool extendSelection) {
+            Log_Debug("cursorPrevX, extend=" << extendSelection);
             m_cursor1.translate(-1, 0);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
@@ -277,6 +292,7 @@ public:
             }
         }
         void cursorNextY(bool extendSelection) {
+            Log_Debug("cursorNextY, extend=" << extendSelection);
             m_cursor1.translate(0, 1);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
@@ -286,6 +302,7 @@ public:
             }
         }
         void cursorPrevY(bool extendSelection) {
+            Log_Debug("cursorPrevY, extend=" << extendSelection);
             m_cursor1.translate(0, -1);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);

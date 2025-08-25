@@ -39,8 +39,8 @@ mdn::Mdn2d& mdn::Mdn2d::operator=(const Mdn2d& other) {
 }
 
 
-mdn::Mdn2d::Mdn2d(Mdn2d&& other, std::string nameIn) noexcept :
-    Mdn2dRules(std::move(other), nameIn)
+mdn::Mdn2d::Mdn2d(Mdn2d&& other) noexcept :
+    Mdn2dRules(std::move(other))
 {
     Log_N_Debug2("");
 }

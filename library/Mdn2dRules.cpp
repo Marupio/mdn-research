@@ -85,8 +85,8 @@ mdn::Mdn2dRules& mdn::Mdn2dRules::operator=(const Mdn2dRules& other) {
 }
 
 
-mdn::Mdn2dRules::Mdn2dRules(Mdn2dRules&& other, std::string nameIn) noexcept :
-    Mdn2dBase(std::move(other), nameIn)
+mdn::Mdn2dRules::Mdn2dRules(Mdn2dRules&& other) noexcept :
+    Mdn2dBase(std::move(other))
 {
     auto lockOther = other.lockReadOnly();
     Log_Debug3("Move-copying Mdn2dRules");

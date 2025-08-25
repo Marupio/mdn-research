@@ -134,7 +134,7 @@ public:
             Mdn2dBase& operator=(const Mdn2dBase& other);
 
             // Move operator
-            Mdn2dBase(Mdn2dBase&& other, std::string nameIn="") noexcept;
+            Mdn2dBase(Mdn2dBase&& other) noexcept;
 
             // Move assignment operator
             Mdn2dBase& operator=(Mdn2dBase&& other) noexcept;

@@ -45,7 +45,7 @@ public:
             Mdn2dRules& operator=(const Mdn2dRules& other);
 
             // Move operator
-            Mdn2dRules(Mdn2dRules&& other, std::string nameIn="") noexcept;
+            Mdn2dRules(Mdn2dRules&& other) noexcept;
 
             // Move assignment operator
             Mdn2dRules& operator=(Mdn2dRules&& other) noexcept;
