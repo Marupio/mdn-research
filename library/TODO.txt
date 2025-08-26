@@ -9,6 +9,7 @@ Here is a list of tasks that I'd like to eventually complete for the library.
 * Propogate new Rect iterabilitiness
 * Change Mdn2dIO into a layer on the Mdn2d class structure
 * Consider adding namespace extensions: mdn::algo (algorithm), mdn::io
+* Get rid of invalidReason in Mdn2dConfig
 
 GUI library
 

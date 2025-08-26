@@ -285,3 +285,35 @@
             PrecisionStatus checkPrecisionWindow(const Coord& xy) const;
 
     // That's all for Mdn2d interface.  Now let's make the GUI.
+
+
+
+
+More detail, now that I've built so much of it:
+
+Menus
+
+File
+    New Project
+    New Mdn2d
+    ----
+    Open Project
+    Open Mdn2d
+    ----
+    Save Project
+    Save Mdn2d
+    ----
+    Close Project
+    Exit
+
+Operation
+    A + B --> A
+    A + B --> B
+    A + B --> C
+
+    Add, Subtract, Multiply, Divide
+    A op B --> A
+    A op B --> B
+    A op B --> C
+    Add Mdn2d
+    Subtract Mdn2d
