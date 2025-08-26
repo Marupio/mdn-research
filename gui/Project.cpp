@@ -14,14 +14,13 @@
 #include "../library/SignConvention.hpp"
 #include "../library/Tools.hpp"
 #include "Clipboard.hpp"
-#include "Selection.hpp"
 #include "MainWindow.hpp"
 #include "MdnQtInterface.hpp"
 
 
-int mdn::Project::m_untitledNumber = 0;
+int mdn::gui::Project::m_untitledNumber = 0;
 
-void mdn::Project::shiftMdnTabsRight(int start, int end, int shift) {
+void mdn::gui::Project::shiftMdnTabsRight(int start, int end, int shift) {
     Log_Debug3_H("start=" << start << ",end=" << end << ",shift=" << shift);
     int lastI = m_data.size() - 1;
     if (end > lastI || end < 0) {
@@ -63,7 +62,7 @@ void mdn::Project::shiftMdnTabsRight(int start, int end, int shift) {
 }
 
 
-void mdn::Project::shiftMdnTabsLeft(int start, int end, int shift) {
+void mdn::gui::Project::shiftMdnTabsLeft(int start, int end, int shift) {
     Log_Debug3_H("start=" << start << ",end=" << end << ",shift=" << shift);
     int lastI = m_data.size() - 1;
     if (end > lastI || end < 0) {
@@ -107,7 +106,7 @@ void mdn::Project::shiftMdnTabsLeft(int start, int end, int shift) {
 }
 
 
-mdn::Project::Project(MainWindow* parent, std::string name, int nStartMdn):
+mdn::gui::Project::Project(MainWindow* parent, std::string name, int nStartMdn):
     m_parent(parent),
     m_name(name)
 {
@@ -133,7 +132,7 @@ mdn::Project::Project(MainWindow* parent, std::string name, int nStartMdn):
 }
 
 
-std::string mdn::Project::requestMdnNameChange(
+std::string mdn::gui::Project::requestMdnNameChange(
     const std::string& origName,
     const std::string& newName
 ) {
@@ -172,7 +171,7 @@ std::string mdn::Project::requestMdnNameChange(
 }
 
 
-void mdn::Project::updateSelection() const {
+void mdn::gui::Project::updateSelection() const {
     if (!m_parent) {
         return;
     }
@@ -182,7 +181,7 @@ void mdn::Project::updateSelection() const {
 }
 
 
-void mdn::Project::setConfig(Mdn2dConfig newConfig) {
+void mdn::gui::Project::setConfig(Mdn2dConfig newConfig) {
     Log_Debug2_H("newConfig=" << newConfig);
     if (m_data.empty()) {
         m_config = newConfig;
@@ -271,7 +270,7 @@ void mdn::Project::setConfig(Mdn2dConfig newConfig) {
 }
 
 
-bool mdn::Project::contains(std::string name, bool warnOnFailure) const {
+bool mdn::gui::Project::contains(std::string name, bool warnOnFailure) const {
     Log_Debug3_H("name='" << name << "', warn=" << warnOnFailure);
     int index = indexOfMdn(name);
     if (index < 0) {
@@ -299,7 +298,7 @@ bool mdn::Project::contains(std::string name, bool warnOnFailure) const {
 }
 
 
-bool mdn::Project::contains(int i, bool warnOnFailure) const {
+bool mdn::gui::Project::contains(int i, bool warnOnFailure) const {
     Log_Debug3_H("i=" << i << ",warnOnFailure=" << warnOnFailure);
     const auto iter = m_data.find(i);
     if (iter == m_data.cend()) {
@@ -317,7 +316,7 @@ bool mdn::Project::contains(int i, bool warnOnFailure) const {
 }
 
 
-int mdn::Project::indexOfMdn(std::string name) const {
+int mdn::gui::Project::indexOfMdn(std::string name) const {
     const auto iter = m_addressingNameToIndex.find(name);
     if (iter == m_addressingNameToIndex.cend()) {
         Log_Debug3("indexOf(" << name << ")= not found, returning -1");
@@ -328,7 +327,7 @@ int mdn::Project::indexOfMdn(std::string name) const {
 }
 
 
-std::string mdn::Project::nameOfMdn(int i) const {
+std::string mdn::gui::Project::nameOfMdn(int i) const {
     const auto iter = m_addressingIndexToName.find(i);
     if (iter == m_addressingIndexToName.cend()) {
         Log_Debug3("nameOf(" << i << ")= not found, returning empty string");
@@ -339,7 +338,7 @@ std::string mdn::Project::nameOfMdn(int i) const {
 }
 
 
-std::string mdn::Project::renameMdn(int i, const std::string& newName) {
+std::string mdn::gui::Project::renameMdn(int i, const std::string& newName) {
     Log_Debug2_H("renaming " << i << " to '" << newName << "'");
     Mdn2d* tgt = getMdn(i);
     std::string currentName = tgt->name();
@@ -349,7 +348,7 @@ std::string mdn::Project::renameMdn(int i, const std::string& newName) {
 }
 
 
-std::vector<std::string> mdn::Project::toc() const {
+std::vector<std::string> mdn::gui::Project::toc() const {
     Log_Debug2_H("");
     int nElems = size();
     if (nElems != m_addressingIndexToName.size() || nElems != m_addressingNameToIndex.size()) {
@@ -426,27 +425,27 @@ std::vector<std::string> mdn::Project::toc() const {
 }
 
 
-const mdn::Mdn2d* mdn::Project::activeMdn() const {
+const mdn::Mdn2d* mdn::gui::Project::activeMdn() const {
     Log_Debug3("");
-    return m_activeMdn2d;
+    return &(m_activeEntry->first);
 }
-mdn::Mdn2d* mdn::Project::activeMdn() {
+mdn::Mdn2d* mdn::gui::Project::activeMdn() {
     Log_Debug3("");
-    return m_activeMdn2d;
-}
-
-
-const mdn::Selection* mdn::Project::activeSelection() const {
-    Log_Debug3("");
-    return m_activeSelection;
-}
-mdn::Selection* mdn::Project::activeSelection() {
-    Log_Debug3("");
-    return m_activeSelection;
+    return &(m_activeEntry->first);
 }
 
 
-void mdn::Project::setActiveMdn(int i) {
+const mdn::gui::Selection* mdn::gui::Project::activeSelection() const {
+    Log_Debug3("");
+    return &(m_activeEntry->second);
+}
+mdn::gui::Selection* mdn::gui::Project::activeSelection() {
+    Log_Debug3("");
+    return &(m_activeEntry->second);
+}
+
+
+void mdn::gui::Project::setActiveMdn(int i) {
     Log_Debug2_H("index=" << i);
     if (!contains(i, true)) {
         Log_Debug2_T("not valid");
@@ -454,14 +453,12 @@ void mdn::Project::setActiveMdn(int i) {
     }
     auto iter = m_data.find(i);
     DBAssert(iter != m_data.end(), "Mdn is not at expected index, " << i);
-    std::pair<Mdn2d, Selection> elem = iter->second;
-    m_activeMdn2d = &(elem.first);
-    m_activeSelection = &(elem.second);
+    m_activeEntry = &iter->second;
     Log_Debug2_T("success");
 }
 
 
-void mdn::Project::setActiveMdn(std::string name) {
+void mdn::gui::Project::setActiveMdn(std::string name) {
     Log_Debug2_H("name='" << name << "'");
     int i = indexOfMdn(name);
     if (i < 0) {
@@ -474,7 +471,10 @@ void mdn::Project::setActiveMdn(std::string name) {
 }
 
 
-const std::pair<mdn::Mdn2d, mdn::Selection>* mdn::Project::at(int i, bool warnOnFailure) const {
+const std::pair<mdn::Mdn2d, mdn::gui::Selection>* mdn::gui::Project::at(
+    int i,
+    bool warnOnFailure
+) const {
     Log_Debug3_H("i=" << i << ", warnOnFailure=" << warnOnFailure);
     const auto iter = m_data.find(i);
     if (iter == m_data.cend()) {
@@ -489,7 +489,7 @@ const std::pair<mdn::Mdn2d, mdn::Selection>* mdn::Project::at(int i, bool warnOn
 }
 
 
-std::pair<mdn::Mdn2d, mdn::Selection>* mdn::Project::at(int i, bool warnOnFailure) {
+std::pair<mdn::Mdn2d, mdn::gui::Selection>* mdn::gui::Project::at(int i, bool warnOnFailure) {
     Log_Debug3_H("i=" << i << ", warnOnFailure=" << warnOnFailure);
     auto iter = m_data.find(i);
     if (iter == m_data.end()) {
@@ -502,7 +502,7 @@ std::pair<mdn::Mdn2d, mdn::Selection>* mdn::Project::at(int i, bool warnOnFailur
     Log_Debug3_T("returning valid entry");
     return &(iter->second);
 }
-const std::pair<mdn::Mdn2d, mdn::Selection>* mdn::Project::at(
+const std::pair<mdn::Mdn2d, mdn::gui::Selection>* mdn::gui::Project::at(
     std::string name,
     bool warnOnFailure
 ) const {
@@ -519,7 +519,10 @@ const std::pair<mdn::Mdn2d, mdn::Selection>* mdn::Project::at(
     Log_Debug3_T("returning valid entry");
     return &(m_data.at(index));
 }
-std::pair<mdn::Mdn2d, mdn::Selection>* mdn::Project::at(std::string name, bool warnOnFailure) {
+std::pair<mdn::Mdn2d, mdn::gui::Selection>* mdn::gui::Project::at(
+    std::string name,
+    bool warnOnFailure
+) {
     Log_Debug3_H("name=" << name << ", warnOnFailure=" << warnOnFailure);
     auto iter = m_addressingNameToIndex.find(name);
     if (iter == m_addressingNameToIndex.cend()) {
@@ -537,69 +540,72 @@ std::pair<mdn::Mdn2d, mdn::Selection>* mdn::Project::at(std::string name, bool w
 }
 
 
-const mdn::Selection* mdn::Project::getSelection(int i, bool warnOnFailure) const {
+const mdn::gui::Selection* mdn::gui::Project::getSelection(int i, bool warnOnFailure) const {
     Log_Debug3("");
     return &at(i, warnOnFailure)->second;
 }
-mdn::Selection* mdn::Project::getSelection(int i, bool warnOnFailure) {
+mdn::gui::Selection* mdn::gui::Project::getSelection(int i, bool warnOnFailure) {
     Log_Debug3("");
     return &at(i, warnOnFailure)->second;
 }
 
 
-const mdn::Selection* mdn::Project::getSelection(std::string name, bool warnOnFailure) const {
+const mdn::gui::Selection* mdn::gui::Project::getSelection(
+    std::string name,
+    bool warnOnFailure
+) const {
     Log_Debug3("");
     return &at(name, warnOnFailure)->second;
 }
-mdn::Selection* mdn::Project::getSelection(std::string name, bool warnOnFailure) {
+mdn::gui::Selection* mdn::gui::Project::getSelection(std::string name, bool warnOnFailure) {
     Log_Debug3("");
     return &at(name, warnOnFailure)->second;
 }
 
 
-const mdn::Mdn2d* mdn::Project::getMdn(int i, bool warnOnFailure) const {
+const mdn::Mdn2d* mdn::gui::Project::getMdn(int i, bool warnOnFailure) const {
     Log_Debug3("");
     return &at(i, warnOnFailure)->first;
 }
-mdn::Mdn2d* mdn::Project::getMdn(int i, bool warnOnFailure) {
+mdn::Mdn2d* mdn::gui::Project::getMdn(int i, bool warnOnFailure) {
     Log_Debug3("");
     return &at(i, warnOnFailure)->first;
 }
 
 
-const mdn::Mdn2d* mdn::Project::getMdn(std::string name, bool warnOnFailure) const {
+const mdn::Mdn2d* mdn::gui::Project::getMdn(std::string name, bool warnOnFailure) const {
     Log_Debug3("");
     return &at(name, warnOnFailure)->first;
 }
-mdn::Mdn2d* mdn::Project::getMdn(std::string name, bool warnOnFailure) {
+mdn::Mdn2d* mdn::gui::Project::getMdn(std::string name, bool warnOnFailure) {
     Log_Debug3("");
     return &at(name, warnOnFailure)->first;
 }
 
 
-const mdn::Mdn2d* mdn::Project::firstMdn(bool warnOnFailure) const {
+const mdn::Mdn2d* mdn::gui::Project::firstMdn(bool warnOnFailure) const {
     Log_Debug3("");
     return getMdn(0, warnOnFailure);
 }
-mdn::Mdn2d* mdn::Project::firstMdn(bool warnOnFailure) {
+mdn::Mdn2d* mdn::gui::Project::firstMdn(bool warnOnFailure) {
     Log_Debug3("");
     return getMdn(0, warnOnFailure);
 }
 
 
-const mdn::Mdn2d* mdn::Project::lastMdn(bool warnOnFailure) const {
+const mdn::Mdn2d* mdn::gui::Project::lastMdn(bool warnOnFailure) const {
     Log_Debug3("");
     int lastI = m_data.size() - 1;
     return getMdn(lastI, warnOnFailure);
 }
-mdn::Mdn2d* mdn::Project::lastMdn(bool warnOnFailure) {
+mdn::Mdn2d* mdn::gui::Project::lastMdn(bool warnOnFailure) {
     Log_Debug3("");
     int lastI = m_data.size() - 1;
     return getMdn(lastI, warnOnFailure);
 }
 
 
-void mdn::Project::insertMdn(Mdn2d& mdn, int index) {
+void mdn::gui::Project::insertMdn(Mdn2d& mdn, int index) {
     Log_Debug2_H("inserting mdn(" << mdn.name() << ") at " << index);
     // For warning messages
     std::ostringstream oss;
@@ -648,7 +654,7 @@ void mdn::Project::insertMdn(Mdn2d& mdn, int index) {
 }
 
 
-std::pair<int, std::string> mdn::Project::duplicateMdn(int index) {
+std::pair<int, std::string> mdn::gui::Project::duplicateMdn(int index) {
     Log_Debug2_H("duplicating mdn at " << index);
     Mdn2d* src = getMdn(index, true);
     if (!src) {
@@ -668,7 +674,7 @@ std::pair<int, std::string> mdn::Project::duplicateMdn(int index) {
 }
 
 
-std::pair<int, std::string> mdn::Project::duplicateMdn(const std::string& name) {
+std::pair<int, std::string> mdn::gui::Project::duplicateMdn(const std::string& name) {
     Log_Debug2_H("Duplicating '" << name << "'");
     Mdn2d* src = getMdn(name, true);
     if (!src) {
@@ -689,7 +695,7 @@ std::pair<int, std::string> mdn::Project::duplicateMdn(const std::string& name) 
 }
 
 
-bool mdn::Project::moveMdn(int fromIndex, int toIndex) {
+bool mdn::gui::Project::moveMdn(int fromIndex, int toIndex) {
     Log_Debug2_H("from " << fromIndex << " to " << toIndex);
     if (fromIndex == toIndex) {
         // Nothing to do
@@ -724,7 +730,7 @@ bool mdn::Project::moveMdn(int fromIndex, int toIndex) {
 }
 
 
-bool mdn::Project::moveMdn(const std::string& name, int toIndex) {
+bool mdn::gui::Project::moveMdn(const std::string& name, int toIndex) {
     Log_Debug2_H("Moving '" << name << "' to " << toIndex);
     int fromIndex = indexOfMdn(name);
     if (fromIndex < 0) {
@@ -738,7 +744,7 @@ bool mdn::Project::moveMdn(const std::string& name, int toIndex) {
 }
 
 
-bool mdn::Project::deleteMdn(int index) {
+bool mdn::gui::Project::deleteMdn(int index) {
     Log_Debug2_H("deleting " << index);
     if (!contains(index, true)) {
         Log_Debug2_T("Not a valid index, returning false");
@@ -755,7 +761,7 @@ bool mdn::Project::deleteMdn(int index) {
 }
 
 
-bool mdn::Project::deleteMdn(const std::string& name) {
+bool mdn::gui::Project::deleteMdn(const std::string& name) {
     Log_Debug2_H("Deleting '" << name << "'");
     if (!contains(name, true)) {
         Log_Debug2_T("Not a valid name, returning false");
@@ -773,9 +779,9 @@ bool mdn::Project::deleteMdn(const std::string& name) {
 }
 
 
-void mdn::Project::copySelection() const {
+void mdn::gui::Project::copySelection() const {
     Log_Debug2_H("");
-    const mdn::Selection* sel = selection();
+    const mdn::gui::Selection* sel = selection();
     if (!sel) {
         Log_WarnQ("Failed to acquire selection");
         Log_Debug2_T("Failed");
@@ -788,14 +794,14 @@ void mdn::Project::copySelection() const {
     }
     Rect r = sel->rect();
     // r.fixOrdering();
-    mdn::Clipboard::encodeRectToClipboard(
+    Clipboard::encodeRectToClipboard(
         *src, r, QStringLiteral("rect"), QString::fromStdString(src->name())
     );
     Log_Debug2_T("Success");
 }
 
 
-void mdn::Project::copyMdn(int index) const {
+void mdn::gui::Project::copyMdn(int index) const {
     Log_Debug2_H("copying " << index);
     const Mdn2d* src = getMdn(index);
     if (src == nullptr) {
@@ -809,14 +815,14 @@ void mdn::Project::copyMdn(int index) const {
     }
 
     const Rect b = src->bounds();
-    mdn::Clipboard::encodeRectToClipboard(
+    Clipboard::encodeRectToClipboard(
         *src, b, QStringLiteral("mdn"), QString::fromStdString(src->name())
     );
     Log_Debug2_T("Success");
 }
 
 
-void mdn::Project::cutSelection() {
+void mdn::gui::Project::cutSelection() {
     Log_Debug2_H("");
     copySelection();
     deleteSelection();
@@ -824,7 +830,7 @@ void mdn::Project::cutSelection() {
 }
 
 
-bool mdn::Project::pasteOnSelection(int index) {
+bool mdn::gui::Project::pasteOnSelection(int index) {
     //  Source scope (data on the clipboard)
     //  A) "mdn"  - defines an entire Mdn for pasting
     //  B) "rect" - defines a specific area on a specific Mdn
@@ -842,7 +848,7 @@ bool mdn::Project::pasteOnSelection(int index) {
     //      required: if target is 1x1, paste okay, use that as bottom left anchor, otherwise
     //      the size must match exactly
     Log_Debug2_H("Pasting, with mdn index=" << index);
-    const mdn::Selection* sel = selection();
+    const mdn::gui::Selection* sel = selection();
     if (!sel) {
         Log_WarnQ("Failed to acquire selection");
         Log_Debug2_T("Returning false");
@@ -936,9 +942,9 @@ bool mdn::Project::pasteOnSelection(int index) {
 }
 
 
-void mdn::Project::deleteSelection() {
+void mdn::gui::Project::deleteSelection() {
     Log_Debug2_H("");
-    const mdn::Selection* sel = selection();
+    const mdn::gui::Selection* sel = selection();
     if (!sel) {
         Log_WarnQ("Failed to acquire selection");
         Log_Debug2_T("No selection to delete");

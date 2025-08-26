@@ -2,7 +2,7 @@
 
 #include "MdnQtInterface.hpp"
 
-void mdn::Clipboard::encodeRectToClipboard(
+void mdn::gui::Clipboard::encodeRectToClipboard(
     const Mdn2d& src,
     const Rect& r,
     const QString& scope,
@@ -68,7 +68,7 @@ void mdn::Clipboard::encodeRectToClipboard(
 }
 
 
-mdn::Clipboard::DecodedPaste mdn::Clipboard::decodeClipboard() {
+mdn::gui::Clipboard::DecodedPaste mdn::gui::Clipboard::decodeClipboard() {
     DecodedPaste out;
 
     const QMimeData* mime = QGuiApplication::clipboard()->mimeData();

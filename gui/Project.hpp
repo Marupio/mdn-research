@@ -8,13 +8,18 @@
 #include <QMessageBox>
 
 #include "Selection.hpp"
-#include "../library/GlobalConfig.hpp"
 #include "../library/Mdn2d.hpp"
 #include "../library/Mdn2dFramework.hpp"
 
+namespace mdn {
+namespace gui {
 class MainWindow;
+}
+}
+
 
 namespace mdn {
+namespace gui {
 
 class Project: public Mdn2dFramework {
 
@@ -44,11 +49,7 @@ protected:
     std::unordered_map<int, std::string> m_addressingIndexToName;
 
     // Current active tab data
-    Selection* m_activeSelection;
-    Mdn2d* m_activeMdn2d;
-
-    //  TODO - Use this active data element instead of individuals above
-    // std::pair<Mdn2d, Selection>* m_activePair;
+    std::pair<Mdn2d, Selection>* m_activeEntry;
 
 
     // *** Protected member functions
@@ -160,11 +161,14 @@ public:
         //  This function also checks the metadata all agree
         std::vector<std::string> toc() const;
 
+        const std::pair<Mdn2d, Selection>* activeEntry() const;
+        std::pair<Mdn2d, Selection>* activeEntry();
+
         const Mdn2d* activeMdn() const;
         Mdn2d* activeMdn();
 
         const Selection* activeSelection() const;
-        mdn::Selection* activeSelection();
+        Selection* activeSelection();
 
         // Given mdn tab is now active
         void setActiveMdn(int i);
@@ -257,30 +261,29 @@ public:
 
         // Set page up/down and page left/right distances (in digits)
         inline void setPageStep(int dxCols, int dyRows) {
-            if (m_activeSelection) {
-                m_activeSelection->setPageStep(dxCols, dyRows);
+            if (auto sel = activeSelection()) {
+                sel->setPageStep(dxCols, dyRows);
             }
         }
 
         // Access current selection
         inline const Selection* selection() const {
-            if (!m_activeSelection) {
-                if (size()) {
-                    // If there are tabs, complain
-                    Log_WarnQ("No tab is currently selected.");
-                }
-                return nullptr;
+            if (const auto sel = activeSelection()) {
+                return sel;
             }
-            return m_activeSelection;
+            if (size()) {
+                Log_WarnQ("No tab is currently selected.");
+            }
+            return nullptr;
         }
         inline Selection* selection() {
-            if (!m_activeSelection) {
-                if (size()) {
-                    Log_WarnQ("No tab is currently selected.");
-                }
-                return nullptr;
+            if (auto sel = activeSelection()) {
+                return sel;
             }
-            return m_activeSelection;
+            if (size()) {
+                Log_WarnQ("No tab is currently selected.");
+            }
+            return nullptr;
         }
 
         // Set new selection
@@ -341,5 +344,5 @@ public:
 
 };
 
-
+} // end namespace gui
 }  // end namespace mdn

@@ -3,6 +3,9 @@
 #include "Project.hpp"
 #include "Selection.hpp"
 
+constexpr double mdn::gui::NumberDisplayWidget::kEdgeGuardFrac;
+
+
 mdn::gui::NumberDisplayWidget::NumberDisplayWidget(QWidget* parent)
     : QWidget(parent) {
     setFocusPolicy(Qt::StrongFocus);
@@ -24,6 +27,7 @@ void mdn::gui::NumberDisplayWidget::setModel(const Mdn2d* model, Selection* sel)
         m_cursorY = m_selection->cursor1().y();
     }
     recalcGridGeometry();
+    centreViewOnOrigin();
     update();
 }
 
@@ -44,16 +48,19 @@ void mdn::gui::NumberDisplayWidget::resetFont() {
 
 
 void mdn::gui::NumberDisplayWidget::setFontPointSize(int pt) {
+    captureCursorFractions();
     pt = std::clamp(pt, m_minPt, m_maxPt);
     if (m_theme.font.pointSize() == pt) return;
     m_theme.font.setPointSize(pt);
     recalcGridGeometry();
     // If you feed page step back to Project, do it here using visibleCols/Rows
     if (m_project) {
-        const int pageCols = std::max(1, m_cols - 1);
-        const int pageRows = std::max(1, m_rows - 1);
-        m_project->setPageStep(pageCols, pageRows); // optional if you added this
+    const int pageCols = std::max(1, (m_cols - 1) / 3);
+    const int pageRows = std::max(1, (m_rows - 1) / 3);
+        m_project->setPageStep(pageCols, pageRows);
     }
+    recalcGridGeometry();
+    restoreCursorFractions();
     update();
 }
 
@@ -226,9 +233,21 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent(QKeyEvent* e) {
             e->accept(); break;
 
         // ---- Origin ----
-        case Qt::Key_Home:
-            m_selection->cursorOrigin(extend);
-            e->accept(); break;
+        case Qt::Key_Home: {
+            if (ctrl) {
+                m_selection->cursorOrigin(extend);
+                m_cursorX = 0;
+                m_cursorY = 0;
+                centreViewOnOrigin();
+            } else {
+                m_cursorX = m_selection->cursor1().x();
+                m_cursorY = m_selection->cursor1().y();
+                centreViewOn(m_cursorX, m_cursorY);
+            }
+            e->accept();
+            break;
+        }
+
 
         // ---- Next / Prev by “entry” convention ----
         // Enter / Return: move along Y (down by default)
@@ -269,6 +288,67 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent(QKeyEvent* e) {
 }
 
 
+void mdn::gui::NumberDisplayWidget::mousePressEvent(QMouseEvent* e) {
+    if (e->button() == Qt::LeftButton) {
+        int mx{0};
+        int my{0};
+        pixelToModel(e->pos().x(), e->pos().y(), mx, my);
+
+        if (e->modifiers().testFlag(Qt::ShiftModifier)) {
+            m_dragging = true;
+            if (m_selection) {
+                m_dragAnchorX = m_selection->cursor0().x();
+                m_dragAnchorY = m_selection->cursor0().y();
+            } else {
+                m_dragAnchorX = m_cursorX;
+                m_dragAnchorY = m_cursorY;
+            }
+            setCursor1(mx, my);
+        } else {
+            m_dragging = true;
+            m_dragAnchorX = mx;
+            m_dragAnchorY = my;
+            setBothCursors(mx, my);
+        }
+        e->accept();
+        return;
+    }
+    QWidget::mousePressEvent(e);
+}
+
+
+void mdn::gui::NumberDisplayWidget::mouseMoveEvent(QMouseEvent* e) {
+    if (m_dragging) {
+        int mx{0};
+        int my{0};
+        pixelToModel(e->pos().x(), e->pos().y(), mx, my);
+        if (m_selection) {
+            m_selection->setCursor0({m_dragAnchorX, m_dragAnchorY});
+            m_selection->setCursor1({mx, my});
+            m_selection->syncRectToCursors();
+            m_cachedSel = m_selection->rect();
+        }
+        m_cursorX = mx;
+        m_cursorY = my;
+        ensureCursorVisible();
+        update();
+        e->accept();
+        return;
+    }
+    QWidget::mouseMoveEvent(e);
+}
+
+
+void mdn::gui::NumberDisplayWidget::mouseReleaseEvent(QMouseEvent* e) {
+    if (e->button() == Qt::LeftButton) {
+        m_dragging = false;
+        e->accept();
+        return;
+    }
+    QWidget::mouseReleaseEvent(e);
+}
+
+
 void mdn::gui::NumberDisplayWidget::wheelEvent(QWheelEvent* e) {
     // Ctrl+Wheel zooms font
     if (e->modifiers().testFlag(Qt::ControlModifier)) {
@@ -287,49 +367,57 @@ void mdn::gui::NumberDisplayWidget::wheelEvent(QWheelEvent* e) {
 
 
 void mdn::gui::NumberDisplayWidget::resizeEvent(QResizeEvent* e) {
+    captureCursorFractions();
+    QWidget::resizeEvent(e);
     recalcGridGeometry();
+    restoreCursorFractions();
     if (m_selection) {
-        const int pageCols = std::max(1, m_cols - 1);
-        const int pageRows = std::max(1, m_rows - 1);
+        const int pageCols = std::max(1, (m_cols - 1) / 3);
+        const int pageRows = std::max(1, (m_rows - 1) / 3);
         m_selection->setPageStep(pageCols, pageRows);
     }
-    QWidget::resizeEvent(e);
     update();
 }
 
 
 void mdn::gui::NumberDisplayWidget::recalcGridGeometry() {
-    // Size grid cells from current font so digits remain crisp
     QFontMetrics fm(m_theme.font);
-    // Width of '0' is a good proxy in monospace; add small padding
     const int cw = fm.horizontalAdvance(QLatin1Char('0')) + 2;
     const int ch = fm.height() + 2;
     m_cellSize = std::max(cw, ch);
 
-    m_cols = std::max(1, width()  / m_cellSize) + 1;
+    m_cols = std::max(1, width() / m_cellSize) + 1;
     m_rows = std::max(1, height() / m_cellSize) + 1;
 
-    int pageCols = std::max(1, m_cols - 1);
-    int pageRows = std::max(1, m_rows - 1);
+    const int pageCols = std::max(1, (m_cols - 1) / 3);
+    const int pageRows = std::max(1, (m_rows - 1) / 3);
     m_project->setPageStep(pageCols, pageRows);
 }
 
 
 void mdn::gui::NumberDisplayWidget::ensureCursorVisible() {
-    // Horizontal: model x+ goes right (no inversion)
-    if (m_cursorX < m_viewOriginX) {
-        m_viewOriginX = m_cursorX;
-    }
-    if (m_cursorX >= m_viewOriginX + m_cols) {
-        m_viewOriginX = m_cursorX - (m_cols - 1);
+    const int guardX = std::max(0, int(std::floor(double(m_cols) * kEdgeGuardFrac)));
+    const int guardY = std::max(0, int(std::floor(double(m_rows) * kEdgeGuardFrac)));
+
+    const int left = m_viewOriginX + guardX;
+    const int right = m_viewOriginX + (m_cols - 1) - guardX;
+    const int topY = m_viewOriginY + guardY;
+    const int bottomY = m_viewOriginY + (m_rows - 1) - guardY;
+
+    if (m_cursorX < left) {
+        m_viewOriginX = m_cursorX - guardX;
+    } else {
+        if (m_cursorX > right) {
+            m_viewOriginX = m_cursorX - ((m_cols - 1) - guardX);
+        }
     }
 
-    // Vertical: model y+ goes up, top of view shows higher model y
-    if (m_cursorY >= m_viewOriginY + m_rows) {
-        m_viewOriginY = m_cursorY - (m_rows - 1);
-    }
-    if (m_cursorY < m_viewOriginY) {
-        m_viewOriginY = m_cursorY;
+    if (m_cursorY < topY) {
+        m_viewOriginY = m_cursorY - guardY;
+    } else {
+        if (m_cursorY > bottomY) {
+            m_viewOriginY = m_cursorY - ((m_rows - 1) - guardY);
+        }
     }
 }
 
@@ -375,3 +463,97 @@ void mdn::gui::NumberDisplayWidget::drawAxes(QPainter& painter, const QRect& wid
 void mdn::gui::NumberDisplayWidget::adjustFontBy(int deltaPts) {
     setFontPointSize(fontPointSize() + deltaPts);
 }
+
+
+void mdn::gui::NumberDisplayWidget::pixelToModel(int px, int py, int& mx, int& my) const {
+    const int cs = std::max(1, m_cellSize);
+    const int col = px / cs;
+    const int row = py / cs;
+
+    mx = m_viewOriginX + col;
+
+    const int invRow = (m_rows > 0) ? ((m_rows - 1) - row) : 0;
+    my = m_viewOriginY + invRow;
+}
+
+
+void mdn::gui::NumberDisplayWidget::centreViewOn(int mx, int my) {
+    const int halfCols = m_cols / 2;
+    const int halfRows = m_rows / 2;
+
+    m_viewOriginX = mx - halfCols;
+    m_viewOriginY = my - halfRows;
+
+    update();
+}
+
+
+void mdn::gui::NumberDisplayWidget::centreViewOnOrigin() {
+    centreViewOn(0, 0);
+}
+
+
+void mdn::gui::NumberDisplayWidget::captureCursorFractions() {
+    if (m_cols <= 1) {
+        m_lastCursorFracX = 0.5;
+    } else {
+        m_lastCursorFracX = double(m_cursorX - m_viewOriginX) / double(m_cols - 1);
+    }
+    if (m_rows <= 1) {
+        m_lastCursorFracY = 0.5;
+    } else {
+        m_lastCursorFracY = double(m_cursorY - m_viewOriginY) / double(m_rows - 1);
+    }
+    if (m_lastCursorFracX < 0.0) {
+        m_lastCursorFracX = 0.0;
+    } else {
+        if (m_lastCursorFracX > 1.0) {
+            m_lastCursorFracX = 1.0;
+        }
+    }
+    if (m_lastCursorFracY < 0.0) {
+        m_lastCursorFracY = 0.0;
+    } else {
+        if (m_lastCursorFracY > 1.0) {
+            m_lastCursorFracY = 1.0;
+        }
+    }
+}
+
+
+void mdn::gui::NumberDisplayWidget::restoreCursorFractions() {
+    int targetCol = int(std::round(m_lastCursorFracX * double(std::max(1, m_cols - 1))));
+    int targetRow = int(std::round(m_lastCursorFracY * double(std::max(1, m_rows - 1))));
+    m_viewOriginX = m_cursorX - targetCol;
+    m_viewOriginY = m_cursorY - targetRow;
+    ensureCursorVisible();
+}
+
+
+void mdn::gui::NumberDisplayWidget::setBothCursors(int mx, int my) {
+    m_cursorX = mx;
+    m_cursorY = my;
+    if (m_selection) {
+        m_selection->setCursor0({mx, my});
+        m_selection->setCursor1({mx, my});
+        m_selection->syncRectToCursors();
+        m_cachedSel = m_selection->rect();
+    }
+    ensureCursorVisible();
+    update();
+}
+
+
+void mdn::gui::NumberDisplayWidget::setCursor1(int mx, int my) {
+    m_cursorX = mx;
+    m_cursorY = my;
+    if (m_selection) {
+        m_selection->setCursor1({mx, my});
+        m_selection->syncRectToCursors();
+        m_cachedSel = m_selection->rect();
+    }
+    ensureCursorVisible();
+    update();
+}
+
+

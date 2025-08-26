@@ -7,6 +7,7 @@
 #include "../library/MdnObserver.hpp"
 
 namespace mdn {
+namespace gui {
 
 class Selection : public MdnObserver {
 
@@ -38,8 +39,17 @@ public:
         m_cursor1 = m_rect.max();
     }
 
+    // Recompute the selection rectangle from cursor0 and cursor1
+    inline void syncRectToCursors() {
+        // Definitely need 'true' here to fixOrdering
+        m_rect.set(m_cursor0, m_cursor1, true);
+    }
+
     const Coord& cursor0() const { return m_cursor0; }
     const Coord& cursor1() const { return m_cursor1; }
+
+    void setCursor0(const Coord& xy) { m_cursor0 = xy; }
+    void setCursor1(const Coord& xy) { m_cursor1 = xy; }
 
     inline void setPageStep(int dx, int dy) {
         m_pageDx = std::max(1, dx);
@@ -331,4 +341,5 @@ public:
 
 };
 
+} // end namespace gui
 } // end namespace mdn

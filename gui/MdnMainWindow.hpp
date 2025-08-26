@@ -1,5 +1,6 @@
-#ifndef MDNMAINWINDOW_H
-#define MDNMAINWINDOW_H
+#pragma once
+
+// This file was created during a prototyping exercise for the GUI.  It remains as a reference.
 
 #include <QMainWindow>
 

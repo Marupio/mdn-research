@@ -24,7 +24,6 @@ add_executable(mdn_gui
     Clipboard.cpp Clipboard.hpp
     main.cpp
     MainWindow.cpp MainWindow.hpp
-    MdnMainWindow.hpp MdnMainWindow.cpp MdnMainWindow.ui
     NumberDisplayWidget.cpp NumberDisplayWidget.hpp
     OperationHistory.ui
     Project.hpp Project.cpp

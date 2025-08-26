@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
         // sirTalksALot.setOutputToFile(); // uses your Logger's default path
     }
 
-    MainWindow window;
+    mdn::gui::MainWindow window;
     window.show();
     return app.exec();
 }

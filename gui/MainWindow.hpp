@@ -17,9 +17,10 @@
 
 // #include "DigitGridWidget.hpp"
 
-#include "../library/GlobalConfig.hpp"
 #include "../library/Mdn2d.hpp"
 
+namespace mdn {
+namespace gui {
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -39,7 +40,12 @@ signals:
 private slots:
     void onTabContextMenu(const QPoint& pos);
 
+protected:
+    bool eventFilter(QObject* watched, QEvent* event) override;
+
+
 private:
+    void createSplitter();
     void createMenus();
     void setupLayout();
     void createNewProject();
@@ -54,6 +60,8 @@ private:
     void syncTabsToProject();
 
     QSplitter* m_splitter = nullptr;
+    double m_splitRatio{0.5};
+    void applySplitRatio();
 
     // MDN Digit Browser (upper pane)
     QTabWidget* m_tabWidget = nullptr;
@@ -64,5 +72,12 @@ private:
     QPushButton* m_submitButton = nullptr;
     QPushButton* m_copyButton = nullptr;
 
-    mdn::Project* m_project = nullptr;
+    Project* m_project = nullptr;
+
+private slots:
+    void onSplitterMoved(int pos, int index);
+
 };
+
+} // end namespace gui
+} // end namespace mdn

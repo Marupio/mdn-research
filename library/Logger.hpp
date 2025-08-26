@@ -80,16 +80,20 @@ public:
 
     // Increase the indent by two spaces
     void increaseIndent() {
-        m_indent += 2;
-        m_indentStr += "  ";
+        if (m_indent < 20) {
+            m_indent += 2;
+            m_indentStr += "  ";
+        }
     }
 
     // Reduce the indent by two spaces
     void decreaseIndent() {
-        m_indent -= 2;
-        m_indentStr.clear();
-        for(int i=0; i < m_indent; ++i) {
-            m_indentStr += "  ";
+        if (m_indent < 20) {
+            m_indent -= 2;
+            m_indentStr.clear();
+            for(int i=0; i < m_indent; ++i) {
+                m_indentStr += "  ";
+            }
         }
     }
 

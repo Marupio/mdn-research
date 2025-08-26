@@ -14,13 +14,15 @@
 #include "../library/Coord.hpp"
 #include "../library/Rect.hpp"
 #include "../library/Digit.hpp"
-#include "Selection.hpp"
 
 // Forward declarations
 namespace mdn {
 class Mdn2d;
+namespace gui {
 class Selection;
-}
+class Project;
+} // end namespace gui forward declaration
+} // end namespace mdn forward declaration
 
 namespace mdn {
 namespace gui {
@@ -85,8 +87,11 @@ public slots:
 
 
 protected:
-    void paintEvent(QPaintEvent* event) override;
-    void keyPressEvent(QKeyEvent* event) override;
+    void paintEvent(QPaintEvent*) override;
+    void keyPressEvent(QKeyEvent*) override;
+    void mousePressEvent(QMouseEvent*) override;
+    void mouseMoveEvent(QMouseEvent*) override;
+    void mouseReleaseEvent(QMouseEvent*) override;
     void wheelEvent(QWheelEvent* e) override;
     void resizeEvent(QResizeEvent* event) override;
 
@@ -96,11 +101,19 @@ private:
     void ensureCursorVisible();
     void drawAxes(QPainter& p, const QRect& widgetRect);
     void adjustFontBy(int deltaPts);
+    void pixelToModel(int px, int py, int& mx, int& my) const;
+    void centreViewOn(int mx, int my);
+    void centreViewOnOrigin();
+    void captureCursorFractions();
+    void restoreCursorFractions();
+    void setBothCursors(int mx, int my);
+    void setCursor1(int mx, int my);
+
 
     // Private member data
     const mdn::Mdn2d* m_model{ nullptr };
-    mdn::Selection* m_selection{ nullptr };
-    class mdn::Project* m_project{ nullptr };
+    Selection* m_selection{ nullptr };
+    Project* m_project{ nullptr };
 
     Theme m_theme{};
 
@@ -119,6 +132,15 @@ private:
     // Zoom bounds
     int m_minPt{8};
     int m_maxPt{48};
+
+    static constexpr double kEdgeGuardFrac = 0.10;
+    double m_lastCursorFracX{0.5};
+    double m_lastCursorFracY{0.5};
+
+    bool m_dragging{false};
+    int m_dragAnchorX{0};
+    int m_dragAnchorY{0};
+
 };
 
 } // end namespace gui

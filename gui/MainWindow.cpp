@@ -1,17 +1,21 @@
 #include "MainWindow.hpp"
 
+#include <QEvent>
 #include <QInputDialog>
+#include <QList>
+#include <QResizeEvent>
 #include <QTabBar>
 
 #include "MdnQtInterface.hpp"
 #include "NumberDisplayWidget.hpp"
 #include "../library/Logger.hpp"
 
-MainWindow::MainWindow(QWidget *parent)
+mdn::gui::MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
     m_project(nullptr)
 {
     Log_Debug2_H("Constructing MainWindow")
+    createSplitter();
     createMenus();
     setupLayout();
     setWindowTitle("MDN Editor");
@@ -19,7 +23,7 @@ MainWindow::MainWindow(QWidget *parent)
 }
 
 
-void MainWindow::onTabContextMenu(const QPoint& pos)
+void mdn::gui::MainWindow::onTabContextMenu(const QPoint& pos)
 {
     Log_Debug3_H("");
     QTabBar* bar = m_tabWidget->tabBar();
@@ -29,7 +33,7 @@ void MainWindow::onTabContextMenu(const QPoint& pos)
         return;
     }
     QWidget* tabPage = m_tabWidget->widget(index);
-    auto* view = qobject_cast<mdn::gui::NumberDisplayWidget*>(tabPage);
+    auto* view = qobject_cast<NumberDisplayWidget*>(tabPage);
     if (!view) {
         Log_Debug3_T("");
         return;
@@ -80,20 +84,45 @@ void MainWindow::onTabContextMenu(const QPoint& pos)
 }
 
 
-void MainWindow::createMenus() {
+bool mdn::gui::MainWindow::eventFilter(QObject* watched, QEvent* event) {
+    if (watched == m_splitter) {
+        if (event->type() == QEvent::Resize) {
+            applySplitRatio();
+        }
+    }
+    return QMainWindow::eventFilter(watched, event);
+}
+
+
+void mdn::gui::MainWindow::createSplitter() {
+    m_splitter = new QSplitter(this);
+    setCentralWidget(m_splitter);
+
+    m_splitter->setChildrenCollapsible(false);
+    m_splitter->setHandleWidth(6);
+    m_splitter->setOrientation(Qt::Horizontal);
+    m_splitter->installEventFilter(this);
+
+    connect(m_splitter, &QSplitter::splitterMoved, this, &MainWindow::onSplitterMoved);
+
+    m_splitRatio = 0.5;
+}
+
+
+void mdn::gui::MainWindow::createMenus() {
     Log_Debug3_H("");
     QMenu* fileMenu = menuBar()->addMenu("&File");
-    fileMenu->addAction("New Project", this, &MainWindow::newProjectRequested);
-    fileMenu->addAction("New Mdn2d", this, &MainWindow::newMdn2dRequested);
+    fileMenu->addAction("New Project", this, &mdn::gui::MainWindow::newProjectRequested);
+    fileMenu->addAction("New Mdn2d", this, &mdn::gui::MainWindow::newMdn2dRequested);
     fileMenu->addSeparator();
-    fileMenu->addAction("Open Project", this, &MainWindow::openProjectRequested);
-    fileMenu->addAction("Open Mdn2d", this, &MainWindow::openMdn2dRequested);
+    fileMenu->addAction("Open Project", this, &mdn::gui::MainWindow::openProjectRequested);
+    fileMenu->addAction("Open Mdn2d", this, &mdn::gui::MainWindow::openMdn2dRequested);
     fileMenu->addSeparator();
-    fileMenu->addAction("Save Project", this, &MainWindow::saveProjectRequested);
-    fileMenu->addAction("Save Mdn2d", this, &MainWindow::saveMdn2dRequested);
+    fileMenu->addAction("Save Project", this, &mdn::gui::MainWindow::saveProjectRequested);
+    fileMenu->addAction("Save Mdn2d", this, &mdn::gui::MainWindow::saveMdn2dRequested);
     fileMenu->addSeparator();
-    fileMenu->addAction("Close Project", this, &MainWindow::closeProjectRequested);
-    fileMenu->addAction("Exit", this, &MainWindow::close);
+    fileMenu->addAction("Close Project", this, &mdn::gui::MainWindow::closeProjectRequested);
+    fileMenu->addAction("Exit", this, &mdn::gui::MainWindow::close);
 
     QMenu* editMenu = menuBar()->addMenu("&Edit");
     editMenu->addAction("Undo");
@@ -123,7 +152,7 @@ void MainWindow::createMenus() {
 }
 
 
-void MainWindow::setupLayout() {
+void mdn::gui::MainWindow::setupLayout() {
     Log_Debug3_H("")
     m_splitter = new QSplitter(Qt::Vertical, this);
 
@@ -136,14 +165,14 @@ void MainWindow::setupLayout() {
         bar,                        // sender
         &QTabBar::tabMoved,         // signal
         this,                       // receiver
-        &MainWindow::onTabMoved     // method
+        &mdn::gui::MainWindow::onTabMoved     // method
     );
     bar->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(
         bar,
         &QTabBar::customContextMenuRequested,
         this,
-        &MainWindow::onTabContextMenu
+        &mdn::gui::MainWindow::onTabContextMenu
     );
 
     // For now, Project will be held by MainWindow
@@ -175,18 +204,18 @@ void MainWindow::setupLayout() {
 }
 
 
-void MainWindow::createNewProject() {
+void mdn::gui::MainWindow::createNewProject() {
     Log_Debug3_H("");
     if (m_project) {
         delete m_project;
         m_project = nullptr;
     }
-    m_project = new mdn::Project(this);
+    m_project = new Project(this);
     Log_Debug3_T("");
 }
 
 
-void MainWindow::createTabs() {
+void mdn::gui::MainWindow::createTabs() {
     Log_Debug3_H("");
     if (!m_project) {
         // Nothing to do
@@ -197,10 +226,10 @@ void MainWindow::createTabs() {
     const std::unordered_map<int, std::string>& tabNames(m_project->data_addressingIndexToName());
     std::vector<std::string> names(m_project->toc());
     for (int index = 0; index < names.size(); ++index) {
-        mdn::Mdn2d* src = m_project->getMdn(index, true);
-        mdn::Selection* sel = m_project->getSelection(index);
-        QString qname = mdn::MdnQtInterface::toQString(names[index]);
-        auto* ndw = new mdn::gui::NumberDisplayWidget;
+        Mdn2d* src = m_project->getMdn(index, true);
+        Selection* sel = m_project->getSelection(index);
+        QString qname = MdnQtInterface::toQString(names[index]);
+        auto* ndw = new NumberDisplayWidget;
         ndw->setProject(m_project);
         ndw->setModel(src, sel);
         int tab = m_tabWidget->addTab(ndw, qname);
@@ -209,7 +238,7 @@ void MainWindow::createTabs() {
 }
 
 
-void MainWindow::onTabMoved(int from, int to) {
+void mdn::gui::MainWindow::onTabMoved(int from, int to) {
     Log_Debug3_H("from " << from << " to " << to);
     m_project->moveMdn(from, to);
     syncTabsToProject();
@@ -217,7 +246,7 @@ void MainWindow::onTabMoved(int from, int to) {
 }
 
 
-void MainWindow::onTabCloseRequested(int index) {
+void mdn::gui::MainWindow::onTabCloseRequested(int index) {
     Log_Debug3_H("");
     if (!m_project) {
         Log_Debug3_T("No project");
@@ -228,10 +257,10 @@ void MainWindow::onTabCloseRequested(int index) {
 }
 
 
-void MainWindow::renameTab(int index) {
+void mdn::gui::MainWindow::renameTab(int index) {
     Log_Debug3_H("index=" << index);
     const std::string origName = m_project->nameOfMdn(index);
-    QString origNameQ = mdn::MdnQtInterface::toQString(origName);
+    QString origNameQ = MdnQtInterface::toQString(origName);
 
     bool ok = false;
     QString newNameQ = QInputDialog::getText(
@@ -246,7 +275,7 @@ void MainWindow::renameTab(int index) {
         Log_Debug3_T("User changed their mind");
         return;
     }
-    std::string newName = mdn::MdnQtInterface::fromQString(newNameQ);
+    std::string newName = MdnQtInterface::fromQString(newNameQ);
 
     if (newName == origName) {
         Log_Debug3_T("Nothing to do");
@@ -258,7 +287,7 @@ void MainWindow::renameTab(int index) {
         Log_InfoQ("Failed to change name from '" << origName << "' to '" << newName << "'");
         return;
     }
-    QString approvedNameQ = mdn::MdnQtInterface::toQString(approvedName);
+    QString approvedNameQ = MdnQtInterface::toQString(approvedName);
     m_tabWidget->setTabText(index, approvedNameQ);
 
     if (approvedName == newName) {
@@ -274,7 +303,7 @@ void MainWindow::renameTab(int index) {
 }
 
 
-void MainWindow::duplicateTab(int index)
+void mdn::gui::MainWindow::duplicateTab(int index)
 {
     Log_Debug3_H("index=" << index);
     // 1) Ask Project to create a new model from this one
@@ -283,8 +312,8 @@ void MainWindow::duplicateTab(int index)
     std::string newName = newIdName.second;
 
     // 2) Create a view for it
-    std::pair<mdn::Mdn2d, mdn::Selection>* entry = m_project->at(newIndex);
-    auto* w = new mdn::gui::NumberDisplayWidget;
+    std::pair<Mdn2d, Selection>* entry = m_project->at(newIndex);
+    auto* w = new NumberDisplayWidget;
     w->setModel(&entry->first, &entry->second);
     w->setProject(m_project);
 
@@ -297,7 +326,7 @@ void MainWindow::duplicateTab(int index)
 }
 
 
-void MainWindow::copyTab(int index)
+void mdn::gui::MainWindow::copyTab(int index)
 {
     Log_Debug3_H("index=" << index);
     if (!m_project) {
@@ -309,7 +338,7 @@ void MainWindow::copyTab(int index)
 }
 
 
-void MainWindow::pasteTab(int insertAt)
+void mdn::gui::MainWindow::pasteTab(int insertAt)
 {
     Log_Debug3_H("");
     if (!m_project) {
@@ -321,7 +350,7 @@ void MainWindow::pasteTab(int insertAt)
 }
 
 
-void MainWindow::syncTabsToProject() {
+void mdn::gui::MainWindow::syncTabsToProject() {
     Log_Debug3_H("");
     if (!m_project) {
         Log_Debug3_T("No project");
@@ -329,17 +358,49 @@ void MainWindow::syncTabsToProject() {
     }
     const int n = m_tabWidget->count();
     for (int i = 0; i < n; ++i) {
-        auto* view = qobject_cast<mdn::gui::NumberDisplayWidget*>(m_tabWidget->widget(i));
+        auto* view = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(i));
         if (!view) {
             continue;
         }
 
-        std::pair<mdn::Mdn2d, mdn::Selection>* entry = m_project->at(i);
-        mdn::Mdn2d& srcNum(entry->first);
-        mdn::Selection& srcSel(entry->second);
+        std::pair<Mdn2d, Selection>* entry = m_project->at(i);
+        Mdn2d& srcNum(entry->first);
+        Selection& srcSel(entry->second);
 
         view->setModel(&srcNum, &srcSel);
         m_tabWidget->setTabText(i, QString::fromStdString(srcNum.name())); // add mdnName(int)
     }
     Log_Debug3_T("");
+}
+
+
+void mdn::gui::MainWindow::applySplitRatio() {
+    QList<int> sizes = m_splitter->sizes();
+    if (sizes.size() < 2) {
+        return;
+    }
+    int total = 0;
+    for (int s : sizes) {
+        total += s;
+    }
+    if (total <= 0) {
+        return;
+    }
+    int first = int(std::round(m_splitRatio * double(total)));
+    int second = std::max(0, total - first);
+    QList<int> newSizes;
+    newSizes << first << second;
+    m_splitter->setSizes(newSizes);
+}
+
+
+void mdn::gui::MainWindow::onSplitterMoved(int pos, int index) {
+    QList<int> sizes = m_splitter->sizes();
+    int total = 0;
+    for (int s : sizes) {
+        total += s;
+    }
+    if (total > 0 && sizes.size() >= 2) {
+        m_splitRatio = double(sizes[0]) / double(total);
+    }
 }

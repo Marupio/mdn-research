@@ -14,6 +14,7 @@
 
 
 namespace mdn {
+namespace gui {
 
 class Clipboard {
 
@@ -46,4 +47,5 @@ public:
 
 };
 
+} // end namespace gui
 } // end namespace mdn

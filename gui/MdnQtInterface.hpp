@@ -16,6 +16,7 @@
 
 
 namespace mdn {
+namespace gui {
 
 class MdnQtInterface {
 public:
@@ -101,4 +102,5 @@ public:
 
 };
 
+} // end namespace gui
 } // end namespace mdn
