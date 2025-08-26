@@ -6,6 +6,7 @@
 #include <string>
 #include <type_traits>
 #include <unordered_set>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -115,6 +116,33 @@ public:
     template<typename T>
     static std::string setToString(const std::unordered_set<T>& set, char delimiter) {
         return setToString(set, std::string(1, delimiter));
+    }
+
+    // Convert a set of anything to a string delimiter
+    template<typename S, typename T>
+    static std::string mapToString(
+        const std::unordered_map<S, T>& map,
+        const std::string& delimiter
+    ) {
+        if (map.empty()) return "";
+
+        std::ostringstream oss;
+        bool first = true;
+        for (auto i : map) {
+            if (first) {
+                first = false;
+                oss << "(" << i.first << " : " << i.second << ")";
+            } else {
+                oss << delimiter << "(" << i.first << " : " << i.second << ")";
+            }
+        }
+        return oss.str();
+    }
+
+    // Optional overload for char delimiter
+    template<typename S, typename T>
+    static std::string mapToString(const std::unordered_map<S, T>& map, char delimiter) {
+        return mapToString(map, std::string(1, delimiter));
     }
 
     // Converts a value between -32 and 32 to -V,..,-C,-B,-A,-9,-8, .. ,-1,0,1,...,8,9,A,B,...,V

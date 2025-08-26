@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include <mutex>
+#include <unordered_map>
 
 #include "GlobalConfig.hpp"
 #include "Tools.hpp"
@@ -23,6 +24,25 @@ enum class LogLevel {
 };
 
 class MDN_API Logger {
+private:
+    // Rubbish parsing function for debugging
+    //  Takes standard file ref,
+    //      e.g. "        |Mdn2dBase.cpp:598,setValue"
+    //  Removes the leading spaces and the line number,
+    //      e.g. "Mdn2dBase.cpp:setValue"
+    std::string cleanRef(const std::string& ref) {
+        int i=0,j,k,phase=0;
+        while (i<ref.size()) {if (ref[i++] == '|') {++phase; break;}}
+        if (phase == 0) return "";
+        j = i;
+        while (j<ref.size()) {if (ref[j++] == ':') {++phase; break;}}
+        if (phase == 1) {return "";}
+        k = j;
+        while (k<ref.size()) {if (ref[k++] == ',') {++phase; break;}}
+        if (phase == 2) {return "";}
+        return std::string(ref.substr(i, j-i) + ref.substr(k, ref.size()-k));
+    }
+
 public:
     static Logger& instance() {
         static Logger inst;
@@ -78,8 +98,23 @@ public:
     // Return the indent, in string form
     const std::string& indent() const { return m_indentStr; }
 
+    mutable std::unordered_map<std::string, int> m_indentenators;
+
+    inline std::string debug_indentenators() const {
+        return Tools::mapToString(m_indentenators, ' ');
+    }
+
     // Increase the indent by two spaces
-    void increaseIndent() {
+    void increaseIndent(std::string fref = "") {
+        #ifdef MDN_DEBUG
+            std::string ref = cleanRef(fref);
+            auto it = m_indentenators.find(ref);
+            if (it == m_indentenators.end()) {
+                m_indentenators[ref] = 1;
+            } else {
+                it->second += 1;
+            }
+        #endif
         if (m_indent < 20) {
             m_indent += 2;
             m_indentStr += "  ";
@@ -87,7 +122,16 @@ public:
     }
 
     // Reduce the indent by two spaces
-    void decreaseIndent() {
+    void decreaseIndent(std::string fref = "") {
+        #ifdef MDN_DEBUG
+            std::string ref = cleanRef(fref);
+            auto it = m_indentenators.find(ref);
+            if (it == m_indentenators.end()) {
+                m_indentenators[ref] = -1;
+            } else {
+                it->second -= 1;
+            }
+        #endif
         if (m_indent < 20) {
             m_indent -= 2;
             m_indentStr.clear();
@@ -276,11 +320,11 @@ private:
             msgStr = oss.str(); \
         } \
         if (msgStr.empty()) { \
-            mdn::Logger::instance().increaseIndent(); \
+            mdn::Logger::instance().increaseIndent(InternalIdentedLoggerFileRef); \
             LOGGER_MACRO(msgStr, level); \
         } else { \
             LOGGER_MACRO("", level); \
-            mdn::Logger::instance().increaseIndent(); \
+            mdn::Logger::instance().increaseIndent(InternalIdentedLoggerFileRef); \
             LOGGER_MACRO(msgStr, level); \
         } \
     }
@@ -301,7 +345,7 @@ private:
     // Internal use - Wrapper for producing a footer message that decreases the indentation level
     #define InternalLoggerFooterWrapper(LOGGER_MACRO, message, level) { \
         LOGGER_MACRO(message, level); \
-        mdn::Logger::instance().decreaseIndent(); \
+        mdn::Logger::instance().decreaseIndent(InternalIdentedLoggerFileRef); \
     }
 
     // Standard log message:
