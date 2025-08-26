@@ -924,6 +924,7 @@ mdn::CoordSet mdn::Mdn2dBase::getNonZeroes(const Rect& window) const {
     return result;
 }
 
+
 mdn::CoordSet mdn::Mdn2dBase::locked_getNonZeroes(const Rect& window) const {
     CoordSet result;
 
@@ -1333,6 +1334,7 @@ std::vector<std::string> mdn::Mdn2dBase::locked_saveTextPrettyRows(
     Log_N_Debug3_T("");
     return result;
 }
+
 
 std::vector<std::string> mdn::Mdn2dBase::saveTextUtilityRows(CommaTabSpace delim) const {
     auto lock = lockReadOnly();

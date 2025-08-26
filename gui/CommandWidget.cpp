@@ -12,12 +12,13 @@
 #include <QTextEdit>
 #include <QVBoxLayout>
 
-CommandWidget::CommandWidget(QWidget* parent)
+mdn::gui::CommandWidget::CommandWidget(QWidget* parent)
     : QWidget(parent) {
     buildUi();
 }
 
-void CommandWidget::appendLine(const QString& line) {
+
+void mdn::gui::CommandWidget::appendLine(const QString& line) {
     if (m_history == nullptr) {
         return;
     }
@@ -25,7 +26,8 @@ void CommandWidget::appendLine(const QString& line) {
     trimHistory();
 }
 
-void CommandWidget::appendHtml(const QString& html) {
+
+void mdn::gui::CommandWidget::appendHtml(const QString& html) {
     if (m_history == nullptr) {
         return;
     }
@@ -33,28 +35,32 @@ void CommandWidget::appendHtml(const QString& html) {
     trimHistory();
 }
 
-QString CommandWidget::currentInput() const {
+
+QString mdn::gui::CommandWidget::currentInput() const {
     if (m_input == nullptr) {
         return QString();
     }
     return m_input->text();
 }
 
-void CommandWidget::setCurrentInput(const QString& text) {
+
+void mdn::gui::CommandWidget::setCurrentInput(const QString& text) {
     if (m_input == nullptr) {
         return;
     }
     m_input->setText(text);
 }
 
-void CommandWidget::clearInput() {
+
+void mdn::gui::CommandWidget::clearInput() {
     if (m_input == nullptr) {
         return;
     }
     m_input->clear();
 }
 
-void CommandWidget::setBusy(bool busy) {
+
+void mdn::gui::CommandWidget::setBusy(bool busy) {
     bool b = busy;
     if (m_input != nullptr) {
         m_input->setEnabled(!b);
@@ -64,7 +70,8 @@ void CommandWidget::setBusy(bool busy) {
     }
 }
 
-void CommandWidget::setMaxHistoryLines(int n) {
+
+void mdn::gui::CommandWidget::setMaxHistoryLines(int n) {
     if (n <= 0) {
         return;
     }
@@ -72,7 +79,8 @@ void CommandWidget::setMaxHistoryLines(int n) {
     trimHistory();
 }
 
-bool CommandWidget::eventFilter(QObject* watched, QEvent* event) {
+
+bool mdn::gui::CommandWidget::eventFilter(QObject* watched, QEvent* event) {
     if (watched == m_input) {
         if (event->type() == QEvent::KeyPress) {
             QKeyEvent* ke = static_cast<QKeyEvent*>(event);
@@ -90,7 +98,8 @@ bool CommandWidget::eventFilter(QObject* watched, QEvent* event) {
     return QWidget::eventFilter(watched, event);
 }
 
-void CommandWidget::onSubmit() {
+
+void mdn::gui::CommandWidget::onSubmit() {
     if (m_input == nullptr) {
         return;
     }
@@ -104,7 +113,8 @@ void CommandWidget::onSubmit() {
     clearInput();
 }
 
-void CommandWidget::onCopy() {
+
+void mdn::gui::CommandWidget::onCopy() {
     if (m_history == nullptr) {
         return;
     }
@@ -120,11 +130,13 @@ void CommandWidget::onCopy() {
     }
 }
 
-void CommandWidget::onReturnPressed() {
+
+void mdn::gui::CommandWidget::onReturnPressed() {
     onSubmit();
 }
 
-void CommandWidget::buildUi() {
+
+void mdn::gui::CommandWidget::buildUi() {
     QVBoxLayout* root = new QVBoxLayout(this);
     root->setContentsMargins(6, 6, 6, 6);
     root->setSpacing(6);
@@ -156,7 +168,8 @@ void CommandWidget::buildUi() {
     connect(m_input, SIGNAL(returnPressed()), this, SLOT(onReturnPressed()));
 }
 
-void CommandWidget::trimHistory() {
+
+void mdn::gui::CommandWidget::trimHistory() {
     if (m_history == nullptr) {
         return;
     }
@@ -181,7 +194,8 @@ void CommandWidget::trimHistory() {
     }
 }
 
-void CommandWidget::recallPrev() {
+
+void mdn::gui::CommandWidget::recallPrev() {
     if (m_inputHistory.isEmpty()) {
         return;
     }
@@ -193,7 +207,8 @@ void CommandWidget::recallPrev() {
     setCurrentInput(m_inputHistory.value(m_histIndex));
 }
 
-void CommandWidget::recallNext() {
+
+void mdn::gui::CommandWidget::recallNext() {
     if (m_inputHistory.isEmpty()) {
         return;
     }

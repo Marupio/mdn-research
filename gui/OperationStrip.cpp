@@ -5,8 +5,10 @@
 #include <QLabel>
 #include <QPushButton>
 
-OperationStrip::OperationStrip(QWidget* parent)
-    : QWidget(parent) {
+mdn::gui::OperationStrip::OperationStrip(QWidget* parent)
+:
+    QWidget(parent)
+{
     QHBoxLayout* lay = new QHBoxLayout(this);
     lay->setContentsMargins(6, 6, 6, 6);
     lay->setSpacing(8);
@@ -52,7 +54,8 @@ OperationStrip::OperationStrip(QWidget* parent)
     lay->addStretch(1);
 }
 
-void OperationStrip::setTabNames(const QStringList& names) {
+
+void mdn::gui::OperationStrip::setTabNames(const QStringList& names) {
     m_names = names;
     m_bPicker->clear();
     m_bPicker->addItems(m_names);
@@ -61,19 +64,22 @@ void OperationStrip::setTabNames(const QStringList& names) {
     }
 }
 
-void OperationStrip::setActiveIndex(int indexA) {
+
+void mdn::gui::OperationStrip::setActiveIndex(int indexA) {
     m_indexA = indexA;
     m_labelA->setText(m_names.value(m_indexA));
 }
 
-void OperationStrip::setRememberedB(int indexB) {
+
+void mdn::gui::OperationStrip::setRememberedB(int indexB) {
     m_indexB = indexB;
     if (m_indexB >= 0 && m_indexB < m_names.size()) {
         m_bPicker->setCurrentIndex(m_indexB);
     }
 }
 
-void OperationStrip::setDestinationMode(DestinationMode mode) {
+
+void mdn::gui::OperationStrip::setDestinationMode(DestinationMode mode) {
     int idx = 0;
     if (mode == DestinationMode::InPlace) {
         idx = 0;
@@ -83,30 +89,37 @@ void OperationStrip::setDestinationMode(DestinationMode mode) {
     m_destPicker->setCurrentIndex(idx);
 }
 
-void OperationStrip::onClickAdd() {
+
+void mdn::gui::OperationStrip::onClickAdd() {
     emitOp(Operation::Add);
 }
 
-void OperationStrip::onClickSub() {
+
+void mdn::gui::OperationStrip::onClickSub() {
     emitOp(Operation::Subtract);
 }
 
-void OperationStrip::onClickMul() {
+
+void mdn::gui::OperationStrip::onClickMul() {
     emitOp(Operation::Multiply);
 }
 
-void OperationStrip::onClickDiv() {
+
+void mdn::gui::OperationStrip::onClickDiv() {
     emitOp(Operation::Divide);
 }
 
-void OperationStrip::onChangeB() {
+
+void mdn::gui::OperationStrip::onChangeB() {
     emit requestChangeB();
 }
 
-void OperationStrip::onDestChanged(int) {
+
+void mdn::gui::OperationStrip::onDestChanged(int) {
 }
 
-void OperationStrip::emitOp(OperationStrip::Operation op) {
+
+void mdn::gui::OperationStrip::emitOp(OperationStrip::Operation op) {
     int idxB = m_bPicker->currentIndex();
     OperationStrip::DestinationMode dest = OperationStrip::DestinationMode::InPlace;
     int stored = m_destPicker->currentIndex();

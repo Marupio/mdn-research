@@ -10,78 +10,107 @@
 #include <QTabWidget>
 #include <QVBoxLayout>
 
-OpsController::OpsController(QMainWindow* mw, QTabWidget* tabs, QWidget* history, QObject* parent)
-    : QObject(parent), m_mainWindow(mw), m_tabs(tabs), m_history(history) {
+mdn::gui::OpsController::OpsController(
+    QMainWindow* mw,
+    QTabWidget* tabs,
+    QWidget* history,
+    QObject* parent
+) :
+    QObject(parent), m_mainWindow(mw), m_tabs(tabs), m_history(history)
+{
     buildMenus();
     rebuildBottomContainer();
     refreshTabNames();
 }
 
-QWidget* OpsController::bottomContainer() const {
+
+QWidget* mdn::gui::OpsController::bottomContainer() const {
     return m_bottomContainer;
 }
 
-void OpsController::refreshTabNames() {
+
+void mdn::gui::OpsController::refreshTabNames() {
     QStringList names = collectTabNames();
     int a = activeIndex();
     if (m_strip) {
         m_strip->setTabNames(names);
         m_strip->setActiveIndex(a);
         m_strip->setRememberedB(m_rememberedB);
-        m_strip->setDestinationMode(m_rememberedDest == Dest::InPlace ? OperationStrip::DestinationMode::InPlace
-                                                                      : OperationStrip::DestinationMode::ToNew);
+        m_strip->setDestinationMode(
+            m_rememberedDest == Dest::InPlace
+            ? OperationStrip::DestinationMode::InPlace
+            : OperationStrip::DestinationMode::ToNew
+        );
     }
 }
 
-void OpsController::onMenuAdd() {
+
+void mdn::gui::OpsController::onMenuAdd() {
     runDialog(Op::Add);
 }
 
-void OpsController::onMenuSub() {
+
+void mdn::gui::OpsController::onMenuSub() {
     runDialog(Op::Subtract);
 }
 
-void OpsController::onMenuMul() {
+
+void mdn::gui::OpsController::onMenuMul() {
     runDialog(Op::Multiply);
 }
 
-void OpsController::onMenuDiv() {
+
+void mdn::gui::OpsController::onMenuDiv() {
     runDialog(Op::Divide);
 }
 
-void OpsController::onMenuAddInPlace() {
+
+void mdn::gui::OpsController::onMenuAddInPlace() {
     runQuick(Op::Add, Dest::InPlace);
 }
 
-void OpsController::onMenuAddToNew() {
+
+void mdn::gui::OpsController::onMenuAddToNew() {
     runQuick(Op::Add, Dest::ToNew);
 }
 
-void OpsController::onMenuSubInPlace() {
+
+void mdn::gui::OpsController::onMenuSubInPlace() {
     runQuick(Op::Subtract, Dest::InPlace);
 }
 
-void OpsController::onMenuSubToNew() {
+
+void mdn::gui::OpsController::onMenuSubToNew() {
     runQuick(Op::Subtract, Dest::ToNew);
 }
 
-void OpsController::onMenuMulInPlace() {
+
+void mdn::gui::OpsController::onMenuMulInPlace() {
     runQuick(Op::Multiply, Dest::InPlace);
 }
 
-void OpsController::onMenuMulToNew() {
+
+void mdn::gui::OpsController::onMenuMulToNew() {
     runQuick(Op::Multiply, Dest::ToNew);
 }
 
-void OpsController::onMenuDivInPlace() {
+
+void mdn::gui::OpsController::onMenuDivInPlace() {
     runQuick(Op::Divide, Dest::InPlace);
 }
 
-void OpsController::onMenuDivToNew() {
+
+void mdn::gui::OpsController::onMenuDivToNew() {
     runQuick(Op::Divide, Dest::ToNew);
 }
 
-void OpsController::onStripRequest(OperationStrip::Operation op, int indexA, int indexB, OperationStrip::DestinationMode dest) {
+
+void mdn::gui::OpsController::onStripRequest(
+    OperationStrip::Operation op,
+    int indexA,
+    int indexB,
+    OperationStrip::DestinationMode dest
+) {
     OpsController::Plan p;
     p.op = stripOpToController(op);
     p.indexA = indexA;
@@ -108,11 +137,13 @@ void OpsController::onStripRequest(OperationStrip::Operation op, int indexA, int
     emit planReady(p);
 }
 
-void OpsController::onStripChangeB() {
+
+void mdn::gui::OpsController::onStripChangeB() {
     runDialog(Op::Add);
 }
 
-void OpsController::buildMenus() {
+
+void mdn::gui::OpsController::buildMenus() {
     QMenuBar* mb = m_mainWindow->menuBar();
     QList<QAction*> menus = mb->actions();
 
@@ -188,7 +219,8 @@ void OpsController::buildMenus() {
     m_menuOps->addAction(actDivNew);
 }
 
-void OpsController::rebuildBottomContainer() {
+
+void mdn::gui::OpsController::rebuildBottomContainer() {
     if (!m_history) {
         return;
     }
@@ -205,12 +237,31 @@ void OpsController::rebuildBottomContainer() {
     m_history->setParent(m_bottomContainer);
     lay->addWidget(m_history, 1);
 
-    connect(m_strip, SIGNAL(requestOperation(OperationStrip::Operation,int,int,OperationStrip::DestinationMode)),
-            this, SLOT(onStripRequest(OperationStrip::Operation,int,int,OperationStrip::DestinationMode)));
+    connect(
+        m_strip,
+        SIGNAL(
+            requestOperation(
+                OperationStrip::Operation,
+                int,
+                int,
+                OperationStrip::DestinationMode
+            )
+        ),
+        this,
+        SLOT(
+            onStripRequest(
+                OperationStrip::Operation,
+                int,
+                int,
+                OperationStrip::DestinationMode
+            )
+        )
+    );
     connect(m_strip, SIGNAL(requestChangeB()), this, SLOT(onStripChangeB()));
 }
 
-QStringList OpsController::collectTabNames() const {
+
+QStringList mdn::gui::OpsController::collectTabNames() const {
     QStringList out;
     if (!m_tabs) {
         return out;
@@ -221,7 +272,8 @@ QStringList OpsController::collectTabNames() const {
     return out;
 }
 
-int OpsController::activeIndex() const {
+
+int mdn::gui::OpsController::activeIndex() const {
     if (!m_tabs) {
         return 0;
     }
@@ -232,7 +284,8 @@ int OpsController::activeIndex() const {
     return idx;
 }
 
-void OpsController::runDialog(Op preset) {
+
+void mdn::gui::OpsController::runDialog(Op preset) {
     QStringList names = collectTabNames();
     if (names.size() < 2) {
         return;
@@ -308,7 +361,8 @@ void OpsController::runDialog(Op preset) {
     emit planReady(p);
 }
 
-void OpsController::runQuick(Op op, Dest dest) {
+
+void mdn::gui::OpsController::runQuick(Op op, Dest dest) {
     QStringList names = collectTabNames();
     if (names.size() < 2) {
         runDialog(op);
@@ -341,7 +395,10 @@ void OpsController::runQuick(Op op, Dest dest) {
     emit planReady(p);
 }
 
-OpsController::Dest OpsController::stripDestToController(OperationStrip::DestinationMode d) const {
+
+mdn::gui::OpsController::Dest mdn::gui::OpsController::stripDestToController(
+    OperationStrip::DestinationMode d
+) const {
     if (d == OperationStrip::DestinationMode::InPlace) {
         return Dest::InPlace;
     } else {
@@ -349,7 +406,10 @@ OpsController::Dest OpsController::stripDestToController(OperationStrip::Destina
     }
 }
 
-OpsController::Op OpsController::stripOpToController(OperationStrip::Operation o) const {
+
+mdn::gui::OpsController::Op mdn::gui::OpsController::stripOpToController(
+    OperationStrip::Operation o
+) const {
     if (o == OperationStrip::Operation::Add) {
         return Op::Add;
     } else {

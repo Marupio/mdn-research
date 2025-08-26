@@ -16,6 +16,9 @@ class QStackedLayout;
 class QCheckBox;
 class QWidget;
 
+namespace mdn {
+namespace gui {
+
 class BinaryOperationDialog : public QDialog {
     Q_OBJECT
 
@@ -97,3 +100,6 @@ private:
     QDialogButtonBox* m_buttons{nullptr};
     QCheckBox* m_remember{nullptr};
 };
+
+} // end namespace gui
+} // end namespace mdn

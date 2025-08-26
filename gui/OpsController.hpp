@@ -3,6 +3,8 @@
 #include <QObject>
 #include <QStringList>
 
+#include "OperationStrip.hpp"
+
 class QMainWindow;
 class QMenu;
 class QMenuBar;
@@ -10,8 +12,15 @@ class QSplitter;
 class QTabWidget;
 class QWidget;
 
-class OperationStrip;
+// Forward declarations
+namespace mdn {
+namespace gui {
 class BinaryOperationDialog;
+} // end namespace gui
+} // end namespace mdn
+
+namespace mdn {
+namespace gui {
 
 class OpsController : public QObject {
     Q_OBJECT
@@ -63,7 +72,12 @@ private slots:
     void onMenuDivInPlace();
     void onMenuDivToNew();
 
-    void onStripRequest(OperationStrip::Operation op, int indexA, int indexB, OperationStrip::DestinationMode dest);
+    void onStripRequest(
+        OperationStrip::Operation op,
+        int indexA,
+        int indexB,
+        OperationStrip::DestinationMode dest
+    );
     void onStripChangeB();
 
 private:
@@ -89,3 +103,6 @@ private:
     int m_rememberedB{0};
     Dest m_rememberedDest{Dest::InPlace};
 };
+
+} // end namespace gui
+} // end namespace mdn

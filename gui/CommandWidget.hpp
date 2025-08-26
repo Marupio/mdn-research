@@ -7,6 +7,9 @@ class QTextEdit;
 class QLineEdit;
 class QPushButton;
 
+namespace mdn {
+namespace gui {
+
 class CommandWidget : public QWidget {
     Q_OBJECT
 
@@ -50,3 +53,6 @@ private:
     int m_histIndex{-1};
     int m_maxLines{2000};
 };
+
+} // end namespace gui
+} // end namespace mdn

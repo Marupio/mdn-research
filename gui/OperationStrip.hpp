@@ -7,6 +7,10 @@ class QComboBox;
 class QLabel;
 class QPushButton;
 
+namespace mdn {
+namespace gui {
+
+
 class OperationStrip : public QWidget {
     Q_OBJECT
 
@@ -58,3 +62,6 @@ private:
     int m_indexA{0};
     int m_indexB{0};
 };
+
+} // end namespace gui
+} // end namespace mdn
