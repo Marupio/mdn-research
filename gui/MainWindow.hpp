@@ -13,9 +13,9 @@
 #include <QHBoxLayout>
 #include <QWidget>
 
+#include "CommandWidget.hpp"
+#include "OpsController.hpp"
 #include "Project.hpp"
-
-// #include "DigitGridWidget.hpp"
 
 #include "../library/Mdn2d.hpp"
 
@@ -50,6 +50,8 @@ private:
     void setupLayout();
     void createNewProject();
     void createTabs();
+    void createTabForIndex(int index);
+    void initOperationsUi();
 
     void onTabMoved(int from, int to);
     void onTabCloseRequested(int index);
@@ -67,15 +69,15 @@ private:
     QTabWidget* m_tabWidget = nullptr;
 
     // Command History (lower pane)
-    QTextEdit* m_commandHistory = nullptr;
-    QLineEdit* m_commandInput = nullptr;
-    QPushButton* m_submitButton = nullptr;
-    QPushButton* m_copyButton = nullptr;
+    CommandWidget* m_command = nullptr;
 
+    OpsController* m_ops{nullptr};
     Project* m_project = nullptr;
 
 private slots:
     void onSplitterMoved(int pos, int index);
+    void onCommandSubmitted(const QString& text);
+    void onOpsPlan(const OpsController::Plan& p);
 
 };
 

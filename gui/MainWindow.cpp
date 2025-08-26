@@ -4,8 +4,11 @@
 #include <QInputDialog>
 #include <QList>
 #include <QResizeEvent>
+#include <QSplitter>
 #include <QTabBar>
+#include <QTabWidget>
 
+#include "OpsController.hpp"
 #include "MdnQtInterface.hpp"
 #include "NumberDisplayWidget.hpp"
 #include "../library/Logger.hpp"
@@ -18,6 +21,7 @@ mdn::gui::MainWindow::MainWindow(QWidget *parent)
     createSplitter();
     createMenus();
     setupLayout();
+    m_command = new CommandWidget(this);
     setWindowTitle("MDN Editor");
     Log_Debug2_H("");
 }
@@ -95,16 +99,12 @@ bool mdn::gui::MainWindow::eventFilter(QObject* watched, QEvent* event) {
 
 
 void mdn::gui::MainWindow::createSplitter() {
-    m_splitter = new QSplitter(this);
+    m_splitter = new QSplitter(Qt::Vertical, this);
     setCentralWidget(m_splitter);
-
     m_splitter->setChildrenCollapsible(false);
     m_splitter->setHandleWidth(6);
-    m_splitter->setOrientation(Qt::Horizontal);
     m_splitter->installEventFilter(this);
-
     connect(m_splitter, &QSplitter::splitterMoved, this, &MainWindow::onSplitterMoved);
-
     m_splitRatio = 0.5;
 }
 
@@ -154,7 +154,6 @@ void mdn::gui::MainWindow::createMenus() {
 
 void mdn::gui::MainWindow::setupLayout() {
     Log_Debug3_H("")
-    m_splitter = new QSplitter(Qt::Vertical, this);
 
     // Top half - Mdn2d tab widget
     m_tabWidget = new QTabWidget(this);
@@ -180,26 +179,15 @@ void mdn::gui::MainWindow::setupLayout() {
     createTabs();
 
     // Bottom half - command history + input
-    QWidget* commandPane = new QWidget(this);
-    QVBoxLayout* cmdLayout = new QVBoxLayout(commandPane);
-    m_commandHistory = new QTextEdit(commandPane);
-    m_commandHistory->setReadOnly(true);
-    QHBoxLayout* inputLayout = new QHBoxLayout();
-    m_commandInput = new QLineEdit(commandPane);
-    m_submitButton = new QPushButton("Submit", commandPane);
-    m_copyButton = new QPushButton("Copy", commandPane);
-    inputLayout->addWidget(m_commandInput);
-    inputLayout->addWidget(m_submitButton);
-    inputLayout->addWidget(m_copyButton);
-    cmdLayout->addWidget(m_commandHistory);
-    cmdLayout->addLayout(inputLayout);
-
     m_splitter->addWidget(m_tabWidget);
-    m_splitter->addWidget(commandPane);
+    m_splitter->addWidget(m_command);
     m_splitter->setStretchFactor(0, 3);
     m_splitter->setStretchFactor(1, 1);
 
     setCentralWidget(m_splitter);
+
+    initOperationsUi();
+
     Log_Debug3_T("");
 }
 
@@ -238,6 +226,41 @@ void mdn::gui::MainWindow::createTabs() {
 }
 
 
+void mdn::gui::MainWindow::createTabForIndex(int index) {
+    std::pair<Mdn2d, Selection>* entry = m_project->at(index);
+    if (entry == nullptr) {
+        return;
+    }
+
+    auto* view = new NumberDisplayWidget;
+    view->setProject(m_project);
+    view->setModel(&entry->first, &entry->second);
+
+    QString tabName = QString::fromStdString(entry->first.name());
+    int tab = m_tabWidget->insertTab(index, view, tabName);
+    m_tabWidget->setCurrentIndex(tab);
+    view->setFocus();
+}
+
+
+void mdn::gui::MainWindow::initOperationsUi() {
+    int idx = m_splitter->indexOf(m_command);
+    m_ops = new OpsController(this, m_tabWidget, m_command, this);
+    QWidget* container = m_ops->bottomContainer();
+    if (idx >= 0) {
+        m_splitter->replaceWidget(idx, container);
+    } else {
+        m_splitter->addWidget(container);
+    }
+
+    connect(m_ops, &OpsController::planReady, this, &MainWindow::onOpsPlan);
+    connect(m_tabWidget, &QTabWidget::currentChanged, m_ops, &OpsController::refreshTabNames);
+
+    m_ops->refreshTabNames();
+    connect(m_command, &CommandWidget::submitCommand, this, &MainWindow::onCommandSubmitted);
+}
+
+
 void mdn::gui::MainWindow::onTabMoved(int from, int to) {
     Log_Debug3_H("from " << from << " to " << to);
     m_project->moveMdn(from, to);
@@ -253,6 +276,9 @@ void mdn::gui::MainWindow::onTabCloseRequested(int index) {
         return;
     }
     m_project->deleteMdn(index);
+    if (m_ops) {
+        m_ops->refreshTabNames();
+    }
     Log_Debug3_T("");
 }
 
@@ -285,10 +311,16 @@ void mdn::gui::MainWindow::renameTab(int index) {
     std::string approvedName = m_project->renameMdn(index, newName);
     if (approvedName == origName) {
         Log_InfoQ("Failed to change name from '" << origName << "' to '" << newName << "'");
+        Log_Debug3_T("");
         return;
     }
     QString approvedNameQ = MdnQtInterface::toQString(approvedName);
     m_tabWidget->setTabText(index, approvedNameQ);
+
+    // Name changed, update
+    if (m_ops) {
+        m_ops->refreshTabNames();
+    }
 
     if (approvedName == newName) {
         Log_Debug3_T("User got what they expect, say no more");
@@ -300,6 +332,7 @@ void mdn::gui::MainWindow::renameTab(int index) {
         "Could not change '" << origName << "' to '" << newName << "', name already exists. "
         << "Using '" << approvedName << "' instead."
     );
+    Log_Debug3_T("");
 }
 
 
@@ -322,6 +355,9 @@ void mdn::gui::MainWindow::duplicateTab(int index)
     int newTab = m_tabWidget->insertTab(newIndex, w, QString::fromStdString(newName));
     m_tabWidget->setCurrentIndex(newTab);
     w->setFocus();
+    if (m_ops) {
+        m_ops->refreshTabNames();
+    }
     Log_Debug3_T("");
 }
 
@@ -370,6 +406,9 @@ void mdn::gui::MainWindow::syncTabsToProject() {
         view->setModel(&srcNum, &srcSel);
         m_tabWidget->setTabText(i, QString::fromStdString(srcNum.name())); // add mdnName(int)
     }
+    if (m_ops) {
+        m_ops->refreshTabNames();
+    }
     Log_Debug3_T("");
 }
 
@@ -402,5 +441,96 @@ void mdn::gui::MainWindow::onSplitterMoved(int pos, int index) {
     }
     if (total > 0 && sizes.size() >= 2) {
         m_splitRatio = double(sizes[0]) / double(total);
+    }
+}
+
+
+void mdn::gui::MainWindow::onCommandSubmitted(const QString& text) {
+    m_command->appendLine(QStringLiteral("» %1").arg(text));
+}
+
+
+void mdn::gui::MainWindow::onOpsPlan(const OpsController::Plan& p) {
+    if (!m_project) {
+        return;
+    }
+
+    Mdn2d* a = m_project->getMdn(p.indexA, true);
+    Mdn2d* b = m_project->getMdn(p.indexB, true);
+
+    if (a == nullptr) {
+        return;
+    }
+    if (b == nullptr) {
+        return;
+    }
+
+    if (p.dest == OpsController::Dest::InPlace) {
+        Mdn2d ans(m_project->config(), a->name());
+        if (p.op == OpsController::Op::Add) {
+            a->plus(*b, ans);
+        } else {
+            if (p.op == OpsController::Op::Subtract) {
+                a->minus(*b, ans);
+            } else {
+                if (p.op == OpsController::Op::Multiply) {
+                    a->multiply(*b, ans);
+                } else {
+                    ans = Mdn2d(m_project->config(), a->name());
+                    a->divide(*b, ans, Fraxis::Default);
+                }
+            }
+        }
+        *a = ans;
+        syncTabsToProject();
+        m_tabWidget->setCurrentIndex(p.indexA);
+        if (m_ops) {
+            m_ops->refreshTabNames();
+        }
+        return;
+    }
+
+    if (p.dest == OpsController::Dest::ToNew) {
+        std::string requestedName = MdnQtInterface::fromQString(p.newName);
+        if (requestedName.empty()) {
+            requestedName = std::string("Result");
+        }
+
+        Mdn2d ans(m_project->config(), requestedName);
+        if (p.op == OpsController::Op::Add) {
+            a->plus(*b, ans);
+        } else {
+            if (p.op == OpsController::Op::Subtract) {
+                a->minus(*b, ans);
+            } else {
+                if (p.op == OpsController::Op::Multiply) {
+                    a->multiply(*b, ans);
+                } else {
+                    ans = Mdn2d(m_project->config(), requestedName);
+                    a->divide(*b, ans, Fraxis::Default);
+                }
+            }
+        }
+
+        int insertAt = p.indexA + 1;
+        m_project->insertMdn(ans, insertAt);
+
+        const auto& nameToIndex = m_project->data_addressingNameToIndex();
+        auto it = nameToIndex.find(ans.name());
+        int actualIndex = -1;
+        if (it != nameToIndex.end()) {
+            actualIndex = it->second;
+        }
+
+        if (actualIndex < 0) {
+            actualIndex = m_tabWidget->count();
+        }
+
+        createTabForIndex(actualIndex);
+        m_tabWidget->setCurrentIndex(actualIndex);
+        if (m_ops) {
+            m_ops->refreshTabNames();
+        }
+        return;
     }
 }
