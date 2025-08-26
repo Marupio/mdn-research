@@ -80,24 +80,7 @@ public:
 signals:
     void focusDownRequested();
 
-    // Emitted when this widget gains focus
-    void focused(NumberDisplayWidget* self);
-
 public slots:
-    // Centre the view on the current cursor position
-    void centreOnCursor();
-
-    // Centre the view on the origin
-    void centreOnOrigin();
-
-    // Increase the font point size and keep the cursor at the same on-screen fraction
-    void zoomIn();
-
-    // Decrease the font point size and keep the cursor at the same on-screen fraction
-    void zoomOut();
-
-    // Reset the font point size to a sensible default and keep the cursor fraction
-    void zoomReset();
     void onCursorChanged(mdn::Coord c);
     void onSelectionChanged(const mdn::Rect& r);
     void onModelModified();
@@ -111,46 +94,20 @@ protected:
     void mouseReleaseEvent(QMouseEvent*) override;
     void wheelEvent(QWheelEvent* e) override;
     void resizeEvent(QResizeEvent* event) override;
-    void focusInEvent(QFocusEvent*) override;
 
 private:
     // Private member functions
-
-    // Recompute grid geometry and page steps
     void recalcGridGeometry();
-
-    // Ensure cursor obeys edge guard
     void ensureCursorVisible();
-
     void drawAxes(QPainter& p, const QRect& widgetRect);
     void adjustFontBy(int deltaPts);
-
-    // Map widget pixel to model coordinate
     void pixelToModel(int px, int py, int& mx, int& my) const;
-
-    // Centre the view on a model coordinate
     void centreViewOn(int mx, int my);
-
-    // Centre the view on the origin (0,0)
     void centreViewOnOrigin();
-
-    // Update last known fractional cursor position within viewport
     void captureCursorFractions();
-
-    // Restore view origin so cursor appears at stored fractional position
     void restoreCursorFractions();
-
-    // Set both cursor0 and cursor1 to one point
     void setBothCursors(int mx, int my);
-
-    // Set only cursor1 (extend selection)
     void setCursor1(int mx, int my);
-
-    // Change the font point size by a delta and preserve cursor fraction
-    void adjustZoomBySteps(int deltaSteps);
-
-    // Set the font point size absolutely and preserve cursor fraction
-    void setZoomPointSize(int pt);
 
 
     // Private member data
