@@ -86,11 +86,6 @@ std::string mdn::Mdn2dBase::locked_generateCopyName(const std::string& nameIn) {
 
 mdn::Mdn2d mdn::Mdn2dBase::NewInstance(Mdn2dConfig config, std::string nameIn) {
     Log_Debug2_H("Creating NewInstance with config=" << config << ", name=" << nameIn);
-    {
-        mdn::Logger& loginst = mdn::Logger::instance();
-        std::string dbind = loginst.debug_indentenators();
-        loginst.info(dbind);
-    }
 
     Log_Info("Creating NewInstance with config=" << config << ", name=" << nameIn);
     std::string newName = nameIn;
@@ -101,7 +96,7 @@ mdn::Mdn2d mdn::Mdn2dBase::NewInstance(Mdn2dConfig config, std::string nameIn) {
     if (Log_Showing_Debug2) {
         Log_Debug2_T("Name of new Mdn2d will be " << newName);
     } else {
-        Log_Debug("Creating a NewInstance of Mdn2d, newName=" << nameIn);
+        Log_Debug_T("Creating a NewInstance of Mdn2d, newName=" << nameIn);
     }
     return Mdn2d(config, newName);
 }

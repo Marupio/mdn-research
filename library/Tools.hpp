@@ -65,7 +65,6 @@ public:
             else
                 oss << array[0];
             for (size_t i = 1; i < array.size(); ++i) {
-                oss << delimiter << array[i];
                 if constexpr (is_byte_like_v<T>)
                     oss << delimiter <<static_cast<int>(array[i]);
                 else

@@ -41,8 +41,12 @@ include_directories("../library")
 
 if(IS_VSCODE_BUILD_BOOL)
     message(STATUS "Adding command to copy Qt DLLs and library for VS Code build")
+    # Use --debug for Debug, --release otherwise
     add_custom_command(TARGET mdn_gui POST_BUILD
-        COMMAND "${Qt6_DIR}/../../../bin/windeployqt6.exe" "$<TARGET_FILE:mdn_gui>"
+        COMMAND "${Qt6_DIR}/../../../bin/windeployqt6.exe"
+                $<$<CONFIG:Debug>:--debug>
+                $<$<NOT:$<CONFIG:Debug>>:--release>
+                "$<TARGET_FILE:mdn_gui>"
         COMMENT "Running windeployqt6 to bundle Qt dependencies for VS Code build..."
     )
     add_custom_command(TARGET mdn_gui POST_BUILD

@@ -9,6 +9,7 @@
 #include <unordered_map>
 
 #include "MainWindow.hpp"
+#include "QtLoggingBridge.hpp"
 
 
 static std::optional<mdn::LogLevel> parseLogLevel(QString s)
@@ -34,6 +35,7 @@ static QString allowedLevelsList()
 
 
 int main(int argc, char *argv[]) {
+    mdn_installQtMessageHandler();
     QApplication app(argc, argv);
 
     // Defaults (can be overridden by CLI)

@@ -40,7 +40,7 @@ private:
         k = j;
         while (k<ref.size()) {if (ref[k++] == ',') {++phase; break;}}
         if (phase == 2) {return "";}
-        return std::string(ref.substr(i, j-i) + ref.substr(k, ref.size()-k));
+        return std::string(ref.substr(i, j-i) + ref.substr(k, ref.size()-k-1));
     }
 
 public:
@@ -113,6 +113,9 @@ public:
                 m_indentenators[ref] = 1;
             } else {
                 it->second += 1;
+                if (it->second == 0) {
+                    m_indentenators.erase(it);
+                }
             }
         #endif
         if (m_indent < 20) {
@@ -130,6 +133,9 @@ public:
                 m_indentenators[ref] = -1;
             } else {
                 it->second -= 1;
+                if (it->second == 0) {
+                    m_indentenators.erase(it);
+                }
             }
         #endif
         if (m_indent < 20) {

@@ -84,12 +84,6 @@ void mdn::Logger::setOutputToFileLegacy(std::filesystem::path debugFile) {
     if (debugFile.empty()) {
         debugFile = defaultPath();
     }
-    // if (std::filesystem::exists(debugFile)) {
-    //     debugFile = debugFile + "0";
-    //     while (std::filesystem::exists(debugFile)) {
-    //         debugFile = debugFile + "0";
-    //     }
-    // }
     if (!std::filesystem::exists(debugFile)) {
         m_ossPtr = new std::ofstream(debugFile);
         if (!m_ossPtr) {

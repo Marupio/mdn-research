@@ -20,8 +20,8 @@ mdn::gui::MainWindow::MainWindow(QWidget *parent)
     Log_Debug2_H("Constructing MainWindow")
     createSplitter();
     createMenus();
-    setupLayout();
     m_command = new CommandWidget(this);
+    setupLayout();
     setWindowTitle("MDN Editor");
     Log_Debug2_H("");
 }
@@ -175,7 +175,9 @@ void mdn::gui::MainWindow::setupLayout() {
     );
 
     // For now, Project will be held by MainWindow
+    Log_Debug3("Dispatch - createNewProject");
     createNewProject();
+    Log_Debug3("Dispatch - createTabs");
     createTabs();
 
     // Bottom half - command history + input
@@ -186,6 +188,7 @@ void mdn::gui::MainWindow::setupLayout() {
 
     setCentralWidget(m_splitter);
 
+    Log_Debug3("Dispatch - initOperationsUi");
     initOperationsUi();
 
     Log_Debug3_T("");
@@ -205,6 +208,11 @@ void mdn::gui::MainWindow::createNewProject() {
 
 void mdn::gui::MainWindow::createTabs() {
     Log_Debug3_H("");
+    {
+        mdn::Logger& loginst = mdn::Logger::instance();
+        std::string dbind = loginst.debug_indentenators();
+        loginst.info(dbind);
+    }
     if (!m_project) {
         // Nothing to do
         Log_Debug3_T("No project");

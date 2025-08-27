@@ -361,6 +361,7 @@ std::vector<std::string> mdn::gui::Project::toc() const {
         Log_ErrorQ(err.what());
         throw err;
     }
+    std::unordered_set<std::string> nameSet;
     std::vector<std::string> result(nElems);
     std::vector<int> check(nElems, 0);
     std::string fail;
@@ -399,7 +400,15 @@ std::vector<std::string> mdn::gui::Project::toc() const {
                 break;
             }
         }
-        result[index] = src->name();
+        auto it = nameSet.find(strName);
+        if (it != nameSet.end()) {
+            fail = "Mdn '" + strName + "' at tab " + std::to_string(index) + " is already in use "
+                + " by another Mdn, possibly at tab " + std::to_string(indexOfMdn(strName));
+        } else {
+            nameSet.insert(strName);
+            Log_Debug2("Adding " << index << ":'" << strName << "'");
+            result[index] = strName;
+        }
     }
     if (fail.empty()) {
         for (int i: check) {
