@@ -73,8 +73,15 @@ int main(int argc, char *argv[]) {
         QStringLiteral("Do not write logs to a file (overrides any defaults).")
     );
 
+    // Optional: --no-log-file to explicitly keep logging off file even if code default changes later
+    QCommandLineOption optLogIndentation(
+        QStringList{QStringLiteral("check-indents")},
+        QStringLiteral("Monitor debug logging for missing indentation calls")
+    );
+
     parser.addOption(optLogLevel);
     parser.addOption(optLogFile);
+    parser.addOption(optLogIndentation);
     parser.addOption(optNoLogFile);
     parser.process(app);
 
@@ -98,8 +105,13 @@ int main(int argc, char *argv[]) {
         const auto p = parser.value(optLogFile);
         sirTalksALot.setOutputToFile(std::filesystem::path{p.toStdString()});
     } else {
-        // Keep whatever default you want here. If your current default is “log to file” with default path:
-        // sirTalksALot.setOutputToFile(); // uses your Logger's default path
+        // uses Logger's default path
+        sirTalksALot.setOutputToFile();
+    }
+
+    // Enable indentation checking, if necessary
+    if (parser.isSet(optLogIndentation)) {
+        sirTalksALot.enableIndentChecking();
     }
 
     mdn::gui::MainWindow window;

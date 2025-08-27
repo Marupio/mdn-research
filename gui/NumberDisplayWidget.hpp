@@ -1,13 +1,14 @@
 #pragma once
 
-#include <QWidget>
-#include <QFont>
-#include <QPen>
 #include <QBrush>
+#include <QFont>
 #include <QKeyEvent>
-#include <QWheelEvent>
-#include <QResizeEvent>
+#include <QLineEdit>
 #include <QPainter>
+#include <QPen>
+#include <QResizeEvent>
+#include <QWheelEvent>
+#include <QWidget>
 
 #include "../library/GlobalConfig.hpp"
 #include "../library/Mdn2d.hpp"
@@ -48,7 +49,7 @@ public:
 
     // Bindings
     void setProject(Project* proj);
-    void setModel(const Mdn2d* mdn, Selection* sel);
+    void setModel(Mdn2d* mdn, Selection* sel);
 
     // Styling
     inline void setTheme(const Theme& t) {
@@ -88,14 +89,36 @@ public slots:
 
 protected:
     void paintEvent(QPaintEvent*) override;
+
+    bool eventFilter(QObject* watched, QEvent* event) override;
+
+    // Acts as selector to the two keyPressEvent functions below
     void keyPressEvent(QKeyEvent*) override;
+        // Selected when not editing a digit
+        void keyPressEvent_gridScope(QKeyEvent*);
+        // Selected when editing a digit
+        void keyPressEvent_digitEditScope(QKeyEvent*);
+
     void mousePressEvent(QMouseEvent*) override;
     void mouseMoveEvent(QMouseEvent*) override;
     void mouseReleaseEvent(QMouseEvent*) override;
     void wheelEvent(QWheelEvent* e) override;
     void resizeEvent(QResizeEvent* event) override;
 
+
 private:
+
+    // Private member types
+
+    // Submission directions
+    enum class SubmitMove {
+        Enter,
+        ShiftEnter,
+        Tab,
+        ShiftTab
+    };
+
+
     // Private member functions
     void recalcGridGeometry();
     void ensureCursorVisible();
@@ -109,9 +132,26 @@ private:
     void setBothCursors(int mx, int my);
     void setCursor1(int mx, int my);
 
+    // API
+    void beginCellEdit(const QString& initialText);
+    void positionCellEditor();
+    void commitCellEdit(SubmitMove how);
+    void cancelCellEdit();
+
+    // Helpers
+    bool isGridTypingKey(const QKeyEvent* ev) const;
+    bool textAcceptableForBase(const QString& s, int base) const;
+    double parseBaseReal(const QString& s, int base, bool& ok) const;
+    int charToDigitValue(QChar ch) const;
+    QRect cursorCellRectInWidget() const;
+    void moveCursorAfterSubmit(SubmitMove how);
+
+
+
+
 
     // Private member data
-    const mdn::Mdn2d* m_model{ nullptr };
+    Mdn2d* m_model{ nullptr };
     Selection* m_selection{ nullptr };
     Project* m_project{ nullptr };
 
@@ -140,6 +180,12 @@ private:
     bool m_dragging{false};
     int m_dragAnchorX{0};
     int m_dragAnchorY{0};
+
+    // In-cell editor
+    QLineEdit* m_cellEditor{nullptr};
+
+    // Editing state
+    bool m_editing{false};
 
 };
 

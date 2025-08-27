@@ -68,6 +68,16 @@ public:
         if (m_ossPtr) {
             (*m_ossPtr) << levelStr << msg << std::endl;
         }
+        if (m_indentChecking) {
+            ++m_nMessages;
+            if (m_nMessages % m_indentCheckFrequency) {
+                std::string dbi(debug_indentenators());
+                std::cerr << dbi << std::endl;
+                if (m_ossPtr) {
+                    (*m_ossPtr) << dbi << std::endl;
+                }
+            }
+        }
     }
 
     void debug4(const std::string& msg) { log(LogLevel::Debug4, msg); }
@@ -98,8 +108,19 @@ public:
     // Return the indent, in string form
     const std::string& indent() const { return m_indentStr; }
 
-    mutable std::unordered_map<std::string, int> m_indentenators;
+    // Turn on indent checking
+    inline void enableIndentChecking() {
+        m_indentCheckFrequency = 50;
+        m_indentChecking = true;
+    }
 
+    // Turn off indent checking
+    inline void disableIndentChecking() {
+        m_indentCheckFrequency = -1;
+        m_indentChecking = false;
+    }
+
+    // Return the current state of the indentenators as a string
     inline std::string debug_indentenators() const {
         return Tools::mapToString(m_indentenators, ' ');
     }
@@ -107,14 +128,16 @@ public:
     // Increase the indent by two spaces
     void increaseIndent(std::string fref = "") {
         #ifdef MDN_DEBUG
-            std::string ref = cleanRef(fref);
-            auto it = m_indentenators.find(ref);
-            if (it == m_indentenators.end()) {
-                m_indentenators[ref] = 1;
-            } else {
-                it->second += 1;
-                if (it->second == 0) {
-                    m_indentenators.erase(it);
+            if (m_indentChecking) {
+                std::string ref = cleanRef(fref);
+                auto it = m_indentenators.find(ref);
+                if (it == m_indentenators.end()) {
+                    m_indentenators[ref] = 1;
+                } else {
+                    it->second += 1;
+                    if (it->second == 0) {
+                        m_indentenators.erase(it);
+                    }
                 }
             }
         #endif
@@ -127,14 +150,16 @@ public:
     // Reduce the indent by two spaces
     void decreaseIndent(std::string fref = "") {
         #ifdef MDN_DEBUG
-            std::string ref = cleanRef(fref);
-            auto it = m_indentenators.find(ref);
-            if (it == m_indentenators.end()) {
-                m_indentenators[ref] = -1;
-            } else {
-                it->second -= 1;
-                if (it->second == 0) {
-                    m_indentenators.erase(it);
+            if (m_indentChecking) {
+                std::string ref = cleanRef(fref);
+                auto it = m_indentenators.find(ref);
+                if (it == m_indentenators.end()) {
+                    m_indentenators[ref] = -1;
+                } else {
+                    it->second -= 1;
+                    if (it->second == 0) {
+                        m_indentenators.erase(it);
+                    }
                 }
             }
         #endif
@@ -161,6 +186,12 @@ private:
     static std::ofstream* m_ossPtr;
     int m_indent;
     std::string m_indentStr;
+
+    // Indentation checking (hints about functions that do not match incrIndent with decrIndent)
+    bool m_indentChecking = false;
+    mutable std::unordered_map<std::string, int> m_indentenators;
+    int m_indentCheckFrequency = -1;
+    long m_nMessages = 0;
 
     // Return the default path for the log file - not a member variable due to library linkage
     //  issues

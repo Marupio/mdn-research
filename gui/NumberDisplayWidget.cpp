@@ -1,5 +1,11 @@
 #include "NumberDisplayWidget.hpp"
 
+#include <QFontMetrics>
+#include <QGuiApplication>
+#include <QStyle>
+#include <QStyleOption>
+
+#include "GuiTools.hpp"
 #include "Project.hpp"
 #include "Selection.hpp"
 
@@ -18,7 +24,7 @@ void mdn::gui::NumberDisplayWidget::setProject(Project* project) {
 }
 
 
-void mdn::gui::NumberDisplayWidget::setModel(const Mdn2d* model, Selection* sel) {
+void mdn::gui::NumberDisplayWidget::setModel(Mdn2d* model, Selection* sel) {
     m_model = model;
     m_selection = sel;
     if (m_selection) {
@@ -165,7 +171,66 @@ void mdn::gui::NumberDisplayWidget::paintEvent(QPaintEvent* event) {
 }
 
 
+bool mdn::gui::NumberDisplayWidget::eventFilter(QObject* watched, QEvent* event)
+{
+    if (watched == m_cellEditor) {
+        if (event->type() == QEvent::KeyPress) {
+            QKeyEvent* ke = static_cast<QKeyEvent*>(event);
+
+            if (ke->key() == Qt::Key_Return || ke->key() == Qt::Key_Enter) {
+                if (ke->modifiers() & Qt::ShiftModifier) {
+                    commitCellEdit(SubmitMove::ShiftEnter);
+                } else {
+                    commitCellEdit(SubmitMove::Enter);
+                }
+                setFocus(Qt::OtherFocusReason);
+                ke->accept();
+                return true;
+            }
+
+            if (ke->key() == Qt::Key_Tab) {
+                commitCellEdit(SubmitMove::Tab);
+                setFocus(Qt::OtherFocusReason);
+                ke->accept();
+                return true;
+            }
+
+            if (ke->key() == Qt::Key_Backtab) {
+                commitCellEdit(SubmitMove::ShiftTab);
+                setFocus(Qt::OtherFocusReason);
+                ke->accept();
+                return true;
+            }
+
+            if (ke->key() == Qt::Key_Escape) {
+                cancelCellEdit();
+                setFocus(Qt::OtherFocusReason);
+                ke->accept();
+                return true;
+            }
+        }
+    }
+
+    return QWidget::eventFilter(watched, event);
+}
+
+
 void mdn::gui::NumberDisplayWidget::keyPressEvent(QKeyEvent* e) {
+    if (m_editing) {
+        return keyPressEvent_digitEditScope(e);
+    } else {
+        return keyPressEvent_gridScope(e);
+    }
+}
+
+
+void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
+    if (isGridTypingKey(e)) {
+        const QString ch = e->text();
+        beginCellEdit(ch);
+        return;
+    }
+
     const Qt::KeyboardModifiers mods = e->modifiers();
     const bool shift  = mods.testFlag(Qt::ShiftModifier);
     const bool ctrl   = mods.testFlag(Qt::ControlModifier);
@@ -288,6 +353,32 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent(QKeyEvent* e) {
 }
 
 
+void mdn::gui::NumberDisplayWidget::keyPressEvent_digitEditScope(QKeyEvent* e) {
+    if (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter) {
+        if (e->modifiers() & Qt::ShiftModifier) {
+            commitCellEdit(SubmitMove::ShiftEnter);
+        } else {
+            commitCellEdit(SubmitMove::Enter);
+        }
+        return;
+    }
+    if (e->key() == Qt::Key_Tab) {
+        commitCellEdit(SubmitMove::Tab);
+        return;
+    }
+    if (e->key() == Qt::Key_Backtab) {
+        commitCellEdit(SubmitMove::ShiftTab);
+        return;
+    }
+    if (e->key() == Qt::Key_Escape) {
+        cancelCellEdit();
+        return;
+    }
+    QWidget::keyPressEvent(e);
+    return;
+}
+
+
 void mdn::gui::NumberDisplayWidget::mousePressEvent(QMouseEvent* e) {
     if (e->button() == Qt::LeftButton) {
         int mx{0};
@@ -375,6 +466,9 @@ void mdn::gui::NumberDisplayWidget::resizeEvent(QResizeEvent* e) {
         const int pageCols = std::max(1, (m_cols - 1) / 3);
         const int pageRows = std::max(1, (m_rows - 1) / 3);
         m_selection->setPageStep(pageCols, pageRows);
+    }
+    if (m_editing) {
+        positionCellEditor();
     }
     update();
 }
@@ -557,3 +651,304 @@ void mdn::gui::NumberDisplayWidget::setCursor1(int mx, int my) {
 }
 
 
+void mdn::gui::NumberDisplayWidget::beginCellEdit(const QString& initialText)
+{
+    Log_Debug3_H("beginCellEdit");
+    if (!m_cellEditor) {
+        m_cellEditor = new QLineEdit(this);
+        m_cellEditor->setFrame(true);
+        m_cellEditor->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+        m_cellEditor->setFont(m_theme.font);
+        m_cellEditor->installEventFilter(this);
+    }
+    m_cellEditor->setText(initialText);
+    positionCellEditor();
+    m_cellEditor->show();
+    m_cellEditor->raise();
+    m_cellEditor->setFocus(Qt::OtherFocusReason);
+    m_editing = true;
+    update();
+    Log_Debug3_T("");
+}
+
+
+void mdn::gui::NumberDisplayWidget::positionCellEditor()
+{
+    Log_Debug4_H("positionCellEditor");
+    const QRect cell = cursorCellRectInWidget();
+    int x = cell.x();
+    int y = cell.y();
+    int h = cell.height();
+    int maxW = width() - x;
+    int w = std::max(1, maxW);
+    m_cellEditor->setGeometry(QRect(x, y, w, h));
+    Log_Debug4_T("");
+}
+
+
+void mdn::gui::NumberDisplayWidget::commitCellEdit(SubmitMove how)
+{
+    Log_Debug2_H("commitCellEdit");
+    if (!m_model || !m_selection || !m_editing) {
+        setFocus(Qt::OtherFocusReason);
+        Log_Debug2_T("");
+        return;
+    }
+
+    const QString raw = m_cellEditor->text().trimmed();
+    const int base = m_model->config().base();
+
+    if (!textAcceptableForBase(raw, base)) {
+        m_cellEditor->hide();
+        m_editing = false;
+        update();
+        moveCursorAfterSubmit(how);
+        setFocus(Qt::OtherFocusReason);
+        Log_Debug2_T("rejected text");
+        return;
+    }
+
+    const mdn::Coord xy = m_selection->cursor1();
+    const bool neg = raw.startsWith('-');
+    const bool hasDot = raw.contains('.');
+
+    bool ok = false;
+    const double val = parseBaseReal(raw, base, ok);
+
+    if (!ok) {
+        m_cellEditor->hide();
+        m_editing = false;
+        update();
+        moveCursorAfterSubmit(how);
+        setFocus(Qt::OtherFocusReason);
+        Log_Debug2_T("parse failed");
+        return;
+    }
+
+    m_model->setToZero(xy);
+
+    if (neg) {
+        if (hasDot) {
+            m_model->subtract(xy, val, m_model->config().fraxis());
+        } else {
+            m_model->subtract(xy, val, m_model->config().fraxis());
+        }
+    } else {
+        if (hasDot) {
+            m_model->add(xy, val, m_model->config().fraxis());
+        } else {
+            m_model->add(xy, val, m_model->config().fraxis());
+        }
+    }
+
+    m_cellEditor->hide();
+    m_editing = false;
+    update();
+    moveCursorAfterSubmit(how);
+    setFocus(Qt::OtherFocusReason);
+    Log_Debug2_T("");
+}
+
+
+void mdn::gui::NumberDisplayWidget::cancelCellEdit()
+{
+    Log_Debug3_H("cancelCellEdit");
+    if (m_cellEditor) {
+        m_cellEditor->hide();
+    }
+    m_editing = false;
+    update();
+    setFocus(Qt::OtherFocusReason);
+    Log_Debug3_T("");
+}
+
+
+bool mdn::gui::NumberDisplayWidget::isGridTypingKey(const QKeyEvent* ev) const
+{
+    const int k = ev->key();
+    if (k == Qt::Key_Minus || k == Qt::Key_Period) {
+        return true;
+    }
+    if ((k >= Qt::Key_0 && k <= Qt::Key_9) || (k >= Qt::Key_A && k <= Qt::Key_Z)) {
+        return true;
+    }
+    return false;
+}
+
+
+bool mdn::gui::NumberDisplayWidget::textAcceptableForBase(const QString& s, int base) const
+{
+    if (s.isEmpty()) {
+        return false;
+    }
+
+    QString t = s.trimmed();
+    if (t.startsWith('+')) {
+        t.remove(0, 1);
+    }
+
+    bool neg = false;
+    if (t.startsWith('-')) {
+        neg = true;
+        t.remove(0, 1);
+    }
+
+    if (t.isEmpty()) {
+        return false;
+    }
+
+    int dots = 0;
+    for (int i = 0; i < t.size(); ++i) {
+        const QChar ch = t.at(i);
+        if (ch == '.') {
+            dots += 1;
+            if (dots > 1) {
+                return false;
+            }
+        } else {
+            const int dv = charToDigitValue(ch);
+            if (dv < 0) {
+                return false;
+            }
+            if (dv >= base) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+
+int mdn::gui::NumberDisplayWidget::charToDigitValue(QChar ch) const
+{
+    const QChar c = GuiTools::toUpperAscii(ch);
+    if (c >= QChar('0') && c <= QChar('9')) {
+        return c.unicode() - QChar('0').unicode();
+    }
+    if (c >= QChar('A') && c <= QChar('Z')) {
+        return 10 + (c.unicode() - QChar('A').unicode());
+    }
+    return -1;
+}
+
+
+double mdn::gui::NumberDisplayWidget::parseBaseReal(const QString& s, int base, bool& ok) const
+{
+    ok = false;
+
+    if (!textAcceptableForBase(s, base)) {
+        return 0.0;
+    }
+
+    QString t = s.trimmed();
+    bool neg = false;
+
+    if (t.startsWith('+')) {
+        t.remove(0, 1);
+    }
+
+    if (t.startsWith('-')) {
+        neg = true;
+        t.remove(0, 1);
+    }
+
+    int dot = t.indexOf('.');
+    QString intPart = dot < 0 ? t : t.left(dot);
+    QString fracPart = dot < 0 ? QString() : t.mid(dot + 1);
+
+    double value = 0.0;
+    for (int i = 0; i < intPart.size(); ++i) {
+        const int dv = charToDigitValue(intPart.at(i));
+        value = value * base + dv;
+    }
+
+    double scale = 1.0;
+    for (int i = 0; i < fracPart.size(); ++i) {
+        const int dv = charToDigitValue(fracPart.at(i));
+        scale /= static_cast<double>(base);
+        value += static_cast<double>(dv) * scale;
+    }
+
+    if (neg) {
+        value = -value;
+    }
+
+    ok = true;
+    return value;
+}
+
+
+QRect mdn::gui::NumberDisplayWidget::cursorCellRectInWidget() const
+{
+    const int vx = m_cursorX - m_viewOriginX;
+    const int vy = (m_rows - 1) - (m_cursorY - m_viewOriginY);
+    const int px = vx * m_cellSize;
+    const int py = vy * m_cellSize;
+    return QRect(px, py, m_cellSize, m_cellSize);
+}
+
+
+void mdn::gui::NumberDisplayWidget::moveCursorAfterSubmit(SubmitMove how)
+{
+    Log_Debug3_H("moveCursorAfterSubmit");
+    if (!m_selection) {
+        Log_Debug3_T("");
+        return;
+    }
+
+    const Rect r = m_selection->rect();
+    const Coord cur = m_selection->cursor1();
+    const bool hasRect = r.isValid();
+    if (!hasRect) {
+        if (how == SubmitMove::Enter) {
+            m_selection->cursorNextY(false);
+        } else if (how == SubmitMove::ShiftEnter) {
+            m_selection->cursorPrevY(false);
+        } else if (how == SubmitMove::Tab) {
+            m_selection->cursorNextX(false);
+        } else {
+            m_selection->cursorPrevX(false);
+        }
+        ensureCursorVisible();
+        update();
+        Log_Debug3_T("no rect");
+        return;
+    }
+
+    const Coord mn = r.min();
+    const Coord mx = r.max();
+    int x = cur.x();
+    int y = cur.y();
+
+    if (how == SubmitMove::Enter) {
+        if (y >= mx.y()) {
+            y = mn.y();
+        } else {
+            y += 1;
+        }
+    } else if (how == SubmitMove::ShiftEnter) {
+        if (y <= mn.y()) {
+            y = mx.y();
+        } else {
+            y -= 1;
+        }
+    } else if (how == SubmitMove::Tab) {
+        if (x >= mx.x()) {
+            x = mn.x();
+        } else {
+            x += 1;
+        }
+    } else {
+        if (x <= mn.x()) {
+            x = mx.x();
+        } else {
+            x -= 1;
+        }
+    }
+
+    m_selection->setCursor1(Coord(x, y));
+    ensureCursorVisible();
+    update();
+    Log_Debug3_T("");
+}
