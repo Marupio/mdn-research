@@ -31,6 +31,7 @@ add_executable(mdn_gui
     OpsController.hpp OpsController.cpp
     OperationHistory.ui
     Project.hpp Project.cpp
+    QtLoggingBridge.hpp QtLoggingBridge.cpp
 )
 
 target_link_libraries(mdn_gui PRIVATE ${QT_LIBS} mdn)
