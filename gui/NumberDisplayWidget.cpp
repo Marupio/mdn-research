@@ -58,11 +58,14 @@ void mdn::gui::NumberDisplayWidget::setFontPointSize(int pt) {
     pt = std::clamp(pt, m_minPt, m_maxPt);
     if (m_theme.font.pointSize() == pt) return;
     m_theme.font.setPointSize(pt);
+    if (m_cellEditor) {
+        m_cellEditor->setFont(m_theme.font);
+        positionCellEditor();
+    }
     recalcGridGeometry();
-    // If you feed page step back to Project, do it here using visibleCols/Rows
     if (m_project) {
-    const int pageCols = std::max(1, (m_cols - 1) / 3);
-    const int pageRows = std::max(1, (m_rows - 1) / 3);
+        const int pageCols = std::max(1, (m_cols - 1) / 3);
+        const int pageRows = std::max(1, (m_rows - 1) / 3);
         m_project->setPageStep(pageCols, pageRows);
     }
     recalcGridGeometry();
@@ -177,8 +180,40 @@ bool mdn::gui::NumberDisplayWidget::eventFilter(QObject* watched, QEvent* event)
         if (event->type() == QEvent::KeyPress) {
             QKeyEvent* ke = static_cast<QKeyEvent*>(event);
 
+            const bool ctrl = (ke->modifiers() & Qt::ControlModifier) != 0;
+            const bool meta = (ke->modifiers() & Qt::MetaModifier) != 0;
+            const bool shift = (ke->modifiers() & Qt::ShiftModifier) != 0;
+
+            if (ctrl) {
+                if (ke->key() == Qt::Key_PageUp) {
+                    if (shift) {
+                        Q_EMIT requestMoveTabRight();
+                    } else {
+                        Q_EMIT requestSelectNextTab();
+                    }
+                    ke->accept();
+                    return true;
+                } else if (ke->key() == Qt::Key_PageDown) {
+                    if (shift) {
+                        Q_EMIT requestMoveTabLeft();
+                    } else {
+                        Q_EMIT requestSelectPrevTab();
+                    }
+                    ke->accept();
+                    return true;
+                }
+            }
+
+            if (ke->key() == Qt::Key_A && (ctrl || meta)) {
+                cancelCellEdit();
+                setFocus(Qt::OtherFocusReason);
+                selectAllBounds();
+                ke->accept();
+                return true;
+            }
+
             if (ke->key() == Qt::Key_Return || ke->key() == Qt::Key_Enter) {
-                if (ke->modifiers() & Qt::ShiftModifier) {
+                if (shift) {
                     commitCellEdit(SubmitMove::ShiftEnter);
                 } else {
                     commitCellEdit(SubmitMove::Enter);
@@ -225,20 +260,41 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent(QKeyEvent* e) {
 
 
 void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
-    if (isGridTypingKey(e)) {
-        const QString ch = e->text();
-        beginCellEdit(ch);
+
+    if (!m_selection || !m_project) {
+        Log_Warn("NumberDisplayWidget key press event handling with no valid project or selection");
+        QWidget::keyPressEvent(e);
         return;
     }
 
     const Qt::KeyboardModifiers mods = e->modifiers();
     const bool shift  = mods.testFlag(Qt::ShiftModifier);
     const bool ctrl   = mods.testFlag(Qt::ControlModifier);
+    const bool meta   = mods.testFlag(Qt::MetaModifier);
     const bool alt    = mods.testFlag(Qt::AltModifier);
     const bool extend = shift;
 
-    // Zoom shortcuts: Ctrl+'+' / Ctrl+'-' / Ctrl+'0'
-    if (ctrl) {
+    if (ctrl || meta) {
+        // Tab selection / movement shortcuts: Ctrl+PgUp, Ctrl+Shift+PgUp, etc..
+        if (e->key() == Qt::Key_PageUp) {
+            if (shift) {
+                Q_EMIT requestMoveTabRight();
+            } else {
+                Q_EMIT requestSelectNextTab();
+            }
+            e->accept();
+            return;
+        } else if (e->key() == Qt::Key_PageDown) {
+            if (shift) {
+                Q_EMIT requestMoveTabLeft();
+            } else {
+                Q_EMIT requestSelectPrevTab();
+            }
+            e->accept();
+            return;
+        }
+
+        // Zoom shortcuts: Ctrl+'+' / Ctrl+'-' / Ctrl+'0'
         if (e->key() == Qt::Key_Plus || e->key() == Qt::Key_Equal) {
             // '=' is '+' on many layouts
             increaseFont();
@@ -255,12 +311,11 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
             e->accept();
             return;
         }
-    }
-
-    if (!m_selection || !m_project) {
-        Log_Warn("NumberDisplayWidget key press event handling with no valid project or selection");
-        QWidget::keyPressEvent(e);
-        return;
+        if (e->key() == Qt::Key_A) {
+            selectAllBounds();
+            e->accept();
+            return;
+        }
     }
 
     // Navigation keys:
@@ -313,7 +368,6 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
             break;
         }
 
-
         // ---- Next / Prev by “entry” convention ----
         // Enter / Return: move along Y (down by default)
         case Qt::Key_Return:
@@ -335,6 +389,7 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
 
         case Qt::Key_Escape:
             emit focusDownRequested();
+            e->accept();
             break;
 
         default:
@@ -348,7 +403,13 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
         m_cursorY = m_selection->cursor1().y();
         ensureCursorVisible();
     }
-    e->accept();
+    if (isGridTypingKey(e)) {
+        const QString ch = e->text();
+        beginCellEdit(ch);
+        return;
+
+    }
+    QWidget::keyPressEvent(e);
     update();
 }
 
@@ -651,16 +712,40 @@ void mdn::gui::NumberDisplayWidget::setCursor1(int mx, int my) {
 }
 
 
+void mdn::gui::NumberDisplayWidget::selectAllBounds()
+{
+    Log_Debug3_H("");
+
+    if (!m_model || !m_selection) {
+        Log_Debug3_T("");
+        return;
+    }
+
+    const Rect b = m_model->bounds();
+    if (b.isInvalid()) {
+        Log_Debug3_T("Bounds empty");
+        return;
+    }
+
+    m_selection->setCursor0(b.min());
+    m_selection->setCursor1(b.max());
+    ensureCursorVisible();
+    update();
+
+    Log_Debug3_T("");
+}
+
+
 void mdn::gui::NumberDisplayWidget::beginCellEdit(const QString& initialText)
 {
-    Log_Debug3_H("beginCellEdit");
+    Log_Debug3_H("");
     if (!m_cellEditor) {
         m_cellEditor = new QLineEdit(this);
         m_cellEditor->setFrame(true);
         m_cellEditor->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-        m_cellEditor->setFont(m_theme.font);
         m_cellEditor->installEventFilter(this);
     }
+    m_cellEditor->setFont(m_theme.font);
     m_cellEditor->setText(initialText);
     positionCellEditor();
     m_cellEditor->show();
@@ -674,7 +759,7 @@ void mdn::gui::NumberDisplayWidget::beginCellEdit(const QString& initialText)
 
 void mdn::gui::NumberDisplayWidget::positionCellEditor()
 {
-    Log_Debug4_H("positionCellEditor");
+    Log_Debug4_H("");
     const QRect cell = cursorCellRectInWidget();
     int x = cell.x();
     int y = cell.y();
@@ -688,7 +773,7 @@ void mdn::gui::NumberDisplayWidget::positionCellEditor()
 
 void mdn::gui::NumberDisplayWidget::commitCellEdit(SubmitMove how)
 {
-    Log_Debug2_H("commitCellEdit");
+    Log_Debug2_H("");
     if (!m_model || !m_selection || !m_editing) {
         setFocus(Qt::OtherFocusReason);
         Log_Debug2_T("");
@@ -708,36 +793,32 @@ void mdn::gui::NumberDisplayWidget::commitCellEdit(SubmitMove how)
         return;
     }
 
+    bool neg = false;
+    const QString body = stripSign(raw, neg);
+    const bool hasDot = body.contains('.');
+
     const mdn::Coord xy = m_selection->cursor1();
-    const bool neg = raw.startsWith('-');
-    const bool hasDot = raw.contains('.');
-
-    bool ok = false;
-    const double val = parseBaseReal(raw, base, ok);
-
-    if (!ok) {
-        m_cellEditor->hide();
-        m_editing = false;
-        update();
-        moveCursorAfterSubmit(how);
-        setFocus(Qt::OtherFocusReason);
-        Log_Debug2_T("parse failed");
-        return;
-    }
-
     m_model->setToZero(xy);
 
-    if (neg) {
-        if (hasDot) {
-            m_model->subtract(xy, val, m_model->config().fraxis());
-        } else {
-            m_model->subtract(xy, val, m_model->config().fraxis());
+    if (hasDot) {
+        bool ok = false;
+        const double mag = parseBaseRealMagnitude(body, base, ok);
+        if (ok) {
+            if (neg) {
+                m_model->subtract(xy, mag, m_model->config().fraxis());
+            } else {
+                m_model->add(xy, mag, m_model->config().fraxis());
+            }
         }
     } else {
-        if (hasDot) {
-            m_model->add(xy, val, m_model->config().fraxis());
-        } else {
-            m_model->add(xy, val, m_model->config().fraxis());
+        bool ok = false;
+        const long long mag = parseBaseIntMagnitude(body, base, ok);
+        if (ok) {
+            if (neg) {
+                m_model->subtract(xy, mag);
+            } else {
+                m_model->add(xy, mag);
+            }
         }
     }
 
@@ -752,7 +833,7 @@ void mdn::gui::NumberDisplayWidget::commitCellEdit(SubmitMove how)
 
 void mdn::gui::NumberDisplayWidget::cancelCellEdit()
 {
-    Log_Debug3_H("cancelCellEdit");
+    Log_Debug3_H("");
     if (m_cellEditor) {
         m_cellEditor->hide();
     }
@@ -765,11 +846,61 @@ void mdn::gui::NumberDisplayWidget::cancelCellEdit()
 
 bool mdn::gui::NumberDisplayWidget::isGridTypingKey(const QKeyEvent* ev) const
 {
+    const Qt::KeyboardModifiers mods = ev->modifiers();
+    if ((mods & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier)) != Qt::NoModifier) {
+        return false;
+    }
+
+    if (!m_model) {
+        return false;
+    }
+    int base = m_model->config().base();
+
+    // Set key limits based on base
+    // * maxNum is at-the-end, i.e. k <= maxNum, but maxAlpha is different
+    // * maxAlpha is one-past-the-end, i.e. k < maxAlpha, not k <= maxAlpha
+    Qt::Key maxNum = Qt::Key_9;
+    Qt::Key maxAlpha = Qt::Key_A;
+    switch (base) {
+        case 2: maxNum = Qt::Key_1; break;
+        case 3: maxNum = Qt::Key_2; break;
+        case 4: maxNum = Qt::Key_3; break;
+        case 5: maxNum = Qt::Key_4; break;
+        case 6: maxNum = Qt::Key_5; break;
+        case 7: maxNum = Qt::Key_6; break;
+        case 8: maxNum = Qt::Key_7; break;
+        case 9: maxNum = Qt::Key_8; break;
+        case 10: break;
+        case 11: maxAlpha = Qt::Key_A; break;
+        case 12: maxAlpha = Qt::Key_B; break;
+        case 13: maxAlpha = Qt::Key_C; break;
+        case 14: maxAlpha = Qt::Key_D; break;
+        case 15: maxAlpha = Qt::Key_E; break;
+        case 16: maxAlpha = Qt::Key_F; break;
+        case 17: maxAlpha = Qt::Key_G; break;
+        case 18: maxAlpha = Qt::Key_H; break;
+        case 19: maxAlpha = Qt::Key_I; break;
+        case 20: maxAlpha = Qt::Key_J; break;
+        case 21: maxAlpha = Qt::Key_K; break;
+        case 22: maxAlpha = Qt::Key_L; break;
+        case 23: maxAlpha = Qt::Key_M; break;
+        case 24: maxAlpha = Qt::Key_N; break;
+        case 25: maxAlpha = Qt::Key_O; break;
+        case 26: maxAlpha = Qt::Key_P; break;
+        case 27: maxAlpha = Qt::Key_Q; break;
+        case 28: maxAlpha = Qt::Key_R; break;
+        case 29: maxAlpha = Qt::Key_S; break;
+        case 30: maxAlpha = Qt::Key_T; break;
+        case 31: maxAlpha = Qt::Key_U; break;
+        case 32: maxAlpha = Qt::Key_V; break;
+        default:
+            Log_Warn("Invalid base: " << base);
+    }
     const int k = ev->key();
     if (k == Qt::Key_Minus || k == Qt::Key_Period) {
         return true;
     }
-    if ((k >= Qt::Key_0 && k <= Qt::Key_9) || (k >= Qt::Key_A && k <= Qt::Key_Z)) {
+    if ((k >= Qt::Key_0 && k <= maxNum) || (k >= Qt::Key_A && k < maxAlpha)) {
         return true;
     }
     return false;
@@ -891,7 +1022,7 @@ QRect mdn::gui::NumberDisplayWidget::cursorCellRectInWidget() const
 
 void mdn::gui::NumberDisplayWidget::moveCursorAfterSubmit(SubmitMove how)
 {
-    Log_Debug3_H("moveCursorAfterSubmit");
+    Log_Debug3_H("");
     if (!m_selection) {
         Log_Debug3_T("");
         return;
@@ -951,4 +1082,62 @@ void mdn::gui::NumberDisplayWidget::moveCursorAfterSubmit(SubmitMove how)
     ensureCursorVisible();
     update();
     Log_Debug3_T("");
+}
+
+
+QString mdn::gui::NumberDisplayWidget::stripSign(const QString& s, bool& isNeg) const
+{
+    QString t(s.trimmed());
+    isNeg = false;
+    if (t.startsWith('+')) {
+        t.remove(0, 1);
+    } else if (t.startsWith('-')) {
+        isNeg = true;
+        t.remove(0, 1);
+    }
+    return t;
+}
+
+
+double mdn::gui::NumberDisplayWidget::parseBaseRealMagnitude(const QString& body, int base, bool& ok) const
+{
+    ok = false;
+    QString intPart;
+    QString fracPart;
+    const int dot = body.indexOf('.');
+    if (dot < 0) {
+        intPart = body;
+    } else {
+        intPart = body.left(dot);
+        fracPart = body.mid(dot + 1);
+    }
+
+    double value = 0.0;
+    for (int i = 0; i < intPart.size(); ++i) {
+        const int dv = charToDigitValue(intPart.at(i));
+        value = value * base + dv;
+    }
+
+    double scale = 1.0;
+    for (int i = 0; i < fracPart.size(); ++i) {
+        const int dv = charToDigitValue(fracPart.at(i));
+        scale /= static_cast<double>(base);
+        value += static_cast<double>(dv) * scale;
+    }
+
+    ok = true;
+    return value;
+}
+
+
+long long mdn::gui::NumberDisplayWidget::parseBaseIntMagnitude(const QString& body, int base, bool& ok) const
+{
+    ok = false;
+    long long value = 0;
+    for (int i = 0; i < body.size(); ++i) {
+        const int dv = charToDigitValue(body.at(i));
+        value = value * base + dv;
+    }
+    ok = true;
+    return value;
 }

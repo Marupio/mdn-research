@@ -79,6 +79,13 @@ private slots:
     void onCommandSubmitted(const QString& text);
     void onOpsPlan(const OpsController::Plan& p);
 
+    void slotSelectNextTab();
+    void slotSelectPrevTab();
+    void slotMoveTabRight();
+    void slotMoveTabLeft();
+
+    void focusActiveGrid();
+
 };
 
 } // end namespace gui

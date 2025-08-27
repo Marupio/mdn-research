@@ -81,6 +81,13 @@ public:
 signals:
     void focusDownRequested();
 
+Q_SIGNALS:
+    void requestSelectNextTab();
+    void requestSelectPrevTab();
+    void requestMoveTabRight();
+    void requestMoveTabLeft();
+
+
 public slots:
     void onCursorChanged(mdn::Coord c);
     void onSelectionChanged(const mdn::Rect& r);
@@ -131,6 +138,8 @@ private:
     void restoreCursorFractions();
     void setBothCursors(int mx, int my);
     void setCursor1(int mx, int my);
+    void selectAllBounds();
+
 
     // API
     void beginCellEdit(const QString& initialText);
@@ -145,9 +154,9 @@ private:
     int charToDigitValue(QChar ch) const;
     QRect cursorCellRectInWidget() const;
     void moveCursorAfterSubmit(SubmitMove how);
-
-
-
+    QString stripSign(const QString& s, bool& isNeg) const;
+    double parseBaseRealMagnitude(const QString& body, int base, bool& ok) const;
+    long long parseBaseIntMagnitude(const QString& body, int base, bool& ok) const;
 
 
     // Private member data

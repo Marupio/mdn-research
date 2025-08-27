@@ -229,6 +229,30 @@ void mdn::gui::MainWindow::createTabs() {
         ndw->setProject(m_project);
         ndw->setModel(src, sel);
         int tab = m_tabWidget->addTab(ndw, qname);
+        connect(
+            ndw,
+            &mdn::gui::NumberDisplayWidget::requestSelectNextTab,
+            this,
+            &mdn::gui::MainWindow::slotSelectNextTab
+        );
+        connect(
+            ndw,
+            &mdn::gui::NumberDisplayWidget::requestSelectPrevTab,
+            this,
+            &mdn::gui::MainWindow::slotSelectPrevTab
+        );
+        connect(
+            ndw,
+            &mdn::gui::NumberDisplayWidget::requestMoveTabRight,
+            this,
+            &mdn::gui::MainWindow::slotMoveTabRight
+        );
+        connect(
+            ndw,
+            &mdn::gui::NumberDisplayWidget::requestMoveTabLeft,
+            this,
+            &mdn::gui::MainWindow::slotMoveTabLeft
+        );
     }
     Log_Debug3_T("");
 }
@@ -541,4 +565,89 @@ void mdn::gui::MainWindow::onOpsPlan(const OpsController::Plan& p) {
         }
         return;
     }
+}
+
+
+void mdn::gui::MainWindow::slotSelectNextTab()
+{
+    Log_Debug3_H("slotSelectNextTab");
+    if (!m_tabWidget) {
+        Log_Debug3_T("");
+        return;
+    }
+    const int idx = m_tabWidget->currentIndex();
+    const int count = m_tabWidget->count();
+    if (idx + 1 < count) {
+        m_tabWidget->setCurrentIndex(idx + 1);
+        focusActiveGrid();
+    }
+    Log_Debug3_T("");
+}
+
+
+void mdn::gui::MainWindow::slotSelectPrevTab()
+{
+    Log_Debug3_H("slotSelectPrevTab");
+    if (!m_tabWidget) {
+        Log_Debug3_T("");
+        return;
+    }
+    const int idx = m_tabWidget->currentIndex();
+    if (idx - 1 >= 0) {
+        m_tabWidget->setCurrentIndex(idx - 1);
+        focusActiveGrid();
+    }
+    Log_Debug3_T("");
+}
+
+
+void mdn::gui::MainWindow::slotMoveTabRight()
+{
+    Log_Debug3_H("slotMoveTabRight");
+    if (!m_tabWidget) {
+        Log_Debug3_T("");
+        return;
+    }
+    const int idx = m_tabWidget->currentIndex();
+    const int count = m_tabWidget->count();
+    if (idx >= 0 && idx + 1 < count) {
+        QTabBar* bar = m_tabWidget->tabBar();
+        bar->moveTab(idx, idx + 1);
+        m_tabWidget->setCurrentIndex(idx + 1);
+        focusActiveGrid();
+    }
+    Log_Debug3_T("");
+}
+
+
+void mdn::gui::MainWindow::slotMoveTabLeft()
+{
+    Log_Debug3_H("slotMoveTabLeft");
+    if (!m_tabWidget) {
+        Log_Debug3_T("");
+        return;
+    }
+    const int idx = m_tabWidget->currentIndex();
+    if (idx > 0) {
+        QTabBar* bar = m_tabWidget->tabBar();
+        bar->moveTab(idx, idx - 1);
+        m_tabWidget->setCurrentIndex(idx - 1);
+        focusActiveGrid();
+    }
+    Log_Debug3_T("");
+}
+
+
+void mdn::gui::MainWindow::focusActiveGrid()
+{
+    Log_Debug4_H("focusActiveGrid");
+    if (!m_tabWidget) {
+        Log_Debug4_T("");
+        return;
+    }
+    QWidget* w = m_tabWidget->currentWidget();
+    if (w) {
+        w->setFocus(Qt::ShortcutFocusReason);
+    }
+    Log_Debug4_T("");
 }

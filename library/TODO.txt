@@ -23,3 +23,24 @@ Why not track that here also
     It's called 'at'
 
 
+FUNCTIONALITY
+
+CTRL + PGUP = next tab < these are backwards
+CTRL + PGDN = prev tab
+CTRL + SHIFT + PGUP = move tab right < doing this a few times --> segfault
+CTRL + SHIFT + PGDN = move tab left
+
+Tab should be move cursor 'within selection', tab loses focus
+Same with shift tab
+Enter + shift+enter should be 'move cursor within selection'
+Delete tab => seg fault
+Focus behaviour is annoying - should always be focused on digit grid.
+Maximize should have origin in middle
+Binary operation window 'Destination' radio buttons are messed up
+Operations->Addition->Create New->segfault
+
+DISPLAY
+Move digit line to correct axes
+Status line showing cursor coords, selected area
+Show digits within bounds darker than those outside bounds
+Need access to config
