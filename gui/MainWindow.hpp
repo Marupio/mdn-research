@@ -43,7 +43,6 @@ private slots:
 protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
 
-
 private:
     void createSplitter();
     void createMenus();
@@ -60,6 +59,13 @@ private:
     void copyTab(int index);
     void pasteTab(int insertAt);
     void syncTabsToProject();
+
+    // Focus model API
+    void initFocusModel();
+    void focusActiveGrid();
+    QWidget* activeGridWidget() const;
+    bool isFocusAllowedWidget(QWidget* w) const;
+    void onAppFocusChanged(QWidget* old, QWidget* now);
 
     QSplitter* m_splitter = nullptr;
     double m_splitRatio{0.5};
@@ -83,8 +89,6 @@ private slots:
     void slotSelectPrevTab();
     void slotMoveTabRight();
     void slotMoveTabLeft();
-
-    void focusActiveGrid();
 
 };
 

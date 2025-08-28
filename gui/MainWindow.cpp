@@ -1,8 +1,10 @@
 #include "MainWindow.hpp"
 
+#include <QApplication>
 #include <QEvent>
 #include <QInputDialog>
 #include <QList>
+#include <QMenuBar>
 #include <QResizeEvent>
 #include <QSplitter>
 #include <QTabBar>
@@ -94,6 +96,23 @@ bool mdn::gui::MainWindow::eventFilter(QObject* watched, QEvent* event) {
             applySplitRatio();
         }
     }
+    if (event->type() == QEvent::FocusIn) {
+        QWidget* w = qobject_cast<QWidget*>(watched);
+
+        if (w != nullptr) {
+            if (w->window() == this) {
+                if (!isFocusAllowedWidget(w)) {
+                    focusActiveGrid();
+                    return true;
+                }
+            }
+        }
+    }
+
+    if (event->type() == QEvent::WindowActivate) {
+        focusActiveGrid();
+    }
+
     return QMainWindow::eventFilter(watched, event);
 }
 
@@ -191,6 +210,9 @@ void mdn::gui::MainWindow::setupLayout() {
     Log_Debug3("Dispatch - initOperationsUi");
     initOperationsUi();
 
+    Log_Debug3("Dispatch - initFocusModel");
+    initFocusModel();
+
     Log_Debug3_T("");
 }
 
@@ -227,6 +249,7 @@ void mdn::gui::MainWindow::createTabs() {
         QString qname = MdnQtInterface::toQString(names[index]);
         auto* ndw = new NumberDisplayWidget;
         ndw->setProject(m_project);
+        ndw->setFocusPolicy(Qt::StrongFocus);
         ndw->setModel(src, sel);
         int tab = m_tabWidget->addTab(ndw, qname);
         connect(
@@ -445,6 +468,118 @@ void mdn::gui::MainWindow::syncTabsToProject() {
 }
 
 
+void mdn::gui::MainWindow::initFocusModel()
+{
+    Log_Debug3_H("initFocusModel");
+
+    if (m_tabWidget) {
+        m_tabWidget->setFocusPolicy(Qt::NoFocus);
+        if (m_tabWidget->tabBar()) {
+            m_tabWidget->tabBar()->setFocusPolicy(Qt::NoFocus);
+        }
+        connect(
+            m_tabWidget,
+            &QTabWidget::currentChanged,
+            this,
+            &mdn::gui::MainWindow::focusActiveGrid
+        );
+    }
+
+    if (m_splitter) {
+        m_splitter->setFocusPolicy(Qt::NoFocus);
+    }
+
+    if (menuBar()) {
+        menuBar()->setFocusPolicy(Qt::StrongFocus);
+    }
+
+    if (qApp) {
+        connect(qApp, &QApplication::focusChanged, this, &mdn::gui::MainWindow::onAppFocusChanged);
+    }
+
+    focusActiveGrid();
+    Log_Debug3_T("");
+}
+
+
+void mdn::gui::MainWindow::focusActiveGrid() {
+    Log_Debug4_H("focusActiveGrid");
+
+    QWidget* w = activeGridWidget();
+
+    if (w) {
+        w->setFocus(Qt::ShortcutFocusReason);
+    }
+    Log_Debug4_T("");
+}
+
+
+QWidget* mdn::gui::MainWindow::activeGridWidget() const
+{
+    QWidget* w{nullptr};
+
+    if (m_tabWidget) {
+        w = m_tabWidget->currentWidget();
+    }
+
+    return w;
+}
+
+
+bool mdn::gui::MainWindow::isFocusAllowedWidget(QWidget* w) const
+{
+    if (w == nullptr) {
+        return false;
+    }
+
+    if (w->window() != this) {
+        return true;
+    }
+
+    if (qobject_cast<QMenuBar*>(w) != nullptr) {
+        return true;
+    }
+
+    if (qobject_cast<QMenu*>(w) != nullptr) {
+        return true;
+    }
+
+    QWidget* grid = activeGridWidget();
+
+    if (grid != nullptr) {
+        if (w == grid) {
+            return true;
+        }
+        if (grid->isAncestorOf(w)) {
+            return true;
+        }
+    }
+
+    if (m_command != nullptr) {
+        if (w == m_command) {
+            return true;
+        }
+        if (m_command->isAncestorOf(w)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+void mdn::gui::MainWindow::onAppFocusChanged(QWidget* old, QWidget* now)
+{
+    Log_Debug4_H("onAppFocusChanged");
+
+    if (!isFocusAllowedWidget(now)) {
+        focusActiveGrid();
+    }
+
+    Log_Debug4_T("");
+}
+
+
 void mdn::gui::MainWindow::applySplitRatio() {
     QList<int> sizes = m_splitter->sizes();
     if (sizes.size() < 2) {
@@ -635,19 +770,4 @@ void mdn::gui::MainWindow::slotMoveTabLeft()
         focusActiveGrid();
     }
     Log_Debug3_T("");
-}
-
-
-void mdn::gui::MainWindow::focusActiveGrid()
-{
-    Log_Debug4_H("focusActiveGrid");
-    if (!m_tabWidget) {
-        Log_Debug4_T("");
-        return;
-    }
-    QWidget* w = m_tabWidget->currentWidget();
-    if (w) {
-        w->setFocus(Qt::ShortcutFocusReason);
-    }
-    Log_Debug4_T("");
 }

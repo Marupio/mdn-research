@@ -5,6 +5,7 @@
 #include <QStyle>
 #include <QStyleOption>
 
+#include "CellLineEdit.hpp"
 #include "GuiTools.hpp"
 #include "Project.hpp"
 #include "Selection.hpp"
@@ -185,7 +186,7 @@ bool mdn::gui::NumberDisplayWidget::eventFilter(QObject* watched, QEvent* event)
             const bool shift = (ke->modifiers() & Qt::ShiftModifier) != 0;
 
             if (ctrl) {
-                if (ke->key() == Qt::Key_PageUp) {
+                if (ke->key() == Qt::Key_PageDown) {
                     if (shift) {
                         Q_EMIT requestMoveTabRight();
                     } else {
@@ -193,7 +194,7 @@ bool mdn::gui::NumberDisplayWidget::eventFilter(QObject* watched, QEvent* event)
                     }
                     ke->accept();
                     return true;
-                } else if (ke->key() == Qt::Key_PageDown) {
+                } else if (ke->key() == Qt::Key_PageUp) {
                     if (shift) {
                         Q_EMIT requestMoveTabLeft();
                     } else {
@@ -393,8 +394,7 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
             break;
 
         default:
-            QWidget::keyPressEvent(e);
-            return;
+            break;
     }
 
     // Ensure the caret stays visible and repaint immediately
@@ -407,7 +407,6 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
         const QString ch = e->text();
         beginCellEdit(ch);
         return;
-
     }
     QWidget::keyPressEvent(e);
     update();
@@ -740,9 +739,11 @@ void mdn::gui::NumberDisplayWidget::beginCellEdit(const QString& initialText)
 {
     Log_Debug3_H("");
     if (!m_cellEditor) {
-        m_cellEditor = new QLineEdit(this);
+        m_cellEditor = new CellLineEdit(this);
+        m_cellEditor->setFocusPolicy(Qt::StrongFocus);
         m_cellEditor->setFrame(true);
         m_cellEditor->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+        m_cellEditor->setFont(m_theme.font);
         m_cellEditor->installEventFilter(this);
     }
     m_cellEditor->setFont(m_theme.font);
