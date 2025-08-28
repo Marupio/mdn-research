@@ -89,6 +89,7 @@ private slots:
     void slotSelectPrevTab();
     void slotMoveTabRight();
     void slotMoveTabLeft();
+    void slotDebugShowAllTabs();
 
 };
 

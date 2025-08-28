@@ -342,6 +342,12 @@ public:
         //  deletes the data enclosed by the selection.
         void deleteSelection();
 
+    // Debug
+
+    // Print out all tabs and status to Log_Info
+    void debugShowAllTabs() const;
+
+
 };
 
 } // end namespace gui

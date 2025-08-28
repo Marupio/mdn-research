@@ -276,6 +276,12 @@ void mdn::gui::MainWindow::createTabs() {
             this,
             &mdn::gui::MainWindow::slotMoveTabLeft
         );
+        connect(
+            ndw,
+            &mdn::gui::NumberDisplayWidget::requestDebugShowAllTabs,
+            this,
+            &mdn::gui::MainWindow::slotDebugShowAllTabs
+        );
     }
     Log_Debug3_T("");
 }
@@ -768,6 +774,17 @@ void mdn::gui::MainWindow::slotMoveTabLeft()
         bar->moveTab(idx, idx - 1);
         m_tabWidget->setCurrentIndex(idx - 1);
         focusActiveGrid();
+    }
+    Log_Debug3_T("");
+}
+
+
+void mdn::gui::MainWindow::slotDebugShowAllTabs()
+{
+    Log_Debug3_H("");
+    if (m_project)
+    {
+        m_project->debugShowAllTabs();
     }
     Log_Debug3_T("");
 }

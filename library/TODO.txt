@@ -25,22 +25,30 @@ Why not track that here also
 
 FUNCTIONALITY
 
-CTRL + PGUP = next tab < these are backwards
-CTRL + PGDN = prev tab
-CTRL + SHIFT + PGUP = move tab right < doing this a few times --> segfault
-CTRL + SHIFT + PGDN = move tab left
-
-Tab should be move cursor 'within selection', tab loses focus
-Same with shift tab
-Enter + shift+enter should be 'move cursor within selection'
+Within-selection cursor movement:
+    * tab + shift tab (right and left) wrapping movements within the selection rectangle
+    * enter + shift enter (up and down) (same as above)
+    * these actually do work on submission of digit text entry
+    * outside of text entry, they do not work
 Delete tab => seg fault
-Focus behaviour is annoying - should always be focused on digit grid.
-Maximize should have origin in middle
+Maximize seems to have no effect on cursor / axes position, i.e. it doesn't do the fraction stuff
 Binary operation window 'Destination' radio buttons are messed up
-Operations->Addition->Create New->segfault
+Creating a new Mdn2d causes a segfault
+    * Right click tab, choose duplicate
+    * Operations->Addition->Create New->segfault
+Implement menus
+Implement Save / Load Project
+Implement Save / Load Mdn2d
 
 DISPLAY
-Move digit line to correct axes
-Status line showing cursor coords, selected area
+Move digit line to correct axes - currently they are out-by-one
+Add a status bit of text below the digit grid showing cursor coords, selected area, etc.
+For writing digits, get bounds first, then only call getValue within the bounds
 Show digits within bounds darker than those outside bounds
-Need access to config
+Add a window / menu option to change the default config
+There is currently no way to change the active fraxis setting
+Resizing the digit grid with the slider works in making it smaller, but the calculation for bigger is a bit buggy, it seems to stick at the top:
+    * slide up to near the top, cursor stays relatively in the centre of the view
+    * slide down, cursor seems to think its ratio is "very close to the top", like 0.1
+    * it still moves down, but definitely not in keeping in the centre
+

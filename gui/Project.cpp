@@ -21,8 +21,11 @@
 int mdn::gui::Project::m_untitledNumber = 0;
 
 void mdn::gui::Project::shiftMdnTabsRight(int start, int end, int shift) {
-    Log_Debug3_H("start=" << start << ",end=" << end << ",shift=" << shift);
-    int lastI = m_data.size() - 1;
+    Log_Debug3_H(
+        "Shifting right, all tabs from " << start
+            << "to " << end << " shift rightwards by " << shift
+    );
+    int lastI = m_data.size();
     if (end > lastI || end < 0) {
         end = lastI;
     }
@@ -32,6 +35,10 @@ void mdn::gui::Project::shiftMdnTabsRight(int start, int end, int shift) {
         end = tmp;
     }
     Log_Debug3("updated values:start=" << start << ",end=" << end << ",shift=" << shift);
+    Log_Debug3(
+        "Sterilized inputs, shifting right, all tabs from " << start
+            << "to " << end << " shift rightwards by " << shift
+    );
     if (start > lastI) {
         // Already at the end
         Log_Debug3_T("No work needed");
@@ -53,6 +60,10 @@ void mdn::gui::Project::shiftMdnTabsRight(int start, int end, int shift) {
             "Moving {'" << curName << "', " << tabI << "}, to "
                 << "{'" << curName << "', " << newIndex << "}"
         );
+        #ifdef MDN_DEBUG
+            auto it = m_data.find(tabI);
+            Assert(it != m_data.end(), "Tab " << tabI << " missing");
+        #endif
         auto node = m_data.extract(tabI);
         node.key() = newIndex;
         m_data.insert(std::move(node));
@@ -63,8 +74,15 @@ void mdn::gui::Project::shiftMdnTabsRight(int start, int end, int shift) {
 
 
 void mdn::gui::Project::shiftMdnTabsLeft(int start, int end, int shift) {
-    Log_Debug3_H("start=" << start << ",end=" << end << ",shift=" << shift);
-    int lastI = m_data.size() - 1;
+    Log_Debug3_H(
+        "Shifting left, all tabs from " << start
+            << " to " << end << " shift leftwards by " << shift
+    );
+    Log_Info(
+        "Shifting left, all tabs from " << start
+            << " to " << end << " shift leftwards by " << shift
+    );
+    int lastI = m_data.size();
     if (end > lastI || end < 0) {
         end = lastI;
     }
@@ -73,7 +91,14 @@ void mdn::gui::Project::shiftMdnTabsLeft(int start, int end, int shift) {
         start = end;
         end = tmp;
     }
-    Log_Debug3("updated values:start=" << start << ",end=" << end << ",shift=" << shift);
+    Log_Debug3(
+        "Sterilised inputs, shifting left, all tabs from " << start
+            << " to " << end << " shift leftwards by " << shift
+    );
+    Log_Info(
+        "Sterilised inputs, shifting left, all tabs from " << start
+            << " to " << end << " shift leftwards by " << shift
+    );
     if (start > lastI) {
         // Already at the end
         Log_Debug3_T("No work needed");
@@ -86,7 +111,7 @@ void mdn::gui::Project::shiftMdnTabsLeft(int start, int end, int shift) {
         Log_ErrorQ(err.what());
         throw err;
     }
-    for (int tabI = start + shift; tabI <= end; ++tabI) {
+    for (int tabI = start; tabI <= end; ++tabI) {
         std::string curName = m_addressingIndexToName[tabI];
         int newIndex = tabI - shift;
         m_addressingIndexToName.erase(tabI);
@@ -716,17 +741,20 @@ bool mdn::gui::Project::moveMdn(int fromIndex, int toIndex) {
         return false;
     }
     // Extract the number and erase the addressing metadata
+    debugShowAllTabs();
     auto node = m_data.extract(fromIndex);
     std::string name = node.mapped().first.name();
     node.key() = toIndex;
     m_addressingIndexToName.erase(fromIndex);
     m_addressingNameToIndex.erase(name);
+    debugShowAllTabs();
     if (fromIndex > toIndex) {
         // Shifting digits to the right
-        shiftMdnTabsRight(fromIndex - 1, toIndex + 1);
+        Log_Debug2("shifting all tabs from " << (fromIndex-1) << " to " << toIndex);
+        shiftMdnTabsRight(fromIndex - 1, toIndex);
     } else {
-        // Shifting digits to the left
-        shiftMdnTabsLeft(fromIndex + 1, toIndex - 1);
+        Log_Debug2("shifting all tabs from " << (fromIndex+1) << " to " << toIndex);
+        shiftMdnTabsLeft(fromIndex + 1, toIndex);
     }
     m_data.insert(std::move(node));
     Log_Debug4(
@@ -976,5 +1004,22 @@ void mdn::gui::Project::deleteSelection() {
         } else {
             Log_Debug2_T("Zeroed " << changed.size() << " digits");
         }
+    }
+}
+
+
+void mdn::gui::Project::debugShowAllTabs() const {
+    Log_Info("-----");
+    for (auto it = m_data.cbegin(); it != m_data.cend(); ++it) {
+        const int index = it->first;
+        const std::pair<Mdn2d, Selection>& entry = it->second;
+        const Mdn2d& currMdn = entry.first;
+        const Selection& currSel = entry.second;
+        const std::string& name = currMdn.name();
+        const int addrIndex = m_addressingNameToIndex.at(name);
+        const std::string& addrName = m_addressingIndexToName.at(index);
+        Log_Info(
+            index << "\t[" << name << "]\t(" << addrIndex << ",[" << addrName << "])"
+        );
     }
 }

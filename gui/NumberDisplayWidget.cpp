@@ -186,7 +186,7 @@ bool mdn::gui::NumberDisplayWidget::eventFilter(QObject* watched, QEvent* event)
             const bool shift = (ke->modifiers() & Qt::ShiftModifier) != 0;
 
             if (ctrl) {
-                if (ke->key() == Qt::Key_PageDown) {
+                if (ke->key() == Qt::Key_PageUp) {
                     if (shift) {
                         Q_EMIT requestMoveTabRight();
                     } else {
@@ -194,7 +194,7 @@ bool mdn::gui::NumberDisplayWidget::eventFilter(QObject* watched, QEvent* event)
                     }
                     ke->accept();
                     return true;
-                } else if (ke->key() == Qt::Key_PageUp) {
+                } else if (ke->key() == Qt::Key_PageDown) {
                     if (shift) {
                         Q_EMIT requestMoveTabLeft();
                     } else {
@@ -277,7 +277,7 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
 
     if (ctrl || meta) {
         // Tab selection / movement shortcuts: Ctrl+PgUp, Ctrl+Shift+PgUp, etc..
-        if (e->key() == Qt::Key_PageUp) {
+        if (e->key() == Qt::Key_PageDown) {
             if (shift) {
                 Q_EMIT requestMoveTabRight();
             } else {
@@ -285,7 +285,7 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
             }
             e->accept();
             return;
-        } else if (e->key() == Qt::Key_PageDown) {
+        } else if (e->key() == Qt::Key_PageUp) {
             if (shift) {
                 Q_EMIT requestMoveTabLeft();
             } else {
@@ -387,6 +387,19 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
         case Qt::Key_Backtab:
             m_selection->cursorPrevX(false);
             e->accept(); break;
+
+        // Debugging purposes
+        case Qt::Key_Space:
+        {
+            if (!ctrl && !meta && !alt)
+            {
+                Q_EMIT requestDebugShowAllTabs();
+                e->accept();
+                break;
+            }
+            QWidget::keyPressEvent(e);
+            return;
+        }
 
         case Qt::Key_Escape:
             emit focusDownRequested();

@@ -86,6 +86,7 @@ Q_SIGNALS:
     void requestSelectPrevTab();
     void requestMoveTabRight();
     void requestMoveTabLeft();
+    void requestDebugShowAllTabs();
 
 
 public slots:
