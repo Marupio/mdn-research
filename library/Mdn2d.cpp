@@ -127,9 +127,9 @@ void mdn::Mdn2d::divide(const Mdn2d& rhs, Mdn2d& ans, Fraxis fraxis) const {
     assertNotSelf(ans, "divide operation");
     auto lockThis = lockReadOnly();
     auto lockAns = ans.lockWriteable();
-    if (Log_Showing_Debug2) {
+    If_Log_Showing_Debug2(
         Log_N_Debug2_H("ans = *this / rhs, fraxis: " << FraxisToName(fraxis));
-    }
+    );
     CoordSet changed = locked_divide(rhs, ans, fraxis);
     ans.locked_carryoverCleanup(changed);
     Log_N_Debug2_T("");
@@ -137,9 +137,9 @@ void mdn::Mdn2d::divide(const Mdn2d& rhs, Mdn2d& ans, Fraxis fraxis) const {
 
 
 mdn::CoordSet mdn::Mdn2d::locked_divide(const Mdn2d& rhs, Mdn2d& ans, Fraxis fraxis) const {
-    if (Log_Showing_Debug3) {
+    If_Log_Showing_Debug3(
         Log_N_Debug3_H("ans = *this / rhs, fraxis: " << FraxisToName(fraxis));
-    }
+    );
     // TODO
     Log_N_Debug3_T("");
     return CoordSet();
@@ -148,9 +148,9 @@ mdn::CoordSet mdn::Mdn2d::locked_divide(const Mdn2d& rhs, Mdn2d& ans, Fraxis fra
 
 void mdn::Mdn2d::add(const Coord& xy, float realNum, Fraxis fraxis) {
     auto lock = lockWriteable();
-    if (Log_Showing_Debug2) {
+    If_Log_Showing_Debug2(
         Log_N_Debug2_H("add " << realNum << ", fraxis: " << FraxisToName(fraxis));
-    }
+    );
     internal_checkFraxis(fraxis);
     locked_carryoverCleanup(locked_add(xy, static_cast<double>(realNum), fraxis));
     internal_operationComplete();
@@ -162,9 +162,9 @@ void mdn::Mdn2d::add(const Coord& xy, double realNum, Fraxis fraxis) {
     auto lock = lockWriteable();
     Log_N_Debug2_H("");
     internal_checkFraxis(fraxis);
-    if (Log_Showing_Debug2) {
+    If_Log_Showing_Debug2(
         Log_N_Debug2("add " << realNum << ", fraxis: " << FraxisToName(fraxis));
-    }
+    );
     locked_carryoverCleanup(locked_add(xy, realNum, fraxis));
     internal_operationComplete();
     Log_N_Debug2_T("");
@@ -172,9 +172,9 @@ void mdn::Mdn2d::add(const Coord& xy, double realNum, Fraxis fraxis) {
 
 
 mdn::CoordSet mdn::Mdn2d::locked_add(const Coord& xy, double realNum, Fraxis fraxis) {
-    if (Log_Showing_Debug3) {
+    If_Log_Showing_Debug3(
         Log_N_Debug3_H("add " << realNum << ", fraxis: " << FraxisToName(fraxis));
-    }
+    );
     double fracPart, intPart;
     fracPart = modf(realNum, &intPart);
     CoordSet changed = locked_add(xy, static_cast<long>(intPart));
@@ -189,9 +189,9 @@ void mdn::Mdn2d::subtract(const Coord& xy, float realNum, Fraxis fraxis) {
     auto lock = lockWriteable();
     Log_N_Debug2_H("");
     internal_checkFraxis(fraxis);
-    if (Log_Showing_Debug2) {
+    If_Log_Showing_Debug2(
         Log_N_Debug2_H("subtract " << realNum << ", fraxis: " << FraxisToName(fraxis));
-    }
+    );
     locked_carryoverCleanup(locked_add(xy, static_cast<double>(-realNum), fraxis));
     internal_operationComplete();
     Log_N_Debug2_T("");
@@ -202,9 +202,9 @@ void mdn::Mdn2d::subtract(const Coord& xy, double realNum, Fraxis fraxis) {
     auto lock = lockWriteable();
     Log_N_Debug2_H("");
     internal_checkFraxis(fraxis);
-    if (Log_Showing_Debug2) {
+    If_Log_Showing_Debug2(
         Log_N_Debug2_H("subtract " << realNum << ", fraxis: " << FraxisToName(fraxis));
-    }
+    );
     locked_carryoverCleanup(locked_add(xy, -realNum, fraxis));
     internal_operationComplete();
     Log_N_Debug2_T("");
@@ -213,9 +213,9 @@ void mdn::Mdn2d::subtract(const Coord& xy, double realNum, Fraxis fraxis) {
 
 void mdn::Mdn2d::add(const Coord& xy, Digit value, Fraxis unused) {
     auto lock = lockWriteable();
-    if (Log_Showing_Debug2) {
+    If_Log_Showing_Debug2(
         Log_N_Debug2_H("add " << static_cast<int>(value) << ", no fraxis");
-    }
+    );
     int ivalue = static_cast<int>(value);
     locked_carryoverCleanup(locked_add(xy, ivalue));
     internal_operationComplete();
@@ -224,9 +224,9 @@ void mdn::Mdn2d::add(const Coord& xy, Digit value, Fraxis unused) {
 
 
 mdn::CoordSet mdn::Mdn2d::locked_add(const Coord& xy, Digit value) {
-    if (Log_Showing_Debug3) {
+    If_Log_Showing_Debug3(
         Log_N_Debug3_H("add " << static_cast<int>(value) << ", no fraxis");
-    }
+    );
     CoordSet changed = locked_add(xy, static_cast<int>(value));
     Log_N_Debug3_T("changed " << changed.size() << " digits");
     return changed;
@@ -330,9 +330,9 @@ mdn::CoordSet mdn::Mdn2d::locked_add(const Coord& xy, long long value) {
 
 void mdn::Mdn2d::subtract(const Coord& xy, Digit value, Fraxis unused) {
     auto lock = lockWriteable();
-    if (Log_Showing_Debug2) {
+    If_Log_Showing_Debug2(
         Log_N_Debug2_H("at " << xy << ", add " << static_cast<int>(value) << ", no fraxis");
-    }
+    );
     locked_carryoverCleanup(locked_add(xy, -static_cast<int>(value)));
     internal_operationComplete();
     Log_N_Debug2_T("");
@@ -368,11 +368,11 @@ void mdn::Mdn2d::subtract(const Coord& xy, long long value, Fraxis unused) {
 
 void mdn::Mdn2d::addFraxis(const Coord& xy, float fraction, Fraxis fraxis) {
     auto lock = lockWriteable();
-    if (Log_Showing_Debug2) {
+    If_Log_Showing_Debug2(
         Log_N_Debug2_H(
             "at " << xy << ", add fraction " << fraction << ", fraxis: " << FraxisToName(fraxis)
         );
-    }
+    );
     locked_carryoverCleanup(locked_addFraxis(xy, static_cast<double>(fraction), fraxis));
     internal_operationComplete();
     Log_N_Debug2_T("");
@@ -381,11 +381,11 @@ void mdn::Mdn2d::addFraxis(const Coord& xy, float fraction, Fraxis fraxis) {
 
 void mdn::Mdn2d::addFraxis(const Coord& xy, double fraction, Fraxis fraxis) {
     auto lock = lockWriteable();
-    if (Log_Showing_Debug2) {
+    If_Log_Showing_Debug2(
         Log_N_Debug2_H(
             "at " << xy << ", add fraction " << fraction << ", fraxis: " << FraxisToName(fraxis)
         );
-    }
+    );
     locked_carryoverCleanup(locked_addFraxis(xy, fraction, fraxis));
     internal_operationComplete();
     Log_N_Debug2_T("");
@@ -401,11 +401,11 @@ mdn::CoordSet mdn::Mdn2d::locked_addFraxis(const Coord& xy, double fraction, Fra
         Log_N_Error(error.what());
         throw error;
     }
-    if (Log_Showing_Debug3) {
+    If_Log_Showing_Debug3(
         Log_N_Debug3_H(
             "at " << xy << ", add fraction " << fraction << ", fraxis: " << FraxisToName(fraxis)
         );
-    }
+    );
 
     CoordSet changed;
     switch(fraxis) {
@@ -430,9 +430,9 @@ mdn::CoordSet mdn::Mdn2d::locked_addFraxis(const Coord& xy, double fraction, Fra
 
 void mdn::Mdn2d::subtractFraxis(const Coord& xy, float fraction, Fraxis fraxis) {
     auto lock = lockWriteable();
-    if (Log_Showing_Debug2) {
+    If_Log_Showing_Debug2(
         Log_N_Debug2_H(
-            "at " << xy << ", subtract fraction " << fraction << ", fraxis: "
+            "at " << xy << ", subtract fraction " << fraction << ", fraxis: );
             << FraxisToName(fraxis)
         );
     }
@@ -444,9 +444,9 @@ void mdn::Mdn2d::subtractFraxis(const Coord& xy, float fraction, Fraxis fraxis) 
 
 void mdn::Mdn2d::subtractFraxis(const Coord& xy, double fraction, Fraxis fraxis) {
     auto lock = lockWriteable();
-    if (Log_Showing_Debug2) {
+    If_Log_Showing_Debug2(
         Log_N_Debug2_H(
-            "at " << xy << ", subtract fraction " << fraction << ", fraxis: "
+            "at " << xy << ", subtract fraction " << fraction << ", fraxis: );
             << FraxisToName(fraxis)
         );
     }
@@ -458,9 +458,9 @@ void mdn::Mdn2d::subtractFraxis(const Coord& xy, double fraction, Fraxis fraxis)
 
 void mdn::Mdn2d::multiply(Digit value) {
     auto lock = lockWriteable();
-    if (Log_Showing_Debug2) {
+    If_Log_Showing_Debug2(
         Log_N_Debug2_H("scalar multiply " << static_cast<int>(value));
-    }
+    );
     locked_carryoverCleanup(locked_multiply(static_cast<int>(value)));
     internal_operationComplete();
     Log_N_Debug2_T("");
@@ -702,14 +702,14 @@ mdn::Mdn2d& mdn::Mdn2d::operator*=(long long scalar) {
 
 void mdn::Mdn2d::internal_checkFraxis(Fraxis& fraxis) const {
     if (fraxis == Fraxis::Default) {
-        if (Log_Showing_Debug4) {
+        If_Log_Showing_Debug4(
             Log_N_Debug4("applying default fraxis: " << FraxisToName(fraxis));
-        }
+        );
         fraxis = m_config.fraxis();
     } else {
-        if (Log_Showing_Debug4) {
+        If_Log_Showing_Debug4(
             Log_N_Debug4("supplied fraxis: " << FraxisToName(fraxis));
-        }
+        );
     }
 }
 
@@ -737,13 +737,13 @@ mdn::CoordSet mdn::Mdn2d::internal_fraxis(const Coord& xy, double f, int dX, int
     Coord xyWorking(xy);
     bool precisionOkay = locked_checkPrecisionWindow(xyWorking) != PrecisionStatus::Below;
     bool numericsOkay = fabs(f) > m_config.epsilon();
-    if (Log_Showing_Debug4) {
+    If_Log_Showing_Debug4(
         Log_N_Debug4(
             "internal_fraxis loop, starting at " << xyWorking << ", "
             << "current vals: f=" << f << ", " << "xy=" << xyWorking << ", "
             << "loop: prec=" << precisionOkay << ", num=" << numericsOkay
         );
-    }
+    );
     while (precisionOkay && numericsOkay && ++count < 1000) {
         f *= m_config.baseDouble();
         Digit d(f);
@@ -755,14 +755,14 @@ mdn::CoordSet mdn::Mdn2d::internal_fraxis(const Coord& xy, double f, int dX, int
         xyWorking.translate(dX, dY);
         precisionOkay = locked_checkPrecisionWindow(xyWorking) != PrecisionStatus::Below;
         numericsOkay = fabs(f) > m_config.epsilon();
-        if (Log_Showing_Debug4) {
+        If_Log_Showing_Debug4(
             Log_N_Debug4(
                 "internal_fraxis loop, added " << static_cast<int>(d) << " to "
                 << xyWorking.translated(-dX, -dY) << ", "
                 << "current vals: f=" << f << ", " << "xy=" << xyWorking << ", "
                 << "loop: prec=" << precisionOkay << ", num=" << numericsOkay
             );
-        }
+        );
     }
     if (precisionOkay && numericsOkay) {
         Log_N_Warn(
@@ -782,9 +782,9 @@ mdn::CoordSet mdn::Mdn2d::internal_fraxis(const Coord& xy, double f, int dX, int
 
 mdn::CoordSet mdn::Mdn2d::internal_fraxisCascade(const Coord& xy, Digit d, int c)
 {
-    if (Log_Showing_Debug4) {
+    If_Log_Showing_Debug4(
         Log_N_Debug4_H("cascade: " << static_cast<int>(d) << " at " << xy);
-    }
+    );
     CoordSet changed;
     Coord xyNext = xy.translated(c, -c);
     d *= -1;

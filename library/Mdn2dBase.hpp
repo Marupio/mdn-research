@@ -494,12 +494,12 @@ protected:
             void internal_checkDigit(const Coord& xy, Type value) const {
                 Digit baseDigit = m_config.baseDigit();
 
-                if (Log_Showing_Debug4) {
+                If_Log_Showing_Debug4 (
                     Log_N_Debug4(
                         "Checking value " << static_cast<int>(value) << " against base "
                         << int(baseDigit)
                     );
-                }
+                );
                 if (value >= baseDigit || value <= -baseDigit) {
                     OutOfRange err(xy, static_cast<int>(value), baseDigit);
                     Log_N_Error(err.what());
