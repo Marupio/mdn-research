@@ -1,11 +1,12 @@
 #pragma once
 
-#include <vector>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 // QT includes
 #include <QMessageBox>
+#include <QObject>
 
 #include "Selection.hpp"
 #include "../library/Mdn2d.hpp"
@@ -21,7 +22,8 @@ class MainWindow;
 namespace mdn {
 namespace gui {
 
-class Project: public Mdn2dFramework {
+class Project: public QObject, public Mdn2dFramework {
+    Q_OBJECT
 
 protected:
 
@@ -70,6 +72,11 @@ public:
     // Construct a null project' given its name and the number of empty Mdns to start with
     Project(MainWindow* parent=nullptr, std::string name="", int nStartMdn=3);
 
+signals:
+    void tabsAboutToChange();
+    void tabsChanged(int currentIndex);
+
+public:
 
     // *** Mdn2dFramework API
 
@@ -344,9 +351,11 @@ public:
 
     // Debug
 
-    // Print out all tabs and status to Log_Info
-    void debugShowAllTabs() const;
+    // Validate internals - all member data is indexed correctly, throws if not
+    void validateInternals(bool logResult) const;
 
+    // Print out all tabs and status to Log_Info
+    void debugShowAllTabs(std::ostream& os) const;
 
 };
 

@@ -412,6 +412,52 @@ private:
     #define Log_Showing_Warn InternalLoggerQuery(LogLevel::Warn)
     #define Log_Showing_Error InternalLoggerQuery(LogLevel::Error)
 
+    // Query wrappers
+    #define If_Log_Showing_Debug4(...) do { \
+        if (InternalLoggerQuery(LogLevel::Debug4)) { __VA_ARGS__ } \
+        } while (0)
+    #define If_Log_Showing_Debug3(...) do { \
+        if (InternalLoggerQuery(LogLevel::Debug3)) { __VA_ARGS__ } \
+        } while (0)
+    #define If_Log_Showing_Debug2(...) do { \
+        if (InternalLoggerQuery(LogLevel::Debug2)) { __VA_ARGS__ } \
+        } while (0)
+    #define If_Log_Showing_Debug(...) do { \
+        if (InternalLoggerQuery(LogLevel::Debug)) { __VA_ARGS__ } \
+        } while (0)
+    #define If_Log_Showing_Info(...) do { \
+        if (InternalLoggerQuery(LogLevel::Info)) { __VA_ARGS__ } \
+        } while (0)
+    #define If_Log_Showing_Warn(...) do { \
+        if (InternalLoggerQuery(LogLevel::Warn)) { __VA_ARGS__ } \
+        } while (0)
+    #define If_Log_Showing_Error(...) do { \
+        if (InternalLoggerQuery(LogLevel::Error)) { __VA_ARGS__ } \
+        } while (0)
+
+    #define If_Not_Log_Showing_Debug4(...) do { \
+        if (!InternalLoggerQuery(LogLevel::Debug4)) { __VA_ARGS__ } \
+        } while (0)
+    #define If_Not_Log_Showing_Debug3(...) do { \
+        if (!InternalLoggerQuery(LogLevel::Debug3)) { __VA_ARGS__ } \
+        } while (0)
+    #define If_Not_Log_Showing_Debug2(...) do { \
+        if (!InternalLoggerQuery(LogLevel::Debug2)) { __VA_ARGS__ } \
+        } while (0)
+    #define If_Not_Log_Showing_Debug(...) do { \
+        if (!InternalLoggerQuery(LogLevel::Debug)) { __VA_ARGS__ } \
+        } while (0)
+    #define If_Not_Log_Showing_Info(...) do { \
+        if (!InternalLoggerQuery(LogLevel::Info)) { __VA_ARGS__ } \
+        } while (0)
+    #define If_Not_Log_Showing_Warn(...) do { \
+        if (!InternalLoggerQuery(LogLevel::Warn)) { __VA_ARGS__ } \
+        } while (0)
+    #define If_Not_Log_Showing_Error(...) do { \
+        if (!InternalLoggerQuery(LogLevel::Error)) { __VA_ARGS__ } \
+        } while (0)
+
+
     // Anonymous, no changes in indentation
     #define Log_Debug4(message) InternalLoggerAnonymous(message, debug4)
     #define Log_Debug3(message) InternalLoggerAnonymous(message, debug3)
@@ -525,6 +571,21 @@ private:
     #define Log_Showing_Info      false
     #define Log_Showing_Warn      false
     #define Log_Showing_Error     false
+    #define If_Log_Showing_Debug4(...)  do { } while (0)
+    #define If_Log_Showing_Debug3(...)  do { } while (0)
+    #define If_Log_Showing_Debug2(...)  do { } while (0)
+    #define If_Log_Showing_Debug(...)   do { } while (0)
+    #define If_Log_Showing_Info(...)    do { } while (0)
+    #define If_Log_Showing_Warn(...)    do { } while (0)
+    #define If_Log_Showing_Error(...)   do { } while (0)
+    #define If_Not_Log_Showing_Debug4(...)  do { } while (0)
+    #define If_Not_Log_Showing_Debug3(...)  do { } while (0)
+    #define If_Not_Log_Showing_Debug2(...)  do { } while (0)
+    #define If_Not_Log_Showing_Debug(...)   do { } while (0)
+    #define If_Not_Log_Showing_Info(...)    do { } while (0)
+    #define If_Not_Log_Showing_Warn(...)    do { } while (0)
+    #define If_Not_Log_Showing_Error(...)   do { } while (0)
+
 #endif
 
 

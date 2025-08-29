@@ -157,6 +157,7 @@ int main() {
     sirTalksALot.setLevel(mdn::LogLevel::Info);
     sirTalksALot.setOutputToFile();
 
+
     Log_Info("" << "MDN sandbox: text I/O smoke tests");
 
     // Build a sample MDN

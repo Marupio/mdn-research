@@ -1,5 +1,9 @@
 #include "Project.hpp"
 
+
+
+
+
 #include <QClipboard>
 #include <QGuiApplication>
 #include <QJsonArray>
@@ -34,7 +38,6 @@ void mdn::gui::Project::shiftMdnTabsRight(int start, int end, int shift) {
         start = end;
         end = tmp;
     }
-    Log_Debug3("updated values:start=" << start << ",end=" << end << ",shift=" << shift);
     Log_Debug3(
         "Sterilized inputs, shifting right, all tabs from " << start
             << "to " << end << " shift rightwards by " << shift
@@ -57,7 +60,11 @@ void mdn::gui::Project::shiftMdnTabsRight(int start, int end, int shift) {
         m_addressingIndexToName.erase(tabI);
         m_addressingIndexToName.insert({newIndex, curName});
         Log_Debug2(
+<<<<<<< HEAD
             "Moving {'" << curName << "', " << tabI << "}, to "
+=======
+            "Moving tab {'" << curName << "', " << tabI << "}, to "
+>>>>>>> origin/main
                 << "{'" << curName << "', " << newIndex << "}"
         );
         #ifdef MDN_DEBUG
@@ -78,10 +85,6 @@ void mdn::gui::Project::shiftMdnTabsLeft(int start, int end, int shift) {
         "Shifting left, all tabs from " << start
             << " to " << end << " shift leftwards by " << shift
     );
-    Log_Info(
-        "Shifting left, all tabs from " << start
-            << " to " << end << " shift leftwards by " << shift
-    );
     int lastI = m_data.size();
     if (end > lastI || end < 0) {
         end = lastI;
@@ -92,10 +95,6 @@ void mdn::gui::Project::shiftMdnTabsLeft(int start, int end, int shift) {
         end = tmp;
     }
     Log_Debug3(
-        "Sterilised inputs, shifting left, all tabs from " << start
-            << " to " << end << " shift leftwards by " << shift
-    );
-    Log_Info(
         "Sterilised inputs, shifting left, all tabs from " << start
             << " to " << end << " shift leftwards by " << shift
     );
@@ -117,7 +116,11 @@ void mdn::gui::Project::shiftMdnTabsLeft(int start, int end, int shift) {
         m_addressingIndexToName.erase(tabI);
         m_addressingIndexToName.insert({newIndex, curName});
         Log_Debug2(
+<<<<<<< HEAD
             "Moving {'" << curName << "', " << tabI << "}, to "
+=======
+            "Moving tab {'" << curName << "', " << tabI << "}, to "
+>>>>>>> origin/main
                 << "{'" << curName << "', " << newIndex << "}"
         );
 
@@ -132,6 +135,7 @@ void mdn::gui::Project::shiftMdnTabsLeft(int start, int end, int shift) {
 
 
 mdn::gui::Project::Project(MainWindow* parent, std::string name, int nStartMdn):
+    QObject(parent),
     m_parent(parent),
     m_name(name)
 {
@@ -220,14 +224,15 @@ void mdn::gui::Project::setConfig(Mdn2dConfig newConfig) {
     Mdn2d* first = firstMdn();
     AssertQ(first, "Failed to acquire firstMdn()");
     Mdn2dConfigImpact impact = first->assessConfigChange(newConfig);
-    if (Log_Showing_Debug4) {
+    If_Log_Showing_Debug4(
         Log_Debug4(
             "Config change impact: " << Mdn2dConfigImpactToName(impact) << ", i.e. "
                 << Mdn2dConfigImpactToDescription(impact)
         );
-    } else if (Log_Showing_Debug3) {
+    );
+    If_Not_Log_Showing_Debug4(
         Log_Debug3("Config change impact: " << Mdn2dConfigImpactToName(impact));
-    }
+    );
     switch (impact) {
         case Mdn2dConfigImpact::NoImpact: {
             m_config = newConfig;
@@ -367,16 +372,21 @@ std::string mdn::gui::Project::nameOfMdn(int i) const {
 
 
 std::string mdn::gui::Project::renameMdn(int i, const std::string& newName) {
-    Log_Debug2_H("renaming " << i << " to '" << newName << "'");
+    Log_Debug3_H("i=" << i << ", newName=" << newName);
     Mdn2d* tgt = getMdn(i);
     std::string currentName = tgt->name();
     std::string actualName = tgt->setName(newName);
-    Log_Debug2_T("Framework said use '" << actualName << "' - returning this value");
+    Log_Debug2(
+        "renaming tab {'" << currentName << "', " << i << "} to "
+            << "{'" << actualName << "', " << i << "} (wanted '" << newName << "')"
+    );
+    Log_Debug3_T("Framework said use '" << actualName << "' - returning this value");
     return actualName;
 }
 
 
 std::vector<std::string> mdn::gui::Project::toc() const {
+#ifdef MDN_DEBUG
     Log_Debug2_H("");
     int nElems = size();
     if (nElems != m_addressingIndexToName.size() || nElems != m_addressingNameToIndex.size()) {
@@ -395,7 +405,7 @@ std::vector<std::string> mdn::gui::Project::toc() const {
     std::string fail;
     for (const auto& [index, name] : m_addressingIndexToName) {
         if (check[index]++) {
-            fail = "More than Mdn assigned to tab " + std::to_string(index);
+            fail = "More than one Mdn assigned to tab " + std::to_string(index);
             break;
         }
         const Mdn2d* src = getMdn(index, false);
@@ -452,13 +462,30 @@ std::vector<std::string> mdn::gui::Project::toc() const {
         Log_Debug2_T("Throwing error");
         throw err;
     }
-    if (Log_Showing_Debug3) {
+    If_Log_Showing_Debug3(
         std::string rstr(mdn::Tools::vectorToString<std::string>(result, ',', false));
         Log_Debug3_T("returning list of names: [" << rstr << "]");
-    } else {
+    );
+    If_Not_Log_Showing_Debug3(
         Log_Debug2_T("returning " << result.size() << " names");
-    }
+    );
     return result;
+#else
+    Log_Debug2_H("");
+    std::vector<std::string> result(size());
+    for (const auto& [index, name] : m_addressingIndexToName) {
+        std::string strName = getMdn(index, false)->name();
+        result[index] = strName;
+    }
+    If_Log_Showing_Debug3(
+        std::string rstr(mdn::Tools::vectorToString<std::string>(result, ',', false));
+        Log_Debug3_T("returning list of names: [" << rstr << "]");
+    );
+    If_Not_Log_Showing_Debug3(
+        Log_Debug2_T("returning " << result.size() << " names");
+    );
+    return result;
+#endif
 }
 
 
@@ -643,7 +670,9 @@ mdn::Mdn2d* mdn::gui::Project::lastMdn(bool warnOnFailure) {
 
 
 void mdn::gui::Project::insertMdn(Mdn2d& mdn, int index) {
-    Log_Debug2_H("inserting mdn(" << mdn.name() << ") at " << index);
+    Log_Debug2_H("inserting tab {'" << mdn.name() << "', " << index << "}");
+    Q_EMIT tabsAboutToChange();
+
     // For warning messages
     std::ostringstream oss;
 
@@ -687,6 +716,7 @@ void mdn::gui::Project::insertMdn(Mdn2d& mdn, int index) {
     Log_Debug4("Inserting {'" << newName << "'," << index << "} to indices");
     m_addressingNameToIndex.insert({newName, index});
     m_addressingIndexToName.insert({index, newName});
+    Q_EMIT tabsChanged(index);
     Log_Debug2_T("");
 }
 
@@ -701,12 +731,13 @@ std::pair<int, std::string> mdn::gui::Project::duplicateMdn(int index) {
     Mdn2d dup = Mdn2d::Duplicate(*src);
     insertMdn(dup, index + 1);
     std::pair<int, std::string> result(index+1, dup.name());
-    if (Log_Showing_Debug3) {
+    If_Log_Showing_Debug3(
         std::string strRes(mdn::Tools::pairToString<int, std::string>(result, ","));
         Log_Debug3_T("Returning " << strRes);
-    } else {
+    );
+    If_Not_Log_Showing_Debug3(
         Log_Debug2_T("Success");
-    }
+    );
     return result;
 }
 
@@ -722,12 +753,13 @@ std::pair<int, std::string> mdn::gui::Project::duplicateMdn(const std::string& n
     Mdn2d dup = Mdn2d::Duplicate(*src);
     insertMdn(dup, index + 1);
     std::pair<int, std::string> result(index+1, dup.name());
-    if (Log_Showing_Debug3) {
+    If_Log_Showing_Debug3(
         std::string strRes(mdn::Tools::pairToString<int, std::string>(result, ","));
         Log_Debug3_T("Returning " << strRes);
-    } else {
+    );
+    If_Not_Log_Showing_Debug3(
         Log_Debug2_T("Success");
-    }
+    );
     return result;
 }
 
@@ -744,13 +776,11 @@ bool mdn::gui::Project::moveMdn(int fromIndex, int toIndex) {
         return false;
     }
     // Extract the number and erase the addressing metadata
-    debugShowAllTabs();
     auto node = m_data.extract(fromIndex);
     std::string name = node.mapped().first.name();
     node.key() = toIndex;
     m_addressingIndexToName.erase(fromIndex);
     m_addressingNameToIndex.erase(name);
-    debugShowAllTabs();
     if (fromIndex > toIndex) {
         // Shifting digits to the right
         Log_Debug2("shifting all tabs from " << (fromIndex-1) << " to " << toIndex);
@@ -1001,18 +1031,19 @@ void mdn::gui::Project::deleteSelection() {
         Log_Debug2_T("Success, deleted entire Mdn");
     } else {
         CoordSet changed(dst->setToZero(r));
-        if (Log_Showing_Debug3) {
+        If_Log_Showing_Debug3(
             std::string coordsList(mdn::Tools::setToString<Coord>(changed, ','));
             Log_Debug3_T("Zeroed coords: " << coordsList);
-        } else {
+        );
+        If_Not_Log_Showing_Debug3(
             Log_Debug2_T("Zeroed " << changed.size() << " digits");
-        }
+        );
     }
 }
 
 
-void mdn::gui::Project::debugShowAllTabs() const {
-    Log_Info("-----");
+void mdn::gui::Project::debugShowAllTabs(std::ostream& os) const {
+    os << "-----\n";
     for (auto it = m_data.cbegin(); it != m_data.cend(); ++it) {
         const int index = it->first;
         const std::pair<Mdn2d, Selection>& entry = it->second;
@@ -1021,8 +1052,22 @@ void mdn::gui::Project::debugShowAllTabs() const {
         const std::string& name = currMdn.name();
         const int addrIndex = m_addressingNameToIndex.at(name);
         const std::string& addrName = m_addressingIndexToName.at(index);
-        Log_Info(
-            index << "\t[" << name << "]\t(" << addrIndex << ",[" << addrName << "])"
-        );
+        os << index << "\t[" << name << "]\t(" << addrIndex << ",[" << addrName << "])\n";
     }
+    os << std::endl;
+}
+
+
+void mdn::gui::Project::validateInternals(bool logResult) const {
+    #ifdef MDN_DEBUG
+        std::vector<std::string> toclist = toc();
+        std::ostringstream oss;
+        debugShowAllTabs(oss);
+        oss << "-----\nTOC: ";
+        oss << Tools::vectorToString(toclist, ",", false);
+        oss << std::endl;
+        if (logResult) {
+            Log_Debug(oss.str());
+        }
+    #endif
 }

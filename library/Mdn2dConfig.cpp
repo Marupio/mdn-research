@@ -133,11 +133,13 @@ bool mdn::Mdn2dConfig::operator==(const Mdn2dConfig& rhs) const {
         rhs.m_precision == m_precision &&
         rhs.m_signConvention == m_signConvention
     );
-    if (Log_Showing_Debug3 && !result) {
-        Log_Debug3(
-            "rhs=" << rhs << ", lhs=" << *this
-        );
-    }
+    If_Log_Showing_Debug3(
+        if (!result) {
+            Log_Debug3(
+                "rhs=" << rhs << ", lhs=" << *this
+            );
+        }
+    );
     return result;
 }
 

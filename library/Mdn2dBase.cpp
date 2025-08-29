@@ -85,7 +85,7 @@ std::string mdn::Mdn2dBase::locked_generateCopyName(const std::string& nameIn) {
 
 
 mdn::Mdn2d mdn::Mdn2dBase::NewInstance(Mdn2dConfig config, std::string nameIn) {
-    Log_Debug2_H("Creating NewInstance with config=" << config << ", name=" << nameIn);
+    Log_Debug_H("Creating NewInstance with config=" << config << ", name=" << nameIn);
 
     Log_Info("Creating NewInstance with config=" << config << ", name=" << nameIn);
     std::string newName = nameIn;
@@ -93,11 +93,7 @@ mdn::Mdn2d mdn::Mdn2dBase::NewInstance(Mdn2dConfig config, std::string nameIn) {
         Log_Debug3("nameIn empty, generating new name");
         newName = static_generateNextName();
     }
-    if (Log_Showing_Debug2) {
-        Log_Debug2_T("Name of new Mdn2d will be " << newName);
-    } else {
-        Log_Debug_T("Creating a NewInstance of Mdn2d, newName=" << nameIn);
-    }
+    Log_Debug_T("Creating a NewInstance of Mdn2d, newName=" << newName);
     return Mdn2d(config, newName);
 }
 
@@ -110,11 +106,12 @@ mdn::Mdn2d mdn::Mdn2dBase::Duplicate(const Mdn2d& other, std::string nameIn) {
         Log_Debug3("nameIn empty, generating new name from " << other.m_name);
         newName = static_generateCopyName(other.m_name);
     }
-    if (Log_Showing_Debug2) {
+    If_Log_Showing_Debug2(
         Log_Debug2_T("Name of new Mdn2d will be " << newName);
-    } else {
+    );
+    If_Not_Log_Showing_Debug2(
         Log_Debug("Duplicating Mdn2d from " << other.m_name << ", name=" << newName);
-    }
+    );
     return Mdn2d(other, newName);
 }
 
@@ -267,11 +264,7 @@ const mdn::Mdn2dConfig& mdn::Mdn2dBase::config() const {
 
 
 const mdn::Mdn2dConfig& mdn::Mdn2dBase::locked_config() const {
-    if (Log_Showing_Debug4) {
-        Log_N_Debug4("returning config: " << m_config);
-    } else {
-        Log_N_Debug3("");
-    }
+    Log_N_Debug4("returning config: " << m_config);
     return m_config;
 }
 
@@ -284,11 +277,7 @@ mdn::Mdn2dConfigImpact mdn::Mdn2dBase::assessConfigChange(const Mdn2dConfig& new
 
 
 mdn::Mdn2dConfigImpact mdn::Mdn2dBase::locked_assessConfigChange(const Mdn2dConfig& newConfig) {
-    if (Log_Showing_Debug4) {
-        Log_N_Debug4_H("assessing new: " << newConfig << " against old: " << m_config);
-    } else {
-        Log_N_Debug3_H("");
-    }
+    Log_N_Debug3_H("assessing new: " << newConfig << " against old: " << m_config);
 
     Mdn2dConfigImpact result = Mdn2dConfigImpact::Unknown;
     if (newConfig.base() != m_config.base()) {
@@ -303,14 +292,10 @@ mdn::Mdn2dConfigImpact mdn::Mdn2dBase::locked_assessConfigChange(const Mdn2dConf
     } else {
         result = Mdn2dConfigImpact::NoImpact;
     }
-    if (Log_Showing_Debug4) {
-        Log_N_Debug4_T(
-            "result = " << Mdn2dConfigImpactToName(result) << ", "
-                << Mdn2dConfigImpactToDescription(result)
-        );
-    } else {
-        Log_N_Debug3_T("result = " << Mdn2dConfigImpactToName(result));
-    }
+    Log_N_Debug3_T(
+        "result = " << Mdn2dConfigImpactToName(result) << ", "
+            << Mdn2dConfigImpactToDescription(result)
+    );
     return result;
 }
 
@@ -323,11 +308,7 @@ void mdn::Mdn2dBase::setConfig(Mdn2dConfig& newConfig) {
 
 
 void mdn::Mdn2dBase::locked_setConfig(Mdn2dConfig newConfig) {
-    if (Log_Showing_Debug4) {
-        Log_N_Debug4_H("applying new config: " << newConfig);
-    } else {
-        Log_N_Debug3_H("");
-    }
+    Log_N_Debug3_H("applying new config: " << newConfig);
 
     if (newConfig.base() != m_config.base()) {
         Log_N_Debug4("Requires full clear()");
@@ -448,12 +429,13 @@ const mdn::CoordSet& mdn::Mdn2dBase::locked_nonZeroOnRow(const Coord& xy) const 
     auto it = m_yIndex.find(xy.y());
     if (it != m_yIndex.end()) {
         const CoordSet& coords = it->second;
-        if (Log_Showing_Debug4) {
+        If_Log_Showing_Debug4(
             std::string coordsList(Tools::setToString<Coord>(coords, ','));
             Log_N_Debug4_T("Returning non-zero coords: " << coordsList);
-        } else {
+        );
+        If_Not_Log_Showing_Debug4(
             Log_N_Debug3_T("Returning set containing " << coords.size() << " non-zero coords");
-        }
+        );
         return coords;
     }
     Log_Debug3_T("Returning empty set");
@@ -473,12 +455,13 @@ const mdn::CoordSet& mdn::Mdn2dBase::locked_nonZeroOnCol(const Coord& xy) const 
     auto it = m_xIndex.find(xy.x());
     if (it != m_xIndex.end()) {
         const CoordSet& coords = it->second;
-        if (Log_Showing_Debug4) {
+        If_Log_Showing_Debug4(
             std::string coordsList(Tools::setToString<Coord>(coords, ','));
             Log_N_Debug4_T("Returning non-zero coords: " << coordsList);
-        } else {
+        );
+        If_Not_Log_Showing_Debug4(
             Log_N_Debug3_T("Returning set containing " << coords.size() << " non-zero coords");
-        }
+        );
         return coords;
     }
     Log_Debug3_T("Returning empty set");
@@ -641,9 +624,7 @@ mdn::Digit mdn::Mdn2dBase::getValue(const Coord& xy) const {
     Log_N_Debug2_H("At " << xy);
     auto lock = lockReadOnly();
     Digit result = locked_getValue(xy);
-    if (Log_Showing_Debug2) {
-        Log_N_Debug2_T("result=" << static_cast<int>(result));
-    }
+    Log_N_Debug2_T("result=" << static_cast<int>(result));
     return result;
 }
 
@@ -654,9 +635,9 @@ mdn::Digit mdn::Mdn2dBase::locked_getValue(const Coord& xy) const {
         Log_N_Debug3("At " << xy << ": no entry, returning 0");
         return static_cast<Digit>(0);
     }
-    if (Log_Showing_Debug3) {
+    If_Log_Showing_Debug3(
         Log_N_Debug3("At " << xy << ": returning " << static_cast<int>(it->second));
-    }
+    );
     return it->second;
 }
 
@@ -665,9 +646,9 @@ mdn::VecDigit mdn::Mdn2dBase::getRow(int y) const {
     auto lock = lockReadOnly();
     Log_N_Debug2_H("");
     VecDigit result = locked_getRow(y);
-    if (Log_Showing_Debug2) {
+    If_Log_Showing_Debug2(
         Log_N_Debug2_T("Row " << y << ": " << Tools::digitArrayToString(result));
-    }
+    );
     return result;
 }
 
@@ -685,9 +666,9 @@ void mdn::Mdn2dBase::getRow(int y, VecDigit& out) const {
     auto lock = lockReadOnly();
     Log_N_Debug2_H("");
     locked_getRow(y, out);
-    if (Log_Showing_Debug2) {
+    If_Log_Showing_Debug2(
         Log_N_Debug2_T("Row " << y << ": inplace" << Tools::digitArrayToString(out));
-    }
+    );
 }
 
 
@@ -710,9 +691,9 @@ void mdn::Mdn2dBase::getRow(const Coord& xy, VecDigit& out) const {
     auto lock = lockReadOnly();
     Log_N_Debug2_H("");
     locked_getRow(xy, out);
-    if (Log_Showing_Debug2) {
+    If_Log_Showing_Debug2(
         Log_N_Debug2_T("Row " << xy << ": inplace" << Tools::digitArrayToString(out));
-    }
+    );
 }
 
 
@@ -843,9 +824,9 @@ mdn::VecDigit mdn::Mdn2dBase::getCol(int x) const {
     auto lock = lockReadOnly();
     Log_N_Debug2_H("");
     VecDigit result = locked_getCol(x);
-    if (Log_Showing_Debug2) {
+    If_Log_Showing_Debug2(
         Log_N_Debug2_T("Column " << x << ": " << Tools::digitArrayToString(result));
-    }
+    );
     return result;
 }
 
@@ -863,9 +844,9 @@ void mdn::Mdn2dBase::getCol(int x, VecDigit& out) const {
     auto lock = lockReadOnly();
     Log_N_Debug2_H("Column " << x);
     locked_getCol(x, out);
-    if (Log_Showing_Debug2) {
+    If_Log_Showing_Debug2(
         Log_N_Debug2_T("Column " << x << ": inplace" << Tools::digitArrayToString(out));
-    }
+    );
 }
 
 
@@ -956,12 +937,12 @@ mdn::CoordSet mdn::Mdn2dBase::locked_getNonZeroes(const Rect& window) const {
     auto it = m_yIndex.lower_bound(y0);
     const auto itEnd = m_yIndex.upper_bound(y1);
 
-    if (Log_Showing_Debug3) {
+    If_Log_Showing_Debug3(
         Log_N_Debug3_H(
             "Row scan y=(" << y0 << ".." << y1
             << "), x filter=(" << x0 << ".." << x1 << ")"
         );
-    }
+    );
 
     for (; it != itEnd; ++it) {
         const CoordSet& rowSet = it->second;
@@ -973,12 +954,13 @@ mdn::CoordSet mdn::Mdn2dBase::locked_getNonZeroes(const Rect& window) const {
         }
     }
 
-    if (Log_Showing_Debug4) {
+    If_Log_Showing_Debug4(
         std::string coordsList(Tools::setToString<Coord>(result, ','));
         Log_N_Debug4_T("Found " << result.size() << " coords: " << coordsList);
-    } else {
+    );
+    If_Not_Log_Showing_Debug4(
         Log_N_Debug3_T("Found " << result.size() << " coords");
-    }
+    );
     return result;
 }
 
@@ -1020,11 +1002,11 @@ bool mdn::Mdn2dBase::locked_setToZero(const Coord& xy) {
         return result;
     }
     // There is currently a non-zero value - erase it
-    if (Log_Showing_Debug3) {
+    If_Log_Showing_Debug3(
         Log_N_Debug3_H(
             "Setting " << xy << " to zero: current value=" << static_cast<int>(it->second)
         );
-    }
+    );
     auto xit(m_xIndex.find(xy.x()));
     auto yit(m_yIndex.find(xy.y()));
     #ifdef MDN_DEBUG
@@ -1072,20 +1054,22 @@ bool mdn::Mdn2dBase::locked_setToZero(const Coord& xy) {
 
 mdn::CoordSet mdn::Mdn2dBase::setToZero(const CoordSet& coords) {
     auto lock = lockWriteable();
-    if (Log_Showing_Debug3) {
+    If_Log_Showing_Debug3(
         std::string coordsList(Tools::setToString<Coord>(coords, ','));
         Log_N_Debug3_H("Zeroing coord set: " << coordsList);
-    } else {
+    );
+    If_Not_Log_Showing_Debug3(
         Log_N_Debug2_H("Zeroing set containing " << coords.size() << " coords");
-    }
+    );
     CoordSet changed = locked_setToZero(coords);
     internal_operationComplete();
-    if (Log_Showing_Debug3) {
+    If_Log_Showing_Debug3(
         std::string coordsList(Tools::setToString<Coord>(changed, ','));
         Log_N_Debug3_T("Returning changed coords: " << coordsList);
-    } else {
+    );
+    If_Not_Log_Showing_Debug3(
         Log_N_Debug2_T("Returning set containing " << changed.size() << " changed coords");
-    }
+    );
     return changed;
 }
 
@@ -1150,12 +1134,13 @@ mdn::CoordSet mdn::Mdn2dBase::setToZero(const Rect& window) {
     Log_N_Debug2_H("Zeroing window: " << window);
     CoordSet changed = locked_setToZero(window);
     internal_operationComplete();
-    if (Log_Showing_Debug3) {
+    If_Log_Showing_Debug3(
         std::string coordsList(Tools::setToString<Coord>(changed, ','));
         Log_N_Debug3_T("Returning changed coords: " << coordsList);
-    } else {
+    );
+    If_Not_Log_Showing_Debug3(
         Log_N_Debug2_T("Returning set containing " << changed.size() << " changed coords");
-    }
+    );
     return changed;
 }
 
@@ -1170,21 +1155,22 @@ mdn::CoordSet mdn::Mdn2dBase::locked_setToZero(const Rect& window) {
         locked_getNonZeroes(window)
     );
     CoordSet changed(locked_setToZero(purgeSet));
-    if (Log_Showing_Debug4) {
+    If_Log_Showing_Debug4(
         std::string coordsList(Tools::setToString<Coord>(changed, ','));
         Log_N_Debug4_T("Returning changed coords: " << coordsList);
-    } else {
+    );
+    If_Not_Log_Showing_Debug4(
         Log_N_Debug3_T("Returning set containing " << changed.size() << " changed coords");
-    }
+    );
     return changed;
 }
 
 
 bool mdn::Mdn2dBase::setValue(const Coord& xy, Digit value) {
     auto lock = lockWriteable();
-    if (Log_Showing_Debug2) {
+    If_Log_Showing_Debug2(
         Log_N_Debug2_H("Setting " << xy << " to " << static_cast<int>(value));
-    }
+    );
     bool possibleCarryOver = locked_setValue(xy, value);
     internal_modifiedAndComplete();
     Log_N_Debug2_T("result=" << possibleCarryOver);
@@ -1461,9 +1447,9 @@ bool mdn::Mdn2dBase::locked_hasBounds() const {
 const mdn::Rect& mdn::Mdn2dBase::bounds() const {
     auto lock = ReadOnlyLock();
     const Rect& bounds = locked_bounds();
-    if (Log_Showing_Debug2) {
+    If_Log_Showing_Debug2(
         Log_N_Debug2("Result: " << bounds);
-    }
+    );
     return bounds;
 }
 
@@ -1554,9 +1540,9 @@ mdn::PrecisionStatus mdn::Mdn2dBase::checkPrecisionWindow(const Coord& xy) const
     auto lock = ReadOnlyLock();
     Log_N_Debug3_H("At: " << xy);
     PrecisionStatus result = locked_checkPrecisionWindow(xy);
-    if (Log_Showing_Debug3) {
+    If_Log_Showing_Debug3(
         Log_N_Debug3_T("result=" << PrecisionStatusToName(result));
-    }
+    );
     return result;
 }
 
@@ -1650,11 +1636,11 @@ void mdn::Mdn2dBase::internal_clearMetadata() const {
 
 bool mdn::Mdn2dBase::internal_setValueRaw(const Coord& xy, Digit value) {
     if (value == 0) {
-        if (Log_Showing_Debug4) {
+        If_Log_Showing_Debug4(
             Log_N_Debug4_H(
                 "Setting " << xy << " to " << static_cast<int>(value) << ": setting to zero"
             );
-        }
+        );
         locked_setToZero(xy);
         Log_N_Debug4_T("result=0");
         return false;
@@ -1663,12 +1649,12 @@ bool mdn::Mdn2dBase::internal_setValueRaw(const Coord& xy, Digit value) {
     auto it = m_raw.find(xy);
     if (it == m_raw.end()) {
         // No entry exists
-        if (Log_Showing_Debug4) {
+        If_Log_Showing_Debug4(
             Log_N_Debug4_H(
                 "Setting " << xy << " to " << static_cast<int>(value)
                 << ", no previous existing value"
             );
-        }
+        );
         PrecisionStatus ps = locked_checkPrecisionWindow(xy);
         if (ps == PrecisionStatus::Below) {
             // Out of numerical precision range
@@ -1685,9 +1671,9 @@ bool mdn::Mdn2dBase::internal_setValueRaw(const Coord& xy, Digit value) {
             Log_N_Debug4_T("result=1");
             return true;
         }
-        if (Log_Showing_Debug4) {
+        If_Log_Showing_Debug4(
             Log_N_Debug4_T("New value within precision range, result=1");
-        }
+        );
         return true;
     }
     // xy is already non-zero
@@ -1695,20 +1681,22 @@ bool mdn::Mdn2dBase::internal_setValueRaw(const Coord& xy, Digit value) {
     it->second = value;
     if (oldVal != value) {
         internal_modified();
-    } else if (Log_Showing_Debug4) {
-        Log_N_Debug4(
-            "Setting " << xy << " to " << static_cast<int>(value)
-            << ", but digit already has that value, result=0"
+    } else {
+        If_Log_Showing_Debug4(
+            Log_N_Debug4(
+                "Setting " << xy << " to " << static_cast<int>(value)
+                << ", but digit already has that value, result=0"
+            );
         );
         return false;
     }
 
-    if (Log_Showing_Debug4) {
+    If_Log_Showing_Debug4(
         Log_N_Debug4_H(
             "Setting " << xy << " to " << static_cast<int>(value)
             << ": overwriting existing value: " << static_cast<int>(oldVal)
         );
-    }
+    );
     // check for sign change
     bool result = (
         (oldVal < 0 && value > 0) || (oldVal > 0 && value < 0)
@@ -1772,12 +1760,12 @@ int mdn::Mdn2dBase::internal_purgeExcessDigits() {
         }
     }
     if (!purgeSet.empty()) {
-        if (Log_Showing_Debug) {
+        If_Log_Showing_Debug(
             Log_N_Debug_H(
                 "Purging " << purgeSet.size() << " digits, now below numerical precision window: "
                 << m_bounds << ", precision: " << m_config.precision()
             );
-        }
+        );
         locked_setToZero(purgeSet);
         Log_N_Debug_T("result=" << purgeSet.size());
         return purgeSet.size();
