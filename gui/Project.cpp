@@ -56,7 +56,7 @@ void mdn::gui::Project::shiftMdnTabsRight(int start, int end, int shift) {
         int newIndex = tabI + shift;
         m_addressingIndexToName.erase(tabI);
         m_addressingIndexToName.insert({newIndex, curName});
-        Log_Debug4(
+        Log_Debug2(
             "Moving {'" << curName << "', " << tabI << "}, to "
                 << "{'" << curName << "', " << newIndex << "}"
         );
@@ -116,7 +116,7 @@ void mdn::gui::Project::shiftMdnTabsLeft(int start, int end, int shift) {
         int newIndex = tabI - shift;
         m_addressingIndexToName.erase(tabI);
         m_addressingIndexToName.insert({newIndex, curName});
-        Log_Debug4(
+        Log_Debug2(
             "Moving {'" << curName << "', " << tabI << "}, to "
                 << "{'" << curName << "', " << newIndex << "}"
         );
@@ -138,8 +138,10 @@ mdn::gui::Project::Project(MainWindow* parent, std::string name, int nStartMdn):
     if (m_name.empty()) {
         m_name = "untitled-" + std::to_string(m_untitledNumber++);
     }
-    Log_Debug2_H(
-        "parent " << (parent ? "not null" : "null") << ",name=" << name << ",nStart=" << nStartMdn
+    Log_Debug2_H("");
+    Log_Debug(
+        "Creating a new Project" << (parent ? "(with parent)" : "(no parent)")
+            << " '" << name << "' with " << nStartMdn << " starting tabs"
     );
     if (nStartMdn == 0) {
         nStartMdn += 1;
@@ -210,6 +212,7 @@ void mdn::gui::Project::setConfig(Mdn2dConfig newConfig) {
     Log_Debug2_H("newConfig=" << newConfig);
     if (m_data.empty()) {
         m_config = newConfig;
+        Log_Debug("Changed config to " << newConfig);
         Log_Debug2_T("No impact");
         return;
     }
