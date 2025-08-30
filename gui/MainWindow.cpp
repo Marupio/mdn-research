@@ -90,6 +90,206 @@ void mdn::gui::MainWindow::onTabContextMenu(const QPoint& pos)
 }
 
 
+void mdn::gui::MainWindow::onProjectTabsAboutToChange()
+{
+    Log_Debug2_H("onProjectTabsAboutToChange");
+    Log_Debug2_T("");
+}
+
+
+void mdn::gui::MainWindow::onProjectTabsChanged(int currentIndex)
+{
+    Log_Debug2_H("onProjectTabsChanged currentIndex=" << currentIndex);
+    Log_Debug2_T("");
+}
+
+
+void mdn::gui::MainWindow::onSplitterMoved(int pos, int index) {
+    QList<int> sizes = m_splitter->sizes();
+    int total = 0;
+    for (int s : sizes) {
+        total += s;
+    }
+    if (total > 0 && sizes.size() >= 2) {
+        m_splitRatio = double(sizes[0]) / double(total);
+    }
+}
+
+
+void mdn::gui::MainWindow::onCommandSubmitted(const QString& text) {
+    m_command->appendLine(QStringLiteral("» %1").arg(text));
+}
+
+
+void mdn::gui::MainWindow::onOpsPlan(const OpsController::Plan& p) {
+    if (!m_project) {
+        return;
+    }
+
+    Mdn2d* a = m_project->getMdn(p.indexA, true);
+    Mdn2d* b = m_project->getMdn(p.indexB, true);
+
+    if (a == nullptr) {
+        return;
+    }
+    if (b == nullptr) {
+        return;
+    }
+
+    if (p.dest == OpsController::Dest::InPlace) {
+        Mdn2d ans(m_project->config(), a->name());
+        if (p.op == OpsController::Op::Add) {
+            a->plus(*b, ans);
+        } else {
+            if (p.op == OpsController::Op::Subtract) {
+                a->minus(*b, ans);
+            } else {
+                if (p.op == OpsController::Op::Multiply) {
+                    a->multiply(*b, ans);
+                } else {
+                    ans = Mdn2d(m_project->config(), a->name());
+                    a->divide(*b, ans, Fraxis::Default);
+                }
+            }
+        }
+        *a = ans;
+        syncTabsToProject();
+        m_tabWidget->setCurrentIndex(p.indexA);
+        if (m_ops) {
+            m_ops->refreshTabNames();
+        }
+        return;
+    }
+
+    if (p.dest == OpsController::Dest::ToNew) {
+        std::string requestedName = MdnQtInterface::fromQString(p.newName);
+        if (requestedName.empty()) {
+            requestedName = std::string("Result");
+        }
+
+        Mdn2d ans(m_project->config(), requestedName);
+        if (p.op == OpsController::Op::Add) {
+            a->plus(*b, ans);
+        } else {
+            if (p.op == OpsController::Op::Subtract) {
+                a->minus(*b, ans);
+            } else {
+                if (p.op == OpsController::Op::Multiply) {
+                    a->multiply(*b, ans);
+                } else {
+                    ans = Mdn2d(m_project->config(), requestedName);
+                    a->divide(*b, ans, Fraxis::Default);
+                }
+            }
+        }
+
+        int insertAt = p.indexA + 1;
+        m_project->insertMdn(ans, insertAt);
+
+        const auto& nameToIndex = m_project->data_addressingNameToIndex();
+        auto it = nameToIndex.find(ans.name());
+        int actualIndex = -1;
+        if (it != nameToIndex.end()) {
+            actualIndex = it->second;
+        }
+
+        if (actualIndex < 0) {
+            actualIndex = m_tabWidget->count();
+        }
+
+        createTabForIndex(actualIndex);
+        m_tabWidget->setCurrentIndex(actualIndex);
+        if (m_ops) {
+            m_ops->refreshTabNames();
+        }
+        return;
+    }
+}
+
+
+void mdn::gui::MainWindow::slotSelectNextTab()
+{
+    Log_Debug3_H("slotSelectNextTab");
+    if (!m_tabWidget) {
+        Log_Debug3_T("");
+        return;
+    }
+    const int idx = m_tabWidget->currentIndex();
+    const int count = m_tabWidget->count();
+    if (idx + 1 < count) {
+        m_tabWidget->setCurrentIndex(idx + 1);
+        focusActiveGrid();
+    }
+    Log_Debug3_T("");
+}
+
+
+void mdn::gui::MainWindow::slotSelectPrevTab()
+{
+    Log_Debug3_H("slotSelectPrevTab");
+    if (!m_tabWidget) {
+        Log_Debug3_T("");
+        return;
+    }
+    const int idx = m_tabWidget->currentIndex();
+    if (idx - 1 >= 0) {
+        m_tabWidget->setCurrentIndex(idx - 1);
+        focusActiveGrid();
+    }
+    Log_Debug3_T("");
+}
+
+
+void mdn::gui::MainWindow::slotMoveTabRight()
+{
+    Log_Debug3_H("slotMoveTabRight");
+    if (!m_tabWidget) {
+        Log_Debug3_T("");
+        return;
+    }
+    const int idx = m_tabWidget->currentIndex();
+    const int count = m_tabWidget->count();
+    if (idx >= 0 && idx + 1 < count) {
+        QTabBar* bar = m_tabWidget->tabBar();
+        bar->moveTab(idx, idx + 1);
+        m_tabWidget->setCurrentIndex(idx + 1);
+        focusActiveGrid();
+    }
+    Log_Debug3_T("");
+}
+
+
+void mdn::gui::MainWindow::slotMoveTabLeft()
+{
+    Log_Debug3_H("slotMoveTabLeft");
+    if (!m_tabWidget) {
+        Log_Debug3_T("");
+        return;
+    }
+    const int idx = m_tabWidget->currentIndex();
+    if (idx > 0) {
+        QTabBar* bar = m_tabWidget->tabBar();
+        bar->moveTab(idx, idx - 1);
+        m_tabWidget->setCurrentIndex(idx - 1);
+        focusActiveGrid();
+    }
+    Log_Debug3_T("");
+}
+
+
+void mdn::gui::MainWindow::slotDebugShowAllTabs()
+{
+    Log_Debug3_H("");
+    if (m_project)
+    {
+        std::ostringstream oss;
+        m_project->debugShowAllTabs(oss);
+        Log_Info(oss.str());
+    }
+    Log_Debug3_T("");
+}
+
+
 bool mdn::gui::MainWindow::eventFilter(QObject* watched, QEvent* event) {
     if (watched == m_splitter) {
         if (event->type() == QEvent::Resize) {
@@ -224,6 +424,12 @@ void mdn::gui::MainWindow::createNewProject() {
         m_project = nullptr;
     }
     m_project = new Project(this);
+    if (m_project) {
+        connect(m_project, &mdn::gui::Project::tabsAboutToChange,
+                this, &mdn::gui::MainWindow::onProjectTabsAboutToChange);
+        connect(m_project, &mdn::gui::Project::tabsChanged,
+                this, &mdn::gui::MainWindow::onProjectTabsChanged);
+    }
     Log_Debug3_T("");
 }
 
@@ -603,188 +809,4 @@ void mdn::gui::MainWindow::applySplitRatio() {
     QList<int> newSizes;
     newSizes << first << second;
     m_splitter->setSizes(newSizes);
-}
-
-
-void mdn::gui::MainWindow::onSplitterMoved(int pos, int index) {
-    QList<int> sizes = m_splitter->sizes();
-    int total = 0;
-    for (int s : sizes) {
-        total += s;
-    }
-    if (total > 0 && sizes.size() >= 2) {
-        m_splitRatio = double(sizes[0]) / double(total);
-    }
-}
-
-
-void mdn::gui::MainWindow::onCommandSubmitted(const QString& text) {
-    m_command->appendLine(QStringLiteral("» %1").arg(text));
-}
-
-
-void mdn::gui::MainWindow::onOpsPlan(const OpsController::Plan& p) {
-    if (!m_project) {
-        return;
-    }
-
-    Mdn2d* a = m_project->getMdn(p.indexA, true);
-    Mdn2d* b = m_project->getMdn(p.indexB, true);
-
-    if (a == nullptr) {
-        return;
-    }
-    if (b == nullptr) {
-        return;
-    }
-
-    if (p.dest == OpsController::Dest::InPlace) {
-        Mdn2d ans(m_project->config(), a->name());
-        if (p.op == OpsController::Op::Add) {
-            a->plus(*b, ans);
-        } else {
-            if (p.op == OpsController::Op::Subtract) {
-                a->minus(*b, ans);
-            } else {
-                if (p.op == OpsController::Op::Multiply) {
-                    a->multiply(*b, ans);
-                } else {
-                    ans = Mdn2d(m_project->config(), a->name());
-                    a->divide(*b, ans, Fraxis::Default);
-                }
-            }
-        }
-        *a = ans;
-        syncTabsToProject();
-        m_tabWidget->setCurrentIndex(p.indexA);
-        if (m_ops) {
-            m_ops->refreshTabNames();
-        }
-        return;
-    }
-
-    if (p.dest == OpsController::Dest::ToNew) {
-        std::string requestedName = MdnQtInterface::fromQString(p.newName);
-        if (requestedName.empty()) {
-            requestedName = std::string("Result");
-        }
-
-        Mdn2d ans(m_project->config(), requestedName);
-        if (p.op == OpsController::Op::Add) {
-            a->plus(*b, ans);
-        } else {
-            if (p.op == OpsController::Op::Subtract) {
-                a->minus(*b, ans);
-            } else {
-                if (p.op == OpsController::Op::Multiply) {
-                    a->multiply(*b, ans);
-                } else {
-                    ans = Mdn2d(m_project->config(), requestedName);
-                    a->divide(*b, ans, Fraxis::Default);
-                }
-            }
-        }
-
-        int insertAt = p.indexA + 1;
-        m_project->insertMdn(ans, insertAt);
-
-        const auto& nameToIndex = m_project->data_addressingNameToIndex();
-        auto it = nameToIndex.find(ans.name());
-        int actualIndex = -1;
-        if (it != nameToIndex.end()) {
-            actualIndex = it->second;
-        }
-
-        if (actualIndex < 0) {
-            actualIndex = m_tabWidget->count();
-        }
-
-        createTabForIndex(actualIndex);
-        m_tabWidget->setCurrentIndex(actualIndex);
-        if (m_ops) {
-            m_ops->refreshTabNames();
-        }
-        return;
-    }
-}
-
-
-void mdn::gui::MainWindow::slotSelectNextTab()
-{
-    Log_Debug3_H("slotSelectNextTab");
-    if (!m_tabWidget) {
-        Log_Debug3_T("");
-        return;
-    }
-    const int idx = m_tabWidget->currentIndex();
-    const int count = m_tabWidget->count();
-    if (idx + 1 < count) {
-        m_tabWidget->setCurrentIndex(idx + 1);
-        focusActiveGrid();
-    }
-    Log_Debug3_T("");
-}
-
-
-void mdn::gui::MainWindow::slotSelectPrevTab()
-{
-    Log_Debug3_H("slotSelectPrevTab");
-    if (!m_tabWidget) {
-        Log_Debug3_T("");
-        return;
-    }
-    const int idx = m_tabWidget->currentIndex();
-    if (idx - 1 >= 0) {
-        m_tabWidget->setCurrentIndex(idx - 1);
-        focusActiveGrid();
-    }
-    Log_Debug3_T("");
-}
-
-
-void mdn::gui::MainWindow::slotMoveTabRight()
-{
-    Log_Debug3_H("slotMoveTabRight");
-    if (!m_tabWidget) {
-        Log_Debug3_T("");
-        return;
-    }
-    const int idx = m_tabWidget->currentIndex();
-    const int count = m_tabWidget->count();
-    if (idx >= 0 && idx + 1 < count) {
-        QTabBar* bar = m_tabWidget->tabBar();
-        bar->moveTab(idx, idx + 1);
-        m_tabWidget->setCurrentIndex(idx + 1);
-        focusActiveGrid();
-    }
-    Log_Debug3_T("");
-}
-
-
-void mdn::gui::MainWindow::slotMoveTabLeft()
-{
-    Log_Debug3_H("slotMoveTabLeft");
-    if (!m_tabWidget) {
-        Log_Debug3_T("");
-        return;
-    }
-    const int idx = m_tabWidget->currentIndex();
-    if (idx > 0) {
-        QTabBar* bar = m_tabWidget->tabBar();
-        bar->moveTab(idx, idx - 1);
-        m_tabWidget->setCurrentIndex(idx - 1);
-        focusActiveGrid();
-    }
-    Log_Debug3_T("");
-}
-
-
-void mdn::gui::MainWindow::slotDebugShowAllTabs()
-{
-    Log_Debug3_H("");
-    if (m_project)
-    {
-        m_project->debugShowAllTabs();
-    }
-    Log_Debug3_T("");
 }

@@ -782,12 +782,11 @@ bool mdn::gui::Project::moveMdn(int fromIndex, int toIndex) {
         Log_Debug2_T("Not a valid fromIndex, returning false");
         return false;
     }
+    Q_EMIT tabsAboutToChange();
     std::string mdnName(nameOfMdn(fromIndex));
     Log_Debug(
         "Moving {'" << mdnName << "', " << fromIndex << "} to " << toIndex
     );
-TODO
-////////////////////////////////////////////////////////////////////////////////////////////////////
     // Extract the number and erase the addressing metadata
     Log_Debug2("Extracting {'" << mdnName << "', " << fromIndex << "}");
     auto node = m_data.extract(fromIndex);
@@ -797,19 +796,19 @@ TODO
     m_addressingNameToIndex.erase(name);
     if (fromIndex > toIndex) {
         // Shifting digits to the right
-        Log_Debug2("shifting all tabs from " << (fromIndex-1) << " to " << toIndex);
+        Log_Debug2("shifting tabs " << (fromIndex-1) << " --> " << toIndex);
         shiftMdnTabsRight(fromIndex - 1, toIndex);
     } else {
-        Log_Debug2("shifting all tabs from " << (fromIndex+1) << " to " << toIndex);
+        Log_Debug2("shifting tabs from " << (fromIndex+1) << " <-- " << toIndex);
         shiftMdnTabsLeft(fromIndex + 1, toIndex);
     }
+    Log_Debug2("Inserting {'" << mdnName << "'," << toIndex << "} into data");
     m_data.insert(std::move(node));
-    Log_Debug4(
-        "Moving {'" << name << "'," << fromIndex << "} to {'" << name << "'," << toIndex << "}"
-    );
+    Log_Debug2("Inserting {'" << mdnName << "'," << toIndex << "} into indices");
     m_addressingIndexToName.insert({toIndex, name});
     m_addressingNameToIndex.insert({name, toIndex});
-    Log_Debug2_T("Success, returning true");
+    Q_EMIT tabsChanged(toIndex);
+    Log_Debug2_T("");
     return true;
 }
 
@@ -822,8 +821,11 @@ bool mdn::gui::Project::moveMdn(const std::string& name, int toIndex) {
         Log_Debug2_T("Returning false");
         return false;
     }
+    Log_Debug(
+        "Moving {'" << name << "', " << fromIndex << "} to " << toIndex
+    );
     bool result = moveMdn(fromIndex, toIndex);
-    Log_Debug2_T("Returning " << result);
+    Log_Debug2_T("result=" << result);
     return result;
 }
 
@@ -835,12 +837,16 @@ bool mdn::gui::Project::deleteMdn(int index) {
         return false;
     }
     std::string name = nameOfMdn(index);
+    Log_Debug("Deleting {'" << name << "', " << index << "} from data");
+    Q_EMIT tabsAboutToChange();
     m_data.erase(index);
+    Log_Debug("Deleting {'" << name << "', " << index << "} from index");
     m_addressingIndexToName.erase(index);
     m_addressingNameToIndex.erase(name);
-    Log_Debug4("Deleting {'" << name << "'," << index << "}");
+    Log_Debug2("shifting tabs from " << index << " <--");
     shiftMdnTabsLeft(index+1);
-    Log_Debug2_T("Success, returning true");
+    Q_EMIT tabsChanged(index);
+    Log_Debug2_T("");
     return true;
 }
 
@@ -853,11 +859,15 @@ bool mdn::gui::Project::deleteMdn(const std::string& name) {
     }
     int index = indexOfMdn(name);
     AssertQ(index >= 0, "Failed to find the index of contained Mdn2d '" << name << "'.");
+    Log_Debug("Deleting {'" << name << "', " << index << "} from data");
+    Q_EMIT tabsAboutToChange();
     m_data.erase(index);
+    Log_Debug("Deleting {'" << name << "', " << index << "} from index");
     m_addressingIndexToName.erase(index);
     m_addressingNameToIndex.erase(name);
-    Log_Debug4("Deleting {'" << name << "'," << index << "}");
+    Log_Debug2("shifting tabs from " << index << " <--");
     shiftMdnTabsLeft(index+1);
+    Q_EMIT tabsChanged(index);
     Log_Debug2_T("Success, returning true");
     return true;
 }
@@ -868,16 +878,18 @@ void mdn::gui::Project::copySelection() const {
     const mdn::gui::Selection* sel = selection();
     if (!sel) {
         Log_WarnQ("Failed to acquire selection");
-        Log_Debug2_T("Failed");
+        Log_Debug2_T("");
         return;
     }
     const Mdn2d* src = sel->get();
     if (!src || !sel->rect().isValid()) {
-        Log_Debug2_T("Selection has no rectangular selection, cannot continue");
+        Log_Debug("Selection has no rectangular selection, cannot continue")
+        Log_Debug2_T("");
         return;
     }
     Rect r = sel->rect();
     // r.fixOrdering();
+    Log_Debug("Copying Mdn '" << src->name() << "', " << r);
     Clipboard::encodeRectToClipboard(
         *src, r, QStringLiteral("rect"), QString::fromStdString(src->name())
     );
@@ -889,26 +901,31 @@ void mdn::gui::Project::copyMdn(int index) const {
     Log_Debug2_H("copying " << index);
     const Mdn2d* src = getMdn(index);
     if (src == nullptr) {
-        Log_Debug2_T("Not a valid index");
+        Log_Debug("Could not copy Mdn at index " << index << ", not a valid index");
+        Log_Debug2_T("");
         return;
     }
     if (!src->hasBounds()) {
         // Nothing to copy (empty MDN)
-        Log_Debug2_T("src has no digits");
+        Log_Debug("Nothing to copy, Mdn '" << src->name() << "' has no digits");
+        Log_Debug2_T("");
         return;
     }
 
     const Rect b = src->bounds();
+    Log_Debug("Copying Mdn '" << src->name() << "' with bounds " << b);
     Clipboard::encodeRectToClipboard(
         *src, b, QStringLiteral("mdn"), QString::fromStdString(src->name())
     );
-    Log_Debug2_T("Success");
+    Log_Debug2_T("");
 }
 
 
 void mdn::gui::Project::cutSelection() {
     Log_Debug2_H("");
+    Log_Debug("Cut = ->copy<- + delete");
     copySelection();
+    Log_Debug("Cut = copy + ->delete<-");
     deleteSelection();
     Log_Debug2_T("");
 }

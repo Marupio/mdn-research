@@ -1,17 +1,18 @@
 #pragma once
 
+#include <QAction>
+#include <QHBoxLayout>
+#include <QLineEdit>
 #include <QMainWindow>
+#include <QMenu>
+#include <QMenuBar>
+#include <QPushButton>
 #include <QSplitter>
 #include <QTabWidget>
 #include <QTextEdit>
-#include <QLineEdit>
-#include <QPushButton>
-#include <QMenuBar>
-#include <QMenu>
-#include <QAction>
 #include <QVBoxLayout>
-#include <QHBoxLayout>
 #include <QWidget>
+
 
 #include "CommandWidget.hpp"
 #include "OpsController.hpp"
@@ -39,6 +40,19 @@ signals:
 
 private slots:
     void onTabContextMenu(const QPoint& pos);
+    void onProjectTabsAboutToChange();
+    void onProjectTabsChanged(int currentIndex);
+
+    void onSplitterMoved(int pos, int index);
+    void onCommandSubmitted(const QString& text);
+    void onOpsPlan(const OpsController::Plan& p);
+
+    void slotSelectNextTab();
+    void slotSelectPrevTab();
+    void slotMoveTabRight();
+    void slotMoveTabLeft();
+    void slotDebugShowAllTabs();
+
 
 protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
@@ -79,17 +93,6 @@ private:
 
     OpsController* m_ops{nullptr};
     Project* m_project = nullptr;
-
-private slots:
-    void onSplitterMoved(int pos, int index);
-    void onCommandSubmitted(const QString& text);
-    void onOpsPlan(const OpsController::Plan& p);
-
-    void slotSelectNextTab();
-    void slotSelectPrevTab();
-    void slotMoveTabRight();
-    void slotMoveTabLeft();
-    void slotDebugShowAllTabs();
 
 };
 
