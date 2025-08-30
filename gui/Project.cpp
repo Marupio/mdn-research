@@ -1,9 +1,5 @@
 #include "Project.hpp"
 
-
-
-
-
 #include <QClipboard>
 #include <QGuiApplication>
 #include <QJsonArray>
@@ -60,11 +56,7 @@ void mdn::gui::Project::shiftMdnTabsRight(int start, int end, int shift) {
         m_addressingIndexToName.erase(tabI);
         m_addressingIndexToName.insert({newIndex, curName});
         Log_Debug2(
-<<<<<<< HEAD
-            "Moving {'" << curName << "', " << tabI << "}, to "
-=======
             "Moving tab {'" << curName << "', " << tabI << "}, to "
->>>>>>> origin/main
                 << "{'" << curName << "', " << newIndex << "}"
         );
         #ifdef MDN_DEBUG
@@ -116,11 +108,7 @@ void mdn::gui::Project::shiftMdnTabsLeft(int start, int end, int shift) {
         m_addressingIndexToName.erase(tabI);
         m_addressingIndexToName.insert({newIndex, curName});
         Log_Debug2(
-<<<<<<< HEAD
-            "Moving {'" << curName << "', " << tabI << "}, to "
-=======
             "Moving tab {'" << curName << "', " << tabI << "}, to "
->>>>>>> origin/main
                 << "{'" << curName << "', " << newIndex << "}"
         );
 
@@ -142,8 +130,7 @@ mdn::gui::Project::Project(MainWindow* parent, std::string name, int nStartMdn):
     if (m_name.empty()) {
         m_name = "untitled-" + std::to_string(m_untitledNumber++);
     }
-    Log_Debug2_H("");
-    Log_Debug(
+    Log_Debug_H(
         "Creating a new Project" << (parent ? "(with parent)" : "(no parent)")
             << " '" << name << "' with " << nStartMdn << " starting tabs"
     );
@@ -153,13 +140,11 @@ mdn::gui::Project::Project(MainWindow* parent, std::string name, int nStartMdn):
     for (int i = 0; i < nStartMdn; ++i) {
         std::string nextName = Mdn2d::static_generateNextName();
         Mdn2d newMdn = Mdn2d::NewInstance(m_config, nextName);
-        Log_Debug4(
-            "Using name '" << nextName << "', built mdn(confirm:'" << newMdn.name() << ",)"
-        );
+        Log_Debug2("Creating Mdn {'" << nextName << "', " << i << "}");
         appendMdn(newMdn);
     }
     setActiveMdn(0);
-    Log_Debug2_T("");
+    Log_Debug_T("");
 }
 
 
@@ -236,7 +221,8 @@ void mdn::gui::Project::setConfig(Mdn2dConfig newConfig) {
     switch (impact) {
         case Mdn2dConfigImpact::NoImpact: {
             m_config = newConfig;
-            Log_Debug2_T("No impact");
+            Log_Debug("Changed config to " << newConfig);
+            Log_Debug2_T("");
             return;
         }
         case Mdn2dConfigImpact::AllDigitsCleared: {
@@ -253,14 +239,21 @@ void mdn::gui::Project::setConfig(Mdn2dConfig newConfig) {
                     mdnAndSel.first.setConfig(newConfig);
                 }
                 m_config = newConfig;
-                Log_Debug2_T("User approved");
+                Log_Debug(
+                    "Changing config to: " << newConfig << ", impact: "
+                        << Mdn2dConfigImpactToName(impact)
+                );
+                Log_Debug2_T("");
                 return;
             } else {
                 // User cancelled
-                Log_Debug2_T("User cancelled");
+                Log_Debug(
+                    "User cancelled changing config to: " << newConfig << ", impact: "
+                        << Mdn2dConfigImpactToName(impact)
+                );
+                Log_Debug2_T("");
                 return;
             }
-            break;
         }
         case Mdn2dConfigImpact::PossibleDigitLoss:
         case Mdn2dConfigImpact::PossiblePolymorphism:
@@ -284,11 +277,19 @@ void mdn::gui::Project::setConfig(Mdn2dConfig newConfig) {
                     mdnAndSel.first.setConfig(newConfig);
                 }
                 m_config = newConfig;
-                Log_Debug2_T("User confirmed");
+                Log_Debug(
+                    "Changing config to: " << newConfig << ", impact: "
+                        << Mdn2dConfigImpactToName(impact)
+                );
+                Log_Debug2_T("");
                 return;
             } else {
                 // User cancelled
-                Log_Debug2_T("User changed mind");
+                Log_Debug(
+                    "User cancelled changing config to: " << newConfig << ", impact: "
+                        << Mdn2dConfigImpactToName(impact)
+                );
+                Log_Debug2_T("");
                 return;
             }
         }
@@ -299,7 +300,7 @@ void mdn::gui::Project::setConfig(Mdn2dConfig newConfig) {
             throw err;
         }
     }
-    Log_Debug2_T("");
+    Log_Debug2_T("Unexpected code branch");
 }
 
 
@@ -310,7 +311,8 @@ bool mdn::gui::Project::contains(std::string name, bool warnOnFailure) const {
         if (warnOnFailure) {
             Log_WarnQ("Mdn2d with name '" << name << "' does not exist.");
         }
-        Log_Debug3_T("Returning false");
+        Log_Debug2("Project does not contain '" << name << "'");
+        Log_Debug3_T("");
         return false;
     }
     const auto iter = m_data.find(index);
@@ -318,33 +320,33 @@ bool mdn::gui::Project::contains(std::string name, bool warnOnFailure) const {
         if (warnOnFailure) {
             Log_WarnQ("Mdn2d with name '" << name << "' exists in addressing but not in data.");
         }
-        Log_Debug3_T("Returning false");
+        Log_Debug2("Project does not contain '" << name << "', but it is in addressing.");
+        Log_Debug3_T("");
         return false;
     }
     const Mdn2d& num = (iter->second).first;
     if (num.name() != name) {
-        Log_Debug3_T("Returning false");
+        Log_Debug2("Project does not contain '" << name << "'");
+        Log_Debug3_T("");
         return false;
     }
-    Log_Debug3_T("Returning true");
+    Log_Debug2("Project contains '" << name << "'");
+    Log_Debug3_T("");
     return true;
 }
 
 
 bool mdn::gui::Project::contains(int i, bool warnOnFailure) const {
-    Log_Debug3_H("i=" << i << ",warnOnFailure=" << warnOnFailure);
     const auto iter = m_data.find(i);
     if (iter == m_data.cend()) {
         if (warnOnFailure) {
             Log_WarnQ("Invalid index (" << i << "), expecting 0 .. " << (m_data.size() - 1));
-            Log_Debug3_T("Returning false");
-            return false;
         }
 
-        Log_Debug3_T("Returning false");
+        Log_Debug2("Project does not contain tab " << i);
         return false;
     }
-    Log_Debug3_T("Returning true");
+    Log_Debug2("Project contains tab " << i);
     return true;
 }
 
@@ -352,10 +354,10 @@ bool mdn::gui::Project::contains(int i, bool warnOnFailure) const {
 int mdn::gui::Project::indexOfMdn(std::string name) const {
     const auto iter = m_addressingNameToIndex.find(name);
     if (iter == m_addressingNameToIndex.cend()) {
-        Log_Debug3("indexOf(" << name << ")= not found, returning -1");
+        Log_Debug2("Project does not contain '" << name << "'");
         return -1;
     }
-    Log_Debug3("indexOf(" << name << ")=" << iter->second);
+    Log_Debug2("Project does contain {'" << name << "', " << iter->second << "}");
     return iter->second;
 }
 
@@ -363,10 +365,10 @@ int mdn::gui::Project::indexOfMdn(std::string name) const {
 std::string mdn::gui::Project::nameOfMdn(int i) const {
     const auto iter = m_addressingIndexToName.find(i);
     if (iter == m_addressingIndexToName.cend()) {
-        Log_Debug3("nameOf(" << i << ")= not found, returning empty string");
+        Log_Debug2("Name of " << i << " (does not exist) returning empty string");
         return "";
     }
-    Log_Debug3("nameOf(" << i << ")=" << iter->second);
+    Log_Debug2("Name of " << i << " = '" << iter->second << "'");
     return iter->second;
 }
 
@@ -380,7 +382,7 @@ std::string mdn::gui::Project::renameMdn(int i, const std::string& newName) {
         "renaming tab {'" << currentName << "', " << i << "} to "
             << "{'" << actualName << "', " << i << "} (wanted '" << newName << "')"
     );
-    Log_Debug3_T("Framework said use '" << actualName << "' - returning this value");
+    Log_Debug3_T("");
     return actualName;
 }
 
@@ -444,7 +446,7 @@ std::vector<std::string> mdn::gui::Project::toc() const {
                 + " by another Mdn, possibly at tab " + std::to_string(indexOfMdn(strName));
         } else {
             nameSet.insert(strName);
-            Log_Debug2("Adding " << index << ":'" << strName << "'");
+            Log_Debug3("Found {'" << strName << "', " << index << "}");
             result[index] = strName;
         }
     }
@@ -510,28 +512,33 @@ mdn::gui::Selection* mdn::gui::Project::activeSelection() {
 
 
 void mdn::gui::Project::setActiveMdn(int i) {
-    Log_Debug2_H("index=" << i);
+    Log_Debug3_H("index=" << i);
     if (!contains(i, true)) {
-        Log_Debug2_T("not valid");
+        Log_Debug2("Failed to set activeMdn to " << i << ", does not exist");
+        Log_Debug3_T("");
         return;
     }
     auto iter = m_data.find(i);
     DBAssert(iter != m_data.end(), "Mdn is not at expected index, " << i);
     m_activeEntry = &iter->second;
-    Log_Debug2_T("success");
+    If_Log_Showing_Debug2(
+        Log_Debug2("Set active {'" << m_activeEntry->first.name() << "', " << i << "}");
+    );
+    Log_Debug3_T("");
 }
 
 
 void mdn::gui::Project::setActiveMdn(std::string name) {
-    Log_Debug2_H("name='" << name << "'");
+    Log_Debug3_H("name='" << name << "'");
     int i = indexOfMdn(name);
     if (i < 0) {
         Log_WarnQ("Failed to acquire index for Mdn2d '" << name << "'");
-        Log_Debug2_T("");
+        Log_Debug3_T("");
         return;
     }
+    Log_Debug2("Setting active: {'" << name << ", " << i << "}");
     setActiveMdn(i);
-    Log_Debug2_T("");
+    Log_Debug3_T("");
 }
 
 
@@ -539,55 +546,65 @@ const std::pair<mdn::Mdn2d, mdn::gui::Selection>* mdn::gui::Project::at(
     int i,
     bool warnOnFailure
 ) const {
-    Log_Debug3_H("i=" << i << ", warnOnFailure=" << warnOnFailure);
+    Log_Debug4_H("i=" << i << ", warnOnFailure=" << warnOnFailure);
     const auto iter = m_data.find(i);
     if (iter == m_data.cend()) {
         if (warnOnFailure) {
             Log_WarnQ("Invalid index (" << i << "), expecting 0 .. " << (m_data.size() - 1));
         }
-        Log_Debug3_T("returning nullptr");
+        Log_Debug3("tab " << i << " is (*nullptr*)");
+        Log_Debug4_T("");
         return nullptr;
     }
-    Log_Debug3_T("returning valid entry");
+    If_Log_Showing_Debug3(
+        Log_Debug3("Returning {'" << iter->second.first.name() << "', " << i << "}");
+    );
+    Log_Debug4_T("");
     return &(iter->second);
 }
 
 
 std::pair<mdn::Mdn2d, mdn::gui::Selection>* mdn::gui::Project::at(int i, bool warnOnFailure) {
-    Log_Debug3_H("i=" << i << ", warnOnFailure=" << warnOnFailure);
+    Log_Debug4_H("i=" << i << ", warnOnFailure=" << warnOnFailure);
     auto iter = m_data.find(i);
     if (iter == m_data.end()) {
         if (warnOnFailure) {
             Log_WarnQ("Invalid index (" << i << "), expecting 0 .. " << (m_data.size() - 1));
         }
-        Log_Debug3_T("returning nullptr");
+        Log_Debug3("tab " << i << " is (*nullptr*)");
+        Log_Debug4_T("");
         return nullptr;
     }
-    Log_Debug3_T("returning valid entry");
+    If_Log_Showing_Debug3(
+        Log_Debug3("Returning {'" << iter->second.first.name() << "', " << i << "}");
+    );
+    Log_Debug4_T("");
     return &(iter->second);
 }
 const std::pair<mdn::Mdn2d, mdn::gui::Selection>* mdn::gui::Project::at(
     std::string name,
     bool warnOnFailure
 ) const {
-    Log_Debug3_H("name=" << name << ", warnOnFailure=" << warnOnFailure);
+    Log_Debug4_H("name=" << name << ", warnOnFailure=" << warnOnFailure);
     const auto iter = m_addressingNameToIndex.find(name);
     if (iter == m_addressingNameToIndex.cend()) {
         if (warnOnFailure) {
             Log_WarnQ("Invalid name (" << name << ")");
         }
-        Log_Debug3_T("returning nullptr");
+        Log_Debug3("no tab '" << name << "' exists");
+        Log_Debug4_T("");
         return nullptr;
     }
     int index = iter->second;
-    Log_Debug3_T("returning valid entry");
+    Log_Debug3("Returning {'" << name << "', " << index << "}");
+    Log_Debug4_T("");
     return &(m_data.at(index));
 }
 std::pair<mdn::Mdn2d, mdn::gui::Selection>* mdn::gui::Project::at(
     std::string name,
     bool warnOnFailure
 ) {
-    Log_Debug3_H("name=" << name << ", warnOnFailure=" << warnOnFailure);
+    Log_Debug4_H("name=" << name << ", warnOnFailure=" << warnOnFailure);
     auto iter = m_addressingNameToIndex.find(name);
     if (iter == m_addressingNameToIndex.cend()) {
         if (warnOnFailure) {
@@ -595,17 +612,19 @@ std::pair<mdn::Mdn2d, mdn::gui::Selection>* mdn::gui::Project::at(
             Log_WarnQ("Invalid Mdn name (" << name << ")");
             QMessageBox::warning(m_parent, "at", oss.str().c_str());
         }
-        Log_Debug3_T("returning nullptr");
+        Log_Debug3("no tab '" << name << "' exists");
+        Log_Debug4_T("");
         return nullptr;
     }
     int index = iter->second;
-    Log_Debug3_T("returning valid entry");
+    Log_Debug3("Returning {'" << name << "', " << index << "}");
+    Log_Debug4_T("");
     return &(m_data[index]);
 }
 
 
 const mdn::gui::Selection* mdn::gui::Project::getSelection(int i, bool warnOnFailure) const {
-    Log_Debug3("");
+    Log_Debug3("" << i << ", warnOnFailure=" << warnOnFailure);
     return &at(i, warnOnFailure)->second;
 }
 mdn::gui::Selection* mdn::gui::Project::getSelection(int i, bool warnOnFailure) {
@@ -670,7 +689,8 @@ mdn::Mdn2d* mdn::gui::Project::lastMdn(bool warnOnFailure) {
 
 
 void mdn::gui::Project::insertMdn(Mdn2d& mdn, int index) {
-    Log_Debug2_H("inserting tab {'" << mdn.name() << "', " << index << "}");
+    Log_Debug2_H("");
+    Log_Debug("inserting tab {'" << mdn.name() << "', " << index << "}");
     Q_EMIT tabsAboutToChange();
 
     // For warning messages
@@ -688,11 +708,6 @@ void mdn::gui::Project::insertMdn(Mdn2d& mdn, int index) {
     if (index < 0) {
         index = maxNewIndex;
     }
-    Selection sel;
-    Log_Debug3("insert dispatch");
-    m_data.try_emplace(index, std::move(mdn), std::move(sel));
-    // m_data.insert({index, {mdn, sel}});
-    Log_Debug3("insert return");
     const std::string& origName = mdn.name();
     std::string newName;
     if (mdnNameExists(origName)) {
@@ -711,9 +726,13 @@ void mdn::gui::Project::insertMdn(Mdn2d& mdn, int index) {
 
     // Shift addressing over
     if (index < maxNewIndex) {
+        Log_Debug2("Shifting tabs to the right from " << index << " -->");
         shiftMdnTabsRight(index);
     }
-    Log_Debug4("Inserting {'" << newName << "'," << index << "} to indices");
+    Log_Debug2("Inserting {'" << newName << "'," << index << "} into data");
+    Selection sel;
+    m_data.try_emplace(index, std::move(mdn), std::move(sel));
+    Log_Debug2("Inserting {'" << newName << "'," << index << "} into indices");
     m_addressingNameToIndex.insert({newName, index});
     m_addressingIndexToName.insert({index, newName});
     Q_EMIT tabsChanged(index);
@@ -722,60 +741,55 @@ void mdn::gui::Project::insertMdn(Mdn2d& mdn, int index) {
 
 
 std::pair<int, std::string> mdn::gui::Project::duplicateMdn(int index) {
-    Log_Debug2_H("duplicating mdn at " << index);
+    Log_Debug2_H("index=" << index);
     Mdn2d* src = getMdn(index, true);
     if (!src) {
-        Log_Debug2_T("not a valid index");
+        Log_Debug("Cannot duplicate mdn at index " << index << ", not a valid index");
+        Log_Debug2_T("");
         return std::pair<int, std::string>(-1, "");
     }
+    Log_Debug("duplicating {'" << src->name() << "', " << index << "}");
     Mdn2d dup = Mdn2d::Duplicate(*src);
+    Log_Debug("inserting new mdn {'" << dup.name() << "', " << index+1 << "}");
     insertMdn(dup, index + 1);
     std::pair<int, std::string> result(index+1, dup.name());
-    If_Log_Showing_Debug3(
-        std::string strRes(mdn::Tools::pairToString<int, std::string>(result, ","));
-        Log_Debug3_T("Returning " << strRes);
-    );
-    If_Not_Log_Showing_Debug3(
-        Log_Debug2_T("Success");
-    );
+    Log_Debug2_T("Returning {'" << result.second << "', " << result.first << "}");
     return result;
 }
 
 
 std::pair<int, std::string> mdn::gui::Project::duplicateMdn(const std::string& name) {
     Log_Debug2_H("Duplicating '" << name << "'");
-    Mdn2d* src = getMdn(name, true);
-    if (!src) {
-        Log_Debug2_T("Not a valid name");
+    int index = indexOfMdn(name);
+    if (index < 0) {
+        Log_Debug("Cannot duplicate mdn '" << name << "', not a valid name");
+        Log_Debug2_T("");
         return std::pair<int, std::string>(-1, "");
     }
-    int index = indexOfMdn(name);
-    Mdn2d dup = Mdn2d::Duplicate(*src);
-    insertMdn(dup, index + 1);
-    std::pair<int, std::string> result(index+1, dup.name());
-    If_Log_Showing_Debug3(
-        std::string strRes(mdn::Tools::pairToString<int, std::string>(result, ","));
-        Log_Debug3_T("Returning " << strRes);
-    );
-    If_Not_Log_Showing_Debug3(
-        Log_Debug2_T("Success");
-    );
-    return result;
+    Log_Debug2_T("");
+    return duplicateMdn(index);
 }
 
 
 bool mdn::gui::Project::moveMdn(int fromIndex, int toIndex) {
-    Log_Debug2_H("from " << fromIndex << " to " << toIndex);
     if (fromIndex == toIndex) {
         // Nothing to do
-        Log_Debug2_T("Nothing to do, returning true");
+        Log_Debug("Moving mdn from and to same index, nothing to do");
         return true;
     }
+    Log_Debug2_H("from " << fromIndex << " to " << toIndex);
     if (!contains(fromIndex, true)) {
         Log_Debug2_T("Not a valid fromIndex, returning false");
         return false;
     }
+    std::string mdnName(nameOfMdn(fromIndex));
+    Log_Debug(
+        "Moving {'" << mdnName << "', " << fromIndex << "} to " << toIndex
+    );
+TODO
+////////////////////////////////////////////////////////////////////////////////////////////////////
     // Extract the number and erase the addressing metadata
+    Log_Debug2("Extracting {'" << mdnName << "', " << fromIndex << "}");
     auto node = m_data.extract(fromIndex);
     std::string name = node.mapped().first.name();
     node.key() = toIndex;
