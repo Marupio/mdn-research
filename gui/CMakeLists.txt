@@ -23,6 +23,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_executable(mdn_gui
     CellLineEdit.cpp CellLineEdit.hpp
     Clipboard.cpp Clipboard.hpp
+    LoggerConfigurator.hpp LoggerConfigurator.cpp
     main.cpp
     MainWindow.cpp MainWindow.hpp
     NumberDisplayWidget.cpp NumberDisplayWidget.hpp
@@ -42,9 +43,10 @@ include_directories("../library")
 # Console test app that exercises Project (no windows shown)
 add_executable(guiTest
     guiTest.cpp
-    Project.cpp Project.hpp                 # Project under test
-    Clipboard.cpp Clipboard.hpp             # used by Project
-    QtLoggingBridge.cpp QtLoggingBridge.hpp # for Qt->Logger message routing
+    LoggerConfigurator.hpp LoggerConfigurator.cpp
+    Project.cpp Project.hpp
+    Clipboard.cpp Clipboard.hpp
+    QtLoggingBridge.cpp QtLoggingBridge.hpp
 )
 
 target_link_libraries(guiTest PRIVATE ${QT_LIBS} mdn)

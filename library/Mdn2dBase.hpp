@@ -18,7 +18,6 @@
 namespace mdn {
 
 class Mdn2d;
-class Project;
 struct TextWriteOptions;
 
 // Digit layer of 2d multi dimensional numbers, establishes:
@@ -28,8 +27,6 @@ struct TextWriteOptions;
 class MDN_API Mdn2dBase {
 
     // *** Friends
-    friend class Project;
-
 
     // This guy handles input and output, mostly text-related
     friend class Mdn2dIO;

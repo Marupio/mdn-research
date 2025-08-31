@@ -2,12 +2,13 @@
 #include <QApplication>
 #include <QDebug>
 
-#include "../library/Logger.hpp"
-#include "QtLoggingBridge.hpp"      // mdn_installQtMessageHandler()
+#include "LoggerConfigurator.hpp"
 #include "Project.hpp"
+#include "QtLoggingBridge.hpp"
 
-#include "../library/Mdn2d.hpp"
 #include "../library/GlobalConfig.hpp"
+#include "../library/Mdn2d.hpp"
+#include "../library/Logger.hpp"
 
 using namespace mdn;
 using namespace mdn::gui;
@@ -29,8 +30,15 @@ int main(int argc, char** argv)
     mdn_installQtMessageHandler();  // forward Qt -> Logger
     QApplication app(argc, argv);
 
-    // Gentle default logging
-    Logger::instance().setLevel(LogLevel::Info);
+    QCoreApplication::setApplicationName("mdn_guiTest");
+    QCoreApplication::setApplicationVersion(QT_VERSION_STR);
+
+    // Parse CLI / optional JSON and configure logger (no hard-coded defaults here)
+    mdn::cli::LoggerConfigurator logCfg("MDN GUI headless Project smoke-test");
+    logCfg.addStandardOptions();
+    if (!logCfg.process(app)) {
+        return EXIT_FAILURE;
+    }
 
     // 1) Create a project with 3 starting tabs
     Project proj(nullptr, "guiTest-project", 3);  // parentless; no windows

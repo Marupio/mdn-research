@@ -382,6 +382,9 @@ std::string mdn::gui::Project::renameMdn(int i, const std::string& newName) {
         "renaming tab {'" << currentName << "', " << i << "} to "
             << "{'" << actualName << "', " << i << "} (wanted '" << newName << "')"
     );
+    m_addressingNameToIndex.erase(currentName);
+    m_addressingNameToIndex[actualName] = i;
+    m_addressingIndexToName[i] = actualName;
     Log_Debug3_T("");
     return actualName;
 }
