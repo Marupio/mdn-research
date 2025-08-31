@@ -432,10 +432,10 @@ void mdn::Mdn2d::subtractFraxis(const Coord& xy, float fraction, Fraxis fraxis) 
     auto lock = lockWriteable();
     If_Log_Showing_Debug2(
         Log_N_Debug2_H(
-            "at " << xy << ", subtract fraction " << fraction << ", fraxis: );
+            "at " << xy << ", subtract fraction " << fraction << ", fraxis: "
             << FraxisToName(fraxis)
         );
-    }
+    );
     locked_carryoverCleanup(locked_addFraxis(xy, -static_cast<double>(fraction), fraxis));
     internal_operationComplete();
     Log_N_Debug2_T("");
@@ -446,10 +446,10 @@ void mdn::Mdn2d::subtractFraxis(const Coord& xy, double fraction, Fraxis fraxis)
     auto lock = lockWriteable();
     If_Log_Showing_Debug2(
         Log_N_Debug2_H(
-            "at " << xy << ", subtract fraction " << fraction << ", fraxis: );
+            "at " << xy << ", subtract fraction " << fraction << ", fraxis: "
             << FraxisToName(fraxis)
         );
-    }
+    );
     locked_carryoverCleanup(locked_addFraxis(xy, -fraction, fraxis));
     internal_operationComplete();
     Log_N_Debug2_T("");

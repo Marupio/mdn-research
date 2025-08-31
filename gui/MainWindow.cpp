@@ -6,6 +6,7 @@
 #include <QList>
 #include <QMenuBar>
 #include <QResizeEvent>
+#include <QSignalBlocker>
 #include <QSplitter>
 #include <QTabBar>
 #include <QTabWidget>
@@ -92,14 +93,75 @@ void mdn::gui::MainWindow::onTabContextMenu(const QPoint& pos)
 
 void mdn::gui::MainWindow::onProjectTabsAboutToChange()
 {
-    Log_Debug2_H("onProjectTabsAboutToChange");
+    Log_Debug2_H("");
+
+    if (!m_tabWidget) {
+        Log_Debug2_T("");
+        return;
+    }
+
+    QSignalBlocker blockTabs(m_tabWidget);
+
+    if (centralWidget()) {
+        centralWidget()->setUpdatesEnabled(false);
+    }
+
+    const int n = m_tabWidget->count();
+    for (int i = 0; i < n; ++i) {
+        auto* view = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(i));
+        if (!view) {
+            continue;
+        }
+        view->cancelCellEdit();
+    }
+
     Log_Debug2_T("");
 }
 
 
 void mdn::gui::MainWindow::onProjectTabsChanged(int currentIndex)
 {
-    Log_Debug2_H("onProjectTabsChanged currentIndex=" << currentIndex);
+    Log_Debug2_H("currentIndex=" << currentIndex);
+
+    if (!m_tabWidget || !m_project) {
+        Log_Debug2_T("");
+        return;
+    }
+
+    QSignalBlocker blockTabs(m_tabWidget);
+
+    const int n = m_tabWidget->count();
+    for (int i = n - 1; i >= 0; --i) {
+        QWidget* w = m_tabWidget->widget(i);
+        m_tabWidget->removeTab(i);
+        delete w;
+    }
+
+    createTabs();
+
+    int idx = currentIndex;
+    const int count = m_tabWidget->count();
+    if (idx < 0) {
+        idx = 0;
+    } else {
+        if (idx >= count) {
+            idx = count - 1;
+        }
+    }
+    if (count > 0) {
+        m_tabWidget->setCurrentIndex(idx);
+    }
+
+    if (centralWidget()) {
+        centralWidget()->setUpdatesEnabled(true);
+    }
+
+    if (m_ops) {
+        m_ops->refreshTabNames();
+    }
+
+    focusActiveGrid();
+
     Log_Debug2_T("");
 }
 

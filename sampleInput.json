@@ -1,0 +1,11 @@
+{
+    "Logger": {
+        "Level": "Debug4",
+        "Output": "C:/Users/daveg/Docu~1/Projects/debug",
+        "Filter": {
+            "COMMENT": "Only one of 'Exclude' or 'Include' is allowed",
+            "Exclude": ["getValue", "setValue", "Mdn2dBase"],
+            "Include": ["MainWindow", "NumberDisplayWidget"]
+        }
+    }
+}

@@ -23,6 +23,8 @@ enum class LogLevel {
     Error
 };
 
+enum class FilterType {Disable, Exclude, Include};
+
 class MDN_API Logger {
 private:
     // Rubbish parsing function for debugging
@@ -51,6 +53,29 @@ public:
 
     void setEnabled(bool enable) { m_enabled = enable; }
     void setLevel(LogLevel level) { m_minLevel = level; }
+
+    // Filtering API
+    inline const FilterType filter() { return m_filter; }
+    inline const std::vector<std::string>& filterList() const { return m_filterList; }
+    inline std::vector<std::string>& filterList() { return m_filterList; }
+
+    inline void disableFilter() { m_filter = FilterType::Disable; }
+    inline void setExcludes(const std::vector<std::string>& val) {
+        m_filterList = val;
+        setFilterToExclude();
+    }
+    inline void setIncludes(const std::vector<std::string>& val) {
+        m_filterList = val;
+        setFilterToInclude();
+    }
+
+    // Other filter functions - set filter type
+    inline void setFilterToExclude() { m_filter = FilterType::Exclude; }
+    inline void setFilterToInclude() { m_filter = FilterType::Include; }
+    inline void setFilter(FilterType filter) { m_filter = filter; }
+
+    // Operate the filter (used by macros)
+    bool filterPass(const std::string& fileRef);
 
     // Echo output messages to log file 'debugFile', leave blank for default log file location
     void setOutputToFileLegacy(std::filesystem::path debugFile="");
@@ -187,6 +212,9 @@ private:
     int m_indent;
     std::string m_indentStr;
 
+    FilterType m_filter = FilterType::Disable;
+    std::vector<std::string> m_filterList;
+
     // Indentation checking (hints about functions that do not match incrIndent with decrIndent)
     bool m_indentChecking = false;
     mutable std::unordered_map<std::string, int> m_indentenators;
@@ -262,8 +290,11 @@ private:
             FILE_REF \
         ); \
         mdn::Logger& loginst = mdn::Logger::instance(); \
-        oss << loginst.indent() << fileRef << message; \
-        loginst.level(oss.str());
+        if (loginst.filterPass(FILE_REF)) { \
+            oss << loginst.indent() << fileRef << message; \
+            loginst.level(oss.str()); \
+        }
+
 
     #define InternalLoggerEchoToQinfo \
         QMessageBox::information(nullptr, "Logger", oss.str().c_str()); }

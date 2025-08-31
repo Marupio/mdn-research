@@ -15,6 +15,31 @@ std::ofstream* mdn::Logger::m_ossPtr;
 std::filesystem::path mdn::Logger::m_debugLog;
 
 
+bool mdn::Logger::filterPass(const std::string& fileRef) {
+    switch (m_filter) {
+        case FilterType::Exclude: {
+            for (const std::string& filterWord : m_filterList) {
+                if (fileRef.find(filterWord) != std::string::npos) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        case FilterType::Include: {
+            for (const std::string& filterWord : m_filterList) {
+                if (fileRef.find(filterWord) != std::string::npos) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        default: {
+            return true;
+        }
+    }
+}
+
+
 void mdn::Logger::setOutputToFile(std::filesystem::path debugFile) {
     namespace fs = std::filesystem;
 

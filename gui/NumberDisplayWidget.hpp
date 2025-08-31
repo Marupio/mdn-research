@@ -78,6 +78,10 @@ public:
         return m_rows;
     }
 
+    // Cell editting
+    void cancelCellEdit();
+
+
 signals:
     void focusDownRequested();
 
@@ -146,7 +150,6 @@ private:
     void beginCellEdit(const QString& initialText);
     void positionCellEditor();
     void commitCellEdit(SubmitMove how);
-    void cancelCellEdit();
 
     // Helpers
     bool isGridTypingKey(const QKeyEvent* ev) const;

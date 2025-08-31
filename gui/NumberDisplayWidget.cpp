@@ -75,6 +75,19 @@ void mdn::gui::NumberDisplayWidget::setFontPointSize(int pt) {
 }
 
 
+void mdn::gui::NumberDisplayWidget::cancelCellEdit()
+{
+    Log_Debug3_H("");
+    if (m_cellEditor) {
+        m_cellEditor->hide();
+    }
+    m_editing = false;
+    update();
+    setFocus(Qt::OtherFocusReason);
+    Log_Debug3_T("");
+}
+
+
 void mdn::gui::NumberDisplayWidget::onCursorChanged(mdn::Coord c) {
     m_cursorX = c.x(); m_cursorY = c.y();
     ensureCursorVisible();
@@ -842,19 +855,6 @@ void mdn::gui::NumberDisplayWidget::commitCellEdit(SubmitMove how)
     moveCursorAfterSubmit(how);
     setFocus(Qt::OtherFocusReason);
     Log_Debug2_T("");
-}
-
-
-void mdn::gui::NumberDisplayWidget::cancelCellEdit()
-{
-    Log_Debug3_H("");
-    if (m_cellEditor) {
-        m_cellEditor->hide();
-    }
-    m_editing = false;
-    update();
-    setFocus(Qt::OtherFocusReason);
-    Log_Debug3_T("");
 }
 
 
