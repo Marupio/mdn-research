@@ -4,8 +4,6 @@
 #include <string>
 #include <cassert>
 
-// GUI Headers
-#include "../gui/Project.hpp"
 
 // MDN headers
 #include "Logger.hpp"

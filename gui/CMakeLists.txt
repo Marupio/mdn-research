@@ -39,7 +39,16 @@ target_link_libraries(mdn_gui PRIVATE ${QT_LIBS} mdn)
 
 include_directories("../library")
 
-# target_compile_definitions(mdn_gui PRIVATE mdn_EXPORTS)
+# Console test app that exercises Project (no windows shown)
+add_executable(guiTest
+    guiTest.cpp
+    Project.cpp Project.hpp                 # Project under test
+    Clipboard.cpp Clipboard.hpp             # used by Project
+    QtLoggingBridge.cpp QtLoggingBridge.hpp # for Qt->Logger message routing
+)
+
+target_link_libraries(guiTest PRIVATE ${QT_LIBS} mdn)
+target_include_directories(guiTest PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}" "../library")
 
 if(IS_VSCODE_BUILD_BOOL)
     message(STATUS "Adding command to copy Qt DLLs and library for VS Code build")
