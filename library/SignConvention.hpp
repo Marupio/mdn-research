@@ -1,5 +1,8 @@
 #pragma once
 
+// NAMED_ENUM
+// Text flag to indicate this is one of the classes that needs to be replaced with NamedEnum
+
 #include <vector>
 #include <string>
 

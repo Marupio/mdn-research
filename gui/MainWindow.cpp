@@ -513,6 +513,7 @@ void mdn::gui::MainWindow::createTabs() {
     std::vector<std::string> names(m_project->toc());
     for (int index = 0; index < names.size(); ++index) {
         Mdn2d* src = m_project->getMdn(index, true);
+        Log_Debug4("Creating tab {'" << src->name() << "', " << index << "}");
         Selection* sel = m_project->getSelection(index);
         QString qname = MdnQtInterface::toQString(names[index]);
         auto* ndw = new NumberDisplayWidget;

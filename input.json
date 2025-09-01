@@ -1,9 +1,9 @@
 {
     "Logger": {
-        "Level": "Info",
+        "Level": "Debug4",
         "Output": "C:/Users/daveg/OneDrive/Documents/Projects/MDN/mdn-research/output",
         "Filter": {
-            "Exclude": ["getValue", "setValue", "Mdn2dBase"]
+            "Exclude": ["getValue", "setValue"]
         }
     }
 }

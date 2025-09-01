@@ -7,22 +7,19 @@
 #include "QtLoggingBridge.hpp"
 
 #include "../library/GlobalConfig.hpp"
-#include "../library/Mdn2d.hpp"
 #include "../library/Logger.hpp"
+#include "../library/Mdn2d.hpp"
+#include "../library/Tools.hpp"
 
 using namespace mdn;
 using namespace mdn::gui;
 
 static void printToc(const Project& p, const char* label)
 {
-    std::ostringstream oss;
-    oss << "[" << label << "] tabs (" << p.size() << "): ";
-    const auto names = p.toc();
-    for (size_t i = 0; i < names.size(); ++i) {
-        if (i) oss << ", ";
-        oss << i << ":'" << names[i] << "'";
-    }
-    Log_Info(oss.str());
+    Log_Info("toc dispatch: " << label);
+    std::vector<std::string> names = p.toc();
+    std::string tocStr = mdn::Tools::vectorToString<std::string>(names, ", ", false);
+    Log_Info("toc result: " << tocStr);
 }
 
 int main(int argc, char** argv)
@@ -85,6 +82,12 @@ int main(int argc, char** argv)
         mdnA.setValue(COORD_ORIGIN, 7);
         Log_Info("Set 'A'(0,0)=7; now value=" << (int)mdnA.getValue(COORD_ORIGIN));
     }
+
+    // 8) Deletion test
+    Log_Info("Attempting to delete 'A'");
+    proj.deleteMdn("A");
+    printToc(proj, "After deleting 'A'");
+    Log_Info("contains('A')? " << (proj.contains(std::string("A")) ? "yes" : "no"));
 
     // No need for an event loop; we’re headless here.
     return 0;

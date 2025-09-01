@@ -248,9 +248,9 @@ private:
 
 #define Internal_AssertStart(expression, messageIfFailed) \
     if (!(expression)) { \
-        std::ostringstream oss; \
-        oss << InternalLoggerFileRef << messageIfFailed << std::endl; \
-        mdn::FailedAssertion err = mdn::FailedAssertion(oss.str().c_str()); \
+        std::ostringstream __mdn_log_oss; \
+        __mdn_log_oss << InternalLoggerFileRef << messageIfFailed << std::endl; \
+        mdn::FailedAssertion err = mdn::FailedAssertion(__mdn_log_oss.str().c_str()); \
         mdn::Logger& loginst = mdn::Logger::instance(); \
         loginst.error(err.what());
 
@@ -285,23 +285,23 @@ private:
 
     // Internal use - this macro brings together the final logging code
     #define InternalLoggerAssembleFunction(FILE_REF, message, level) { \
-        std::ostringstream oss; \
+        std::ostringstream __mdn_log_oss; \
         std::string fileRef( \
             FILE_REF \
         ); \
         mdn::Logger& loginst = mdn::Logger::instance(); \
         if (loginst.filterPass(FILE_REF)) { \
-            oss << loginst.indent() << fileRef << message; \
-            loginst.level(oss.str()); \
+            __mdn_log_oss << loginst.indent() << fileRef << message; \
+            loginst.level(__mdn_log_oss.str()); \
         }
 
 
     #define InternalLoggerEchoToQinfo \
-        QMessageBox::information(nullptr, "Logger", oss.str().c_str()); }
+        QMessageBox::information(nullptr, "Logger", __mdn_log_oss.str().c_str()); }
     #define InternalLoggerEchoToQwarn \
-        QMessageBox::warning(nullptr, "Logger", oss.str().c_str()); }
+        QMessageBox::warning(nullptr, "Logger", __mdn_log_oss.str().c_str()); }
     #define InternalLoggerEchoToQcrit \
-        QMessageBox::critical(nullptr, "Logger", oss.str().c_str()); }
+        QMessageBox::critical(nullptr, "Logger", __mdn_log_oss.str().c_str()); }
 
     // Internal use - As above, but with indentation:
     //      [        |Mdn2dBase.cpp:598,setValue]
@@ -383,9 +383,9 @@ private:
     #define InternalLoggerHeaderWrapper(LOGGER_MACRO, message, level) { \
         std::string msgStr; \
         { \
-            std::ostringstream oss; \
-            oss << message; \
-            msgStr = oss.str(); \
+            std::ostringstream __mdn_log_oss; \
+            __mdn_log_oss << message; \
+            msgStr = __mdn_log_oss.str(); \
         } \
         if (msgStr.empty()) { \
             mdn::Logger::instance().increaseIndent(InternalIdentedLoggerFileRef); \

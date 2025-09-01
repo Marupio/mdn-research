@@ -51,7 +51,7 @@ protected:
     std::unordered_map<int, std::string> m_addressingIndexToName;
 
     // Current active tab data
-    std::pair<Mdn2d, Selection>* m_activeEntry;
+    mutable int m_activeIndex;
 
 
     // *** Protected member functions

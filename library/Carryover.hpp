@@ -1,5 +1,8 @@
 #pragma once
 
+// NAMED_ENUM
+// Text flag to indicate this is one of the classes that needs to be replaced with NamedEnum
+
 // Carryovers
 //  Some carryovers are required, such as when a digit magnitude exceeds its base.  Other times a
 //  carryover is optional - some MDNs have multiple valid states.  Switching between these states is

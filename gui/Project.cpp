@@ -23,7 +23,7 @@ int mdn::gui::Project::m_untitledNumber = 0;
 void mdn::gui::Project::shiftMdnTabsRight(int start, int end, int shift) {
     Log_Debug3_H(
         "Shifting right, all tabs from " << start
-            << "to " << end << " shift rightwards by " << shift
+            << " to " << end << " shift rightwards by " << shift
     );
     int lastI = m_data.size();
     if (end > lastI || end < 0) {
@@ -36,7 +36,7 @@ void mdn::gui::Project::shiftMdnTabsRight(int start, int end, int shift) {
     }
     Log_Debug3(
         "Sterilized inputs, shifting right, all tabs from " << start
-            << "to " << end << " shift rightwards by " << shift
+            << " to " << end << " shift rightwards by " << shift
     );
     if (start > lastI) {
         // Already at the end
@@ -51,6 +51,11 @@ void mdn::gui::Project::shiftMdnTabsRight(int start, int end, int shift) {
         throw err;
     }
     for (int tabI = end; tabI >= start; --tabI) {
+        auto itIN = m_addressingIndexToName.find(tabI);
+        if (itIN == m_addressingIndexToName.end()) {
+            Log_Debug2("Could not move tab {???, " << tabI <<"}, does not exist.  Skipping.");
+            continue;
+        }
         std::string curName = m_addressingIndexToName[tabI];
         int newIndex = tabI + shift;
         m_addressingIndexToName.erase(tabI);
@@ -103,6 +108,11 @@ void mdn::gui::Project::shiftMdnTabsLeft(int start, int end, int shift) {
         throw err;
     }
     for (int tabI = start; tabI <= end; ++tabI) {
+        auto itIN = m_addressingIndexToName.find(tabI);
+        if (itIN == m_addressingIndexToName.end()) {
+            Log_Debug2("Could not move tab {???, " << tabI <<"}, does not exist.  Skipping.");
+            continue;
+        }
         std::string curName = m_addressingIndexToName[tabI];
         int newIndex = tabI - shift;
         m_addressingIndexToName.erase(tabI);
@@ -495,22 +505,45 @@ std::vector<std::string> mdn::gui::Project::toc() const {
 
 
 const mdn::Mdn2d* mdn::gui::Project::activeMdn() const {
-    Log_Debug3("");
-    return &(m_activeEntry->first);
+    Log_Debug3_H("");
+    if (!contains(m_activeIndex)) {
+        Log_Debug3_T("Not a valid index");
+        return nullptr;
+    }
+    Log_Debug3_T("");
+    return &(m_data.at(m_activeIndex).first);
 }
 mdn::Mdn2d* mdn::gui::Project::activeMdn() {
-    Log_Debug3("");
-    return &(m_activeEntry->first);
+    Log_Debug3_H("");
+    if (!contains(m_activeIndex)) {
+        Log_Debug3_T("Not a valid index");
+        return nullptr;
+    }
+    Log_Debug3_T("");
+    return &(m_data[m_activeIndex].first);
 }
 
 
 const mdn::gui::Selection* mdn::gui::Project::activeSelection() const {
-    Log_Debug3("");
-    return &(m_activeEntry->second);
+    Log_Debug3_H("");
+    if (!contains(m_activeIndex)) {
+        Log_Debug3_T("Not a valid index");
+        return nullptr;
+    }
+    Log_Debug3_T("");
+    return &(m_data.at(m_activeIndex).second);
 }
 mdn::gui::Selection* mdn::gui::Project::activeSelection() {
-    Log_Debug3("");
-    return &(m_activeEntry->second);
+    Log_Debug3_H("Here, checking for " << m_activeIndex);
+    Log_Info("Checking if it contains " << m_activeIndex);
+    bool containsIt = contains(m_activeIndex);
+    Log_Info("The repsonse was: " << containsIt);
+    if (!contains(m_activeIndex)) {
+        Log_Debug3_T("Not a valid index");
+        return nullptr;
+    }
+    Log_Debug3_T("");
+    return &(m_data[m_activeIndex].second);
 }
 
 
@@ -521,11 +554,11 @@ void mdn::gui::Project::setActiveMdn(int i) {
         Log_Debug3_T("");
         return;
     }
-    auto iter = m_data.find(i);
-    DBAssert(iter != m_data.end(), "Mdn is not at expected index, " << i);
-    m_activeEntry = &iter->second;
+    m_activeIndex = i;
     If_Log_Showing_Debug2(
-        Log_Debug2("Set active {'" << m_activeEntry->first.name() << "', " << i << "}");
+        auto iter = m_data.find(i);
+        DBAssert(iter != m_data.end(), "Mdn is not at expected index, " << i);
+        Log_Debug2("Set active {'" << iter->second.first.name() << "', " << i << "}");
     );
     Log_Debug3_T("");
 }
@@ -581,7 +614,9 @@ std::pair<mdn::Mdn2d, mdn::gui::Selection>* mdn::gui::Project::at(int i, bool wa
     If_Log_Showing_Debug3(
         Log_Debug3("Returning {'" << iter->second.first.name() << "', " << i << "}");
     );
-    Log_Debug4_T("");
+    std::ostringstream oss;
+    debugShowAllTabs(oss);
+    Log_Debug4_T(oss.str());
     return &(iter->second);
 }
 const std::pair<mdn::Mdn2d, mdn::gui::Selection>* mdn::gui::Project::at(

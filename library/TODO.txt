@@ -4,6 +4,18 @@ The library code is now basically frozen, apart from debugging.
 Here is a list of tasks that I'd like to eventually complete for the library.
 
 * Propagate NamedEnum
+    Logger::LogLevel, Logger::FilterType
+    Coord::CardinalDirection
+    Rect::FrontBack, Rect::RelativePositiev
+    TextOptions::AxesOutput, TextOptions::CommaTabSpace
+    library/Carryover.hpp
+    library/Fraxis.hpp
+    library/Mdn2dConfigImpact.hpp
+    library/NamedEnum.hpp
+    library/NamedEnumExample.hpp
+    library/PrecisionStatus.hpp
+    library/SignConvention.hpp
+
 * Propogate ErrorPolicy
 * Propogate InputHandling
 * Propogate new Rect iterabilitiness
@@ -24,6 +36,10 @@ Why not track that here also
 
 
 FUNCTIONALITY
+
+When inputing a value at the cursor, if it has carry-overs:
+    * the carryovers do operation+ on the existing values
+    * the cursor location clears and adds the digit
 
 Within-selection cursor movement:
     * tab + shift tab (right and left) wrapping movements within the selection rectangle

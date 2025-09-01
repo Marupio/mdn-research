@@ -13,7 +13,6 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
-
 #include "CommandWidget.hpp"
 #include "OpsController.hpp"
 #include "Project.hpp"
@@ -52,7 +51,6 @@ private slots:
     void slotMoveTabRight();
     void slotMoveTabLeft();
     void slotDebugShowAllTabs();
-
 
 protected:
     bool eventFilter(QObject* watched, QEvent* event) override;

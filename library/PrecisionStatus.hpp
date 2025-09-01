@@ -1,5 +1,8 @@
 #pragma once
 
+// NAMED_ENUM
+// Text flag to indicate this is one of the classes that needs to be replaced with NamedEnum
+
 // Precision status
 //  Is this coordinate within the precision window; if not is it above or below?
 
