@@ -216,7 +216,9 @@ public:
 
         // Inserts a new number at the 'end', i.e. the last index
         inline void appendMdn(Mdn2d&& mdn) {
+            Log_Debug2_H(mdn.name());
             insertMdn(std::move(mdn), -1);
+            Log_Debug2_T("");
         }
 
         // Insert a new number at the given index, index == -1 means 'at the end'
@@ -268,9 +270,18 @@ public:
 
         // Set page up/down and page left/right distances (in digits)
         inline void setPageStep(int dxCols, int dyRows) {
-            if (auto sel = activeSelection()) {
+            Log_Info("");
+            std::ostringstream oss;
+            debugShowAllTabs(oss);
+            Log_Info(oss.str());
+            Selection* sel = activeSelection();
+            Log_Info("sel = " << sel);
+            if (sel) {
+                Log_Info("");
                 sel->setPageStep(dxCols, dyRows);
+                Log_Info("");
             }
+            Log_Info("");
         }
 
         // Access current selection

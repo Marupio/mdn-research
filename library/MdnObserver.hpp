@@ -19,6 +19,9 @@ protected:
 
 public:
 
+    // Construct null or from reference
+    MdnObserver(Mdn2d* ref=nullptr): m_ref(ref) {}
+
     // Return instance of this observer
     int instance() const {
         return m_instance;

@@ -26,16 +26,33 @@ void mdn::gui::NumberDisplayWidget::setProject(Project* project) {
 
 
 void mdn::gui::NumberDisplayWidget::setModel(Mdn2d* model, Selection* sel) {
+    Log_Info("");
+    {std::ostringstream oss;
+    m_project->debugShowAllTabs(oss);
+    Log_Info(oss.str());}
     m_model = model;
+    Log_Info("");
     m_selection = sel;
+    Log_Info("");
+    {std::ostringstream oss;
+    m_project->debugShowAllTabs(oss);
+    Log_Info(oss.str());}
     if (m_selection) {
+        Log_Info("");
         m_cachedSel = m_selection->rect();
+        Log_Info("");
         m_cursorX = m_selection->cursor1().x();
+        Log_Info("");
         m_cursorY = m_selection->cursor1().y();
+        Log_Info("");
     }
+    Log_Info("");
     recalcGridGeometry();
+    Log_Info("");
     centreViewOnOrigin();
+    Log_Info("");
     update();
+    Log_Info("");
 }
 
 
@@ -561,17 +578,30 @@ void mdn::gui::NumberDisplayWidget::resizeEvent(QResizeEvent* e) {
 
 
 void mdn::gui::NumberDisplayWidget::recalcGridGeometry() {
+    Log_Info("");
     QFontMetrics fm(m_theme.font);
+    Log_Info("");
     const int cw = fm.horizontalAdvance(QLatin1Char('0')) + 2;
+    Log_Info("");
     const int ch = fm.height() + 2;
+    Log_Info("");
     m_cellSize = std::max(cw, ch);
+    Log_Info("");
 
     m_cols = std::max(1, width() / m_cellSize) + 1;
+    Log_Info("");
     m_rows = std::max(1, height() / m_cellSize) + 1;
+    Log_Info("");
 
     const int pageCols = std::max(1, (m_cols - 1) / 3);
+    Log_Info("");
     const int pageRows = std::max(1, (m_rows - 1) / 3);
+    Log_Info("");
+    {std::ostringstream oss;
+    m_project->debugShowAllTabs(oss);
+    Log_Info(oss.str());}
     m_project->setPageStep(pageCols, pageRows);
+    Log_Info("");
 }
 
 

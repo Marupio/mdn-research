@@ -30,6 +30,7 @@ class Selection : public MdnObserver {
 
 public:
 
+    Selection(Mdn2d* ref=nullptr): MdnObserver(ref) {}
 
     // Accessors
     const Rect& rect() const { return m_rect; }

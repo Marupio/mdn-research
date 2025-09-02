@@ -525,6 +525,7 @@ mdn::Mdn2d* mdn::gui::Project::activeMdn() {
 
 
 const mdn::gui::Selection* mdn::gui::Project::activeSelection() const {
+    Log_Info("");
     Log_Debug3_H("");
     if (!contains(m_activeIndex)) {
         Log_Debug3_T("Not a valid index");
@@ -534,6 +535,11 @@ const mdn::gui::Selection* mdn::gui::Project::activeSelection() const {
     return &(m_data.at(m_activeIndex).second);
 }
 mdn::gui::Selection* mdn::gui::Project::activeSelection() {
+    Log_Info("");
+    std::ostringstream oss;
+    debugShowAllTabs(oss);
+    Log_Info(oss.str());
+    Log_Info("m_activeIndex = " << m_activeIndex);
     Log_Debug3_H("Here, checking for " << m_activeIndex);
     Log_Info("Checking if it contains " << m_activeIndex);
     bool containsIt = contains(m_activeIndex);
@@ -621,9 +627,11 @@ std::pair<mdn::Mdn2d, mdn::gui::Selection>* mdn::gui::Project::at(int i, bool wa
     Mdn2d& isf = iterSecond.first;
     Log_Info("isf name = " << isf.name());
     Log_Info("isf origin value = " << static_cast<int>(isf.getValue(COORD_ORIGIN)));
-    // Selection& iss = iterSecond.second;
-    // Log_Info("iss.rect = " << iss.rect());
-    // Log_Info("iss.mdn = " << iss.get()->name());
+    Selection& iss = iterSecond.second;
+    Log_Info("iss.rect = " << iss.rect());
+    Log_Info("iss.mdn = " << iss.get()->name());
+    std::pair<Mdn2d, Selection>* iterSecondPtr = &iterSecond;
+    Log_Info("iter->second = [" << iterSecondPtr << "]");
     Log_Debug4_T(oss.str());
     return &(iter->second);
 }
@@ -778,6 +786,8 @@ void mdn::gui::Project::insertMdn(Mdn2d&& mdn, int index) {
     Log_Debug2("Inserting {'" << newName << "'," << index << "} into data");
     Selection sel;
     m_data.try_emplace(index, std::move(mdn), std::move(sel));
+    std::pair<Mdn2d, Selection>& entry = m_data[index];
+    entry.second.set(&(entry.first));
     Log_Debug2("Inserting {'" << newName << "'," << index << "} into indices");
     m_addressingNameToIndex.insert({newName, index});
     m_addressingIndexToName.insert({index, newName});

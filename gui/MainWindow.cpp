@@ -675,16 +675,32 @@ void mdn::gui::MainWindow::duplicateTab(int index)
     std::string newName = newIdName.second;
 
     // 2) Create a view for it
+    {std::ostringstream oss;
+    m_project->debugShowAllTabs(oss);
+    Log_Info(oss.str());}
     std::pair<Mdn2d, Selection>* entry = m_project->at(newIndex);
+    Log_Info("got entry=" << entry);
+    {std::ostringstream oss;
+    m_project->debugShowAllTabs(oss);
+    Log_Info(oss.str());}
     auto* w = new NumberDisplayWidget;
-    w->setModel(&entry->first, &entry->second);
+    Log_Info("");
+    {std::ostringstream oss;
+    m_project->debugShowAllTabs(oss);
+    Log_Info(oss.str());} // Still okay!
+    w->setModel(&(entry->first), &(entry->second));
+    Log_Info("");
     w->setProject(m_project);
+    Log_Info("");
 
     // 3) Insert UI tab right after the source
     // int insertAt = index + 1;
     int newTab = m_tabWidget->insertTab(newIndex, w, QString::fromStdString(newName));
+    Log_Info("");
     m_tabWidget->setCurrentIndex(newTab);
+    Log_Info("");
     w->setFocus();
+    Log_Info("");
     if (m_ops) {
         m_ops->refreshTabNames();
     }
