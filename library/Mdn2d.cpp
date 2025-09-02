@@ -172,8 +172,9 @@ void mdn::Mdn2d::add(const Coord& xy, double realNum, Fraxis fraxis) {
 
 
 mdn::CoordSet mdn::Mdn2d::locked_add(const Coord& xy, double realNum, Fraxis fraxis) {
+    Log_N_Debug3_H("");
     If_Log_Showing_Debug3(
-        Log_N_Debug3_H("add " << realNum << ", fraxis: " << FraxisToName(fraxis));
+        Log_N_Debug3("add " << realNum << ", fraxis: " << FraxisToName(fraxis));
     );
     double fracPart, intPart;
     fracPart = modf(realNum, &intPart);
@@ -224,8 +225,9 @@ void mdn::Mdn2d::add(const Coord& xy, Digit value, Fraxis unused) {
 
 
 mdn::CoordSet mdn::Mdn2d::locked_add(const Coord& xy, Digit value) {
+    Log_N_Debug3_H("");
     If_Log_Showing_Debug3(
-        Log_N_Debug3_H("add " << static_cast<int>(value) << ", no fraxis");
+        Log_N_Debug3("add " << static_cast<int>(value) << ", no fraxis");
     );
     CoordSet changed = locked_add(xy, static_cast<int>(value));
     Log_N_Debug3_T("changed " << changed.size() << " digits");

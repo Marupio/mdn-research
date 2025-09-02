@@ -95,9 +95,9 @@ public:
         }
         if (m_indentChecking) {
             ++m_nMessages;
-            if (m_nMessages % m_indentCheckFrequency) {
+            if (!(m_nMessages % m_indentCheckFrequency)) {
                 std::string dbi(debug_indentenators());
-                std::cerr << dbi << std::endl;
+                std::cerr << ")" << m_nMessages << "," << m_indentCheckFrequency << "): " << std::endl;
                 if (m_ossPtr) {
                     (*m_ossPtr) << dbi << std::endl;
                 }
@@ -135,7 +135,7 @@ public:
 
     // Turn on indent checking
     inline void enableIndentChecking() {
-        m_indentCheckFrequency = 50;
+        m_indentCheckFrequency = 10;
         m_indentChecking = true;
     }
 
@@ -145,6 +145,10 @@ public:
         m_indentChecking = false;
     }
 
+    inline std::string breadCrumbs(std::string delimiter="->") {
+        return Tools::vectorToString(m_breadCrumbs, delimiter, false);
+    }
+
     // Return the current state of the indentenators as a string
     inline std::string debug_indentenators() const {
         return Tools::mapToString(m_indentenators, ' ');
@@ -152,9 +156,10 @@ public:
 
     // Increase the indent by two spaces
     void increaseIndent(std::string fref = "") {
+        std::string ref = cleanRef(fref);
+        m_breadCrumbs.push_back(ref);
         #ifdef MDN_DEBUG
             if (m_indentChecking) {
-                std::string ref = cleanRef(fref);
                 auto it = m_indentenators.find(ref);
                 if (it == m_indentenators.end()) {
                     m_indentenators[ref] = 1;
@@ -166,14 +171,13 @@ public:
                 }
             }
         #endif
-        if (m_indent < 20) {
-            m_indent += 2;
-            m_indentStr += "  ";
-        }
+        m_indent += 2;
+        m_indentStr += "  ";
     }
 
     // Reduce the indent by two spaces
     void decreaseIndent(std::string fref = "") {
+        m_breadCrumbs.pop_back();
         #ifdef MDN_DEBUG
             if (m_indentChecking) {
                 std::string ref = cleanRef(fref);
@@ -188,12 +192,10 @@ public:
                 }
             }
         #endif
-        if (m_indent < 20) {
-            m_indent -= 2;
-            m_indentStr.clear();
-            for(int i=0; i < m_indent; ++i) {
-                m_indentStr += "  ";
-            }
+        m_indent -= 2;
+        m_indentStr.clear();
+        for(int i=0; i < m_indent; ++i) {
+            m_indentStr += "  ";
         }
     }
 
@@ -219,6 +221,7 @@ private:
     bool m_indentChecking = false;
     mutable std::unordered_map<std::string, int> m_indentenators;
     int m_indentCheckFrequency = -1;
+    std::vector<std::string> m_breadCrumbs;
     long m_nMessages = 0;
 
     // Return the default path for the log file - not a member variable due to library linkage
@@ -395,6 +398,7 @@ private:
             mdn::Logger::instance().increaseIndent(InternalIdentedLoggerFileRef); \
             LOGGER_MACRO(msgStr, level); \
         } \
+        LOGGER_MACRO(mdn::Logger::instance().breadCrumbs(), level); \
     }
 
     // Standard log message:

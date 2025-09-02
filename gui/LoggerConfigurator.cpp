@@ -38,7 +38,8 @@ LoggerConfigurator::LoggerConfigurator(QString appDescription)
           QStringList{QStringLiteral("i"), QStringLiteral("input")},
           QStringLiteral("Path to JSON settings file."),
           QStringLiteral("path")),
-      m_appDescription(std::move(appDescription))
+      m_appDescription(std::move(appDescription)),
+      m_userLogFileChoice(0)
 {
     // Help + version always available
     m_parser.addHelpOption();
@@ -48,6 +49,7 @@ LoggerConfigurator::LoggerConfigurator(QString appDescription)
     }
 }
 
+
 void LoggerConfigurator::addStandardOptions() {
     m_parser.addOption(m_optLogLevel);
     m_parser.addOption(m_optLogFile);
@@ -56,9 +58,11 @@ void LoggerConfigurator::addStandardOptions() {
     m_parser.addOption(m_optJsonInput);
 }
 
+
 void LoggerConfigurator::addCustomOption(const QCommandLineOption& opt) {
     m_parser.addOption(opt);
 }
+
 
 bool LoggerConfigurator::process(QCoreApplication& app) {
     // Set defaults before reading CLI/JSON, matching current behaviour.
@@ -88,22 +92,20 @@ bool LoggerConfigurator::process(QCoreApplication& app) {
 // ---------------- private helpers ----------------
 
 void LoggerConfigurator::applyDefaults() {
-    mdn::Logger& L = mdn::Logger::instance();
-    L.setLevel(mdn::LogLevel::Info);
-
-    // Maintain your current default: write to the logger's default file unless --no-log-file
-    // or an explicit --log-file overrides it.
-    L.setOutputToFile(); // no path -> your logger's default behaviour
+    mdn::Logger& sirTalksAlot = mdn::Logger::instance();
+    sirTalksAlot.setLevel(mdn::LogLevel::Info);
+    // sirTalksAlot.setOutputToFile();
 }
 
+
 bool LoggerConfigurator::applyCliToLogger() {
-    mdn::Logger& L = mdn::Logger::instance();
+    mdn::Logger& sirTalksAlot = mdn::Logger::instance();
 
     // --log-level
     if (m_parser.isSet(m_optLogLevel)) {
         const auto levelStr = m_parser.value(m_optLogLevel);
         if (auto lvl = parseLogLevel(levelStr)) {
-            L.setLevel(*lvl);
+            sirTalksAlot.setLevel(*lvl);
         } else {
             qCritical().noquote()
                 << "Invalid log level:" << levelStr
@@ -116,21 +118,23 @@ bool LoggerConfigurator::applyCliToLogger() {
     if (m_parser.isSet(m_optNoLogFile)) {
         // Do nothing: the default setOutputToFile() above is intentionally overridden by "do nothing" here
         // so no file logging is enabled if caller uses --no-log-file.
-        // L.disableFileOutput(); // assuming your Logger has this; if not, remove and rely on "do nothing"
+        // sirTalksAlot.disableFileOutput(); // assuming your Logger has this; if not, remove and rely on "do nothing"
+        m_userLogFileChoice = -1;
     } else if (m_parser.isSet(m_optLogFile)) {
         const auto p = m_parser.value(m_optLogFile);
-        L.setOutputToFile(std::filesystem::path{p.toStdString()});
+        sirTalksAlot.setOutputToFile(std::filesystem::path{p.toStdString()});
     } else {
-        // Already set to default file in applyDefaults()
+        sirTalksAlot.setOutputToFile();
     }
 
     // --check-indents
     if (m_parser.isSet(m_optLogIndentation)) {
-        L.enableIndentChecking();
+        sirTalksAlot.enableIndentChecking();
     }
 
     return true;
 }
+
 
 bool LoggerConfigurator::applyJsonIfProvided() {
     if (!m_jsonPath.has_value()) return true;
@@ -147,6 +151,7 @@ bool LoggerConfigurator::applyJsonIfProvided() {
     return true;
 }
 
+
 std::optional<mdn::LogLevel> LoggerConfigurator::parseLogLevel(QString s) {
     s = s.trimmed().toLower();
     s.remove(' ');
@@ -161,9 +166,11 @@ std::optional<mdn::LogLevel> LoggerConfigurator::parseLogLevel(QString s) {
     return std::nullopt;
 }
 
+
 QString LoggerConfigurator::allowedLevelsList() {
     return QStringLiteral("Debug4 | Debug3 | Debug2 | Debug | Info | Warning | Error");
 }
+
 
 bool LoggerConfigurator::loadJsonObjectFromFile(const QString& path, QJsonObject& out) {
     QFile f(path);
@@ -186,6 +193,7 @@ bool LoggerConfigurator::loadJsonObjectFromFile(const QString& path, QJsonObject
     return true;
 }
 
+
 bool LoggerConfigurator::applyLoggerSettingsFromJson(const QJsonObject& root) {
     if (!root.contains("Logger")) {
         return false;
@@ -193,11 +201,11 @@ bool LoggerConfigurator::applyLoggerSettingsFromJson(const QJsonObject& root) {
 
     const QJsonObject logger = root.value("Logger").toObject();
 
-    mdn::Logger& L = mdn::Logger::instance();
+    mdn::Logger& sirTalksAlot = mdn::Logger::instance();
     if (logger.contains("Level")) {
         const QString levelStr = logger.value("Level").toString();
         if (auto lvl = parseLogLevel(levelStr)) {
-            L.setLevel(*lvl);
+            sirTalksAlot.setLevel(*lvl);
         } else {
             qCritical().noquote()
                 << "Invalid log level:" << levelStr
@@ -211,7 +219,7 @@ bool LoggerConfigurator::applyLoggerSettingsFromJson(const QJsonObject& root) {
         const QString outPath = logger.value("Output").toString();
         if (!outPath.isEmpty()) {
             const std::filesystem::path p(outPath.toStdString());
-            L.setOutputToFile(p);
+            sirTalksAlot.setOutputToFile(p);
             Log_Info("Logger.Output set to " << p.string());
         }
     }
@@ -254,11 +262,11 @@ bool LoggerConfigurator::applyLoggerSettingsFromJson(const QJsonObject& root) {
             Log_Info(oss.str());
             std::string filterStr = mdn::Tools::vectorToString(includes, ", ", false);
             Log_Info("Applying Logger filter includes: " << filterStr);
-            L.setIncludes(includes);
+            sirTalksAlot.setIncludes(includes);
         } else if (!excludes.empty()) {
             std::string filterStr = mdn::Tools::vectorToString(excludes, ", ", false);
             Log_Info("Applying Logger filter excludes: " << filterStr);
-            L.setExcludes(excludes);
+            sirTalksAlot.setExcludes(excludes);
         }
     }
 

@@ -57,6 +57,12 @@ private:
 
     std::optional<QString> m_jsonPath;
     QString m_appDescription;
+
+    // Did the user make a choice about the log file:
+    //  1   User specified a log file
+    //  0   User made no choice
+    // -1   User specified 'no log file'
+    int m_userLogFileChoice;
 };
 
 } // namespace mdn::cli

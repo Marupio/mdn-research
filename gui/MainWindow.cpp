@@ -26,7 +26,7 @@ mdn::gui::MainWindow::MainWindow(QWidget *parent)
     m_command = new CommandWidget(this);
     setupLayout();
     setWindowTitle("MDN Editor");
-    Log_Debug2_H("");
+    Log_Debug2_T("");
 }
 
 

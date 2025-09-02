@@ -44,8 +44,10 @@ void mdn::Logger::setOutputToFile(std::filesystem::path debugFile) {
     namespace fs = std::filesystem;
 
     if (m_ossPtr) {
-        Log_Warn("Attempting to open debug file '" << debugFile
-                 << "', but '" << m_debugLog << "' is already in use.");
+        Log_Warn(
+            "Switching to a new debug file: '" << debugFile
+                << "', closing existing log '" << m_debugLog << "'."
+        );
         m_ossPtr->close();
         delete m_ossPtr;
         m_ossPtr = nullptr;
