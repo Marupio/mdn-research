@@ -151,7 +151,7 @@ mdn::gui::Project::Project(MainWindow* parent, std::string name, int nStartMdn):
         std::string nextName = Mdn2d::static_generateNextName();
         Mdn2d newMdn = Mdn2d::NewInstance(m_config, nextName);
         Log_Debug2("Creating Mdn {'" << nextName << "', " << i << "}");
-        appendMdn(newMdn);
+        appendMdn(std::move(newMdn));
     }
     setActiveMdn(0);
     Log_Debug_T("");
@@ -616,6 +616,14 @@ std::pair<mdn::Mdn2d, mdn::gui::Selection>* mdn::gui::Project::at(int i, bool wa
     );
     std::ostringstream oss;
     debugShowAllTabs(oss);
+    Log_Info("iter->first = " << iter->first);
+    std::pair<Mdn2d, Selection>& iterSecond = iter->second;
+    Mdn2d& isf = iterSecond.first;
+    Log_Info("isf name = " << isf.name());
+    Log_Info("isf origin value = " << static_cast<int>(isf.getValue(COORD_ORIGIN)));
+    // Selection& iss = iterSecond.second;
+    // Log_Info("iss.rect = " << iss.rect());
+    // Log_Info("iss.mdn = " << iss.get()->name());
     Log_Debug4_T(oss.str());
     return &(iter->second);
 }
@@ -726,7 +734,7 @@ mdn::Mdn2d* mdn::gui::Project::lastMdn(bool warnOnFailure) {
 }
 
 
-void mdn::gui::Project::insertMdn(Mdn2d& mdn, int index) {
+void mdn::gui::Project::insertMdn(Mdn2d&& mdn, int index) {
     Log_Debug2_H("");
     Log_Debug("inserting tab {'" << mdn.name() << "', " << index << "}");
     Q_EMIT tabsAboutToChange();
@@ -787,10 +795,23 @@ std::pair<int, std::string> mdn::gui::Project::duplicateMdn(int index) {
         return std::pair<int, std::string>(-1, "");
     }
     Log_Debug("duplicating {'" << src->name() << "', " << index << "}");
-    Mdn2d dup = Mdn2d::Duplicate(*src);
-    Log_Debug("inserting new mdn {'" << dup.name() << "', " << index+1 << "}");
-    insertMdn(dup, index + 1);
-    std::pair<int, std::string> result(index+1, dup.name());
+    std::pair<int, std::string> result;
+    {
+        Mdn2d dup = Mdn2d::Duplicate(*src);
+        Log_Debug("inserting new mdn {'" << dup.name() << "', " << index+1 << "}");
+        insertMdn(std::move(dup), index + 1);
+        result = std::pair<int, std::string>(index+1, dup.name());
+    }
+    Mdn2d* check = getMdn(index + 1);
+    if (!check) {
+        Log_WarnQ("Failed to retrieve newly duplicated Mdn2d");
+    } else {
+        std::string checkName = check->name();
+        int originValue = check->getValue(COORD_ORIGIN);
+        Log_Info("Yay!  We got name=" << checkName << ", and originValue=" << originValue);
+        std::pair<Mdn2d, Selection>* checkAt = at(index+1, true);
+        Log_Info("YayYay! We made it here.");
+    }
     Log_Debug2_T("Returning {'" << result.second << "', " << result.first << "}");
     return result;
 }

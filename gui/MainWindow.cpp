@@ -246,7 +246,7 @@ void mdn::gui::MainWindow::onOpsPlan(const OpsController::Plan& p) {
         }
 
         int insertAt = p.indexA + 1;
-        m_project->insertMdn(ans, insertAt);
+        m_project->insertMdn(std::move(ans), insertAt);
 
         const auto& nameToIndex = m_project->data_addressingNameToIndex();
         auto it = nameToIndex.find(ans.name());

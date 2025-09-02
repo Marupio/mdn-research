@@ -215,8 +215,8 @@ public:
         Mdn2d* lastMdn(bool warnOnFailure=false);
 
         // Inserts a new number at the 'end', i.e. the last index
-        inline void appendMdn(Mdn2d& mdn) {
-            insertMdn(mdn, -1);
+        inline void appendMdn(Mdn2d&& mdn) {
+            insertMdn(std::move(mdn), -1);
         }
 
         // Insert a new number at the given index, index == -1 means 'at the end'
@@ -225,7 +225,7 @@ public:
         //          Recover: places number at the end
         //      * Warning: if number's name conflicts
         //          Recover: rename the new mdn, by convention
-        void insertMdn(Mdn2d& mdn, int index);
+        void insertMdn(Mdn2d&& mdn, int index);
 
         // Duplicate the Mdn2d at the given index or given name, returns the name of the new mdn.
         //  An empty string return indicates the operation failed

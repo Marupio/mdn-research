@@ -58,7 +58,7 @@ int main(int argc, char** argv)
         const std::string newName = "D";
         Mdn2d m(proj.config(), newName);
         const int insertAt = 1 + 1; // after "B"
-        proj.insertMdn(m, insertAt);
+        proj.insertMdn(std::move(m), insertAt);
         Log_Info("Inserted '" << newName << "' at " << insertAt);
     }
     printToc(proj, "after-insert");
