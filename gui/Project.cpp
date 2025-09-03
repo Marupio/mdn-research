@@ -422,7 +422,7 @@ std::vector<std::string> mdn::gui::Project::toc() const {
             fail = "More than one Mdn assigned to tab " + std::to_string(index);
             break;
         }
-        const Mdn2d& src = getMdn(index, false);
+        const Mdn2d& src = getMdn(index);
         std::string strName = src.name();
         {
             const auto iter = m_addressingIndexToName.find(index);
@@ -708,27 +708,26 @@ std::pair<int, std::string> mdn::gui::Project::duplicateMdn(int index) {
     Log_Debug("duplicating {'" << src.name() << "', " << index << "}");
     std::pair<int, std::string> result;
     {
-        Mdn2d dup = Mdn2d::Duplicate(*src);
+        Mdn2d dup = Mdn2d::Duplicate(src);
         Log_Debug("inserting new mdn {'" << dup.name() << "', " << index+1 << "}");
         insertMdn(std::move(dup), index + 1);
+        Mdn2d& insertedDup = getMdn(index + 1);
+
+        // TODO create operator= for Selections
+        Selection& sel = src.selection();
+        Selection& idSel = insertedDup.selection();
+        idSel.setRect(sel.rect());
+        idSel.setCursor0(sel.cursor0());
+        idSel.setCursor1(sel.cursor1());
         result = std::pair<int, std::string>(index+1, dup.name());
     }
-//////////////////////// HERE ////////////////////
     Mdn2d& check = getMdn(index + 1);
     {
-        std::string checkName = check->name();
-        int originValue = check->getValue(COORD_ORIGIN);
+        std::string checkName = check.name();
+        int originValue = check.getValue(COORD_ORIGIN);
         Log_Info("Yay!  We got name=" << checkName << ", and originValue=" << originValue);
-        std::pair<Mdn2d, Selection>* checkAt = at(index+1, true);
-        Log_Info("YayYay! We made it here.");
     }
     Log_Debug2_T("Returning {'" << result.second << "', " << result.first << "}");
-
-
-
-    // Selection& sel = newEntry.selection();
-
-
     return result;
 }
 
@@ -765,7 +764,7 @@ bool mdn::gui::Project::moveMdn(int fromIndex, int toIndex) {
     // Extract the number and erase the addressing metadata
     Log_Debug2("Extracting {'" << mdnName << "', " << fromIndex << "}");
     auto node = m_data.extract(fromIndex);
-    std::string name = node.mapped().first.name();
+    std::string name = node.mapped().name();
     node.key() = toIndex;
     m_addressingIndexToName.erase(fromIndex);
     m_addressingNameToIndex.erase(name);
@@ -850,23 +849,18 @@ bool mdn::gui::Project::deleteMdn(const std::string& name) {
 
 void mdn::gui::Project::copySelection() const {
     Log_Debug2_H("");
-    const Selection* sel = selection();
-    if (!sel) {
-        Log_WarnQ("Failed to acquire selection");
-        Log_Debug2_T("");
-        return;
-    }
-    const Mdn2d* src = sel->get();
-    if (!src || !sel->rect().isValid()) {
+    const Selection& sel = activeSelection();
+    const Mdn2d& src = sel.ref();
+    if (!sel.rect().isValid()) {
         Log_Debug("Selection has no rectangular selection, cannot continue")
         Log_Debug2_T("");
         return;
     }
-    Rect r = sel->rect();
+    Rect r = sel.rect();
     // r.fixOrdering();
-    Log_Debug("Copying Mdn '" << src->name() << "', " << r);
+    Log_Debug("Copying Mdn '" << src.name() << "', " << r);
     Clipboard::encodeRectToClipboard(
-        *src, r, QStringLiteral("rect"), QString::fromStdString(src->name())
+        src, r, QStringLiteral("rect"), QString::fromStdString(src.name())
     );
     Log_Debug2_T("Success");
 }
@@ -874,23 +868,18 @@ void mdn::gui::Project::copySelection() const {
 
 void mdn::gui::Project::copyMdn(int index) const {
     Log_Debug2_H("copying " << index);
-    const Mdn2d* src = getMdn(index);
-    if (src == nullptr) {
-        Log_Debug("Could not copy Mdn at index " << index << ", not a valid index");
-        Log_Debug2_T("");
-        return;
-    }
-    if (!src->hasBounds()) {
+    const Mdn2d& src = getMdn(index);
+    if (!src.hasBounds()) {
         // Nothing to copy (empty MDN)
-        Log_Debug("Nothing to copy, Mdn '" << src->name() << "' has no digits");
+        Log_Debug("Nothing to copy, Mdn '" << src.name() << "' has no digits");
         Log_Debug2_T("");
         return;
     }
 
-    const Rect b = src->bounds();
-    Log_Debug("Copying Mdn '" << src->name() << "' with bounds " << b);
+    const Rect b = src.bounds();
+    Log_Debug("Copying Mdn '" << src.name() << "' with bounds " << b);
     Clipboard::encodeRectToClipboard(
-        *src, b, QStringLiteral("mdn"), QString::fromStdString(src->name())
+        src, b, QStringLiteral("mdn"), QString::fromStdString(src.name())
     );
     Log_Debug2_T("");
 }
@@ -924,18 +913,9 @@ bool mdn::gui::Project::pasteOnSelection(int index) {
     //      required: if target is 1x1, paste okay, use that as bottom left anchor, otherwise
     //      the size must match exactly
     Log_Debug2_H("Pasting, with mdn index=" << index);
-    Selection* sel = selection();
-    if (!sel) {
-        Log_WarnQ("Failed to acquire selection");
-        Log_Debug2_T("Returning false");
-        return false;
-    }
-    Mdn2d* dst = sel->get();
-    if (!dst) { // || !sel->rect().isValid()) {
-        Log_Debug2_T("No valid destination");
-        return false;
-    }
-    Rect selRect = sel->rect();
+    Selection& sel = activeSelection();
+    Mdn2d& dst = sel.ref();
+    Rect selRect = sel.rect();
     Clipboard::DecodedPaste p = Clipboard::decodeClipboard();
     if (!p.valid()) {
         return false;
@@ -990,7 +970,7 @@ bool mdn::gui::Project::pasteOnSelection(int index) {
                     << "a(" << ax << "," << ay << ")"
             );
         } else if (p.scope == QLatin1String("mdn")) {
-            dst->clear();
+            dst.clear();
             if (p.srcRect.isValid()) {
                 ax = p.srcRect.left();
                 ay = p.srcRect.bottom();
@@ -1011,7 +991,7 @@ bool mdn::gui::Project::pasteOnSelection(int index) {
 
     // Overwrite rows (zeros in payload clear cells)
     for (int rowI = 0; rowI < H; ++rowI) {
-        dst->setRow(Coord(ax, ay + rowI), p.rows[size_t(rowI)]);
+        dst.setRow(Coord(ax, ay + rowI), p.rows[size_t(rowI)]);
     }
     Log_Debug2_T("");
     return true;
@@ -1020,23 +1000,14 @@ bool mdn::gui::Project::pasteOnSelection(int index) {
 
 void mdn::gui::Project::deleteSelection() {
     Log_Debug2_H("");
-    Selection* sel = selection();
-    if (!sel) {
-        Log_WarnQ("Failed to acquire selection");
-        Log_Debug2_T("No selection to delete");
-        return;
-    }
-    Mdn2d* dst = sel->get();
-    if (!dst) {
-        Log_Debug2_T("No target mdn2d");
-        return;
-    }
-    Rect r = sel->rect();
+    Selection& sel = activeSelection();
+    Mdn2d& dst = sel.ref();
+    Rect r = sel.rect();
     if (r.empty()) {
-        deleteMdn(dst->name());
+        deleteMdn(dst.name());
         Log_Debug2_T("Success, deleted entire Mdn");
     } else {
-        CoordSet changed(dst->setToZero(r));
+        CoordSet changed(dst.setToZero(r));
         If_Log_Showing_Debug3(
             std::string coordsList(mdn::Tools::setToString<Coord>(changed, ','));
             Log_Debug3_T("Zeroed coords: " << coordsList);
@@ -1052,10 +1023,9 @@ void mdn::gui::Project::debugShowAllTabs(std::ostream& os) const {
     os << "-----\n";
     for (auto it = m_data.cbegin(); it != m_data.cend(); ++it) {
         const int index = it->first;
-        const std::pair<Mdn2d, Selection>& entry = it->second;
-        const Mdn2d& currMdn = entry.first;
-        const Selection& currSel = entry.second;
-        const std::string& name = currMdn.name();
+        const Mdn2d& entry = it->second;
+        const Selection& currSel = entry.selection();
+        const std::string& name = entry.name();
         const int addrIndex = m_addressingNameToIndex.at(name);
         const std::string& addrName = m_addressingIndexToName.at(index);
         os << index << "\t[" << name << "]\t(" << addrIndex << ",[" << addrName << "])\n";

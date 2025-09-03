@@ -229,6 +229,11 @@ public:
     // Construct null - retuns invalid (empty)
     Rect() : Rect(GetInvalid()) {}
 
+    // Construct from a single coordinate location, no need to fix ordering here
+    Rect(Coord minMax)
+        : m_min(minMax), m_max(minMax)
+    {}
+
     // Construct from components
     //  fixOrdering - when true, corrects inputs where individual components of min and max might
     //      need to be swapped. Useful when source coords are unreliable. See fixOrdering function.

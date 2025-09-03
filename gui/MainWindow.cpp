@@ -188,33 +188,26 @@ void mdn::gui::MainWindow::onOpsPlan(const OpsController::Plan& p) {
         return;
     }
 
-    Mdn2d* a = m_project->getMdn(p.indexA, true);
-    Mdn2d* b = m_project->getMdn(p.indexB, true);
-
-    if (a == nullptr) {
-        return;
-    }
-    if (b == nullptr) {
-        return;
-    }
+    Mdn2d& a = m_project->getMdn(p.indexA);
+    Mdn2d& b = m_project->getMdn(p.indexB);
 
     if (p.dest == OpsController::Dest::InPlace) {
-        Mdn2d ans(m_project->config(), a->name());
+        Mdn2d ans(m_project->config(), a.name());
         if (p.op == OpsController::Op::Add) {
-            a->plus(*b, ans);
+            a.plus(b, ans);
         } else {
             if (p.op == OpsController::Op::Subtract) {
-                a->minus(*b, ans);
+                a.minus(b, ans);
             } else {
                 if (p.op == OpsController::Op::Multiply) {
-                    a->multiply(*b, ans);
+                    a.multiply(b, ans);
                 } else {
-                    ans = Mdn2d(m_project->config(), a->name());
-                    a->divide(*b, ans, Fraxis::Default);
+                    ans = Mdn2d(m_project->config(), a.name());
+                    a.divide(b, ans, Fraxis::Default);
                 }
             }
         }
-        *a = ans;
+        a = ans;
         syncTabsToProject();
         m_tabWidget->setCurrentIndex(p.indexA);
         if (m_ops) {
@@ -231,16 +224,16 @@ void mdn::gui::MainWindow::onOpsPlan(const OpsController::Plan& p) {
 
         Mdn2d ans(m_project->config(), requestedName);
         if (p.op == OpsController::Op::Add) {
-            a->plus(*b, ans);
+            a.plus(b, ans);
         } else {
             if (p.op == OpsController::Op::Subtract) {
-                a->minus(*b, ans);
+                a.minus(b, ans);
             } else {
                 if (p.op == OpsController::Op::Multiply) {
-                    a->multiply(*b, ans);
+                    a.multiply(b, ans);
                 } else {
                     ans = Mdn2d(m_project->config(), requestedName);
-                    a->divide(*b, ans, Fraxis::Default);
+                    a.divide(b, ans, Fraxis::Default);
                 }
             }
         }
@@ -512,14 +505,14 @@ void mdn::gui::MainWindow::createTabs() {
     const std::unordered_map<int, std::string>& tabNames(m_project->data_addressingIndexToName());
     std::vector<std::string> names(m_project->toc());
     for (int index = 0; index < names.size(); ++index) {
-        Mdn2d* src = m_project->getMdn(index, true);
-        Log_Debug4("Creating tab {'" << src->name() << "', " << index << "}");
-        Selection* sel = m_project->getSelection(index);
+        Mdn2d& src = m_project->getMdn(index);
+        Log_Debug4("Creating tab {'" << src.name() << "', " << index << "}");
+        Selection& sel = m_project->getSelection(index);
         QString qname = MdnQtInterface::toQString(names[index]);
         auto* ndw = new NumberDisplayWidget;
         ndw->setProject(m_project);
         ndw->setFocusPolicy(Qt::StrongFocus);
-        ndw->setModel(src, sel);
+        ndw->setModel(&src, &sel);
         int tab = m_tabWidget->addTab(ndw, qname);
         connect(
             ndw,
@@ -557,16 +550,13 @@ void mdn::gui::MainWindow::createTabs() {
 
 
 void mdn::gui::MainWindow::createTabForIndex(int index) {
-    std::pair<Mdn2d, Selection>* entry = m_project->at(index);
-    if (entry == nullptr) {
-        return;
-    }
-
+    Mdn2d& entry = m_project->getMdn(index);
+    Selection& sel = entry.selection();
     auto* view = new NumberDisplayWidget;
     view->setProject(m_project);
-    view->setModel(&entry->first, &entry->second);
+    view->setModel(&entry, &sel);
 
-    QString tabName = QString::fromStdString(entry->first.name());
+    QString tabName = QString::fromStdString(entry.name());
     int tab = m_tabWidget->insertTab(index, view, tabName);
     m_tabWidget->setCurrentIndex(tab);
     view->setFocus();
@@ -678,7 +668,8 @@ void mdn::gui::MainWindow::duplicateTab(int index)
     {std::ostringstream oss;
     m_project->debugShowAllTabs(oss);
     Log_Info(oss.str());}
-    std::pair<Mdn2d, Selection>* entry = m_project->at(newIndex);
+    Mdn2d& entry = m_project->getMdn(newIndex);
+    Selection& sel = entry.selection();
     Log_Info("got entry=" << entry);
     {std::ostringstream oss;
     m_project->debugShowAllTabs(oss);
@@ -688,7 +679,7 @@ void mdn::gui::MainWindow::duplicateTab(int index)
     {std::ostringstream oss;
     m_project->debugShowAllTabs(oss);
     Log_Info(oss.str());} // Still okay!
-    w->setModel(&(entry->first), &(entry->second));
+    w->setModel(&entry, &sel);
     Log_Info("");
     w->setProject(m_project);
     Log_Info("");
@@ -745,9 +736,8 @@ void mdn::gui::MainWindow::syncTabsToProject() {
             continue;
         }
 
-        std::pair<Mdn2d, Selection>* entry = m_project->at(i);
-        Mdn2d& srcNum(entry->first);
-        Selection& srcSel(entry->second);
+        Mdn2d& srcNum = m_project->getMdn(i);
+        Selection& srcSel = srcNum.selection();
 
         view->setModel(&srcNum, &srcSel);
         m_tabWidget->setTabText(i, QString::fromStdString(srcNum.name())); // add mdnName(int)

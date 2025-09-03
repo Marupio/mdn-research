@@ -1,6 +1,6 @@
 {
     "Logger": {
-        "Level": "Debug4",
+        "Level": "Warn",
         "Output": "C:/Users/daveg/OneDrive/Documents/Projects/MDN/mdn-research/output",
         "Filter": {
             "Exclude": ["getValue", "setValue"]

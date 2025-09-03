@@ -259,34 +259,9 @@ public:
             std::ostringstream oss;
             debugShowAllTabs(oss);
             Log_Info(oss.str());
-            Selection* sel = activeSelection();
-            Log_Info("sel = " << sel);
-            if (sel) {
-                Log_Info("");
-                sel->setPageStep(dxCols, dyRows);
-                Log_Info("");
-            }
+            Selection& sel = activeSelection();
+            sel.setPageStep(dxCols, dyRows);
             Log_Info("");
-        }
-
-        // Access current selection
-        inline const Selection& selection() const {
-            if (const auto sel = activeSelection()) {
-                return sel;
-            }
-            if (size()) {
-                Log_WarnQ("No tab is currently selected.");
-            }
-            return nullptr;
-        }
-        inline Selection& selection() {
-            if (auto sel = activeSelection()) {
-                return sel;
-            }
-            if (size()) {
-                Log_WarnQ("No tab is currently selected.");
-            }
-            return nullptr;
         }
 
         // Set new selection

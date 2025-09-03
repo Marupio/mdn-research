@@ -43,7 +43,7 @@ public:
             Mdn2d& operator=(Mdn2d&& other) noexcept;
 
             // Virtual destructor
-            virtual ~Mdn2d() {}
+            virtual ~Mdn2d();
 
 
     // *** Member Functions

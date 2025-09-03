@@ -54,6 +54,9 @@ mdn::Mdn2d& mdn::Mdn2d::operator=(Mdn2d&& other) noexcept {
 }
 
 
+mdn::Mdn2d::~Mdn2d() = default;
+
+
 const mdn::Selection& mdn::Mdn2d::selection() const {
     auto lock = lockWriteable();
     return locked_selection();

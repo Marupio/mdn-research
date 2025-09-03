@@ -31,7 +31,7 @@ class Selection {
 
 public:
 
-    Selection(Mdn2d& ref): m_ref(ref) {}
+    Selection(Mdn2d& ref): m_ref(ref), m_rect(COORD_ORIGIN) {}
 
     // Accessors
 
@@ -47,7 +47,7 @@ public:
     const Mdn2d& ref() const { return m_ref; }
 
     const Rect& rect() const { return m_rect; }
-    void setRect(Rect& rectIn) {
+    void setRect(const Rect& rectIn) {
         m_rect = rectIn;
         m_cursor0 = m_rect.min();
         m_cursor1 = m_rect.max();

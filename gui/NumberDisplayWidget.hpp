@@ -19,8 +19,8 @@
 // Forward declarations
 namespace mdn {
 class Mdn2d;
-namespace gui {
 class Selection;
+namespace gui {
 class Project;
 } // end namespace gui forward declaration
 } // end namespace mdn forward declaration

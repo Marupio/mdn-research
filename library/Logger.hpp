@@ -156,10 +156,10 @@ public:
 
     // Increase the indent by two spaces
     void increaseIndent(std::string fref = "") {
-        std::string ref = cleanRef(fref);
-        m_breadCrumbs.push_back(ref);
         #ifdef MDN_DEBUG
             if (m_indentChecking) {
+                std::string ref = cleanRef(fref);
+                m_breadCrumbs.push_back(ref);
                 auto it = m_indentenators.find(ref);
                 if (it == m_indentenators.end()) {
                     m_indentenators[ref] = 1;
@@ -177,9 +177,9 @@ public:
 
     // Reduce the indent by two spaces
     void decreaseIndent(std::string fref = "") {
-        m_breadCrumbs.pop_back();
         #ifdef MDN_DEBUG
             if (m_indentChecking) {
+                m_breadCrumbs.pop_back();
                 std::string ref = cleanRef(fref);
                 auto it = m_indentenators.find(ref);
                 if (it == m_indentenators.end()) {

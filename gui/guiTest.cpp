@@ -74,9 +74,9 @@ int main(int argc, char** argv)
     Log_Info("contains(99)?  " << (proj.contains(99) ? "yes" : "no"));
 
     // 7) Quick data access smoke test
-    if (auto* pair = proj.at("A")) {
-        auto& mdnA = pair->first;
-        auto& selA = pair->second;
+    if (proj.contains("A")) {
+        Mdn2d& mdnA = proj.getMdn("A");
+        Selection& selA = mdnA.selection();
         Log_Info("Accessed 'A': bounds=" << selA.rect()); // relies on Selection’s ostream<<
         // Touch a digit (origin) to ensure model mutability works in this context:
         mdnA.setValue(COORD_ORIGIN, 7);
