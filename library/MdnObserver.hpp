@@ -43,7 +43,10 @@ public:
     }
 
     // Return the reference Mdn2d
-    virtual Mdn2d* get() const {
+    virtual const Mdn2d* get() const {
+        return m_ref;
+    }
+    virtual Mdn2d* get() {
         return m_ref;
     }
 

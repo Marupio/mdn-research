@@ -6,10 +6,16 @@
 
 namespace mdn {
 
+class Selection;
+
 // Represents a 2D Multi-Dimensional Number (MDN).
 class MDN_API Mdn2d : public Mdn2dRules {
 
 protected:
+
+    // Lazy-evaluation selection
+    mutable std::unique_ptr<Selection> m_selection;
+
 
 public:
 
@@ -41,6 +47,14 @@ public:
 
 
     // *** Member Functions
+
+        // *** Selection
+
+            const Selection& selection() const;
+            protected: const Selection& locked_selection() const; public:
+            Selection& selection();
+            protected: Selection& locked_selection(); public:
+
 
         // *** Full Mdn2d mathematical operations
 

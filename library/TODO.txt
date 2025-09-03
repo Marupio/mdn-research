@@ -3,6 +3,8 @@ TODO LIST
 The library code is now basically frozen, apart from debugging.
 Here is a list of tasks that I'd like to eventually complete for the library.
 
+Make Selection thread safe
+
 * Propagate NamedEnum
     Logger::LogLevel, Logger::FilterType
     Coord::CardinalDirection

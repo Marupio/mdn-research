@@ -8,6 +8,7 @@
 #include "Constants.hpp"
 #include "Logger.hpp"
 #include "MdnException.hpp"
+#include "Selection.hpp"
 #include "Tools.hpp"
 
 
@@ -50,6 +51,34 @@ mdn::Mdn2d& mdn::Mdn2d::operator=(Mdn2d&& other) noexcept {
     Mdn2dRules::operator=(std::move(other));
     Log_N_Debug2("Move copying");
     return *this;
+}
+
+
+const mdn::Selection& mdn::Mdn2d::selection() const {
+    auto lock = lockWriteable();
+    return locked_selection();
+}
+
+
+const mdn::Selection& mdn::Mdn2d::locked_selection() const {
+    if (!m_selection) {
+        m_selection.reset(new Selection(const_cast<Mdn2d&>(*this)));
+    }
+    return *(m_selection.get());
+}
+
+
+mdn::Selection& mdn::Mdn2d::selection() {
+    auto lock = lockWriteable();
+    return locked_selection();
+}
+
+
+mdn::Selection& mdn::Mdn2d::locked_selection() {
+    if (!m_selection) {
+        m_selection.reset(new Selection(*this));
+    }
+    return *(m_selection.get());
 }
 
 

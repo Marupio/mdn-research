@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <memory>
 #include <shared_mutex>
 #include <string>
 #include <unordered_map>
@@ -156,6 +157,7 @@ public:
             void setConfig(Mdn2dConfig& newConfig);
             // Locked version *copies* config - everyone has their own copy
             protected: virtual void locked_setConfig(Mdn2dConfig newConfig); public:
+
 
         // *** Observers
 

@@ -2,14 +2,15 @@
 
 #include <vector>
 
-#include "../library/Rect.hpp"
-#include "../library/Mdn2d.hpp"
-#include "../library/MdnObserver.hpp"
+#include "Rect.hpp"
+#include "Mdn2d.hpp"
 
 namespace mdn {
-namespace gui {
 
-class Selection : public MdnObserver {
+class Selection {
+
+    // Parent Mdn2d
+    Mdn2d& m_ref;
 
     // Coordinate bounds of selection, inclusive: [x0..x1] × [y0..y1]
     Rect m_rect;
@@ -30,9 +31,21 @@ class Selection : public MdnObserver {
 
 public:
 
-    Selection(Mdn2d* ref=nullptr): MdnObserver(ref) {}
+    Selection(Mdn2d& ref): m_ref(ref) {}
 
     // Accessors
+
+// TODO
+// TODO: Make this class thread safe
+
+    // Return pointer to Mdn2d to be consistent with original (StandAloneSelection)
+    Mdn2d* get() { return &m_ref; }
+    const Mdn2d* get() const { return &m_ref; }
+
+    // Direct access to the reference
+    Mdn2d& ref() { return m_ref; }
+    const Mdn2d& ref() const { return m_ref; }
+
     const Rect& rect() const { return m_rect; }
     void setRect(Rect& rectIn) {
         m_rect = rectIn;
@@ -62,7 +75,7 @@ public:
 
         // True if the selection includes a valid Mdn
         bool hasMdn() const {
-            return get() != nullptr;
+            return true;
         }
 
         // True if the selected rectangular area is valid
@@ -92,21 +105,6 @@ public:
 
 
     // * Selection operations
-
-        // Attach to an MDN
-        void attach(Mdn2d* m) {
-            if (m_ref == m) return;
-            if (m_ref) m_ref->unregisterObserver(this);
-            m_ref = m;
-            if (m_ref) m_ref->registerObserver(this);
-        }
-
-        // Detatch from an MDN
-        void detach() {
-            if (m_ref) m_ref->unregisterObserver(this);
-            m_ref = nullptr;
-            m_rect.clear();
-        }
 
         void cursorUp(bool extendSelection) {
             Log_Debug("cursorUp, extend=" << extendSelection);
@@ -323,24 +321,6 @@ public:
             }
         }
 
-
-        // Destructor
-        ~Selection() { if (m_ref) m_ref->unregisterObserver(this); }
-
-
-    // *** MdnObserver interface
-
-    // The observed object is being destroyed
-    void farewell() override {
-        MdnObserver::farewell();
-        m_rect.clear();
-    }
-
-    void reallocating(Mdn2d* newRef) override {
-        MdnObserver::reallocating(newRef);
-    }
-
 };
 
-} // end namespace gui
 } // end namespace mdn

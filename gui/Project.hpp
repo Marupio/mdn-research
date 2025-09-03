@@ -8,9 +8,9 @@
 #include <QMessageBox>
 #include <QObject>
 
-#include "Selection.hpp"
 #include "../library/Mdn2d.hpp"
 #include "../library/Mdn2dFramework.hpp"
+#include "../library/Selection.hpp"
 
 namespace mdn {
 namespace gui {
@@ -42,7 +42,7 @@ protected:
     Mdn2dConfig m_config;
 
     // References to the constituent Mdn2d data, key is its tab position in the gui
-    std::unordered_map<int, std::pair<Mdn2d, Selection>> m_data;
+    std::unordered_map<int, Mdn2d> m_data;
 
     // m_addressingNameToIndex[name] = index
     std::unordered_map<std::string, int> m_addressingNameToIndex;
@@ -119,10 +119,7 @@ public:
         // Apply changes in selection to MainWindow
         void updateSelection() const;
 
-        // Direct access to underlying data
-        const std::unordered_map<int, std::pair<Mdn2d, Selection>>& data_data() const {
-            return m_data;
-        }
+        // Direct access to underlying data, for those who really want it
         const std::unordered_map<std::string, int>& data_addressingNameToIndex() const {
             return m_addressingNameToIndex;
         }
@@ -168,51 +165,39 @@ public:
         //  This function also checks the metadata all agree
         std::vector<std::string> toc() const;
 
-        const std::pair<Mdn2d, Selection>* activeEntry() const;
-        std::pair<Mdn2d, Selection>* activeEntry();
+        const Mdn2d& activeMdn() const;
+        Mdn2d& activeMdn();
 
-        const Mdn2d* activeMdn() const;
-        Mdn2d* activeMdn();
-
-        const Selection* activeSelection() const;
-        Selection* activeSelection();
+        const Selection& activeSelection() const;
+        Selection& activeSelection();
 
         // Given mdn tab is now active
         void setActiveMdn(int i);
         void setActiveMdn(std::string name);
 
         // Get selection associated with i'th tab
-        const Selection* getSelection(int i, bool warnOnFailure=false) const;
-        Selection* getSelection(int i, bool warnOnFailure=false);
-
-        // Get an entry of contained data (Mdn2d and Selection together)
-        const std::pair<Mdn2d, Selection>* at(int i, bool warnOnFailure=false) const;
-        std::pair<Mdn2d, Selection>* at(int i, bool warnOnFailure=false);
-        const std::pair<Mdn2d, Selection>* at(std::string name, bool warnOnFailure=false) const;
-        std::pair<Mdn2d, Selection>* at(std::string name, bool warnOnFailure=false);
+        const Selection& getSelection(int i) const;
+        Selection& getSelection(int i);
 
         // Get selection associated with given tab name
-        const Selection* getSelection(std::string name, bool warnOnFailure=false) const;
-        Selection* getSelection(std::string name, bool warnOnFailure=false);
+        const Selection& getSelection(std::string name) const;
+        Selection& getSelection(std::string name);
 
-        // Return pointer to the i'th Mdn tab, nullptr on failure
-        //  e.g.:
-        //      Mdn2d* src = getMdn(fromIndex);
-        //      AssertQ(src, "Failed to acquire Mdn2d from index " << fromIndex);
-        const Mdn2d* getMdn(int i, bool warnOnFailure=false) const;
-        Mdn2d* getMdn(int i, bool warnOnFailure=false);
+        // Return reference to the Mdn2d on the i'th Mdn tab
+        const Mdn2d& getMdn(int i) const;
+        Mdn2d& getMdn(int i);
 
-        // Return pointer to the Mdn tab with the given name, nullptr on failure
-        const Mdn2d* getMdn(std::string name, bool warnOnFailure=false) const;
-        Mdn2d* getMdn(std::string name, bool warnOnFailure=false);
+        // Return reference to Mdn2d tab with the given name, nullptr on failure
+        const Mdn2d& getMdn(std::string name) const;
+        Mdn2d& getMdn(std::string name);
 
-        // Return pointer to Mdn2d at first tab, nullptr on failure
-        const Mdn2d* firstMdn(bool warnOnFailure=false) const;
-        Mdn2d* firstMdn(bool warnOnFailure=false);
+        // Return reference to Mdn2d at first tab, nullptr on failure
+        const Mdn2d& firstMdn() const;
+        Mdn2d& firstMdn();
 
-        // Return pointer to Mdn2d at last tab, nullptr on failure
-        const Mdn2d* lastMdn(bool warnOnFailure=false) const;
-        Mdn2d* lastMdn(bool warnOnFailure=false);
+        // Return reference to Mdn2d at last tab, nullptr on failure
+        const Mdn2d& lastMdn() const;
+        Mdn2d& lastMdn();
 
         // Inserts a new number at the 'end', i.e. the last index
         inline void appendMdn(Mdn2d&& mdn) {
@@ -285,7 +270,7 @@ public:
         }
 
         // Access current selection
-        inline const Selection* selection() const {
+        inline const Selection& selection() const {
             if (const auto sel = activeSelection()) {
                 return sel;
             }
@@ -294,7 +279,7 @@ public:
             }
             return nullptr;
         }
-        inline Selection* selection() {
+        inline Selection& selection() {
             if (auto sel = activeSelection()) {
                 return sel;
             }
