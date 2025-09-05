@@ -5,21 +5,21 @@ Here is a list of tasks that I'd like to eventually complete for the library.
 
 Make Selection thread safe
 
-* Propagate NamedEnum
+* Propagate NamedEnum * THIS TASK IS ON HOLD FOR FURTHER ASSESSMENT *
     Logger::LogLevel, Logger::FilterType
     Coord::CardinalDirection
-    Rect::FrontBack, Rect::RelativePositiev
+    Rect::FrontBack, Rect::RelativePosition
     TextOptions::AxesOutput, TextOptions::CommaTabSpace
-    library/Carryover.hpp
-    library/Fraxis.hpp
+    +library/Carryover.hpp
+    +library/Fraxis.hpp
     library/Mdn2dConfigImpact.hpp
     library/NamedEnum.hpp
     library/NamedEnumExample.hpp
     library/PrecisionStatus.hpp
     library/SignConvention.hpp
 
-* Propogate ErrorPolicy
-* Propogate InputHandling
+* Propogate ErrorPolicy * ON HOLD *
+* Propogate InputHandling * ON HOLD *
 * Propogate new Rect iterabilitiness
 * Change Mdn2dIO into a layer on the Mdn2d class structure
 * Consider adding namespace extensions: mdn::algo (algorithm), mdn::io
@@ -27,33 +27,34 @@ Make Selection thread safe
 
 GUI library
 
-Why not track that here also
-
-* Change the namespaces from simply mdn to mdn::gui
-* Change Project's internal data treatment to use pair<Mdn,Selection>, instead of individuals
-+ Add a Project::verify() function to check metadata is consistent
-    It's in 'toc'
-+ Add a getMdnAndSelection function, make getSelection's and getMdn's use it
-    It's called 'at'
+* Crash on close
 
 
 FUNCTIONALITY
 
-When inputing a value at the cursor, if it has carry-overs:
-    * the carryovers do operation+ on the existing values
-    * the cursor location clears and adds the digit
+* Add number of digits with float / double add / subtract
+* Add CLI-only features to LoggerConfigurator
+* Click & drag tabs continuously, not one swap at a time * ON HOLD, MAYBE THIS IS OKAY *
+Cursor input behaviour
+    OVERWRITE
+        All numbers entered replace exising numbers
+        Entering a value that exceeds base causes carryovers that will replace existing numbers
+        * Start editing by typing a number (or pressing F2?)
+    ADD
+        All numbers entered are added to existing numbers
+        * Press '+' or num pad '+'
+    SUBTRACT
+        All numbers entered are subtracted from existing numbers
+        * Press '-' or num pad '-'
+    I want a status bar entry indicating mode: ADD + | SUB - | OVER
 
 Within-selection cursor movement:
     * tab + shift tab (right and left) wrapping movements within the selection rectangle
     * enter + shift enter (up and down) (same as above)
     * these actually do work on submission of digit text entry
     * outside of text entry, they do not work
-Delete tab => seg fault
 Maximize seems to have no effect on cursor / axes position, i.e. it doesn't do the fraction stuff
 Binary operation window 'Destination' radio buttons are messed up
-Creating a new Mdn2d causes a segfault
-    * Right click tab, choose duplicate
-    * Operations->Addition->Create New->segfault
 Implement menus
 Implement Save / Load Project
 Implement Save / Load Mdn2d

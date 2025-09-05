@@ -255,13 +255,10 @@ public:
 
         // Set page up/down and page left/right distances (in digits)
         inline void setPageStep(int dxCols, int dyRows) {
-            Log_Info("");
-            std::ostringstream oss;
-            debugShowAllTabs(oss);
-            Log_Info(oss.str());
+            Log_Debug3_H("");
             Selection& sel = activeSelection();
             sel.setPageStep(dxCols, dyRows);
-            Log_Info("");
+            Log_Debug3_T("");
         }
 
         // Set new selection

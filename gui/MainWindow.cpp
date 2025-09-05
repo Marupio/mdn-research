@@ -3,11 +3,13 @@
 #include <QApplication>
 #include <QEvent>
 #include <QInputDialog>
+#include <QLabel>
 #include <QList>
 #include <QMenuBar>
 #include <QResizeEvent>
 #include <QSignalBlocker>
 #include <QSplitter>
+#include <QStatusBar>
 #include <QTabBar>
 #include <QTabWidget>
 
@@ -20,10 +22,11 @@ mdn::gui::MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
     m_project(nullptr)
 {
-    Log_Debug2_H("Constructing MainWindow")
+    Log_Debug2_H("")
     createSplitter();
     createMenus();
     m_command = new CommandWidget(this);
+    createStatusBar();
     setupLayout();
     setWindowTitle("MDN Editor");
     Log_Debug2_T("");
@@ -133,6 +136,7 @@ void mdn::gui::MainWindow::onProjectTabsChanged(int currentIndex)
     const int n = m_tabWidget->count();
     for (int i = n - 1; i >= 0; --i) {
         QWidget* w = m_tabWidget->widget(i);
+        Log_Debug4("removeTab(" << i << ")");
         m_tabWidget->removeTab(i);
         delete w;
     }
@@ -508,11 +512,59 @@ void mdn::gui::MainWindow::createTabs() {
         Mdn2d& src = m_project->getMdn(index);
         Log_Debug4("Creating tab {'" << src.name() << "', " << index << "}");
         Selection& sel = m_project->getSelection(index);
-        QString qname = MdnQtInterface::toQString(names[index]);
         auto* ndw = new NumberDisplayWidget;
         ndw->setProject(m_project);
         ndw->setFocusPolicy(Qt::StrongFocus);
         ndw->setModel(&src, &sel);
+
+        connect(ndw, &NumberDisplayWidget::statusCursorChanged, this,
+            [this](int x, int y){
+                if (m_statusCursor)
+                    m_statusCursor->setText(QStringLiteral("(%1,%2)").arg(x).arg(y));
+            });
+        connect(ndw, &NumberDisplayWidget::statusSelectionChanged, this,
+            [this](const mdn::Rect& r){
+                if (!m_statusSel) {
+                    return;
+                }
+                if (!r.isValid()) {
+                    m_statusSel->setText(QStringLiteral("(empty)"));
+                    return;
+                }
+                const int w = r.width();
+                const int h = r.height();
+                m_statusSel->setText(
+                    QStringLiteral("[%1,%2]→[%3,%4] (%5×%6)")
+                        .arg(r.left()).arg(r.right())
+                        .arg(r.bottom()).arg(r.top())
+                        .arg(w).arg(h)
+                );
+            });
+        connect(ndw, &NumberDisplayWidget::statusModeChanged, this,
+            [this](NumberDisplayWidget::EditMode m){
+                if (!m_statusMode) {
+                    return;
+                }
+                switch (m) {
+                    case NumberDisplayWidget::EditMode::Overwrite: {
+                        m_statusMode->setText("OVER");
+                        break;
+                    }
+                    case NumberDisplayWidget::EditMode::Add: {
+                        m_statusMode->setText("ADD +");
+                        break;
+                    }
+                    case NumberDisplayWidget::EditMode::Subtract: {
+                        m_statusMode->setText("SUB −");
+                        break;
+                    }
+                }
+            }
+        );
+
+        std::string name = names[index];
+        Log_Debug4("addTab(" << name << ")");
+        QString qname = MdnQtInterface::toQString(name);
         int tab = m_tabWidget->addTab(ndw, qname);
         connect(
             ndw,
@@ -550,16 +602,20 @@ void mdn::gui::MainWindow::createTabs() {
 
 
 void mdn::gui::MainWindow::createTabForIndex(int index) {
+    Log_Debug3_H("index=" << index);
     Mdn2d& entry = m_project->getMdn(index);
     Selection& sel = entry.selection();
     auto* view = new NumberDisplayWidget;
     view->setProject(m_project);
     view->setModel(&entry, &sel);
 
-    QString tabName = QString::fromStdString(entry.name());
-    int tab = m_tabWidget->insertTab(index, view, tabName);
+    const std::string& tabName(entry.name());
+    QString tabNameQ = QString::fromStdString(tabName);
+    Log_Info("insertTab(" << index << ", " << entry.name());
+    int tab = m_tabWidget->insertTab(index, view, tabNameQ);
     m_tabWidget->setCurrentIndex(tab);
     view->setFocus();
+    Log_Debug3_T("");
 }
 
 
@@ -578,6 +634,26 @@ void mdn::gui::MainWindow::initOperationsUi() {
 
     m_ops->refreshTabNames();
     connect(m_command, &CommandWidget::submitCommand, this, &MainWindow::onCommandSubmitted);
+}
+
+
+void mdn::gui::MainWindow::createStatusBar()
+{
+    auto* sb = statusBar();
+    m_statusMode   = new QLabel(this);
+    m_statusCursor = new QLabel(this);
+    m_statusSel    = new QLabel(this);
+
+    m_statusMode->setText("OVER");
+    m_statusCursor->setText("(0,0)");
+    m_statusSel->setText("(empty)");
+
+    // Left to right; make them compact
+    sb->addPermanentWidget(m_statusMode,   0);
+    sb->addPermanentWidget(new QLabel("  |  ", this), 0);
+    sb->addPermanentWidget(m_statusCursor, 0);
+    sb->addPermanentWidget(new QLabel("  |  ", this), 0);
+    sb->addPermanentWidget(m_statusSel,    1); // stretch last one a bit
 }
 
 
@@ -661,40 +737,6 @@ void mdn::gui::MainWindow::duplicateTab(int index)
     Log_Debug3_H("index=" << index);
     // 1) Ask Project to create a new model from this one
     std::pair<int, std::string>newIdName = m_project->duplicateMdn(index);
-    int newIndex = newIdName.first;
-    std::string newName = newIdName.second;
-
-    // 2) Create a view for it
-    {std::ostringstream oss;
-    m_project->debugShowAllTabs(oss);
-    Log_Info(oss.str());}
-    Mdn2d& entry = m_project->getMdn(newIndex);
-    Selection& sel = entry.selection();
-    Log_Info("got entry=" << entry);
-    {std::ostringstream oss;
-    m_project->debugShowAllTabs(oss);
-    Log_Info(oss.str());}
-    auto* w = new NumberDisplayWidget;
-    Log_Info("");
-    {std::ostringstream oss;
-    m_project->debugShowAllTabs(oss);
-    Log_Info(oss.str());} // Still okay!
-    w->setModel(&entry, &sel);
-    Log_Info("");
-    w->setProject(m_project);
-    Log_Info("");
-
-    // 3) Insert UI tab right after the source
-    // int insertAt = index + 1;
-    int newTab = m_tabWidget->insertTab(newIndex, w, QString::fromStdString(newName));
-    Log_Info("");
-    m_tabWidget->setCurrentIndex(newTab);
-    Log_Info("");
-    w->setFocus();
-    Log_Info("");
-    if (m_ops) {
-        m_ops->refreshTabNames();
-    }
     Log_Debug3_T("");
 }
 

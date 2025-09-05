@@ -522,7 +522,6 @@ mdn::Mdn2d& mdn::gui::Project::activeMdn() {
 
 
 const mdn::Selection& mdn::gui::Project::activeSelection() const {
-    Log_Info("");
     Log_Debug3_H("");
     if (!contains(m_activeIndex)) {
         InvalidState err("Project has no valid index");
@@ -707,26 +706,20 @@ std::pair<int, std::string> mdn::gui::Project::duplicateMdn(int index) {
     Mdn2d& src = getMdn(index);
     Log_Debug("duplicating {'" << src.name() << "', " << index << "}");
     std::pair<int, std::string> result;
-    {
-        Mdn2d dup = Mdn2d::Duplicate(src);
-        Log_Debug("inserting new mdn {'" << dup.name() << "', " << index+1 << "}");
-        insertMdn(std::move(dup), index + 1);
-        Mdn2d& insertedDup = getMdn(index + 1);
+    Mdn2d dup = Mdn2d::Duplicate(src);
+    Log_Debug("inserting new mdn {'" << dup.name() << "', " << index+1 << "}");
+    insertMdn(std::move(dup), index + 1);
+    Mdn2d& insertedDup = getMdn(index + 1);
 
-        // TODO create operator= for Selections
-        Selection& sel = src.selection();
-        Selection& idSel = insertedDup.selection();
-        idSel.setRect(sel.rect());
-        idSel.setCursor0(sel.cursor0());
-        idSel.setCursor1(sel.cursor1());
-        result = std::pair<int, std::string>(index+1, dup.name());
-    }
+    // TODO create operator= for Selections
+    Selection& sel = src.selection();
+    Selection& idSel = insertedDup.selection();
+
+    idSel.setRect(sel.rect());
+    idSel.setCursor0(sel.cursor0());
+    idSel.setCursor1(sel.cursor1());
+    result = std::pair<int, std::string>(index+1, dup.name());
     Mdn2d& check = getMdn(index + 1);
-    {
-        std::string checkName = check.name();
-        int originValue = check.getValue(COORD_ORIGIN);
-        Log_Info("Yay!  We got name=" << checkName << ", and originValue=" << originValue);
-    }
     Log_Debug2_T("Returning {'" << result.second << "', " << result.first << "}");
     return result;
 }
@@ -1020,16 +1013,28 @@ void mdn::gui::Project::deleteSelection() {
 
 
 void mdn::gui::Project::debugShowAllTabs(std::ostream& os) const {
+    Log_Debug3_H("");
+    Log_Debug4("Has " << m_data.size() << " entries");
     os << "-----\n";
+    int count = 0;
     for (auto it = m_data.cbegin(); it != m_data.cend(); ++it) {
+        Log_Debug4("count=" << count++);
         const int index = it->first;
+        Log_Debug4("index=" << index);
         const Mdn2d& entry = it->second;
+        Log_Debug4("");
         const Selection& currSel = entry.selection();
+        Log_Debug4("");
         const std::string& name = entry.name();
+        Log_Debug4("name=" << name);
         const int addrIndex = m_addressingNameToIndex.at(name);
+        Log_Debug4("");
         const std::string& addrName = m_addressingIndexToName.at(index);
+        Log_Debug4("");
         os << index << "\t[" << name << "]\t(" << addrIndex << ",[" << addrName << "])\n";
+        Log_Debug4("");
     }
+    Log_Debug3_T("");
     os << std::endl;
 }
 

@@ -82,42 +82,141 @@ public:
         // *** Addition / subtraction
 
             // Add the given number at xy, breaking into integer and fraxis operations
-            void add(const Coord& xy, float realNum, Fraxis fraxis=Fraxis::Default);
-            void add(const Coord& xy, double realNum, Fraxis fraxis=Fraxis::Default);
+            void add(
+                const Coord& xy,
+                float realNum,
+                bool overwrite=false,
+                Fraxis fraxis=Fraxis::Default
+            );
+            void add(
+                const Coord& xy,
+                double realNum,
+                bool overwrite=false,
+                Fraxis fraxis=Fraxis::Default
+            );
             protected: CoordSet locked_add(
-                const Coord& xy, double realNum, Fraxis fraxis=Fraxis::Default
+                const Coord& xy,
+                double realNum,
+                bool overwrite=false,
+                Fraxis fraxis=Fraxis::Default
             ); public:
 
             // Subtract the given number at xy, breaking into integer and fraxis operations
-            void subtract(const Coord& xy, float realNum, Fraxis fraxis=Fraxis::Default);
-            void subtract(const Coord& xy, double realNum, Fraxis fraxis=Fraxis::Default);
+            void subtract(
+                const Coord& xy,
+                float realNum,
+                bool overwrite=false,
+                Fraxis fraxis=Fraxis::Default
+            );
+            void subtract(
+                const Coord& xy,
+                double realNum,
+                bool overwrite=false,
+                Fraxis fraxis=Fraxis::Default
+            );
 
             // Addition component: integer part, at xy with symmetric carryover
-            void add(const Coord& xy, Digit value, Fraxis unused=Fraxis::Default);
-            protected: CoordSet locked_add(const Coord& xy, Digit value); public:
-            void add(const Coord& xy, int value, Fraxis unused=Fraxis::Default);
-            protected: CoordSet locked_add(const Coord& xy, int value); public:
-            void add(const Coord& xy, long value, Fraxis unused=Fraxis::Default);
-            protected: CoordSet locked_add(const Coord& xy, long value); public:
-            void add(const Coord& xy, long long value, Fraxis unused=Fraxis::Default);
-            protected: CoordSet locked_add(const Coord& xy, long long value); public:
+            void add(
+                const Coord& xy,
+                Digit value,
+                bool overwrite=false,
+                Fraxis unused=Fraxis::Default
+            );
+            protected: CoordSet locked_add(
+                const Coord& xy,
+                Digit value,
+                bool overwrite=false
+            ); public:
+            void add(
+                const Coord& xy,
+                int value,
+                bool overwrite=false,
+                Fraxis unused=Fraxis::Default
+            );
+            protected: CoordSet locked_add(
+                const Coord& xy,
+                int value,
+                bool overwrite=false
+            ); public:
+            void add(
+                const Coord& xy,
+                long value,
+                bool overwrite=false,
+                Fraxis unused=Fraxis::Default
+            );
+            protected: CoordSet locked_add(
+                const Coord& xy,
+                long value,
+                bool overwrite=false
+            ); public:
+            void add(
+                const Coord& xy,
+                long long value,
+                bool overwrite=false,
+                Fraxis unused=Fraxis::Default
+            );
+            protected: CoordSet locked_add(
+                const Coord& xy,
+                long long value,
+                bool overwrite=false
+            ); public:
 
             // Subtraction component: integer part, at xy with symmetric carryover
-            void subtract(const Coord& xy, Digit value, Fraxis unused=Fraxis::Default);
-            void subtract(const Coord& xy, int value, Fraxis unused=Fraxis::Default);
-            void subtract(const Coord& xy, long value, Fraxis unused=Fraxis::Default);
-            void subtract(const Coord& xy, long long value, Fraxis unused=Fraxis::Default);
+            void subtract(
+                const Coord& xy,
+                Digit value,
+                bool overwrite=false,
+                Fraxis unused=Fraxis::Default
+            );
+            void subtract(
+                const Coord& xy,
+                int value,
+                bool overwrite=false,
+                Fraxis unused=Fraxis::Default
+            );
+            void subtract(
+                const Coord& xy,
+                long value,
+                bool overwrite=false,
+                Fraxis unused=Fraxis::Default
+            );
+            void subtract(
+                const Coord& xy,
+                long long value,
+                bool overwrite=false,
+                Fraxis unused=Fraxis::Default
+            );
 
             // Addition component: fractional part, at xy with assymmetric cascade
-            void addFraxis(const Coord& xy, float fraction, Fraxis fraxis=Fraxis::Default);
-            void addFraxis(const Coord& xy, double fraction, Fraxis fraxis=Fraxis::Default);
+            void addFraxis(
+                const Coord& xy,
+                float fraction,
+                bool overwrite=false,
+                Fraxis fraxis=Fraxis::Default
+            );
+            void addFraxis(
+                const Coord& xy,
+                double fraction,
+                bool overwrite=false,
+                Fraxis fraxis=Fraxis::Default
+            );
             protected: CoordSet locked_addFraxis(
-                const Coord& xy, double fraction, Fraxis fraxis
+                const Coord& xy, double fraction, bool overwrite, Fraxis fraxis
             ); public:
 
             // Subtract a fractional value cascading along the fraxis
-            void subtractFraxis(const Coord& xy, float fraction, Fraxis fraxis=Fraxis::Default);
-            void subtractFraxis(const Coord& xy, double fraction, Fraxis fraxis=Fraxis::Default);
+            void subtractFraxis(
+                const Coord& xy,
+                float fraction,
+                bool overwrite=false,
+                Fraxis fraxis=Fraxis::Default
+            );
+            void subtractFraxis(
+                const Coord& xy,
+                double fraction,
+                bool overwrite=false,
+                Fraxis fraxis=Fraxis::Default
+            );
 
 
         // *** Multiplication / divide
@@ -192,8 +291,10 @@ protected:
             //  dX, dY, c - constants to guide propagation:
             //      x Direction: -1, 0, -1
             //      y Direction: 0, -1, 1
-            CoordSet internal_fraxis(const Coord& xy, double f, int dX, int dY, int c);
-            CoordSet internal_fraxisCascade(const Coord& xy, Digit d, int c);
+            CoordSet internal_fraxis(
+                const Coord& xy, double f, bool overwrite, int dX, int dY, int c
+            );
+            CoordSet internal_fraxisCascade(const Coord& xy, Digit d, bool overwrite, int c);
 
             // // plusEquals variant: *this += rhs x scalar, used in mdn x mdn algorithm
             // Mdn2d& internal_plusEquals(const Mdn2d& rhs, int scalar);

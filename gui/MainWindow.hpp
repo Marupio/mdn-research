@@ -63,6 +63,7 @@ private:
     void createTabs();
     void createTabForIndex(int index);
     void initOperationsUi();
+    void createStatusBar();
 
     void onTabMoved(int from, int to);
     void onTabCloseRequested(int index);
@@ -88,6 +89,10 @@ private:
 
     // Command History (lower pane)
     CommandWidget* m_command = nullptr;
+
+    QLabel* m_statusMode = nullptr;
+    QLabel* m_statusCursor = nullptr;
+    QLabel* m_statusSel = nullptr;
 
     OpsController* m_ops{nullptr};
     Project* m_project = nullptr;

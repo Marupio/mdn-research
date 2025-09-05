@@ -26,33 +26,18 @@ void mdn::gui::NumberDisplayWidget::setProject(Project* project) {
 
 
 void mdn::gui::NumberDisplayWidget::setModel(Mdn2d* model, Selection* sel) {
-    Log_Info("");
-    {std::ostringstream oss;
-    m_project->debugShowAllTabs(oss);
-    Log_Info(oss.str());}
+    Log_Debug2_H("model=" << model->name());
     m_model = model;
-    Log_Info("");
     m_selection = sel;
-    Log_Info("");
-    {std::ostringstream oss;
-    m_project->debugShowAllTabs(oss);
-    Log_Info(oss.str());}
     if (m_selection) {
-        Log_Info("");
         m_cachedSel = m_selection->rect();
-        Log_Info("");
         m_cursorX = m_selection->cursor1().x();
-        Log_Info("");
         m_cursorY = m_selection->cursor1().y();
-        Log_Info("");
     }
-    Log_Info("");
     recalcGridGeometry();
-    Log_Info("");
     centreViewOnOrigin();
-    Log_Info("");
     update();
-    Log_Info("");
+    Log_Debug2_T("");
 }
 
 
@@ -108,12 +93,14 @@ void mdn::gui::NumberDisplayWidget::cancelCellEdit()
 void mdn::gui::NumberDisplayWidget::onCursorChanged(mdn::Coord c) {
     m_cursorX = c.x(); m_cursorY = c.y();
     ensureCursorVisible();
+    emit statusCursorChanged(m_cursorX, m_cursorY);
     update();
 }
 
 
 void mdn::gui::NumberDisplayWidget::onSelectionChanged(const mdn::Rect& r) {
     m_cachedSel = r;
+    emit statusSelectionChanged(m_cachedSel);
     update();
 }
 
@@ -349,6 +336,25 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
         }
     }
 
+    if (!ctrl && !meta && !alt) {
+        if (e->key() == Qt::Key_Plus || e->key() == Qt::Key_Equal) {
+            toggleEditMode(EditMode::Add);
+            e->accept(); return;
+        }
+        if (e->key() == Qt::Key_Minus) {
+            toggleEditMode(EditMode::Subtract);
+            e->accept(); return;
+        }
+        if (e->key() == Qt::Key_F2) {
+            beginCellEdit(QString());
+            e->accept(); return;
+        }
+        if (e->key() == Qt::Key_F3) {
+            cycleEditMode(!shift);
+            e->accept(); return;
+        }
+    }
+
     // Navigation keys:
     switch (e->key()) {
         // ---- Arrow keys ----
@@ -445,6 +451,8 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
         m_cursorX = m_selection->cursor1().x();
         m_cursorY = m_selection->cursor1().y();
         ensureCursorVisible();
+        emit statusCursorChanged(m_cursorX, m_cursorY);
+        emit statusSelectionChanged(m_selection->rect());
     }
     if (isGridTypingKey(e)) {
         const QString ch = e->text();
@@ -473,10 +481,11 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_digitEditScope(QKeyEvent* e) {
         commitCellEdit(SubmitMove::ShiftTab);
         return;
     }
-    if (e->key() == Qt::Key_Escape) {
+    if (e->key() == Qt::Key_Escape || e->key() == Qt::Key_F2) {
         cancelCellEdit();
         return;
     }
+
     QWidget::keyPressEvent(e);
     return;
 }
@@ -635,7 +644,7 @@ void mdn::gui::NumberDisplayWidget::ensureCursorVisible() {
 void mdn::gui::NumberDisplayWidget::drawAxes(QPainter& painter, const QRect& widgetRect) {
     // X axis in view?
     if (m_viewOriginY <= 0 && 0 < m_viewOriginY + m_rows) {
-        const int yIndex = m_viewOriginY + (m_rows - 1) - 0;
+        const int yIndex = m_viewOriginY + m_rows;
         const int yOriginPx = yIndex * m_cellSize;
 
         QPen axis = m_theme.axisPen;
@@ -750,6 +759,8 @@ void mdn::gui::NumberDisplayWidget::setBothCursors(int mx, int my) {
         m_cachedSel = m_selection->rect();
     }
     ensureCursorVisible();
+    emit statusCursorChanged(m_cursorX, m_cursorY);
+    emit statusSelectionChanged(m_cachedSel);
     update();
 }
 
@@ -763,6 +774,8 @@ void mdn::gui::NumberDisplayWidget::setCursor1(int mx, int my) {
         m_cachedSel = m_selection->rect();
     }
     ensureCursorVisible();
+    emit statusCursorChanged(m_cursorX, m_cursorY);
+    emit statusSelectionChanged(m_cachedSel);
     update();
 }
 
@@ -855,26 +868,28 @@ void mdn::gui::NumberDisplayWidget::commitCellEdit(SubmitMove how)
     const bool hasDot = body.contains('.');
 
     const mdn::Coord xy = m_selection->cursor1();
-    m_model->setToZero(xy);
+    bool overwrite = m_mode == EditMode::Overwrite;
 
     if (hasDot) {
         bool ok = false;
         const double mag = parseBaseRealMagnitude(body, base, ok);
+        const double val = neg ? -mag : mag;
         if (ok) {
-            if (neg) {
-                m_model->subtract(xy, mag, m_model->config().fraxis());
+            if (m_mode == EditMode::Subtract) {
+                m_model->subtract(xy, val, overwrite, m_model->config().fraxis());
             } else {
-                m_model->add(xy, mag, m_model->config().fraxis());
+                m_model->add(xy, val, overwrite, m_model->config().fraxis());
             }
         }
     } else {
         bool ok = false;
         const long long mag = parseBaseIntMagnitude(body, base, ok);
+        const long long val = neg ? -mag : mag;
         if (ok) {
-            if (neg) {
-                m_model->subtract(xy, mag);
+            if (m_mode == EditMode::Subtract) {
+                m_model->subtract(xy, val, overwrite);
             } else {
-                m_model->add(xy, mag);
+                m_model->add(xy, val, overwrite);
             }
         }
     }
@@ -1184,4 +1199,33 @@ long long mdn::gui::NumberDisplayWidget::parseBaseIntMagnitude(const QString& bo
     }
     ok = true;
     return value;
+}
+
+
+QString mdn::gui::NumberDisplayWidget::modeShortText() const {
+    switch (m_mode) {
+        case EditMode::Overwrite: {
+            return QStringLiteral("OVER");
+        }
+        case EditMode::Add: {
+            return QStringLiteral("ADD +");
+        }
+        case EditMode::Subtract: {
+            return QStringLiteral("SUB −");
+        }
+    }
+    return QStringLiteral("OVER");
+}
+
+
+QString mdn::gui::NumberDisplayWidget::selectionSummaryText() const {
+    if (!m_selection) return QString();
+    const Rect r = m_selection->rect();
+    if (!r.isValid()) return QStringLiteral("(empty)");
+    const int w = r.width();
+    const int h = r.height();
+    return QStringLiteral("[%1..%2]×[%3..%4]  (%5×%6)")
+        .arg(r.left()).arg(r.right())
+        .arg(r.bottom()).arg(r.top())
+        .arg(w).arg(h);
 }

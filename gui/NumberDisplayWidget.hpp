@@ -32,6 +32,13 @@ class NumberDisplayWidget : public QWidget {
     Q_OBJECT
 
 public:
+    enum class EditMode {
+        Overwrite,
+        Add,
+        Subtract
+    };
+    Q_ENUM(EditMode)
+
     struct Theme {
         QFont   font            {QStringLiteral("Courier New"), 11};
         QBrush  background      {Qt::NoBrush};
@@ -81,6 +88,55 @@ public:
     // Cell editting
     void cancelCellEdit();
 
+    inline EditMode editMode() const { return m_mode; }
+    inline void setEditMode(EditMode m) {
+        if (m_mode != m) {
+            m_mode = m;
+            emit statusModeChanged(m_mode);
+            update();
+        }
+    }
+    inline void toggleEditMode(EditMode m) {
+        if (m_mode != m) {
+            m_mode = m;
+            emit statusModeChanged(m_mode);
+            update();
+        } else {
+            m_mode = EditMode::Overwrite;
+            emit statusModeChanged(m_mode);
+            update();
+        }
+    }
+    inline void cycleEditMode(bool forward) {
+        if (forward) {
+            switch (m_mode) {
+                case EditMode::Overwrite:
+                    m_mode = EditMode::Add;
+                    break;
+                case EditMode::Add:
+                    m_mode = EditMode::Subtract;
+                    break;
+                case EditMode::Subtract:
+                    m_mode = EditMode::Overwrite;
+                    break;
+            }
+        } else {
+            switch (m_mode) {
+                case EditMode::Overwrite:
+                    m_mode = EditMode::Subtract;
+                    break;
+                case EditMode::Add:
+                    m_mode = EditMode::Overwrite;
+                    break;
+                case EditMode::Subtract:
+                    m_mode = EditMode::Add;
+                    break;
+            }
+        }
+        emit statusModeChanged(m_mode);
+        update();
+    }
+
 
 signals:
     void focusDownRequested();
@@ -91,6 +147,9 @@ Q_SIGNALS:
     void requestMoveTabRight();
     void requestMoveTabLeft();
     void requestDebugShowAllTabs();
+    void statusCursorChanged(int x, int y);
+    void statusSelectionChanged(const mdn::Rect& r);
+    void statusModeChanged(mdn::gui::NumberDisplayWidget::EditMode m);
 
 
 public slots:
@@ -144,6 +203,8 @@ private:
     void setBothCursors(int mx, int my);
     void setCursor1(int mx, int my);
     void selectAllBounds();
+    QString modeShortText() const;
+    QString selectionSummaryText() const;
 
 
     // API
@@ -161,7 +222,6 @@ private:
     QString stripSign(const QString& s, bool& isNeg) const;
     double parseBaseRealMagnitude(const QString& body, int base, bool& ok) const;
     long long parseBaseIntMagnitude(const QString& body, int base, bool& ok) const;
-
 
     // Private member data
     Mdn2d* m_model{ nullptr };
@@ -196,6 +256,7 @@ private:
 
     // In-cell editor
     QLineEdit* m_cellEditor{nullptr};
+    EditMode m_mode{ EditMode::Overwrite };
 
     // Editing state
     bool m_editing{false};
