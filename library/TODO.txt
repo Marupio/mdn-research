@@ -32,6 +32,32 @@ GUI library
 
 FUNCTIONALITY
 
+Finish Selection cursor iterate functions
+NDW::moveCursorAfterSubmit
+    Convert to switch
+    Finish putting stayInside functionality into it
+Make Selection thread safe
+
+CTRL+A highlights cursors 0 and 1 but not rect
+ESC should remove rect selection, all at cursor1
+Tab | shift tab | enter | shift enter (t,st,e,se)
+t|st
+    Single-digit selection
+        * movement: FAIL
+        * submission: PASS
+    Multi-digit selection
+        * movement: FAIL
+        * submission: PASS
+e|se
+    Single-digit selection
+        * movement: PASS
+        * submission: PASS
+    Multi-digit selection
+        * movement: PASS
+        * submission: PASS
+arrow keys
+    Movement - should deselect and move - PASS
+    Submission - should deselect and move - FAIL
 * Add number of digits with float / double add / subtract
 * Add CLI-only features to LoggerConfigurator
 * Click & drag tabs continuously, not one swap at a time * ON HOLD, MAYBE THIS IS OKAY *

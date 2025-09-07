@@ -13,6 +13,20 @@
 constexpr double mdn::gui::NumberDisplayWidget::kEdgeGuardFrac;
 
 
+std::string mdn::gui::NumberDisplayWidget::EditModeToString(EditMode m) {
+    switch (m) {
+        case EditMode::Overwrite:
+            return "Overwrite";
+        case EditMode::Add:
+            return "Add";
+        case EditMode::Subtract:
+            return "Subtract";
+        default:
+            return "Unknown";
+    }
+}
+
+
 mdn::gui::NumberDisplayWidget::NumberDisplayWidget(QWidget* parent)
     : QWidget(parent) {
     setFocusPolicy(Qt::StrongFocus);
@@ -30,7 +44,6 @@ void mdn::gui::NumberDisplayWidget::setModel(Mdn2d* model, Selection* sel) {
     m_model = model;
     m_selection = sel;
     if (m_selection) {
-        m_cachedSel = m_selection->rect();
         m_cursorX = m_selection->cursor1().x();
         m_cursorY = m_selection->cursor1().y();
     }
@@ -99,13 +112,22 @@ void mdn::gui::NumberDisplayWidget::onCursorChanged(mdn::Coord c) {
 
 
 void mdn::gui::NumberDisplayWidget::onSelectionChanged(const mdn::Rect& r) {
-    m_cachedSel = r;
-    emit statusSelectionChanged(m_cachedSel);
+    emit statusSelectionChanged(*m_selection);
     update();
 }
 
 
 void mdn::gui::NumberDisplayWidget::onModelModified() {
+    update();
+}
+
+
+void mdn::gui::NumberDisplayWidget::setEditMode(EditMode m) {
+    if (m_mode == m) {
+        return;
+    }
+    m_mode = m;
+    emit editModeChanged(m_mode);
     update();
 }
 
@@ -202,8 +224,11 @@ bool mdn::gui::NumberDisplayWidget::eventFilter(QObject* watched, QEvent* event)
             const bool meta = (ke->modifiers() & Qt::MetaModifier) != 0;
             const bool shift = (ke->modifiers() & Qt::ShiftModifier) != 0;
 
-            if (ctrl) {
-                if (ke->key() == Qt::Key_PageUp) {
+            switch (ke->key()) {
+                case Qt::Key_PageUp: {
+                    if (!ctrl) {
+                        break;
+                    }
                     if (shift) {
                         Q_EMIT requestMoveTabRight();
                     } else {
@@ -211,7 +236,11 @@ bool mdn::gui::NumberDisplayWidget::eventFilter(QObject* watched, QEvent* event)
                     }
                     ke->accept();
                     return true;
-                } else if (ke->key() == Qt::Key_PageDown) {
+                }
+                case Qt::Key_PageDown: {
+                    if (!ctrl) {
+                        break;
+                    }
                     if (shift) {
                         Q_EMIT requestMoveTabLeft();
                     } else {
@@ -220,46 +249,69 @@ bool mdn::gui::NumberDisplayWidget::eventFilter(QObject* watched, QEvent* event)
                     ke->accept();
                     return true;
                 }
-            }
-
-            if (ke->key() == Qt::Key_A && (ctrl || meta)) {
-                cancelCellEdit();
-                setFocus(Qt::OtherFocusReason);
-                selectAllBounds();
-                ke->accept();
-                return true;
-            }
-
-            if (ke->key() == Qt::Key_Return || ke->key() == Qt::Key_Enter) {
-                if (shift) {
-                    commitCellEdit(SubmitMove::ShiftEnter);
-                } else {
-                    commitCellEdit(SubmitMove::Enter);
+                case Qt::Key_A: {
+                    if (!ctrl && !meta) {
+                        break;
+                    }
+                    cancelCellEdit();
+                    setFocus(Qt::OtherFocusReason);
+                    selectAllBounds();
+                    ke->accept();
+                    return true;
                 }
-                setFocus(Qt::OtherFocusReason);
-                ke->accept();
-                return true;
-            }
-
-            if (ke->key() == Qt::Key_Tab) {
-                commitCellEdit(SubmitMove::Tab);
-                setFocus(Qt::OtherFocusReason);
-                ke->accept();
-                return true;
-            }
-
-            if (ke->key() == Qt::Key_Backtab) {
-                commitCellEdit(SubmitMove::ShiftTab);
-                setFocus(Qt::OtherFocusReason);
-                ke->accept();
-                return true;
-            }
-
-            if (ke->key() == Qt::Key_Escape) {
-                cancelCellEdit();
-                setFocus(Qt::OtherFocusReason);
-                ke->accept();
-                return true;
+                case Qt::Key_Return:
+                case Qt::Key_Enter: {
+                    if (shift) {
+                        commitCellEdit(SubmitMove::ShiftEnter, true); // stay inside
+                    } else {
+                        commitCellEdit(SubmitMove::Enter, true); // stay inside
+                    }
+                    setFocus(Qt::OtherFocusReason);
+                    ke->accept();
+                    return true;
+                }
+                case Qt::Key_Tab: {
+                    commitCellEdit(SubmitMove::Tab, true);
+                    setFocus(Qt::OtherFocusReason);
+                    ke->accept();
+                    return true;
+                }
+                case Qt::Key_Backtab: {
+                    commitCellEdit(SubmitMove::ShiftTab, true); // stay inside
+                    setFocus(Qt::OtherFocusReason);
+                    ke->accept();
+                    return true;
+                }
+                case Qt::Key_Escape: {
+                    cancelCellEdit();
+                    setFocus(Qt::OtherFocusReason);
+                    ke->accept();
+                    return true;
+                }
+                case Qt::Key_Up: {
+                    commitCellEdit(SubmitMove::Enter, false); // do not stay inside
+                    setFocus(Qt::OtherFocusReason);
+                    ke->accept();
+                    return true;
+                }
+                case Qt::Key_Down: {
+                    commitCellEdit(SubmitMove::ShiftEnter, false); // do not stay inside
+                    setFocus(Qt::OtherFocusReason);
+                    ke->accept();
+                    return true;
+                }
+                case Qt::Key_Right: {
+                    commitCellEdit(SubmitMove::Tab, false); // do not stay inside
+                    setFocus(Qt::OtherFocusReason);
+                    ke->accept();
+                    return true;
+                }
+                case Qt::Key_Left: {
+                    commitCellEdit(SubmitMove::ShiftTab, false); // do not stay inside
+                    setFocus(Qt::OtherFocusReason);
+                    ke->accept();
+                    return true;
+                }
             }
         }
     }
@@ -338,20 +390,24 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
 
     if (!ctrl && !meta && !alt) {
         if (e->key() == Qt::Key_Plus || e->key() == Qt::Key_Equal) {
-            toggleEditMode(EditMode::Add);
-            e->accept(); return;
+            emit requestToggleEditMode(EditMode::Add);
+            e->accept();
+            return;
         }
         if (e->key() == Qt::Key_Minus) {
-            toggleEditMode(EditMode::Subtract);
-            e->accept(); return;
+            emit requestToggleEditMode(EditMode::Subtract);
+            e->accept();
+            return;
         }
         if (e->key() == Qt::Key_F2) {
             beginCellEdit(QString());
-            e->accept(); return;
+            e->accept();
+            return;
         }
         if (e->key() == Qt::Key_F3) {
-            cycleEditMode(!shift);
-            e->accept(); return;
+            emit requestCycleEditMode(!shift);
+            e->accept();
+            return;
         }
     }
 
@@ -361,33 +417,39 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
         case Qt::Key_Up:
             if (ctrl) m_selection->cursorJumpUp(extend);
             else      m_selection->cursorUp(extend);
-            e->accept(); break;
+            e->accept();
+            return;
 
         case Qt::Key_Down:
             if (ctrl) m_selection->cursorJumpDn(extend);
             else      m_selection->cursorDn(extend);
-            e->accept(); break;
+            e->accept();
+            return;
 
         case Qt::Key_Left:
             if (ctrl) m_selection->cursorJumpLf(extend);
             else      m_selection->cursorLf(extend);
-            e->accept(); break;
+            e->accept();
+            return;
 
         case Qt::Key_Right:
             if (ctrl) m_selection->cursorJumpRt(extend);
             else      m_selection->cursorRt(extend);
-            e->accept(); break;
+            e->accept();
+            return;
 
         // ---- Paging ----
         case Qt::Key_PageUp:
             if (alt)  m_selection->cursorPageLf(extend);
             else      m_selection->cursorPageUp(extend);
-            e->accept(); break;
+            e->accept();
+            return;
 
         case Qt::Key_PageDown:
             if (alt)  m_selection->cursorPageRt(extend);
             else      m_selection->cursorPageDn(extend);
-            e->accept(); break;
+            e->accept();
+            return;
 
         // ---- Origin ----
         case Qt::Key_Home: {
@@ -402,27 +464,32 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
                 centreViewOn(m_cursorX, m_cursorY);
             }
             e->accept();
-            break;
+            return;
         }
 
         // ---- Next / Prev by “entry” convention ----
         // Enter / Return: move along Y (down by default)
         case Qt::Key_Return:
         case Qt::Key_Enter:
-            if (shift) m_selection->cursorPrevY(false);
-            else       m_selection->cursorNextY(false);
-            e->accept(); break;
+            if (shift) {
+                m_selection->cursorIterateReverseY();
+            } else {
+                m_selection->cursorIterateY();
+            }
+            e->accept();
+            return;
 
         // Tab: move along X (right by default)
         case Qt::Key_Tab:
-            if (shift) m_selection->cursorPrevX(false);
-            else       m_selection->cursorNextX(false);
-            e->accept(); break;
+            m_selection->cursorIterateX();
+            e->accept();
+            return;
 
         // Shift+Tab comes in as Key_Backtab on some platforms
         case Qt::Key_Backtab:
-            m_selection->cursorPrevX(false);
-            e->accept(); break;
+            m_selection->cursorIterateReverseX();
+            e->accept();
+            return;
 
         // Debugging purposes
         case Qt::Key_Space:
@@ -431,7 +498,7 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
             {
                 Q_EMIT requestDebugShowAllTabs();
                 e->accept();
-                break;
+                return;
             }
             QWidget::keyPressEvent(e);
             return;
@@ -440,7 +507,7 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
         case Qt::Key_Escape:
             emit focusDownRequested();
             e->accept();
-            break;
+            return;
 
         default:
             break;
@@ -452,38 +519,65 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
         m_cursorY = m_selection->cursor1().y();
         ensureCursorVisible();
         emit statusCursorChanged(m_cursorX, m_cursorY);
-        emit statusSelectionChanged(m_selection->rect());
+        emit statusSelectionChanged(*m_selection);
     }
     if (isGridTypingKey(e)) {
         const QString ch = e->text();
         beginCellEdit(ch);
         return;
     }
-    QWidget::keyPressEvent(e);
+
+    if (!e->isAccepted()) {
+        QWidget::keyPressEvent(e);
+    }
     update();
 }
 
 
 void mdn::gui::NumberDisplayWidget::keyPressEvent_digitEditScope(QKeyEvent* e) {
-    if (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter) {
-        if (e->modifiers() & Qt::ShiftModifier) {
-            commitCellEdit(SubmitMove::ShiftEnter);
-        } else {
-            commitCellEdit(SubmitMove::Enter);
+    const Qt::KeyboardModifiers mods = e->modifiers();
+    const bool shift  = mods.testFlag(Qt::ShiftModifier);
+    const bool ctrl   = mods.testFlag(Qt::ControlModifier);
+    const bool meta   = mods.testFlag(Qt::MetaModifier);
+    const bool alt    = mods.testFlag(Qt::AltModifier);
+
+    switch (e->key()) {
+        // Submit
+        case Qt::Key_Return:
+        case Qt::Key_Enter: {
+            SubmitMove how = shift ? SubmitMove::ShiftEnter : SubmitMove::Enter;
+            commitCellEdit(how, true); // stay inside
+            return;
         }
-        return;
-    }
-    if (e->key() == Qt::Key_Tab) {
-        commitCellEdit(SubmitMove::Tab);
-        return;
-    }
-    if (e->key() == Qt::Key_Backtab) {
-        commitCellEdit(SubmitMove::ShiftTab);
-        return;
-    }
-    if (e->key() == Qt::Key_Escape || e->key() == Qt::Key_F2) {
-        cancelCellEdit();
-        return;
+        case Qt::Key_Tab: {
+            commitCellEdit(SubmitMove::Tab, true); // stay inside
+            return;
+        }
+        case Qt::Key_Backtab: {
+            commitCellEdit(SubmitMove::ShiftTab, true); // stay inside
+            return;
+        }
+        case Qt::Key_Escape:
+        case Qt::Key_F2: {
+            cancelCellEdit();
+            return;
+        }
+        case Qt::UpArrow: {
+            commitCellEdit(SubmitMove::Enter, false); // do not stay inside
+            return;
+        }
+        case Qt::DownArrow: {
+            commitCellEdit(SubmitMove::ShiftEnter, false); // do not stay inside
+            return;
+        }
+        case Qt::LeftArrow: {
+            commitCellEdit(SubmitMove::ShiftTab, false); // do not stay inside
+            return;
+        }
+        case Qt::RightArrow: {
+            commitCellEdit(SubmitMove::Tab, false); // do not stay inside
+            return;
+        }
     }
 
     QWidget::keyPressEvent(e);
@@ -529,7 +623,6 @@ void mdn::gui::NumberDisplayWidget::mouseMoveEvent(QMouseEvent* e) {
             m_selection->setCursor0({m_dragAnchorX, m_dragAnchorY});
             m_selection->setCursor1({mx, my});
             m_selection->syncRectToCursors();
-            m_cachedSel = m_selection->rect();
         }
         m_cursorX = mx;
         m_cursorY = my;
@@ -756,11 +849,10 @@ void mdn::gui::NumberDisplayWidget::setBothCursors(int mx, int my) {
         m_selection->setCursor0({mx, my});
         m_selection->setCursor1({mx, my});
         m_selection->syncRectToCursors();
-        m_cachedSel = m_selection->rect();
     }
     ensureCursorVisible();
     emit statusCursorChanged(m_cursorX, m_cursorY);
-    emit statusSelectionChanged(m_cachedSel);
+    emit statusSelectionChanged(*m_selection);
     update();
 }
 
@@ -771,11 +863,10 @@ void mdn::gui::NumberDisplayWidget::setCursor1(int mx, int my) {
     if (m_selection) {
         m_selection->setCursor1({mx, my});
         m_selection->syncRectToCursors();
-        m_cachedSel = m_selection->rect();
     }
     ensureCursorVisible();
     emit statusCursorChanged(m_cursorX, m_cursorY);
-    emit statusSelectionChanged(m_cachedSel);
+    emit statusSelectionChanged(*m_selection);
     update();
 }
 
@@ -841,7 +932,7 @@ void mdn::gui::NumberDisplayWidget::positionCellEditor()
 }
 
 
-void mdn::gui::NumberDisplayWidget::commitCellEdit(SubmitMove how)
+void mdn::gui::NumberDisplayWidget::commitCellEdit(SubmitMove how, bool stayInside)
 {
     Log_Debug2_H("");
     if (!m_model || !m_selection || !m_editing) {
@@ -857,7 +948,7 @@ void mdn::gui::NumberDisplayWidget::commitCellEdit(SubmitMove how)
         m_cellEditor->hide();
         m_editing = false;
         update();
-        moveCursorAfterSubmit(how);
+        moveCursorAfterSubmit(how, stayInside);
         setFocus(Qt::OtherFocusReason);
         Log_Debug2_T("rejected text");
         return;
@@ -897,7 +988,7 @@ void mdn::gui::NumberDisplayWidget::commitCellEdit(SubmitMove how)
     m_cellEditor->hide();
     m_editing = false;
     update();
-    moveCursorAfterSubmit(how);
+    moveCursorAfterSubmit(how, stayInside);
     setFocus(Qt::OtherFocusReason);
     Log_Debug2_T("");
 }
@@ -1079,7 +1170,7 @@ QRect mdn::gui::NumberDisplayWidget::cursorCellRectInWidget() const
 }
 
 
-void mdn::gui::NumberDisplayWidget::moveCursorAfterSubmit(SubmitMove how)
+void mdn::gui::NumberDisplayWidget::moveCursorAfterSubmit(SubmitMove how, bool stayInside)
 {
     Log_Debug3_H("");
     if (!m_selection) {
@@ -1089,58 +1180,41 @@ void mdn::gui::NumberDisplayWidget::moveCursorAfterSubmit(SubmitMove how)
 
     const Rect r = m_selection->rect();
     const Coord cur = m_selection->cursor1();
-    const bool hasRect = r.isValid();
-    if (!hasRect) {
-        if (how == SubmitMove::Enter) {
-            m_selection->cursorNextY(false);
-        } else if (how == SubmitMove::ShiftEnter) {
-            m_selection->cursorPrevY(false);
-        } else if (how == SubmitMove::Tab) {
-            m_selection->cursorNextX(false);
-        } else {
-            m_selection->cursorPrevX(false);
-        }
-        ensureCursorVisible();
-        update();
-        Log_Debug3_T("no rect");
-        return;
-    }
-
-    const Coord mn = r.min();
-    const Coord mx = r.max();
-    int x = cur.x();
-    int y = cur.y();
-
-    if (how == SubmitMove::Enter) {
-        if (y >= mx.y()) {
-            y = mn.y();
-        } else {
-            y += 1;
-        }
-    } else if (how == SubmitMove::ShiftEnter) {
-        if (y <= mn.y()) {
-            y = mx.y();
-        } else {
-            y -= 1;
-        }
-    } else if (how == SubmitMove::Tab) {
-        if (x >= mx.x()) {
-            x = mn.x();
-        } else {
-            x += 1;
+    if (stayInside) {
+        switch (how) {
+            case SubmitMove::Enter:
+                m_selection->cursorIterateY();
+                break;
+            case SubmitMove::ShiftEnter:
+                m_selection->cursorIterateReverseY();
+                break;
+            case SubmitMove::Tab:
+                m_selection->cursorIterateX();
+                break;
+            case SubmitMove::ShiftTab:
+                m_selection->cursorIterateReverseX();
+                break;
         }
     } else {
-        if (x <= mn.x()) {
-            x = mx.x();
-        } else {
-            x -= 1;
+        switch (how) {
+            case SubmitMove::Enter:
+                m_selection->cursorNextY(false);
+                break;
+            case SubmitMove::ShiftEnter:
+                m_selection->cursorPrevY(false);
+                break;
+            case SubmitMove::Tab:
+                m_selection->cursorNextX(false);
+                break;
+            case SubmitMove::ShiftTab:
+                m_selection->cursorPrevX(false);
+                break;
         }
     }
-
-    m_selection->setCursor1(Coord(x, y));
     ensureCursorVisible();
     update();
     Log_Debug3_T("");
+    return;
 }
 
 

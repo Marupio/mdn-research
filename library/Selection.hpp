@@ -83,6 +83,17 @@ public:
             return m_rect.isValid();
         }
 
+        // True if this rect has only a single coordinate
+        bool isSingleCoord() const {
+            return m_rect.isSingleCoord();
+        }
+
+        // True if this rect encompasses two or more coordinates
+        bool isMultiCoord() const {
+            return m_rect.isMultiCoord();
+        }
+
+
         // True if an Mdn is selected, but there's no rectangular area
         bool hasMdnOnly() const {
             return hasMdn() && !hasRect();
@@ -107,7 +118,7 @@ public:
     // * Selection operations
 
         void cursorUp(bool extendSelection) {
-            Log_Debug("cursorUp, extend=" << extendSelection);
+            Log_Debug("extend=" << extendSelection);
             m_cursor1.translateY(1);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
@@ -117,7 +128,7 @@ public:
             }
         }
         void cursorDn(bool extendSelection) {
-            Log_Debug("cursorDn, extend=" << extendSelection);
+            Log_Debug("extend=" << extendSelection);
             m_cursor1.translateY(-1);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
@@ -127,7 +138,7 @@ public:
             }
         }
         void cursorLf(bool extendSelection) {
-            Log_Debug("cursorLf, extend=" << extendSelection);
+            Log_Debug("extend=" << extendSelection);
             m_cursor1.translateX(-1);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
@@ -137,7 +148,7 @@ public:
             }
         }
         void cursorRt(bool extendSelection) {
-            Log_Debug("cursorRt, extend=" << extendSelection);
+            Log_Debug("extend=" << extendSelection);
             m_cursor1.translateX(1);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
@@ -147,7 +158,7 @@ public:
             }
         }
         void cursorJumpUp(bool extendSelection) {
-            Log_Debug("cursorJumpUp, extend=" << extendSelection);
+            Log_Debug("extend=" << extendSelection);
             const Mdn2d* dst = get();
             if (!dst) {
                 Log_Warn("Failed to acquire Mdn2d");
@@ -167,7 +178,7 @@ public:
             }
         }
         void cursorJumpDn(bool extendSelection) {
-            Log_Debug("cursorJumpDn, extend=" << extendSelection);
+            Log_Debug("extend=" << extendSelection);
             const Mdn2d* dst = get();
             if (!dst) {
                 Log_Warn("Failed to acquire Mdn2d");
@@ -187,7 +198,7 @@ public:
             }
         }
         void cursorJumpLf(bool extendSelection) {
-            Log_Debug("cursorJumpLf, extend=" << extendSelection);
+            Log_Debug("extend=" << extendSelection);
             const Mdn2d* dst = get();
             if (!dst) {
                 Log_Warn("Failed to acquire Mdn2d");
@@ -207,7 +218,7 @@ public:
             }
         }
         void cursorJumpRt(bool extendSelection) {
-            Log_Debug("cursorJumpRt, extend=" << extendSelection);
+            Log_Debug("extend=" << extendSelection);
             const Mdn2d* dst = get();
             if (!dst) {
                 Log_Warn("Failed to acquire Mdn2d");
@@ -227,8 +238,7 @@ public:
             }
         }
         void cursorPageUp(bool extendSelection) {
-            Log_Debug("cursorPageUp, extend=" << extendSelection);
-            // Missing information - need to find out how much a page movement is
+            Log_Debug("extend=" << extendSelection);
             m_cursor1.translateY(m_pageDy);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
@@ -238,8 +248,7 @@ public:
             }
         }
         void cursorPageDn(bool extendSelection) {
-            Log_Debug("cursorPageDn, extend=" << extendSelection);
-            // Missing information - need to find out how much a page movement is
+            Log_Debug("extend=" << extendSelection);
             m_cursor1.translateY(-m_pageDy);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
@@ -249,8 +258,7 @@ public:
             }
         }
         void cursorPageLf(bool extendSelection) {
-            Log_Debug("cursorPageLf, extend=" << extendSelection);
-            // Missing information - need to find out how much a page movement is
+            Log_Debug("extend=" << extendSelection);
             m_cursor1.translateX(-m_pageDx);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
@@ -260,8 +268,7 @@ public:
             }
         }
         void cursorPageRt(bool extendSelection) {
-            Log_Debug("cursorPageRt, extend=" << extendSelection);
-            // Missing information - need to find out how much a page movement is
+            Log_Debug("extend=" << extendSelection);
             m_cursor1.translateX(m_pageDx);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
@@ -271,7 +278,7 @@ public:
             }
         }
         void cursorOrigin(bool extendSelection) {
-            Log_Debug("cursorOrigin, extend=" << extendSelection);
+            Log_Debug("extend=" << extendSelection);
             m_cursor1 = COORD_ORIGIN;
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
@@ -281,7 +288,7 @@ public:
             }
         }
         void cursorNextX(bool extendSelection) {
-            Log_Debug("cursorNextX, extend=" << extendSelection);
+            Log_Debug("extend=" << extendSelection);
             m_cursor1.translate(1, 0);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
@@ -291,7 +298,7 @@ public:
             }
         }
         void cursorPrevX(bool extendSelection) {
-            Log_Debug("cursorPrevX, extend=" << extendSelection);
+            Log_Debug("extend=" << extendSelection);
             m_cursor1.translate(-1, 0);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
@@ -301,7 +308,7 @@ public:
             }
         }
         void cursorNextY(bool extendSelection) {
-            Log_Debug("cursorNextY, extend=" << extendSelection);
+            Log_Debug("extend=" << extendSelection);
             m_cursor1.translate(0, 1);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
@@ -311,13 +318,112 @@ public:
             }
         }
         void cursorPrevY(bool extendSelection) {
-            Log_Debug("cursorPrevY, extend=" << extendSelection);
+            Log_Debug("extend=" << extendSelection);
             m_cursor1.translate(0, -1);
             if (extendSelection) {
                 m_rect.set(m_cursor0, m_cursor1, true);
             } else {
                 m_cursor0 = m_cursor1;
                 m_rect.set(m_cursor0);
+            }
+        }
+
+        // Iterate cursor functions:
+        //  singleCoord - moves one step in the direction specified and returns false
+        //  multiCoord - at each call, increments in the direction specified, with wrapping
+        //      behaviour to ensure every selected cell is visited.  Returns true if more cells need
+        //      to be visited.
+
+        bool cursorIterateX() {
+            Log_Debug("");
+            if (isSingleCoord()) {
+                m_cursor1.translate(1, 0);
+                m_cursor0 = m_cursor1;
+                m_rect.set(m_cursor0);
+                return false;
+            } else {
+                if (m_cursor1.x() == m_rect.max().x()) {
+                    if (m_cursor1.y() == m_rect.max().y()) {
+                        m_cursor1 = m_rect.min();
+                        return false;
+                    } else {
+                        m_cursor1.x() = m_rect.min().x();
+                        m_cursor1.translateY(1);
+                        return true;
+                    }
+                } else {
+                    m_cursor1.translateX(1);
+                    return true;
+                }
+            }
+        }
+        bool cursorIterateReverseX() {
+            Log_Debug("");
+            if (isSingleCoord()) {
+                m_cursor1.translate(-1, 0);
+                m_cursor0 = m_cursor1;
+                m_rect.set(m_cursor0);
+                return false;
+            } else {
+                if (m_cursor1.x() == m_rect.min().x()) {
+                    if (m_cursor1.y() == m_rect.min().y()) {
+                        m_cursor1 = m_rect.max();
+                        return false;
+                    } else {
+                        m_cursor1.x() = m_rect.max().x();
+                        m_cursor1.translateY(-1);
+                        return true;
+                    }
+                } else {
+                    m_cursor1.translateX(-1);
+                    return true;
+                }
+            }
+        }
+        bool cursorIterateY() {
+            Log_Debug("");
+            if (isSingleCoord()) {
+                m_cursor1.translate(0, 1);
+                m_cursor0 = m_cursor1;
+                m_rect.set(m_cursor0);
+                return false;
+            } else {
+                if (m_cursor1.y() == m_rect.max().y()) {
+                    if (m_cursor1.x() == m_rect.max().x()) {
+                        m_cursor1 = m_rect.min();
+                        return false;
+                    } else {
+                        m_cursor1.y() = m_rect.min().y();
+                        m_cursor1.translateX(1);
+                        return true;
+                    }
+                } else {
+                    m_cursor1.translateY(1);
+                    return true;
+                }
+            }
+        }
+        bool cursorIterateReverseY() {
+            Log_Debug("");
+            if (isSingleCoord()) {
+                m_cursor1.translate(0, -1);
+                m_cursor0 = m_cursor1;
+                m_rect.set(m_cursor0);
+                return false;
+            } else {
+                if (m_cursor1.y() == m_rect.min().y()) {
+                    if (m_cursor1.x() == m_rect.min().x()) {
+                        m_cursor1 = m_rect.max();
+                        return false;
+                    } else {
+                        m_cursor1.y() = m_rect.max().y();
+                        m_cursor1.translateX(-1);
+                        return true;
+                    }
+                } else {
+                    m_cursor1.translateY(-1);
+                    return true;
+                }
             }
         }
 

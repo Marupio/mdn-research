@@ -18,6 +18,21 @@
         "CMAKE_PREFIX_PATH": "C:/Qt/6.9.1/msvc2022_64",
         "Qt6_DIR": "C:/Qt/6.9.1/msvc2022_64/lib/cmake/Qt6"
       }
+    },
+    {
+      "name": "release",
+      "hidden": false,
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "cl",
+        "CMAKE_CXX_COMPILER": "cl",
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_FLAGS_DEBUG": "",
+        "CMAKE_PREFIX_PATH": "C:/Qt/6.9.1/msvc2022_64",
+        "Qt6_DIR": "C:/Qt/6.9.1/msvc2022_64/lib/cmake/Qt6",
+        "Logs": "OFF",
+        "MDN_DEBUG": "OFF"
+      }
     }
   ]
 }

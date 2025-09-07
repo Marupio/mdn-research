@@ -266,6 +266,97 @@ void mdn::gui::MainWindow::onOpsPlan(const OpsController::Plan& p) {
 }
 
 
+void mdn::gui::MainWindow::cycleEditMode() {
+    // Shift-click cycles backward; normal click forward (optional UX sugar)
+    const bool forward = !(QApplication::keyboardModifiers() & Qt::ShiftModifier);
+    cycleGlobalEditMode(forward);
+}
+
+
+void mdn::gui::MainWindow::setGlobalEditMode(NumberDisplayWidget::EditMode m) {
+    if (m_globalMode == m) {
+        return;
+    }
+    m_globalMode = m;
+
+    // Update all NDWs
+    for (int i = 0; i < m_tabWidget->count(); ++i) {
+        if (auto* ndw = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(i)))
+            ndw->setEditMode(m_globalMode);
+    }
+
+    // Update status button/label
+    updateStatusModeText(m_globalMode);
+}
+
+
+void mdn::gui::MainWindow::toggleGlobalEditMode(NumberDisplayWidget::EditMode m) {
+    if (m_globalMode != m) {
+        setGlobalEditMode(m);
+    } else {
+        setGlobalEditMode(NumberDisplayWidget::EditMode::Overwrite);
+    }
+}
+
+
+void mdn::gui::MainWindow::cycleGlobalEditMode(bool forward) {
+
+    using M = NumberDisplayWidget::EditMode;
+    M next;
+    if (forward) {
+        switch (m_globalMode) {
+            case M::Overwrite:
+                next = M::Add;
+                break;
+            case M::Add:
+                next = M::Subtract;
+                break;
+            case M::Subtract:
+                next = M::Overwrite;
+                break;
+        }
+    } else {
+        switch (m_globalMode) {
+            case M::Overwrite:
+                next = M::Subtract;
+                break;
+            case M::Add:
+                next = M::Overwrite;
+                break;
+            case M::Subtract:
+                next = M::Add;
+                break;
+        }
+    }
+    setGlobalEditMode(next);
+}
+
+
+void mdn::gui::MainWindow::onEditModeChanged(NumberDisplayWidget::EditMode m) {
+    if (m != m_globalMode) {
+        Log_Warn(
+            "Unexpected edit mode change, to '" << NumberDisplayWidget::EditModeToString(m)
+                << "', expecting '" << NumberDisplayWidget::EditModeToString(m_globalMode) << "'"
+        );
+    }
+}
+
+
+void mdn::gui::MainWindow::chooseModeOverwrite() {
+    setGlobalEditMode(NumberDisplayWidget::EditMode::Overwrite);
+}
+
+
+void mdn::gui::MainWindow::chooseModeAdd() {
+    setGlobalEditMode(NumberDisplayWidget::EditMode::Add);
+}
+
+
+void mdn::gui::MainWindow::chooseModeSubtract() {
+    setGlobalEditMode(NumberDisplayWidget::EditMode::Subtract);
+}
+
+
 void mdn::gui::MainWindow::slotSelectNextTab()
 {
     Log_Debug3_H("slotSelectNextTab");
@@ -522,45 +613,39 @@ void mdn::gui::MainWindow::createTabs() {
                 if (m_statusCursor)
                     m_statusCursor->setText(QStringLiteral("(%1,%2)").arg(x).arg(y));
             });
-        connect(ndw, &NumberDisplayWidget::statusSelectionChanged, this,
-            [this](const mdn::Rect& r){
-                if (!m_statusSel) {
-                    return;
-                }
-                if (!r.isValid()) {
-                    m_statusSel->setText(QStringLiteral("(empty)"));
-                    return;
-                }
-                const int w = r.width();
-                const int h = r.height();
-                m_statusSel->setText(
-                    QStringLiteral("[%1,%2]→[%3,%4] (%5×%6)")
-                        .arg(r.left()).arg(r.right())
-                        .arg(r.bottom()).arg(r.top())
-                        .arg(w).arg(h)
-                );
-            });
-        connect(ndw, &NumberDisplayWidget::statusModeChanged, this,
-            [this](NumberDisplayWidget::EditMode m){
-                if (!m_statusMode) {
-                    return;
-                }
-                switch (m) {
-                    case NumberDisplayWidget::EditMode::Overwrite: {
-                        m_statusMode->setText("OVER");
-                        break;
-                    }
-                    case NumberDisplayWidget::EditMode::Add: {
-                        m_statusMode->setText("ADD +");
-                        break;
-                    }
-                    case NumberDisplayWidget::EditMode::Subtract: {
-                        m_statusMode->setText("SUB −");
-                        break;
-                    }
-                }
-            }
+        connect(
+            ndw,
+            &NumberDisplayWidget::statusSelectionChanged,
+            this,
+            &MainWindow::updateStatusSelectionText
         );
+        connect(
+            ndw,
+            &NumberDisplayWidget::editModeChanged,
+            this,
+            &MainWindow::onEditModeChanged
+        );
+        connect(
+            ndw,
+            &NumberDisplayWidget::requestSetEditMode,
+            this,
+            &MainWindow::setGlobalEditMode
+        );
+        connect(
+            ndw,
+            &NumberDisplayWidget::requestToggleEditMode,
+            this,
+            &MainWindow::toggleGlobalEditMode
+        );
+        connect(
+            ndw,
+            &NumberDisplayWidget::requestCycleEditMode,
+            this,
+            &MainWindow::cycleGlobalEditMode
+        );
+
+        // Push current global mode into the new widget
+        ndw->setEditMode(m_globalMode);
 
         std::string name = names[index];
         Log_Debug4("addTab(" << name << ")");
@@ -597,6 +682,7 @@ void mdn::gui::MainWindow::createTabs() {
             &mdn::gui::MainWindow::slotDebugShowAllTabs
         );
     }
+    updateStatusModeText(m_globalMode);
     Log_Debug3_T("");
 }
 
@@ -640,6 +726,22 @@ void mdn::gui::MainWindow::initOperationsUi() {
 void mdn::gui::MainWindow::createStatusBar()
 {
     auto* sb = statusBar();
+
+    m_statusModeBtn = new QToolButton(this);
+    m_statusModeBtn->setAutoRaise(true);
+    m_statusModeBtn->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    m_statusModeBtn->setText("OVER"); // initial
+    connect(m_statusModeBtn, &QToolButton::clicked, this, &MainWindow::cycleEditMode);
+
+    m_modeMenu = new QMenu(this);
+    m_modeMenu->addAction("OVER", this, &MainWindow::chooseModeOverwrite);
+    m_modeMenu->addAction("ADD +", this, &MainWindow::chooseModeAdd);
+    m_modeMenu->addAction("SUB −", this, &MainWindow::chooseModeSubtract);
+    m_statusModeBtn->setMenu(m_modeMenu);
+    m_statusModeBtn->setPopupMode(QToolButton::MenuButtonPopup); // right side arrow; right-click opens menu
+
+    sb->addPermanentWidget(m_statusModeBtn);
+
     m_statusMode   = new QLabel(this);
     m_statusCursor = new QLabel(this);
     m_statusSel    = new QLabel(this);
@@ -788,6 +890,57 @@ void mdn::gui::MainWindow::syncTabsToProject() {
         m_ops->refreshTabNames();
     }
     Log_Debug3_T("");
+}
+
+
+void mdn::gui::MainWindow::updateStatusModeText(NumberDisplayWidget::EditMode m) {
+    if (!m_statusMode) {
+        return;
+    }
+    switch (m) {
+        case NumberDisplayWidget::EditMode::Overwrite: {
+            m_statusModeBtn->setText("OVER");
+            break;
+        }
+        case NumberDisplayWidget::EditMode::Add: {
+            m_statusModeBtn->setText("ADD +");
+            break;
+        }
+        case NumberDisplayWidget::EditMode::Subtract: {
+            m_statusModeBtn->setText("SUB −");
+            break;
+        }
+    }
+}
+
+
+void mdn::gui::MainWindow::updateStatusSelectionText(const mdn::Selection& s) {
+    if (!m_statusSel) {
+        return;
+    }
+    if (!s.rect().isValid()) {
+        m_statusSel->setText(QStringLiteral("(empty)"));
+        return;
+    }
+    const Rect& r = s.rect();
+    const Coord& rMin = r.min();
+    if (r.isSingleCoord()) {
+        m_statusSel->setText(
+            QStringLiteral("@[%1,%2]").arg(rMin.x()).arg(rMin.y())
+        );
+    } else {
+        const Coord& rMax = r.max();
+        const Coord& c1 = s.cursor1();
+        const int w = r.width();
+        const int h = r.height();
+        m_statusSel->setText(
+            QStringLiteral("@[%1,%2]:[%3,%4]→[%5,%7] (%7×%8)")
+                .arg(c1.x()).arg(c1.y())
+                .arg(rMin.x()).arg(rMin.y())
+                .arg(rMax.x()).arg(rMax.y())
+                .arg(w).arg(h)
+        );
+    }
 }
 
 

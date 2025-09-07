@@ -38,6 +38,7 @@ public:
         Subtract
     };
     Q_ENUM(EditMode)
+    static std::string EditModeToString(EditMode m);
 
     struct Theme {
         QFont   font            {QStringLiteral("Courier New"), 11};
@@ -89,57 +90,13 @@ public:
     void cancelCellEdit();
 
     inline EditMode editMode() const { return m_mode; }
-    inline void setEditMode(EditMode m) {
-        if (m_mode != m) {
-            m_mode = m;
-            emit statusModeChanged(m_mode);
-            update();
-        }
-    }
-    inline void toggleEditMode(EditMode m) {
-        if (m_mode != m) {
-            m_mode = m;
-            emit statusModeChanged(m_mode);
-            update();
-        } else {
-            m_mode = EditMode::Overwrite;
-            emit statusModeChanged(m_mode);
-            update();
-        }
-    }
-    inline void cycleEditMode(bool forward) {
-        if (forward) {
-            switch (m_mode) {
-                case EditMode::Overwrite:
-                    m_mode = EditMode::Add;
-                    break;
-                case EditMode::Add:
-                    m_mode = EditMode::Subtract;
-                    break;
-                case EditMode::Subtract:
-                    m_mode = EditMode::Overwrite;
-                    break;
-            }
-        } else {
-            switch (m_mode) {
-                case EditMode::Overwrite:
-                    m_mode = EditMode::Subtract;
-                    break;
-                case EditMode::Add:
-                    m_mode = EditMode::Overwrite;
-                    break;
-                case EditMode::Subtract:
-                    m_mode = EditMode::Add;
-                    break;
-            }
-        }
-        emit statusModeChanged(m_mode);
-        update();
-    }
 
 
 signals:
     void focusDownRequested();
+    void requestCycleEditMode(bool forward);
+    void requestToggleEditMode(EditMode m);
+    void requestSetEditMode(EditMode m);
 
 Q_SIGNALS:
     void requestSelectNextTab();
@@ -148,15 +105,15 @@ Q_SIGNALS:
     void requestMoveTabLeft();
     void requestDebugShowAllTabs();
     void statusCursorChanged(int x, int y);
-    void statusSelectionChanged(const mdn::Rect& r);
-    void statusModeChanged(mdn::gui::NumberDisplayWidget::EditMode m);
+    void statusSelectionChanged(const mdn::Selection& s);
+    void editModeChanged(mdn::gui::NumberDisplayWidget::EditMode m);
 
 
 public slots:
     void onCursorChanged(mdn::Coord c);
     void onSelectionChanged(const mdn::Rect& r);
     void onModelModified();
-
+    void setEditMode(EditMode m);
 
 protected:
     void paintEvent(QPaintEvent*) override;
@@ -175,7 +132,8 @@ protected:
     void mouseReleaseEvent(QMouseEvent*) override;
     void wheelEvent(QWheelEvent* e) override;
     void resizeEvent(QResizeEvent* event) override;
-
+    // Prevent Qt's default Tab/Shift+Tab focus traversal so we can use them for grid nav
+    bool focusNextPrevChild(bool) override { return false; }
 
 private:
 
@@ -206,11 +164,11 @@ private:
     QString modeShortText() const;
     QString selectionSummaryText() const;
 
-
     // API
     void beginCellEdit(const QString& initialText);
     void positionCellEditor();
-    void commitCellEdit(SubmitMove how);
+    // how: direction to move, stayInside: if there's a selection rectangle, true=stay inside it
+    void commitCellEdit(SubmitMove how, bool stayInside);
 
     // Helpers
     bool isGridTypingKey(const QKeyEvent* ev) const;
@@ -218,7 +176,8 @@ private:
     double parseBaseReal(const QString& s, int base, bool& ok) const;
     int charToDigitValue(QChar ch) const;
     QRect cursorCellRectInWidget() const;
-    void moveCursorAfterSubmit(SubmitMove how);
+    // how: direction to move, stayInside: if there's a selection rectangle, true=stay inside it
+    void moveCursorAfterSubmit(SubmitMove how, bool stayInside);
     QString stripSign(const QString& s, bool& isNeg) const;
     double parseBaseRealMagnitude(const QString& body, int base, bool& ok) const;
     long long parseBaseIntMagnitude(const QString& body, int base, bool& ok) const;
@@ -240,7 +199,6 @@ private:
     // Cached for painting (not the source of truth)
     int m_cursorX{0};
     int m_cursorY{0};
-    mdn::Rect m_cachedSel{};
 
     // Zoom bounds
     int m_minPt{8};

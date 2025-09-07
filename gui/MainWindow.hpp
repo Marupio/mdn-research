@@ -10,12 +10,15 @@
 #include <QSplitter>
 #include <QTabWidget>
 #include <QTextEdit>
+#include <QToolButton>
 #include <QVBoxLayout>
 #include <QWidget>
 
 #include "CommandWidget.hpp"
+#include "NumberDisplayWidget.hpp"
 #include "OpsController.hpp"
 #include "Project.hpp"
+
 
 #include "../library/Mdn2d.hpp"
 
@@ -46,6 +49,16 @@ private slots:
     void onCommandSubmitted(const QString& text);
     void onOpsPlan(const OpsController::Plan& p);
 
+    void cycleEditMode();
+    void setGlobalEditMode(NumberDisplayWidget::EditMode m);
+    void toggleGlobalEditMode(NumberDisplayWidget::EditMode m);
+    void cycleGlobalEditMode(bool forward);
+    void onEditModeChanged(NumberDisplayWidget::EditMode m);
+
+    void chooseModeOverwrite();
+    void chooseModeAdd();
+    void chooseModeSubtract();
+
     void slotSelectNextTab();
     void slotSelectPrevTab();
     void slotMoveTabRight();
@@ -72,6 +85,8 @@ private:
     void copyTab(int index);
     void pasteTab(int insertAt);
     void syncTabsToProject();
+    void updateStatusModeText(NumberDisplayWidget::EditMode m);
+    void updateStatusSelectionText(const mdn::Selection& s);
 
     // Focus model API
     void initFocusModel();
@@ -79,10 +94,11 @@ private:
     QWidget* activeGridWidget() const;
     bool isFocusAllowedWidget(QWidget* w) const;
     void onAppFocusChanged(QWidget* old, QWidget* now);
+    void applySplitRatio();
 
     QSplitter* m_splitter = nullptr;
     double m_splitRatio{0.5};
-    void applySplitRatio();
+    NumberDisplayWidget::EditMode m_globalMode = NumberDisplayWidget::EditMode::Overwrite;
 
     // MDN Digit Browser (upper pane)
     QTabWidget* m_tabWidget = nullptr;
@@ -93,6 +109,8 @@ private:
     QLabel* m_statusMode = nullptr;
     QLabel* m_statusCursor = nullptr;
     QLabel* m_statusSel = nullptr;
+    QToolButton* m_statusModeBtn = nullptr;
+    QMenu* m_modeMenu = nullptr;
 
     OpsController* m_ops{nullptr};
     Project* m_project = nullptr;
