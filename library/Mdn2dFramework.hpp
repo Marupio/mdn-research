@@ -42,6 +42,14 @@ public:
         return newName;
     }
 
+    // Returns allowed name closest to suggestedName
+    virtual std::string suggestName(
+        const std::string& suggestedName
+    ) const {
+        // Default always likes the suggestedName
+        return suggestedName;
+    }
+
 };
 
 static Mdn2dFramework DummyFramework;

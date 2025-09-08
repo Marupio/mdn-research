@@ -384,19 +384,19 @@ private:
 
     // Internal use - Wrapper for producing a header message that increases the indentation level
     #define InternalLoggerHeaderWrapper(LOGGER_MACRO, message, level) { \
-        std::string msgStr; \
+        std::string __mdn_logger_msgStr; \
         { \
             std::ostringstream __mdn_log_oss; \
             __mdn_log_oss << message; \
-            msgStr = __mdn_log_oss.str(); \
+            __mdn_logger_msgStr = __mdn_log_oss.str(); \
         } \
-        if (msgStr.empty()) { \
+        if (__mdn_logger_msgStr.empty()) { \
             mdn::Logger::instance().increaseIndent(InternalIdentedLoggerFileRef); \
-            LOGGER_MACRO(msgStr, level); \
+            LOGGER_MACRO(__mdn_logger_msgStr, level); \
         } else { \
             LOGGER_MACRO("", level); \
             mdn::Logger::instance().increaseIndent(InternalIdentedLoggerFileRef); \
-            LOGGER_MACRO(msgStr, level); \
+            LOGGER_MACRO(__mdn_logger_msgStr, level); \
         } \
         LOGGER_MACRO(mdn::Logger::instance().breadCrumbs(), level); \
     }

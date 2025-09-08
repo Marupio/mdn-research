@@ -418,24 +418,28 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
             if (ctrl) m_selection->cursorJumpUp(extend);
             else      m_selection->cursorUp(extend);
             e->accept();
+            postNavRefresh();
             return;
 
         case Qt::Key_Down:
             if (ctrl) m_selection->cursorJumpDn(extend);
             else      m_selection->cursorDn(extend);
             e->accept();
+            postNavRefresh();
             return;
 
         case Qt::Key_Left:
             if (ctrl) m_selection->cursorJumpLf(extend);
             else      m_selection->cursorLf(extend);
             e->accept();
+            postNavRefresh();
             return;
 
         case Qt::Key_Right:
             if (ctrl) m_selection->cursorJumpRt(extend);
             else      m_selection->cursorRt(extend);
             e->accept();
+            postNavRefresh();
             return;
 
         // ---- Paging ----
@@ -443,12 +447,14 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
             if (alt)  m_selection->cursorPageLf(extend);
             else      m_selection->cursorPageUp(extend);
             e->accept();
+            postNavRefresh();
             return;
 
         case Qt::Key_PageDown:
             if (alt)  m_selection->cursorPageRt(extend);
             else      m_selection->cursorPageDn(extend);
             e->accept();
+            postNavRefresh();
             return;
 
         // ---- Origin ----
@@ -464,6 +470,7 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
                 centreViewOn(m_cursorX, m_cursorY);
             }
             e->accept();
+            postNavRefresh();
             return;
         }
 
@@ -477,18 +484,21 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
                 m_selection->cursorIterateY();
             }
             e->accept();
+            postNavRefresh();
             return;
 
         // Tab: move along X (right by default)
         case Qt::Key_Tab:
             m_selection->cursorIterateX();
             e->accept();
+            postNavRefresh();
             return;
 
         // Shift+Tab comes in as Key_Backtab on some platforms
         case Qt::Key_Backtab:
             m_selection->cursorIterateReverseX();
             e->accept();
+            postNavRefresh();
             return;
 
         // Debugging purposes
@@ -892,6 +902,19 @@ void mdn::gui::NumberDisplayWidget::selectAllBounds()
     update();
 
     Log_Debug3_T("");
+}
+
+
+void mdn::gui::NumberDisplayWidget::postNavRefresh() {
+    if (!m_selection) {
+        return;
+    }
+    m_cursorX = m_selection->cursor1().x();
+    m_cursorY = m_selection->cursor1().y();
+    ensureCursorVisible();
+    emit statusCursorChanged(m_cursorX, m_cursorY);
+    emit statusSelectionChanged(*m_selection);
+    update();
 }
 
 

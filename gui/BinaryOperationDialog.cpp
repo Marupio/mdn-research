@@ -207,11 +207,12 @@ void mdn::gui::BinaryOperationDialog::buildUi() {
 
     QGroupBox* destGroup = new QGroupBox(tr("Destination"), this);
     QVBoxLayout* destLay = new QVBoxLayout(destGroup);
-    m_destOverwriteA = new QRadioButton(tr("Overwrite A"));
-    m_destOverwriteB = new QRadioButton(tr("Overwrite B"));
-    m_destCreateNew = new QRadioButton(tr("Create new"));
 
-    m_newNameEdit = new QLineEdit(this);
+    m_destOverwriteA = new QRadioButton(tr("Overwrite A"), destGroup);
+    m_destOverwriteB = new QRadioButton(tr("Overwrite B"), destGroup);
+    m_destCreateNew  = new QRadioButton(tr("Create new"),  destGroup);
+
+    m_newNameEdit = new QLineEdit(destGroup);
     m_newNameEdit->setEnabled(false);
 
     destLay->addWidget(m_destOverwriteA);
@@ -219,11 +220,17 @@ void mdn::gui::BinaryOperationDialog::buildUi() {
 
     QHBoxLayout* nameRow = new QHBoxLayout();
     nameRow->addWidget(m_destCreateNew);
-    nameRow->addWidget(new QLabel(tr("Name:")));
+    nameRow->addWidget(new QLabel(tr("Name:"), destGroup));
     nameRow->addWidget(m_newNameEdit, 1);
-    QWidget* nameRowW = new QWidget(this);
+    QWidget* nameRowW = new QWidget(destGroup);
     nameRowW->setLayout(nameRow);
     destLay->addWidget(nameRowW);
+
+    auto* destButtons = new QButtonGroup(destGroup);
+    destButtons->setExclusive(true);
+    destButtons->addButton(m_destOverwriteA);
+    destButtons->addButton(m_destOverwriteB);
+    destButtons->addButton(m_destCreateNew);
 
     connect(m_destOverwriteA, SIGNAL(toggled(bool)), this, SLOT(onDestChanged()));
     connect(m_destOverwriteB, SIGNAL(toggled(bool)), this, SLOT(onDestChanged()));
@@ -405,5 +412,18 @@ QString mdn::gui::BinaryOperationDialog::opName(Operation op) const {
                 return tr("Divide");
             }
         }
+    }
+}
+
+
+QString mdn::gui::BinaryOperationDialog::makeUnique(
+    const QString& base, const QStringList& existing
+) const {
+    if (!existing.contains(base, Qt::CaseSensitive)) return base;
+    int n = 1;
+    for (;;) {
+        const QString trial = base + QStringLiteral("_%1").arg(n);
+        if (!existing.contains(trial, Qt::CaseSensitive)) return trial;
+        ++n;
     }
 }

@@ -197,6 +197,22 @@ std::string mdn::gui::Project::requestMdnNameChange(
 }
 
 
+std::string mdn::gui::Project::suggestName(const std::string& likeThis) const {
+    std::string working = likeThis.empty() ? "Mdn" : likeThis;
+    if (!contains(working)) {
+        return working;
+    }
+    std::pair<std::string, int> prefixValue(Tools::strInt(working));
+    std::string prefix = prefixValue.first;
+    int val = prefixValue.second + 1;
+    std::string suggestion;
+    do {
+        suggestion = prefix + std::to_string(val++);
+    } while (!contains(suggestion));
+    return suggestion;
+}
+
+
 void mdn::gui::Project::updateSelection() const {
     if (!m_parent) {
         return;

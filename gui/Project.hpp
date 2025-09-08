@@ -113,6 +113,9 @@ public:
             const std::string& newName
         ) override;
 
+        // Returns allowed name closest to suggestedName
+        std::string suggestName(const std::string& likeThis) const override;
+
 
     // *** Interaction with MainWindow parent
 

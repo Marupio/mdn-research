@@ -537,7 +537,7 @@ void mdn::Mdn2dRules::locked_transpose() {
 
 
 const mdn::CoordSet& mdn::Mdn2dRules::getPolymorphicNodes() const {
-    auto lock = ReadOnlyLock();
+    auto lock = lockReadOnly();
     Log_N_Debug2_H("");
     const mdn::CoordSet& coords = locked_getPolymorphicNodes();
     Log_N_Debug2_T("");

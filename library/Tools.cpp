@@ -156,3 +156,18 @@ void mdn::Tools::stabilise(double& div) {
 std::string mdn::Tools::removePath(const char* fullpath) {
     return std::filesystem::path(fullpath).filename().string();
 }
+
+
+std::pair<std::string, int> mdn::Tools::strInt(const std::string& inStr) {
+    int nChar = inStr.size();
+    if (!isdigit(inStr[nChar-1])) {
+        return std::pair<std::string, int>(inStr, -1);
+    }
+    int cursor = nChar - 1;
+    while (cursor >= 0 && isdigit(inStr[cursor])) {cursor--;}
+    cursor++;
+    std::string valStr = inStr.substr(cursor, nChar - cursor);
+    int val = std::stoi(valStr);
+    std::string pre = inStr.substr(0, cursor);
+    return std::pair<std::string, int>(pre, val);
+}

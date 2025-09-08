@@ -71,6 +71,7 @@ private:
     void updateSummary();
     QString opSymbol(Operation op) const;
     QString opName(Operation op) const;
+    QString makeUnique(const QString& base, const QStringList& existing) const;
 
 private:
     QStringList m_names;

@@ -163,6 +163,7 @@ private:
     void selectAllBounds();
     QString modeShortText() const;
     QString selectionSummaryText() const;
+    void postNavRefresh();
 
     // API
     void beginCellEdit(const QString& initialText);

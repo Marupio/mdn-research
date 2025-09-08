@@ -189,6 +189,8 @@ public:
     // Get filename from full path
     static std::string removePath(const char* fullpath);
 
+    // Decompose given string into a string and an integer, return int has -1 if none
+    static std::pair<std::string, int> strInt(const std::string& inStr);
 };
 
 } // namespace mdn

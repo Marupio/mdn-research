@@ -97,7 +97,7 @@ void mdn::Mdn2d::plus(const Mdn2d& rhs, Mdn2d& ans) const {
 
 
 mdn::CoordSet mdn::Mdn2d::locked_plus(const Mdn2d& rhs, Mdn2d& ans) const {
-    Log_N_Debug3_H("ans = *this + rhs");
+    Log_N_Debug3_H("ans(" << ans.m_name << ") = *this(" << m_name << ") + rhs(" << rhs.m_name << ")");
     CoordSet changed;
     ans = *this;
     for (const auto& [xy, digit] : rhs.m_raw) {
@@ -120,7 +120,7 @@ void mdn::Mdn2d::minus(const Mdn2d& rhs, Mdn2d& ans) const {
 
 
 mdn::CoordSet mdn::Mdn2d::locked_minus(const Mdn2d& rhs, Mdn2d& ans) const {
-    Log_N_Debug3_H("ans = *this - rhs");
+    Log_N_Debug3_H("ans(" << ans.m_name << ") = *this(" << m_name << ") - rhs(" << rhs.m_name << ")");
     CoordSet changed;
     ans = *this;
     for (const auto& [xy, digit] : rhs.m_raw) {
@@ -143,7 +143,7 @@ void mdn::Mdn2d::multiply(const Mdn2d& rhs, Mdn2d& ans) const {
 
 
 mdn::CoordSet mdn::Mdn2d::locked_multiply(const Mdn2d& rhs, Mdn2d& ans) const {
-    Log_N_Debug3_H("ans = *this * rhs");
+    Log_N_Debug3_H("ans(" << ans.m_name << ") = *this(" << m_name << ") x rhs(" << rhs.m_name << ")");
     ans.locked_clear();
     for (const auto& [xy, digit] : rhs.m_raw) {
         int id = static_cast<int>(digit);

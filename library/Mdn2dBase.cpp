@@ -1,6 +1,8 @@
 #include "Mdn2dBase.hpp"
 
 #include <cassert>
+#include <cctype>
+#include <cstdlib>
 #include <cmath>
 #include <regex>
 #include <stdexcept>
@@ -21,18 +23,38 @@ std::shared_mutex mdn::Mdn2dBase::m_static_mutex;
 int mdn::Mdn2dBase::m_nextNameSeed = 0;
 
 
-std::string mdn::Mdn2dBase::static_generateNextName() {
+std::string mdn::Mdn2dBase::static_generateNextName(const std::string& prefix) {
     auto lock = std::unique_lock<std::shared_mutex>(m_static_mutex);
     Log_Debug3_H("")
-    std::string newName = locked_generateNextName();
+    std::string newName = locked_generateNextName(prefix);
     Log_Debug3_T("returning name=" << newName);
     return newName;
 }
 
 
-std::string mdn::Mdn2dBase::locked_generateNextName() {
-    Log_Debug4("m_nextNameSeed incrementing from " << m_nextNameSeed);
-    return "Mdn" + std::to_string(++m_nextNameSeed);
+std::string mdn::Mdn2dBase::locked_generateNextName(const std::string& prefix) {
+    Log_Debug4_H("");
+    Mdn2dFramework& framework = Mdn2dConfig::master();
+    if (&framework != &DummyFramework) {
+        std::string fs = framework.suggestName(prefix);
+        Log_Debug4_T("framework suggests [" << fs << "]");
+        return fs;
+    }
+
+    // No framework to go on
+    std::string working = prefix.empty() ? "Mdn" : prefix;
+
+    std::pair<std::string, int> prefixAndInt(Tools::strInt(working));
+    std::string pf = prefixAndInt.first;
+    int val = prefixAndInt.second;
+    if (val < 0) {
+        std::string newName = pf + std::to_string(++m_nextNameSeed);
+        Log_Debug4_T("returning [" << newName << "]");
+        return newName;
+    }
+    std::string newName = pf + std::to_string(val + 1);
+    Log_Debug4_T("returning [" << newName << "]");
+    return newName;
 }
 
 
@@ -46,13 +68,13 @@ std::string mdn::Mdn2dBase::static_generateCopyName(const std::string& nameIn) {
 
 
 std::string mdn::Mdn2dBase::locked_generateCopyName(const std::string& nameIn) {
-    std::regex suffixRegex(R"(^(.*_Copy_)(\d+)$)");
+    std::regex suffixRegex(R"(^(.*_Copy)(\d+)$)");
     std::smatch match;
 
     std::string candidate;
     Log_Debug4_H("");
     if (std::regex_match(nameIn, match, suffixRegex)) {
-        Log_Debug4("Has suffix '_Copy_#'");
+        Log_Debug4("Has suffix '_Copy#'");
         std::string base = match[1];
         int nCopy = std::stoi(match[2]) + 1;
         do {
@@ -178,7 +200,9 @@ mdn::Mdn2dBase::Mdn2dBase(const Mdn2dBase& other, std::string nameIn):
 mdn::Mdn2dBase& mdn::Mdn2dBase::operator=(const Mdn2dBase& other) {
     Log_Debug3_H("Setting " << m_name << " equal to " << other.m_name);
     if (this != &other) {
+        Log_Info("Getting writeable lock for this...");
         auto lockThis = lockWriteable();
+        Log_Info("Getting readable lock for other...");
         auto lockOther = other.lockReadOnly();
         Log_Debug3("other is not me, operator= should work...");
         if (m_config.base() != other.m_config.base()) {
@@ -1445,7 +1469,7 @@ bool mdn::Mdn2dBase::locked_hasBounds() const {
 
 
 const mdn::Rect& mdn::Mdn2dBase::bounds() const {
-    auto lock = ReadOnlyLock();
+    auto lock = lockReadOnly();
     const Rect& bounds = locked_bounds();
     If_Log_Showing_Debug2(
         Log_N_Debug2("Result: " << bounds);
@@ -1537,7 +1561,7 @@ int mdn::Mdn2dBase::locked_setPrecision(int newPrecision) {
 
 
 mdn::PrecisionStatus mdn::Mdn2dBase::checkPrecisionWindow(const Coord& xy) const {
-    auto lock = ReadOnlyLock();
+    auto lock = lockReadOnly();
     Log_N_Debug3_H("At: " << xy);
     PrecisionStatus result = locked_checkPrecisionWindow(xy);
     If_Log_Showing_Debug3(
@@ -1605,12 +1629,12 @@ void mdn::Mdn2dBase::internal_modifiedAndComplete() {
 
 
 mdn::Mdn2dBase::WritableLock mdn::Mdn2dBase::lockWriteable() const {
-    return std::unique_lock(m_mutex);
+    return m_lockTracker.lockWriteable(m_mutex);
 }
 
 
 mdn::Mdn2dBase::ReadOnlyLock mdn::Mdn2dBase::lockReadOnly() const {
-    return std::shared_lock(m_mutex);
+    return m_lockTracker.lockReadOnly(m_mutex);
 }
 
 

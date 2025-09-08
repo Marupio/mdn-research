@@ -9,6 +9,7 @@
 
 #include "CoordTypes.hpp"
 #include "GlobalConfig.hpp"
+#include "LockTracker.hpp"
 #include "Mdn2dConfig.hpp"
 #include "Mdn2dConfigImpact.hpp"
 #include "MdnObserver.hpp"
@@ -52,6 +53,9 @@ protected:
     // Thread safety
     mutable std::shared_mutex m_mutex;
 
+    // Counts active read/write locks taken via lockReadOnly/lockWriteable
+    mutable mdn::LockTracker m_lockTracker;
+
     // Empty CoordSet for functions that return references, but no reference exists for null
     const CoordSet m_nullCoordSet;
 
@@ -92,15 +96,15 @@ public:
 
     // *** Public data types
 
-    using WritableLock = std::unique_lock<std::shared_mutex>;
-    using ReadOnlyLock = std::shared_lock<std::shared_mutex>;
+    using WritableLock = mdn::LockTracker::WritableLock;
+    using ReadOnlyLock = mdn::LockTracker::ReadOnlyLock;
 
 
     // *** Static functions
 
     // Creates a new Mdn2d name, acquires static lock first
-    static std::string static_generateNextName();
-    protected: static std::string locked_generateNextName(); public:
+    static std::string static_generateNextName(const std::string& prefix="");
+    protected: static std::string locked_generateNextName(const std::string& prefix=""); public:
 
     // Create a 'copy' name from given nameIn (e.g. nameIn_copy0), acquires static lock first
     static std::string static_generateCopyName(const std::string& nameIn);
@@ -457,6 +461,14 @@ public:
             //  * clear derived data
             //  * increment m_event flag
             void internal_modifiedAndComplete();
+
+            // Access mutex counter data
+            int activeWriterCount() const noexcept {
+                return m_lockTracker.activeWriterCount();
+            }
+            int activeReaderCount() const noexcept {
+                return m_lockTracker.activeReaderCount();
+            }
 
 
 protected:

@@ -188,7 +188,9 @@ void mdn::gui::MainWindow::onCommandSubmitted(const QString& text) {
 
 
 void mdn::gui::MainWindow::onOpsPlan(const OpsController::Plan& p) {
+    Log_Debug_H("" << p);
     if (!m_project) {
+        Log_Debug_T("");
         return;
     }
 
@@ -196,71 +198,64 @@ void mdn::gui::MainWindow::onOpsPlan(const OpsController::Plan& p) {
     Mdn2d& b = m_project->getMdn(p.indexB);
 
     if (p.dest == OpsController::Dest::InPlace) {
-        Mdn2d ans(m_project->config(), a.name());
-        if (p.op == OpsController::Op::Add) {
-            a.plus(b, ans);
-        } else {
-            if (p.op == OpsController::Op::Subtract) {
-                a.minus(b, ans);
-            } else {
-                if (p.op == OpsController::Op::Multiply) {
-                    a.multiply(b, ans);
-                } else {
-                    ans = Mdn2d(m_project->config(), a.name());
-                    a.divide(b, ans, Fraxis::Default);
-                }
+        switch (p.op) {
+            case OpsController::Op::Add: {
+                a += b;
+                break;
+            }
+            case OpsController::Op::Subtract: {
+                a -= b;
+                break;
+            }
+            case OpsController::Op::Multiply: {
+                a *= b;
+                break;
+            }
+            case OpsController::Op::Divide: {
+                a /= b;
+                break;
             }
         }
-        a = ans;
         syncTabsToProject();
         m_tabWidget->setCurrentIndex(p.indexA);
         if (m_ops) {
             m_ops->refreshTabNames();
         }
+        Log_Debug_T("");
         return;
-    }
-
-    if (p.dest == OpsController::Dest::ToNew) {
+    } else if (p.dest == OpsController::Dest::ToNew) {
         std::string requestedName = MdnQtInterface::fromQString(p.newName);
         if (requestedName.empty()) {
             requestedName = std::string("Result");
         }
-
-        Mdn2d ans(m_project->config(), requestedName);
-        if (p.op == OpsController::Op::Add) {
-            a.plus(b, ans);
-        } else {
-            if (p.op == OpsController::Op::Subtract) {
+        std::string suggestedName = m_project->suggestName(requestedName);
+        Mdn2d ans(m_project->config(), suggestedName);
+        Log_Debug2("suggestedName=" << suggestedName);
+        switch (p.op) {
+            case OpsController::Op::Add: {
+                a.plus(b, ans);
+                break;
+            }
+            case OpsController::Op::Subtract: {
                 a.minus(b, ans);
-            } else {
-                if (p.op == OpsController::Op::Multiply) {
-                    a.multiply(b, ans);
-                } else {
-                    ans = Mdn2d(m_project->config(), requestedName);
-                    a.divide(b, ans, Fraxis::Default);
-                }
+                break;
+            }
+            case OpsController::Op::Multiply: {
+                a.multiply(b, ans);
+                break;
+            }
+            case OpsController::Op::Divide: {
+                a.divide(b, ans);
+                break;
             }
         }
-
-        int insertAt = p.indexA + 1;
-        m_project->insertMdn(std::move(ans), insertAt);
-
-        const auto& nameToIndex = m_project->data_addressingNameToIndex();
-        auto it = nameToIndex.find(ans.name());
-        int actualIndex = -1;
-        if (it != nameToIndex.end()) {
-            actualIndex = it->second;
-        }
-
-        if (actualIndex < 0) {
-            actualIndex = m_tabWidget->count();
-        }
-
-        createTabForIndex(actualIndex);
-        m_tabWidget->setCurrentIndex(actualIndex);
+        m_project->insertMdn(std::move(ans), p.indexA + 1);
+        syncTabsToProject();
+        m_tabWidget->setCurrentIndex(p.indexA);
         if (m_ops) {
             m_ops->refreshTabNames();
         }
+        Log_Debug_T("");
         return;
     }
 }
@@ -923,19 +918,18 @@ void mdn::gui::MainWindow::updateStatusSelectionText(const mdn::Selection& s) {
         return;
     }
     const Rect& r = s.rect();
-    const Coord& rMin = r.min();
     if (r.isSingleCoord()) {
         m_statusSel->setText(
-            QStringLiteral("@[%1,%2]").arg(rMin.x()).arg(rMin.y())
+            QStringLiteral("(1×1)")
         );
     } else {
+        const Coord& rMin = r.min();
         const Coord& rMax = r.max();
         const Coord& c1 = s.cursor1();
         const int w = r.width();
         const int h = r.height();
         m_statusSel->setText(
-            QStringLiteral("@[%1,%2]:[%3,%4]→[%5,%7] (%7×%8)")
-                .arg(c1.x()).arg(c1.y())
+            QStringLiteral("[%1,%2]→[%3,%4] (%5×%6)")
                 .arg(rMin.x()).arg(rMin.y())
                 .arg(rMax.x()).arg(rMax.y())
                 .arg(w).arg(h)

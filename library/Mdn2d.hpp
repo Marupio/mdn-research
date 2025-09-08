@@ -271,11 +271,7 @@ public:
 
         // Scalar multiplication.
         Mdn2d& operator*=(int scalar);
-
-        // Scalar multiplication.
         Mdn2d& operator*=(long scalar);
-
-        // Scalar multiplication.
         Mdn2d& operator*=(long long scalar);
 
 

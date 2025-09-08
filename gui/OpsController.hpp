@@ -1,8 +1,11 @@
 #pragma once
 
+#include <ostream>
+
 #include <QObject>
 #include <QStringList>
 
+#include "MdnQtInterface.hpp"
 #include "OperationStrip.hpp"
 
 class QMainWindow;
@@ -32,11 +35,62 @@ public:
         Multiply,
         Divide
     };
+    static std::string OpToString(const Op& o) {
+        switch (o) {
+            case Op::Add: {
+                return "Add";
+            }
+            case Op::Subtract: {
+                return "Subtract";
+            }
+            case Op::Multiply: {
+                return "Multiply";
+            }
+            case Op::Divide: {
+                return "Divide";
+            }
+            default: {
+                return "Unknown";
+            }
+        }
+    }
+    static std::string OpToOpStr(const Op& o) {
+        switch (o) {
+            case Op::Add: {
+                return "+";
+            }
+            case Op::Subtract: {
+                return "-";
+            }
+            case Op::Multiply: {
+                return "×";
+            }
+            case Op::Divide: {
+                return "÷";
+            }
+            default: {
+                return "?";
+            }
+        }
+    }
 
     enum class Dest {
         InPlace,
         ToNew
     };
+    static std::string DestToString(const Dest& d) {
+        switch (d) {
+            case Dest::InPlace: {
+                return "InPlace";
+            }
+            case Dest::ToNew: {
+                return "ToNew";
+            }
+            default: {
+                return "Unknown";
+            }
+        }
+    }
 
     struct Plan {
         Op op;
@@ -44,6 +98,16 @@ public:
         int indexB;
         Dest dest;
         QString newName;
+
+        friend std::ostream& operator<<(std::ostream& os, const Plan& p) {
+            std::string destStr(
+                p.dest == Dest::InPlace
+                    ? "InPlace"
+                    : "ToNew(" + MdnQtInterface::fromQString(p.newName) + ")"
+            );
+            os << "[" << p.indexA << OpToOpStr(p.op) << p.indexB << "→" << destStr << "]";
+            return os;
+        }
     };
 
 public:
