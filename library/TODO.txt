@@ -36,6 +36,8 @@ GUI library
 FUNCTIONALITY
 
 Clear all button
+Truncate decimal numbers
+
 Finish Selection cursor iterate functions
 NDW::moveCursorAfterSubmit
     Convert to switch
@@ -44,24 +46,6 @@ Make Selection thread safe
 
 CTRL+A highlights cursors 0 and 1 but not rect
 ESC should remove rect selection, all at cursor1
-Tab | shift tab | enter | shift enter (t,st,e,se)
-t|st
-    Single-digit selection
-        * movement: PASS
-        * submission: PASS
-    Multi-digit selection
-        * movement: PASS
-        * submission: PASS
-e|se
-    Single-digit selection
-        * movement: PASS
-        * submission: PASS
-    Multi-digit selection
-        * movement: PASS
-        * submission: PASS
-arrow keys
-    Movement - should deselect and move - PASS
-    Submission - should deselect and move - PASS
 Duplicating the same tab twice causes there to be two independent tabs with the same name
     Deleting duplicate tab is a crash
 * Add number of digits with float / double add / subtract

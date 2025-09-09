@@ -65,6 +65,11 @@ public:
     void setCursor0(const Coord& xy) { m_cursor0 = xy; }
     void setCursor1(const Coord& xy) { m_cursor1 = xy; }
 
+    void clear() {
+        m_cursor0 = m_cursor1;
+        m_rect.set(m_cursor0);
+    }
+
     inline void setPageStep(int dx, int dy) {
         m_pageDx = std::max(1, dx);
         m_pageDy = std::max(1, dy);
@@ -389,12 +394,12 @@ public:
                 return false;
             } else {
                 if (m_cursor1.y() == m_rect.max().y()) {
-                    if (m_cursor1.x() == m_rect.max().x()) {
-                        m_cursor1 = m_rect.min();
+                    if (m_cursor1.x() == m_rect.min().x()) {
+                        m_cursor1 = m_rect.max();
                         return false;
                     } else {
                         m_cursor1.y() = m_rect.min().y();
-                        m_cursor1.translateX(1);
+                        m_cursor1.translateX(-1);
                         return true;
                     }
                 } else {
@@ -412,12 +417,12 @@ public:
                 return false;
             } else {
                 if (m_cursor1.y() == m_rect.min().y()) {
-                    if (m_cursor1.x() == m_rect.min().x()) {
-                        m_cursor1 = m_rect.max();
+                    if (m_cursor1.x() == m_rect.max().x()) {
+                        m_cursor1 = m_rect.min();
                         return false;
                     } else {
                         m_cursor1.y() = m_rect.max().y();
-                        m_cursor1.translateX(-1);
+                        m_cursor1.translateX(1);
                         return true;
                     }
                 } else {

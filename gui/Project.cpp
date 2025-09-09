@@ -149,7 +149,7 @@ mdn::gui::Project::Project(MainWindow* parent, std::string name, int nStartMdn):
     }
     for (int i = 0; i < nStartMdn; ++i) {
         Log_Debug3("Project constructor, Mdn index " << i);
-        std::string nextName = Project::suggestName("Mdn");
+        std::string nextName = Project::suggestName("Mdn0");
         Log_Debug3("Got name=[" << nextName << "], constructor dispatch");
         Mdn2d newMdn = Mdn2d::NewInstance(m_config, nextName);
         Log_Debug2("Creating Mdn {'" << nextName << "', " << i << "}");

@@ -65,7 +65,8 @@ void mdn::gui::NumberDisplayWidget::decreaseFont() {
 
 
 void mdn::gui::NumberDisplayWidget::resetFont() {
-    setFontPointSize(11);
+    emit requestFontSizeChange(11);
+    // setFontPointSize(11);
 }
 
 
@@ -349,13 +350,13 @@ bool mdn::gui::NumberDisplayWidget::eventFilter(QObject* watched, QEvent* event)
                     return true;
                 }
                 case Qt::Key_Up: {
-                    commitCellEdit(SubmitMove::Enter, false); // do not stay inside
+                    commitCellEdit(SubmitMove::ShiftEnter, false); // do not stay inside
                     setFocus(Qt::OtherFocusReason);
                     ke->accept();
                     return true;
                 }
                 case Qt::Key_Down: {
-                    commitCellEdit(SubmitMove::ShiftEnter, false); // do not stay inside
+                    commitCellEdit(SubmitMove::Enter, false); // do not stay inside
                     setFocus(Qt::OtherFocusReason);
                     ke->accept();
                     return true;
@@ -539,9 +540,9 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
         case Qt::Key_Return:
         case Qt::Key_Enter:
             if (shift) {
-                m_selection->cursorIterateReverseY();
-            } else {
                 m_selection->cursorIterateY();
+            } else {
+                m_selection->cursorIterateReverseY();
             }
             e->accept();
             postNavRefresh();
@@ -561,11 +562,19 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
             postNavRefresh();
             return;
 
+        case Qt::Key_Backspace:
+        case Qt::Key_Delete: {
+            if (!ctrl && !meta && !alt && m_selection && m_model) {
+                m_model->setToZero(m_selection->rect());
+                e->accept();
+                postNavRefresh();
+            }
+        }
+
+
         // Debugging purposes
-        case Qt::Key_Space:
-        {
-            if (!ctrl && !meta && !alt)
-            {
+        case Qt::Key_Space: {
+            if (!ctrl && !meta && !alt) {
                 Q_EMIT requestDebugShowAllTabs();
                 e->accept();
                 return;
@@ -575,7 +584,8 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
         }
 
         case Qt::Key_Escape:
-            emit focusDownRequested();
+            clearSelection();
+            // emit focusDownRequested();
             e->accept();
             return;
 
@@ -633,11 +643,11 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_digitEditScope(QKeyEvent* e) {
             return;
         }
         case Qt::UpArrow: {
-            commitCellEdit(SubmitMove::Enter, false); // do not stay inside
+            commitCellEdit(SubmitMove::ShiftEnter, false); // do not stay inside
             return;
         }
         case Qt::DownArrow: {
-            commitCellEdit(SubmitMove::ShiftEnter, false); // do not stay inside
+            commitCellEdit(SubmitMove::Enter, false); // do not stay inside
             return;
         }
         case Qt::LeftArrow: {
@@ -831,7 +841,7 @@ void mdn::gui::NumberDisplayWidget::drawAxes(QPainter& painter, const QRect& wid
 
 
 void mdn::gui::NumberDisplayWidget::adjustFontBy(int deltaPts) {
-    setFontPointSize(fontPointSize() + deltaPts);
+    emit requestFontSizeChange(fontPointSize() + deltaPts);
 }
 
 
@@ -944,10 +954,24 @@ void mdn::gui::NumberDisplayWidget::selectAllBounds()
         return;
     }
 
-    m_selection->setCursor0(b.min());
-    m_selection->setCursor1(b.max());
-    ensureCursorVisible();
-    update();
+    m_selection->setRect(b);
+    postNavRefresh();
+
+    Log_Debug3_T("");
+}
+
+
+void mdn::gui::NumberDisplayWidget::clearSelection()
+{
+    Log_Debug3_H("");
+
+    if (!m_model || !m_selection) {
+        Log_Debug3_T("");
+        return;
+    }
+
+    m_selection->clear();
+    postNavRefresh();
 
     Log_Debug3_T("");
 }
@@ -1254,10 +1278,10 @@ void mdn::gui::NumberDisplayWidget::moveCursorAfterSubmit(SubmitMove how, bool s
     if (stayInside) {
         switch (how) {
             case SubmitMove::Enter:
-                m_selection->cursorIterateY();
+                m_selection->cursorIterateReverseY();
                 break;
             case SubmitMove::ShiftEnter:
-                m_selection->cursorIterateReverseY();
+                m_selection->cursorIterateY();
                 break;
             case SubmitMove::Tab:
                 m_selection->cursorIterateX();
@@ -1269,10 +1293,10 @@ void mdn::gui::NumberDisplayWidget::moveCursorAfterSubmit(SubmitMove how, bool s
     } else {
         switch (how) {
             case SubmitMove::Enter:
-                m_selection->cursorNextY(false);
+                m_selection->cursorPrevY(false);
                 break;
             case SubmitMove::ShiftEnter:
-                m_selection->cursorPrevY(false);
+                m_selection->cursorNextY(false);
                 break;
             case SubmitMove::Tab:
                 m_selection->cursorNextX(false);

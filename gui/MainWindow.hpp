@@ -59,6 +59,8 @@ private slots:
     void chooseModeAdd();
     void chooseModeSubtract();
 
+    void setGlobalFontSize(int pt);
+
     void slotSelectNextTab();
     void slotSelectPrevTab();
     void slotMoveTabRight();
@@ -111,6 +113,8 @@ private:
     QLabel* m_statusSel = nullptr;
     QToolButton* m_statusModeBtn = nullptr;
     QMenu* m_modeMenu = nullptr;
+
+    int m_globalFontSize = 11;
 
     OpsController* m_ops{nullptr};
     Project* m_project = nullptr;

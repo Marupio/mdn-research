@@ -111,7 +111,7 @@ Q_SIGNALS:
     void statusCursorChanged(int x, int y);
     void statusSelectionChanged(const mdn::Selection& s);
     void editModeChanged(mdn::gui::NumberDisplayWidget::EditMode m);
-
+    void requestFontSizeChange(int pt);
 
 public slots:
     void onCursorChanged(mdn::Coord c);
@@ -165,6 +165,7 @@ private:
     void setBothCursors(int mx, int my);
     void setCursor1(int mx, int my);
     void selectAllBounds();
+    void clearSelection();
     QString modeShortText() const;
     QString selectionSummaryText() const;
     void postNavRefresh();

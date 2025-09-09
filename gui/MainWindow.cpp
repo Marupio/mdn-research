@@ -368,6 +368,20 @@ void mdn::gui::MainWindow::chooseModeSubtract() {
 }
 
 
+void mdn::gui::MainWindow::setGlobalFontSize(int pt) {
+    if (m_globalFontSize == pt) {
+        return;
+    }
+    m_globalFontSize = pt;
+
+    // Update all NDWs
+    for (int i = 0; i < m_tabWidget->count(); ++i) {
+        if (auto* ndw = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(i)))
+            ndw->setFontPointSize(m_globalFontSize);
+    }
+}
+
+
 void mdn::gui::MainWindow::slotSelectNextTab()
 {
     Log_Debug3_H("slotSelectNextTab");
@@ -658,6 +672,13 @@ void mdn::gui::MainWindow::createTabs() {
 
         // Push current global mode into the new widget
         ndw->setEditMode(m_globalMode);
+
+        connect(
+            ndw,
+            &NumberDisplayWidget::requestFontSizeChange,
+            this,
+            &MainWindow::setGlobalFontSize
+        );
 
         std::string name = names[index];
         Log_Debug4("addTab(" << name << ")");
