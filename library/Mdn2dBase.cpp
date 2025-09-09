@@ -861,6 +861,7 @@ void mdn::Mdn2dBase::locked_getAreaRows(const Rect& window, VecVecDigit& out) co
         VecDigit row(width, Digit(0));
         Coord xy(xStart, y);
         locked_getRow(xy, width, row);
+        out.push_back(row);
     }
     Log_N_Debug3_T("");
 }

@@ -31,10 +31,11 @@ GUI library
 * Enter + ShiftEnter are backwards
 * Change font size needs to propogate to all Mdns
 * Be able to change config
-* 
+
 
 FUNCTIONALITY
 
+Clear all button
 Finish Selection cursor iterate functions
 NDW::moveCursorAfterSubmit
     Convert to switch

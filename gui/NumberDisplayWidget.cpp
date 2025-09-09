@@ -159,18 +159,65 @@ void mdn::gui::NumberDisplayWidget::paintEvent(QPaintEvent* event) {
     // 2) grid stroke
     // 3) digit
     // 4) origin overlay
+    QPen nzGridPen = m_theme.nzGridPen;
+    QPen nzTextPen = m_theme.nzTextPen;
     QPen gridPen = m_theme.gridPen;
     QPen textPen = m_theme.textPen;
 
+    // Actual window bounds:
+    //  m_viewOriginY + m_rows - 1
+    //  m_viewOriginY + m_rows - 1 - (m_rows-1) = m_viewOriginY
+    //  y range = [m_viewOriginY .. m_viewOriginY+m_rows-1]
+    //  x range = [m_viewOriginX .. m_viewOriginX + m_cols-1]
+    m_viewBounds.set(
+        m_viewOriginX,              m_viewOriginY,
+        m_viewOriginX + m_cols-1,   m_viewOriginY+m_rows-1,
+        false // No need to fix ordering
+    );
+
+    VecVecDigit rows;
+    m_model->getAreaRows(m_viewBounds, rows);
+
+    const Rect& modelBounds = m_model->bounds();
+    const Rect viewIbounds = Rect::Intersection(m_viewBounds, modelBounds);
+    // int nzRowStart = -1;
+    // int nzRowEnd = -1;
+    // int nzColStart = -1;
+    // int nzColEnd = -1;
+    // if (!viewIbounds.empty()) {
+    //     nzRowStart = viewIbounds.min().y() - m_viewBounds.min().y();
+    //     nzRowEnd = m_viewBounds.height() - (m_viewBounds.max().y() - viewIbounds.max().y());
+    //     nzColStart = viewIbounds.min().x() - m_viewBounds.min().x();
+    //     nzColEnd = m_viewBounds.width() - (m_viewBounds.max().x() - viewIbounds.max().x());
+    // }
+    //
+    // // To keep things confusing, we have vy = 0 at the top of the view window, increasing downwards
+    // // And rowI = 0 at the bottom of the view window, increasing upwards
+    // //      +---------------------------------------------------+ vy=0    rowI=m_rows-1
+    // //      |                 View window                       |
+    // //      |              +--------------------------------+...|...> nzRowEnd (rowI units)
+    // //      |              |                                |   |
+    // //      |              |      Non-zero bounds           |   |
+    // //      |              |                                |   |
+    // //      |              +--------------------------------+...|...> nzRowStart (rowI units)
+    // //      |--nzColStart->.                   ---nzColEnd->.   |
+    // //      +---------------------------------------------------+ vy=m_rows-1    rowI=0
+    // //
+    //
+    // // bool nonZero = false;
     for (int vy = 0; vy < m_rows; ++vy) {
+
+        int rowI = m_rows - 1 - vy;
+        const VecDigit& currentRow = rows[rowI];
+
         for (int vx = 0; vx < m_cols; ++vx) {
             // Convert view cell (vx,vy) to model coordinate (x,y).
             // Screen row 0 is the top row. Model y+ goes up.
             const int modelX = m_viewOriginX + vx;
-            const int modelY = m_viewOriginY + (m_rows - 1 - vy);
+            const int modelY = m_viewOriginY + rowI;
 
-            const mdn::Coord xy(modelX, modelY);
-            const int digit = static_cast<int>(m_model->getValue(xy));
+            const Coord xy(modelX, modelY);
+            const int digit = static_cast<int>(currentRow[vx]);
 
             const QRect cell(vx * m_cellSize, vy * m_cellSize, m_cellSize, m_cellSize);
 
@@ -187,13 +234,26 @@ void mdn::gui::NumberDisplayWidget::paintEvent(QPaintEvent* event) {
                 painter.fillRect(cell, m_theme.cursorFill);
             }
 
-            // Grid stroke
-            painter.setPen(gridPen);
-            painter.drawRect(cell);
+            QPen restorePen;
+            if (viewIbounds.contains(xy)) {
+                // Non-zero grid stroke
+                painter.setPen(nzGridPen);
+                painter.drawRect(cell);
 
-            // Digit
-            painter.setPen(textPen);
-            painter.drawText(cell, Qt::AlignCenter, QString::number(digit));
+                // Non-zero digit
+                painter.setPen(nzTextPen);
+                painter.drawText(cell, Qt::AlignCenter, QString::number(digit));
+                restorePen = nzGridPen;
+            } else {
+                // Zero grid stroke
+                painter.setPen(gridPen);
+                painter.drawRect(cell);
+
+                // Zero digit
+                painter.setPen(textPen);
+                painter.drawText(cell, Qt::AlignCenter, QString::number(digit));
+                restorePen = gridPen;
+            }
 
             // Highlight origin
             if (xy == mdn::COORD_ORIGIN) {
@@ -204,7 +264,7 @@ void mdn::gui::NumberDisplayWidget::paintEvent(QPaintEvent* event) {
                 painter.drawRect(inner);
 
                 // restore
-                painter.setPen(gridPen);
+                painter.setPen(restorePen);
             }
         }
     }

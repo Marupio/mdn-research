@@ -1,10 +1,14 @@
 {
     "Logger": {
-        "Level": "Debug4",
+        "Level": "Warn",
         "Output": "C:/Users/daveg/OneDrive/Documents/Projects/MDN/mdn-research/output",
         "Filter": {
             "Comment_Exclude": [],
-            "Exclude": ["getValue", "setValue", "debugShowAllTabs"]
+            "Exclude": [
+                "debugShowAllTabs",
+                "getValue", "setValue",
+                "LockTracker", "lockReadOnly", "lockWriteable"
+            ]
         }
     }
 }

@@ -43,10 +43,14 @@ public:
     struct Theme {
         QFont   font            {QStringLiteral("Courier New"), 11};
         QBrush  background      {Qt::NoBrush};
-        QPen    gridPen         {QColor(160,160,160), 1};
         QPen    axisPen         {QColor(128,128,128), 3};
         QPen    originPen       {QColor(220,0,0), 2};
-        QPen    textPen         {QColor(20,20,20)};
+        // Grid & text pens for out-of-bounds (zeroes) part of window
+        QPen    gridPen         {QColor(220,220,220), 1};
+        QPen    textPen         {QColor(120,120,120)};
+        // Grid & text pens for in-bounds (non-zero) part of window
+        QPen    nzGridPen       {QColor(160,160,160), 1};
+        QPen    nzTextPen       {QColor(10,10,10)};
         QBrush  selectionFill   {QColor(82,143,255,70)};
         QBrush  anchorFill      {QColor(128,128,128,90)};
         QBrush  cursorFill      {QColor(255,214,64,140)};
@@ -196,6 +200,7 @@ private:
     int m_rows{16};
     int m_viewOriginX{0};
     int m_viewOriginY{0};
+    Rect m_viewBounds;
 
     // Cached for painting (not the source of truth)
     int m_cursorX{0};
