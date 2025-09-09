@@ -197,22 +197,30 @@ void mdn::gui::MainWindow::onOpsPlan(const OpsController::Plan& p) {
     Mdn2d& a = m_project->getMdn(p.indexA);
     Mdn2d& b = m_project->getMdn(p.indexB);
 
-    if (p.dest == OpsController::Dest::InPlace) {
+    if (p.dest == DestinationSimple::InPlace) {
         switch (p.op) {
-            case OpsController::Op::Add: {
+            case Operation::Add: {
+                Log_Debug4("Dispatch a += b");
                 a += b;
+                Log_Debug4("a += b return");
                 break;
             }
-            case OpsController::Op::Subtract: {
+            case Operation::Subtract: {
+                Log_Debug4("Dispatch a -= b");
                 a -= b;
+                Log_Debug4("a -= b return");
                 break;
             }
-            case OpsController::Op::Multiply: {
+            case Operation::Multiply: {
+                Log_Debug4("Dispatch a *= b");
                 a *= b;
+                Log_Debug4("a *= b return");
                 break;
             }
-            case OpsController::Op::Divide: {
+            case Operation::Divide: {
+                Log_Debug4("Dispatch a /= b");
                 a /= b;
+                Log_Debug4("a /= b return");
                 break;
             }
         }
@@ -223,7 +231,7 @@ void mdn::gui::MainWindow::onOpsPlan(const OpsController::Plan& p) {
         }
         Log_Debug_T("");
         return;
-    } else if (p.dest == OpsController::Dest::ToNew) {
+    } else if (p.dest == DestinationSimple::ToNew) {
         std::string requestedName = MdnQtInterface::fromQString(p.newName);
         if (requestedName.empty()) {
             requestedName = std::string("Result");
@@ -232,20 +240,28 @@ void mdn::gui::MainWindow::onOpsPlan(const OpsController::Plan& p) {
         Mdn2d ans(m_project->config(), suggestedName);
         Log_Debug2("suggestedName=" << suggestedName);
         switch (p.op) {
-            case OpsController::Op::Add: {
+            case Operation::Add: {
+                Log_Debug4("Dispatch a.plus(b, ans)");
                 a.plus(b, ans);
+                Log_Debug4("a.plus(b, ans) return");
                 break;
             }
-            case OpsController::Op::Subtract: {
+            case Operation::Subtract: {
+                Log_Debug4("Dispatch a.minus(b, ans)");
                 a.minus(b, ans);
+                Log_Debug4("a.minus(b, ans) return");
                 break;
             }
-            case OpsController::Op::Multiply: {
+            case Operation::Multiply: {
+                Log_Debug4("Dispatch a.multiply(b, ans)");
                 a.multiply(b, ans);
+                Log_Debug4("a.multiply(b, ans) return");
                 break;
             }
-            case OpsController::Op::Divide: {
+            case Operation::Divide: {
+                Log_Debug4("Dispatch a.divide(b, ans)");
                 a.divide(b, ans);
+                Log_Debug4("a.divide(b, ans) return");
                 break;
             }
         }
@@ -569,6 +585,7 @@ void mdn::gui::MainWindow::createNewProject() {
         m_project = nullptr;
     }
     m_project = new Project(this);
+    m_project->config().setMaster(*m_project);
     if (m_project) {
         connect(m_project, &mdn::gui::Project::tabsAboutToChange,
                 this, &mdn::gui::MainWindow::onProjectTabsAboutToChange);
@@ -692,7 +709,7 @@ void mdn::gui::MainWindow::createTabForIndex(int index) {
 
     const std::string& tabName(entry.name());
     QString tabNameQ = QString::fromStdString(tabName);
-    Log_Info("insertTab(" << index << ", " << entry.name());
+    Log_Debug4("insertTab(" << index << ", " << entry.name());
     int tab = m_tabWidget->insertTab(index, view, tabNameQ);
     m_tabWidget->setCurrentIndex(tab);
     view->setFocus();

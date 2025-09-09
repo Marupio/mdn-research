@@ -34,8 +34,8 @@ mdn::gui::OperationStrip::OperationStrip(QWidget* parent)
     m_labelA = new QLabel(tr(""), this);
 
     m_destPicker = new QComboBox(this);
-    m_destPicker->addItem(tr("In place"), static_cast<int>(DestinationMode::InPlace));
-    m_destPicker->addItem(tr("To new"), static_cast<int>(DestinationMode::ToNew));
+    m_destPicker->addItem(tr("In place"), static_cast<int>(DestinationSimple::InPlace));
+    m_destPicker->addItem(tr("To new"), static_cast<int>(DestinationSimple::ToNew));
     connect(m_destPicker, SIGNAL(currentIndexChanged(int)), this, SLOT(onDestChanged(int)));
 
     lay->addWidget(m_add);
@@ -79,9 +79,9 @@ void mdn::gui::OperationStrip::setRememberedB(int indexB) {
 }
 
 
-void mdn::gui::OperationStrip::setDestinationMode(DestinationMode mode) {
+void mdn::gui::OperationStrip::setDestinationMode(DestinationSimple mode) {
     int idx = 0;
-    if (mode == DestinationMode::InPlace) {
+    if (mode == DestinationSimple::InPlace) {
         idx = 0;
     } else {
         idx = 1;
@@ -119,12 +119,12 @@ void mdn::gui::OperationStrip::onDestChanged(int) {
 }
 
 
-void mdn::gui::OperationStrip::emitOp(OperationStrip::Operation op) {
+void mdn::gui::OperationStrip::emitOp(Operation op) {
     int idxB = m_bPicker->currentIndex();
-    OperationStrip::DestinationMode dest = OperationStrip::DestinationMode::InPlace;
+    DestinationSimple dest = DestinationSimple::InPlace;
     int stored = m_destPicker->currentIndex();
     if (stored == 1) {
-        dest = OperationStrip::DestinationMode::ToNew;
+        dest = DestinationSimple::ToNew;
     }
     emit requestOperation(op, m_indexA, idxB, dest);
 }

@@ -134,6 +134,10 @@ mdn::CoordSet mdn::Mdn2d::locked_minus(const Mdn2d& rhs, Mdn2d& ans) const {
 void mdn::Mdn2d::multiply(const Mdn2d& rhs, Mdn2d& ans) const {
     assertNotSelf(ans, "multiply operation");
     auto lockThis = lockReadOnly();
+    ReadOnlyLock* lockRhsPtr;
+    if (&rhs != this) {
+        lockRhsPtr = &(rhs.lockReadOnly());
+    }
     auto lockAns = ans.lockWriteable();
     Log_N_Debug2_H("ans = *this * rhs");
     CoordSet changed = locked_multiply(rhs, ans);
@@ -630,7 +634,10 @@ bool mdn::Mdn2d::operator!=(const Mdn2d& rhs) const {
 
 mdn::Mdn2d& mdn::Mdn2d::operator+=(const Mdn2d& rhs) {
     auto lock = lockWriteable();
-    auto lockRhs = rhs.lockReadOnly();
+    ReadOnlyLock* lockRhsPtr;
+    if (&rhs != this) {
+        lockRhsPtr = &(rhs.lockReadOnly());
+    }
     Log_N_Debug2_H("plus equals");
     CoordSet changed = locked_plusEquals(rhs);
     locked_carryoverCleanup(changed);
@@ -653,7 +660,10 @@ mdn::CoordSet mdn::Mdn2d::locked_plusEquals(const Mdn2d& rhs) {
 
 mdn::Mdn2d& mdn::Mdn2d::operator-=(const Mdn2d& rhs) {
     auto lock = lockWriteable();
-    auto lockRhs = rhs.lockReadOnly();
+    ReadOnlyLock* lockRhsPtr;
+    if (&rhs != this) {
+        lockRhsPtr = &(rhs.lockReadOnly());
+    }
     Log_N_Debug2_H("minus equals");
     CoordSet changed = locked_minusEquals(rhs);
     locked_carryoverCleanup(changed);
@@ -676,7 +686,10 @@ mdn::CoordSet mdn::Mdn2d::locked_minusEquals(const Mdn2d& rhs) {
 
 mdn::Mdn2d& mdn::Mdn2d::operator*=(const Mdn2d& rhs) {
     auto lock = lockWriteable();
-    auto lockRhs = rhs.lockReadOnly();
+    ReadOnlyLock* lockRhsPtr;
+    if (&rhs != this) {
+        lockRhsPtr = &(rhs.lockReadOnly());
+    }
     Log_N_Debug2_H("times equals (Mdn2d)");
     locked_carryoverCleanup(locked_timesEquals(rhs));
     internal_operationComplete();

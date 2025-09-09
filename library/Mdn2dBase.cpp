@@ -33,9 +33,9 @@ std::string mdn::Mdn2dBase::static_generateNextName(const std::string& prefix) {
 
 
 std::string mdn::Mdn2dBase::locked_generateNextName(const std::string& prefix) {
-    Log_Debug4_H("");
+    Log_Debug4_H("prefix=[" << prefix << "]");
     Mdn2dFramework& framework = Mdn2dConfig::master();
-    if (&framework != &DummyFramework) {
+    if (framework.className() != "Mdn2dFramework") {
         std::string fs = framework.suggestName(prefix);
         Log_Debug4_T("framework suggests [" << fs << "]");
         return fs;
@@ -107,15 +107,13 @@ std::string mdn::Mdn2dBase::locked_generateCopyName(const std::string& nameIn) {
 
 
 mdn::Mdn2d mdn::Mdn2dBase::NewInstance(Mdn2dConfig config, std::string nameIn) {
-    Log_Debug_H("Creating NewInstance with config=" << config << ", name=" << nameIn);
-
-    Log_Info("Creating NewInstance with config=" << config << ", name=" << nameIn);
+    Log_Debug_H("Preparing NewInstance with config=" << config << ", name=" << nameIn);
     std::string newName = nameIn;
     if (nameIn.empty()) {
         Log_Debug3("nameIn empty, generating new name");
         newName = static_generateNextName();
     }
-    Log_Debug_T("Creating a NewInstance of Mdn2d, newName=" << newName);
+    Log_Debug_T("Mdn2d constructor dispatch, newName=" << newName);
     return Mdn2d(config, newName);
 }
 

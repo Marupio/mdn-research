@@ -3,7 +3,8 @@
         "Level": "Debug4",
         "Output": "C:/Users/daveg/OneDrive/Documents/Projects/MDN/mdn-research/output",
         "Filter": {
-            "Exclude": ["getValue", "setValue"]
+            "Comment_Exclude": [],
+            "Exclude": ["getValue", "setValue", "debugShowAllTabs"]
         }
     }
 }

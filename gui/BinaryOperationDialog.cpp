@@ -19,27 +19,34 @@ mdn::gui::BinaryOperationDialog::BinaryOperationDialog(QWidget* parent)
 :
     QDialog(parent)
 {
+    Log_Debug3_H("");
     buildUi();
+    Log_Debug3_T("");
 }
 
 
 void mdn::gui::BinaryOperationDialog::setTabNames(const QStringList& names) {
+    Log_Debug3_H("");
     m_names = names;
     rebuildBPicker();
     updateSummary();
+    Log_Debug3_T("");
 }
 
 
 void mdn::gui::BinaryOperationDialog::setActiveIndex(int indexA) {
+    Log_Debug3_H("");
     m_indexA = indexA;
     if (m_labelA) {
         m_labelA->setText(m_names.value(m_indexA));
     }
     updateSummary();
+    Log_Debug3_T("");
 }
 
 
 void mdn::gui::BinaryOperationDialog::setInitialOperation(Operation op) {
+    Log_Debug3_H("");
     m_op = op;
     if (m_opsButtons) {
         int id = static_cast<int>(op);
@@ -49,17 +56,22 @@ void mdn::gui::BinaryOperationDialog::setInitialOperation(Operation op) {
         }
     }
     updateSummary();
+    Log_Debug3_T("");
 }
 
 
 void mdn::gui::BinaryOperationDialog::setRememberedB(int indexB) {
+    Log_Debug3_H("");
     m_indexB = indexB;
     selectBInUi(m_indexB);
+    Log_Debug3_H("mIndexB=" << m_indexB);
     updateSummary();
+    Log_Debug3_T("");
 }
 
 
 void mdn::gui::BinaryOperationDialog::setRememberedDestination(DestinationMode mode) {
+    Log_Debug3_H("");
     m_dest = mode;
     if (mode == DestinationMode::OverwriteA) {
         m_destOverwriteA->setChecked(true);
@@ -71,10 +83,12 @@ void mdn::gui::BinaryOperationDialog::setRememberedDestination(DestinationMode m
         }
     }
     updateSummary();
+    Log_Debug3_T("");
 }
 
 
 mdn::gui::BinaryOperationDialog::Plan mdn::gui::BinaryOperationDialog::plan() const {
+    Log_Debug3_H("");
     BinaryOperationDialog::Plan p;
     p.op = m_op;
     p.indexA = m_indexA;
@@ -82,27 +96,35 @@ mdn::gui::BinaryOperationDialog::Plan mdn::gui::BinaryOperationDialog::plan() co
     p.dest = m_dest;
     p.newName = m_newNameEdit->text();
     p.rememberChoices = m_remember->isChecked();
+    Log_Debug3_T("returning p=" << p);
     return p;
 }
 
 
 void mdn::gui::BinaryOperationDialog::onOpChanged() {
+    Log_Debug3_H("");
     int id = m_opsButtons->checkedId();
     if (id < 0) {
+        Log_Debug3_T("");
         return;
     }
     m_op = static_cast<Operation>(id);
     updateSummary();
+    Log_Debug3_T("");
 }
 
 
 void mdn::gui::BinaryOperationDialog::onBSelectionChanged() {
+    Log_Debug3_H("");
     m_indexB = currentBFromUi();
+    Log_Debug3_H("mIndexB=" << m_indexB);
     updateSummary();
+    Log_Debug3_T("");
 }
 
 
 void mdn::gui::BinaryOperationDialog::onDestChanged() {
+    Log_Debug3_H("");
     if (m_destOverwriteA->isChecked()) {
         m_dest = DestinationMode::OverwriteA;
     } else {
@@ -121,15 +143,18 @@ void mdn::gui::BinaryOperationDialog::onDestChanged() {
         m_newNameEdit->setText(a + " " + sym + " " + b);
     }
     updateSummary();
+    Log_Debug3_T("");
 }
 
 
 void mdn::gui::BinaryOperationDialog::onFilterTextChanged(const QString& text) {
+    Log_Debug3_H("");
     for (int i = 0; i < m_bList->count(); ++i) {
         QListWidgetItem* it = m_bList->item(i);
         bool show = it->text().contains(text, Qt::CaseInsensitive);
         it->setHidden(!show);
     }
+    Log_Debug3_T("");
 }
 
 
@@ -139,6 +164,7 @@ void mdn::gui::BinaryOperationDialog::onAccept() {
 
 
 void mdn::gui::BinaryOperationDialog::buildUi() {
+    Log_Debug3_H("");
     QVBoxLayout* root = new QVBoxLayout(this);
 
     QHBoxLayout* opsRow = new QHBoxLayout();
@@ -163,7 +189,7 @@ void mdn::gui::BinaryOperationDialog::buildUi() {
     QWidget* opsRowW = new QWidget(this);
     opsRowW->setLayout(opsRow);
 
-    connect(m_opsButtons, SIGNAL(buttonClicked(int)), this, SLOT(onOpChanged()));
+    // connect(m_opsButtons, SIGNAL(buttonClicked(int)), this, SLOT(onOpChanged()));
 
     QHBoxLayout* aRow = new QHBoxLayout();
     QLabel* aLabel = new QLabel(tr("A (active):"));
@@ -200,7 +226,19 @@ void mdn::gui::BinaryOperationDialog::buildUi() {
     QWidget* bPicker = new QWidget(this);
     bPicker->setLayout(bBox);
 
-    connect(m_bRadioButtons, SIGNAL(buttonClicked(int)), this, SLOT(onBSelectionChanged()));
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    connect(m_opsButtons,      &QButtonGroup::idClicked,
+            this,              &BinaryOperationDialog::onOpChanged);
+    connect(m_bRadioButtons,   &QButtonGroup::idClicked,
+            this,              &BinaryOperationDialog::onBSelectionChanged);
+#else
+    connect(m_opsButtons,    QOverload<int>::of(&QButtonGroup::buttonClicked),
+            this,            &BinaryOperationDialog::onOpChanged);
+    connect(m_bRadioButtons, QOverload<int>::of(&QButtonGroup::buttonClicked),
+            this,            &BinaryOperationDialog::onBSelectionChanged);
+#endif
+
     connect(m_bList, SIGNAL(currentRowChanged(int)), this, SLOT(onBSelectionChanged()));
     connect(m_bCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(onBSelectionChanged()));
     connect(m_bFilter, SIGNAL(textChanged(QString)), this, SLOT(onFilterTextChanged(QString)));
@@ -253,10 +291,12 @@ void mdn::gui::BinaryOperationDialog::buildUi() {
 
     setWindowTitle(tr("Binary Operation"));
     resize(560, 560);
+    Log_Debug3_T("");
 }
 
 
 void mdn::gui::BinaryOperationDialog::rebuildBPicker() {
+    Log_Debug3_H("");
     if (m_names.size() <= 7) {
         m_bRadioGroup->setVisible(true);
         m_bFilter->setVisible(false);
@@ -315,12 +355,15 @@ void mdn::gui::BinaryOperationDialog::rebuildBPicker() {
     }
 
     selectBInUi(m_indexB);
+    Log_Debug3_T("");
 }
 
 
 void mdn::gui::BinaryOperationDialog::selectBInUi(int indexB) {
+    Log_Debug3_H("");
     if (m_names.isEmpty()) {
         m_indexB = 0;
+        Log_Debug3_T("");
         return;
     }
     int idx = indexB;
@@ -344,17 +387,22 @@ void mdn::gui::BinaryOperationDialog::selectBInUi(int indexB) {
         }
     }
     m_indexB = idx;
+    Log_Debug3_T("m_indexB =" << m_indexB);
 }
 
 
 int mdn::gui::BinaryOperationDialog::currentBFromUi() const {
+    Log_Debug3_H("");
     if (m_bRadioGroup->isVisible()) {
         int id = m_bRadioButtons->checkedId();
+        Log_Debug3_T("");
         return id;
     } else {
         if (m_bList->isVisible()) {
+        Log_Debug3_T("");
             return m_bList->currentRow();
         } else {
+        Log_Debug3_T("");
             return m_bCombo->currentIndex();
         }
     }
@@ -362,6 +410,7 @@ int mdn::gui::BinaryOperationDialog::currentBFromUi() const {
 
 
 void mdn::gui::BinaryOperationDialog::updateSummary() {
+    Log_Debug3_H("");
     QString a = m_names.value(m_indexA);
     QString b = m_names.value(m_indexB);
     QString sym = opSymbol(m_op);
@@ -379,6 +428,7 @@ void mdn::gui::BinaryOperationDialog::updateSummary() {
 
     QString s = QStringLiteral("%1  %2  %3  →  %4").arg(a, sym, b, destStr);
     m_summary->setText(s);
+    Log_Debug3_T("");
 }
 
 

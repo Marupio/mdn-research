@@ -3,6 +3,9 @@
 #include <QWidget>
 #include <QStringList>
 
+#include "EnumDestinationMode.hpp"
+#include "EnumOperation.hpp"
+
 class QComboBox;
 class QLabel;
 class QPushButton;
@@ -15,28 +18,15 @@ class OperationStrip : public QWidget {
     Q_OBJECT
 
 public:
-    enum class Operation {
-        Add,
-        Subtract,
-        Multiply,
-        Divide
-    };
-
-    enum class DestinationMode {
-        InPlace,
-        ToNew
-    };
-
-public:
     explicit OperationStrip(QWidget* parent = nullptr);
 
     void setTabNames(const QStringList& names);
     void setActiveIndex(int indexA);
     void setRememberedB(int indexB);
-    void setDestinationMode(DestinationMode mode);
+    void setDestinationMode(DestinationSimple mode);
 
 signals:
-    void requestOperation(Operation op, int indexA, int indexB, DestinationMode dest);
+    void requestOperation(Operation op, int indexA, int indexB, DestinationSimple dest);
     void requestChangeB();
 
 private slots:
@@ -48,7 +38,7 @@ private slots:
     void onDestChanged(int idx);
 
 private:
-    void emitOp(OperationStrip::Operation op);
+    void emitOp(Operation op);
 
 private:
     QPushButton* m_add{nullptr};

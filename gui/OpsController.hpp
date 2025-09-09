@@ -5,6 +5,8 @@
 #include <QObject>
 #include <QStringList>
 
+#include "EnumDestinationMode.hpp"
+#include "EnumOperation.hpp"
 #include "MdnQtInterface.hpp"
 #include "OperationStrip.hpp"
 
@@ -29,83 +31,21 @@ class OpsController : public QObject {
     Q_OBJECT
 
 public:
-    enum class Op {
-        Add,
-        Subtract,
-        Multiply,
-        Divide
-    };
-    static std::string OpToString(const Op& o) {
-        switch (o) {
-            case Op::Add: {
-                return "Add";
-            }
-            case Op::Subtract: {
-                return "Subtract";
-            }
-            case Op::Multiply: {
-                return "Multiply";
-            }
-            case Op::Divide: {
-                return "Divide";
-            }
-            default: {
-                return "Unknown";
-            }
-        }
-    }
-    static std::string OpToOpStr(const Op& o) {
-        switch (o) {
-            case Op::Add: {
-                return "+";
-            }
-            case Op::Subtract: {
-                return "-";
-            }
-            case Op::Multiply: {
-                return "×";
-            }
-            case Op::Divide: {
-                return "÷";
-            }
-            default: {
-                return "?";
-            }
-        }
-    }
-
-    enum class Dest {
-        InPlace,
-        ToNew
-    };
-    static std::string DestToString(const Dest& d) {
-        switch (d) {
-            case Dest::InPlace: {
-                return "InPlace";
-            }
-            case Dest::ToNew: {
-                return "ToNew";
-            }
-            default: {
-                return "Unknown";
-            }
-        }
-    }
 
     struct Plan {
-        Op op;
+        Operation op;
         int indexA;
         int indexB;
-        Dest dest;
+        DestinationSimple dest;
         QString newName;
 
         friend std::ostream& operator<<(std::ostream& os, const Plan& p) {
             std::string destStr(
-                p.dest == Dest::InPlace
+                p.dest == DestinationSimple::InPlace
                     ? "InPlace"
                     : "ToNew(" + MdnQtInterface::fromQString(p.newName) + ")"
             );
-            os << "[" << p.indexA << OpToOpStr(p.op) << p.indexB << "→" << destStr << "]";
+            os << "[" << p.indexA << OperationToOpStr(p.op) << p.indexB << "→" << destStr << "]";
             return os;
         }
     };
@@ -137,10 +77,10 @@ private slots:
     void onMenuDivToNew();
 
     void onStripRequest(
-        OperationStrip::Operation op,
+        Operation op,
         int indexA,
         int indexB,
-        OperationStrip::DestinationMode dest
+        DestinationSimple dest
     );
     void onStripChangeB();
 
@@ -149,10 +89,10 @@ private:
     void rebuildBottomContainer();
     QStringList collectTabNames() const;
     int activeIndex() const;
-    void runDialog(Op preset);
-    void runQuick(Op op, Dest dest);
-    OpsController::Dest stripDestToController(OperationStrip::DestinationMode d) const;
-    OpsController::Op stripOpToController(OperationStrip::Operation o) const;
+    void runDialog(Operation preset);
+    void runQuick(Operation op, DestinationSimple dest);
+    DestinationSimple stripDestToController(DestinationSimple d) const;
+    Operation stripOpToController(Operation o) const;
 
 private:
     QMainWindow* m_mainWindow{nullptr};
@@ -165,7 +105,7 @@ private:
     QMenu* m_menuOps{nullptr};
 
     int m_rememberedB{0};
-    Dest m_rememberedDest{Dest::InPlace};
+    DestinationSimple m_rememberedDest{DestinationSimple::InPlace};
 };
 
 } // end namespace gui

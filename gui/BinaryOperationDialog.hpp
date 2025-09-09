@@ -3,6 +3,10 @@
 #include <QDialog>
 #include <QStringList>
 
+#include "EnumDestinationMode.hpp"
+#include "EnumOperation.hpp"
+#include "../library/Logger.hpp"
+
 class QAbstractButton;
 class QButtonGroup;
 class QComboBox;
@@ -23,19 +27,6 @@ class BinaryOperationDialog : public QDialog {
     Q_OBJECT
 
 public:
-    enum class Operation {
-        Add,
-        Subtract,
-        Multiply,
-        Divide
-    };
-
-    enum class DestinationMode {
-        OverwriteA,
-        OverwriteB,
-        CreateNew
-    };
-
     struct Plan {
         Operation op;
         int indexA;
@@ -44,6 +35,18 @@ public:
         QString newName;
         bool rememberChoices;
     };
+    friend std::ostream& operator<<(std::ostream& os, const Plan& p) {
+        std::string destStr;
+        if (p.dest == DestinationMode::CreateNew) {
+            destStr = "CreateNew(" + MdnQtInterface::fromQString(p.newName) + ")";
+        } else if (p.dest == DestinationMode::OverwriteA) {
+            destStr = "OverwriteA";
+        } else {
+            destStr = "OverwriteB";
+        }
+        os << "[" << p.indexA << OperationToOpStr(p.op) << p.indexB << "→" << destStr << "]";
+        return os;
+    }
 
 public:
     explicit BinaryOperationDialog(QWidget* parent = nullptr);

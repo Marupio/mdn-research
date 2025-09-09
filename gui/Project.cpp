@@ -141,14 +141,16 @@ mdn::gui::Project::Project(MainWindow* parent, std::string name, int nStartMdn):
         m_name = "untitled-" + std::to_string(m_untitledNumber++);
     }
     Log_Debug_H(
-        "Creating a new Project" << (parent ? "(with parent)" : "(no parent)")
+        "Creating a new Project " << (parent ? "(with parent)" : "(no parent)")
             << " '" << name << "' with " << nStartMdn << " starting tabs"
     );
     if (nStartMdn == 0) {
         nStartMdn += 1;
     }
     for (int i = 0; i < nStartMdn; ++i) {
-        std::string nextName = Mdn2d::static_generateNextName();
+        Log_Debug3("Project constructor, Mdn index " << i);
+        std::string nextName = Project::suggestName("Mdn");
+        Log_Debug3("Got name=[" << nextName << "], constructor dispatch");
         Mdn2d newMdn = Mdn2d::NewInstance(m_config, nextName);
         Log_Debug2("Creating Mdn {'" << nextName << "', " << i << "}");
         appendMdn(std::move(newMdn));
@@ -198,8 +200,10 @@ std::string mdn::gui::Project::requestMdnNameChange(
 
 
 std::string mdn::gui::Project::suggestName(const std::string& likeThis) const {
+    Log_Debug_H(likeThis);
     std::string working = likeThis.empty() ? "Mdn" : likeThis;
     if (!contains(working)) {
+        Log_Debug_T("Returning " << working);
         return working;
     }
     std::pair<std::string, int> prefixValue(Tools::strInt(working));
@@ -208,7 +212,8 @@ std::string mdn::gui::Project::suggestName(const std::string& likeThis) const {
     std::string suggestion;
     do {
         suggestion = prefix + std::to_string(val++);
-    } while (!contains(suggestion));
+    } while (contains(suggestion));
+    Log_Debug_T("Returning " << suggestion);
     return suggestion;
 }
 
@@ -231,6 +236,8 @@ void mdn::gui::Project::setConfig(Mdn2dConfig newConfig) {
         Log_Debug2_T("No impact");
         return;
     }
+    m_config.setMaster(*this);
+
     // For now, assume config is the same across all Mdn2d's
     Mdn2d& first = firstMdn();
     Mdn2dConfigImpact impact = first.assessConfigChange(newConfig);

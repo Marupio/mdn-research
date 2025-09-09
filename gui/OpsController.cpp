@@ -1,6 +1,4 @@
 #include "OpsController.hpp"
-#include "OperationStrip.hpp"
-#include "BinaryOperationDialog.hpp"
 
 #include <QAction>
 #include <QMainWindow>
@@ -10,6 +8,11 @@
 #include <QTabWidget>
 #include <QVBoxLayout>
 
+#include "../library/Logger.hpp"
+#include "BinaryOperationDialog.hpp"
+#include "OperationStrip.hpp"
+
+
 mdn::gui::OpsController::OpsController(
     QMainWindow* mw,
     QTabWidget* tabs,
@@ -18,9 +21,11 @@ mdn::gui::OpsController::OpsController(
 ) :
     QObject(parent), m_mainWindow(mw), m_tabs(tabs), m_history(history)
 {
+    Log_Debug3_H("");
     buildMenus();
     rebuildBottomContainer();
     refreshTabNames();
+    Log_Debug3_T("");
 }
 
 
@@ -30,6 +35,7 @@ QWidget* mdn::gui::OpsController::bottomContainer() const {
 
 
 void mdn::gui::OpsController::refreshTabNames() {
+    Log_Debug3_H("");
     QStringList names = collectTabNames();
     int a = activeIndex();
     if (m_strip) {
@@ -37,109 +43,128 @@ void mdn::gui::OpsController::refreshTabNames() {
         m_strip->setActiveIndex(a);
         m_strip->setRememberedB(m_rememberedB);
         m_strip->setDestinationMode(
-            m_rememberedDest == Dest::InPlace
-            ? OperationStrip::DestinationMode::InPlace
-            : OperationStrip::DestinationMode::ToNew
+            m_rememberedDest == DestinationSimple::InPlace
+            ? DestinationSimple::InPlace
+            : DestinationSimple::ToNew
         );
     }
+    Log_Debug3_T("");
 }
 
 
 void mdn::gui::OpsController::onMenuAdd() {
-    runDialog(Op::Add);
+    Log_Debug3_H("");
+    runDialog(Operation::Add);
+    Log_Debug3_T("");
 }
 
 
 void mdn::gui::OpsController::onMenuSub() {
-    runDialog(Op::Subtract);
+    Log_Debug3_H("");
+    runDialog(Operation::Subtract);
+    Log_Debug3_T("");
 }
 
 
 void mdn::gui::OpsController::onMenuMul() {
-    runDialog(Op::Multiply);
+    Log_Debug3_H("");
+    runDialog(Operation::Multiply);
+    Log_Debug3_T("");
 }
 
 
 void mdn::gui::OpsController::onMenuDiv() {
-    runDialog(Op::Divide);
+    Log_Debug3_H("");
+    runDialog(Operation::Divide);
+    Log_Debug3_T("");
 }
 
 
 void mdn::gui::OpsController::onMenuAddInPlace() {
-    runQuick(Op::Add, Dest::InPlace);
+    Log_Debug3_H("");
+    runQuick(Operation::Add, DestinationSimple::InPlace);
+    Log_Debug3_T("");
 }
 
 
 void mdn::gui::OpsController::onMenuAddToNew() {
-    runQuick(Op::Add, Dest::ToNew);
+    Log_Debug3_H("");
+    runQuick(Operation::Add, DestinationSimple::ToNew);
+    Log_Debug3_T("");
 }
 
 
 void mdn::gui::OpsController::onMenuSubInPlace() {
-    runQuick(Op::Subtract, Dest::InPlace);
+    Log_Debug3_H("");
+    runQuick(Operation::Subtract, DestinationSimple::InPlace);
+    Log_Debug3_T("");
 }
 
 
 void mdn::gui::OpsController::onMenuSubToNew() {
-    runQuick(Op::Subtract, Dest::ToNew);
+    Log_Debug3_H("");
+    runQuick(Operation::Subtract, DestinationSimple::ToNew);
+    Log_Debug3_T("");
 }
 
 
 void mdn::gui::OpsController::onMenuMulInPlace() {
-    runQuick(Op::Multiply, Dest::InPlace);
+    Log_Debug3_H("");
+    runQuick(Operation::Multiply, DestinationSimple::InPlace);
+    Log_Debug3_T("");
 }
 
 
 void mdn::gui::OpsController::onMenuMulToNew() {
-    runQuick(Op::Multiply, Dest::ToNew);
+    Log_Debug3_H("");
+    runQuick(Operation::Multiply, DestinationSimple::ToNew);
+    Log_Debug3_T("");
 }
 
 
 void mdn::gui::OpsController::onMenuDivInPlace() {
-    runQuick(Op::Divide, Dest::InPlace);
+    Log_Debug3_H("");
+    runQuick(Operation::Divide, DestinationSimple::InPlace);
+    Log_Debug3_T("");
 }
 
 
 void mdn::gui::OpsController::onMenuDivToNew() {
-    runQuick(Op::Divide, Dest::ToNew);
+    Log_Debug3_H("");
+    runQuick(Operation::Divide, DestinationSimple::ToNew);
+    Log_Debug3_T("");
 }
 
 
 void mdn::gui::OpsController::onStripRequest(
-    OperationStrip::Operation op,
+    Operation op,
     int indexA,
     int indexB,
-    OperationStrip::DestinationMode dest
+    DestinationSimple dest
 ) {
+    Log_Debug3_H(
+        OperationToString(op) << "(" << indexA << "," << indexB << ")"
+    );
     OpsController::Plan p;
     p.op = stripOpToController(op);
     p.indexA = indexA;
     p.indexB = indexB;
     p.dest = stripDestToController(dest);
-    if (p.dest == Dest::ToNew) {
+    if (p.dest == DestinationSimple::ToNew) {
         QStringList names = collectTabNames();
-        QString sym = "+";
-        if (p.op == Op::Subtract) {
-            sym = "-";
-        } else {
-            if (p.op == Op::Multiply) {
-                sym = "×";
-            } else {
-                sym = "÷";
-            }
-        }
         QString a = names.value(p.indexA);
         QString b = names.value(p.indexB);
-        p.newName = a + " " + sym + " " + b;
+        p.newName = a + " " + OperationToOpQStr(p.op) + " " + b;
     }
     m_rememberedB = indexB;
     m_rememberedDest = stripDestToController(dest);
+    Log_Debug3_T("emitting " << p);
     emit planReady(p);
 }
 
 
 void mdn::gui::OpsController::onStripChangeB() {
-    runDialog(Op::Add);
+    runDialog(Operation::Add);
 }
 
 
@@ -241,19 +266,19 @@ void mdn::gui::OpsController::rebuildBottomContainer() {
         m_strip,
         SIGNAL(
             requestOperation(
-                OperationStrip::Operation,
+                Operation,
                 int,
                 int,
-                OperationStrip::DestinationMode
+                DestinationSimple
             )
         ),
         this,
         SLOT(
             onStripRequest(
-                OperationStrip::Operation,
+                Operation,
                 int,
                 int,
-                OperationStrip::DestinationMode
+                DestinationSimple
             )
         )
     );
@@ -285,87 +310,112 @@ int mdn::gui::OpsController::activeIndex() const {
 }
 
 
-void mdn::gui::OpsController::runDialog(Op preset) {
+void mdn::gui::OpsController::runDialog(Operation preset) {
+    Log_Debug3_H("" << preset);
     QStringList names = collectTabNames();
     if (names.size() < 2) {
+        Log_Debug3_T("names.size() = " << names.size());
         return;
     }
+    Log_Debug4("");
     BinaryOperationDialog dlg(m_mainWindow);
 
+    Log_Debug4("");
     dlg.setTabNames(names);
+    Log_Debug4("");
     dlg.setActiveIndex(activeIndex());
+    Log_Debug4("");
 
-    BinaryOperationDialog::Operation bop = BinaryOperationDialog::Operation::Add;
-    if (preset == Op::Add) {
-        bop = BinaryOperationDialog::Operation::Add;
-    } else {
-        if (preset == Op::Subtract) {
-            bop = BinaryOperationDialog::Operation::Subtract;
-        } else {
-            if (preset == Op::Multiply) {
-                bop = BinaryOperationDialog::Operation::Multiply;
-            } else {
-                bop = BinaryOperationDialog::Operation::Divide;
-            }
-        }
-    }
-    dlg.setInitialOperation(bop);
+    dlg.setInitialOperation(preset);
+    Log_Debug4("");
 
     int b = m_rememberedB;
     if (b < 0 || b >= names.size()) {
         b = 0;
     }
+    Log_Debug4("");
     dlg.setRememberedB(b);
+    Log_Debug4("");
 
-    BinaryOperationDialog::DestinationMode d = BinaryOperationDialog::DestinationMode::OverwriteA;
-    if (m_rememberedDest == Dest::InPlace) {
-        d = BinaryOperationDialog::DestinationMode::OverwriteA;
+    DestinationMode d = DestinationMode::OverwriteA;
+    Log_Debug4("");
+    if (m_rememberedDest == DestinationSimple::InPlace) {
+    Log_Debug4("");
+        d = DestinationMode::OverwriteA;
     } else {
-        d = BinaryOperationDialog::DestinationMode::CreateNew;
+    Log_Debug4("");
+        d = DestinationMode::CreateNew;
     }
+    Log_Debug4("");
     dlg.setRememberedDestination(d);
+    Log_Debug4("");
 
     int res = dlg.exec();
+    Log_Debug4("");
     if (res != QDialog::Accepted) {
+        Log_Debug3_T("Not accepted");
         return;
     }
+    Log_Debug4("");
 
     BinaryOperationDialog::Plan pp = dlg.plan();
+    Log_Debug4("pp=" << pp);
 
     OpsController::Plan p;
+    Log_Debug4("");
     p.op = preset;
+    Log_Debug4("");
     p.indexA = pp.indexA;
+    Log_Debug4("");
     p.indexB = pp.indexB;
-    if (pp.dest == BinaryOperationDialog::DestinationMode::OverwriteA) {
-        p.dest = Dest::InPlace;
+    Log_Debug4("");
+    if (pp.dest == DestinationMode::OverwriteA) {
+    Log_Debug4("");
+        p.dest = DestinationSimple::InPlace;
     } else {
-        if (pp.dest == BinaryOperationDialog::DestinationMode::OverwriteB) {
-            p.dest = Dest::InPlace;
+    Log_Debug4("");
+        if (pp.dest == DestinationMode::OverwriteB) {
+    Log_Debug4("");
+            p.dest = DestinationSimple::InPlace;
+    Log_Debug4("");
             p.indexA = pp.indexB;
+    Log_Debug4("");
             p.indexB = pp.indexA;
         } else {
-            p.dest = Dest::ToNew;
+    Log_Debug4("");
+            p.dest = DestinationSimple::ToNew;
+    Log_Debug4("");
             p.newName = pp.newName;
         }
+    Log_Debug4("");
     }
+    Log_Debug4("");
 
     if (pp.rememberChoices) {
+    Log_Debug4("");
         m_rememberedB = pp.indexB;
-        if (p.dest == Dest::InPlace) {
-            m_rememberedDest = Dest::InPlace;
+    Log_Debug4("");
+        if (p.dest == DestinationSimple::InPlace) {
+    Log_Debug4("");
+            m_rememberedDest = DestinationSimple::InPlace;
         } else {
-            m_rememberedDest = Dest::ToNew;
+    Log_Debug4("");
+            m_rememberedDest = DestinationSimple::ToNew;
+    Log_Debug4("");
         }
     }
 
+    Log_Debug3_T("Emitting " << p);
     emit planReady(p);
 }
 
 
-void mdn::gui::OpsController::runQuick(Op op, Dest dest) {
+void mdn::gui::OpsController::runQuick(Operation op, DestinationSimple dest) {
+    Log_Debug3_H("op=" << op << ", dest=" << dest);
     QStringList names = collectTabNames();
     if (names.size() < 2) {
         runDialog(op);
+        Log_Debug3_T("names.size() = " << names.size());
         return;
     }
     int a = activeIndex();
@@ -379,12 +429,12 @@ void mdn::gui::OpsController::runQuick(Op op, Dest dest) {
     p.indexA = a;
     p.indexB = b;
     p.dest = dest;
-    if (dest == Dest::ToNew) {
+    if (dest == DestinationSimple::ToNew) {
         QString sym = "+";
-        if (op == Op::Subtract) {
+        if (op == Operation::Subtract) {
             sym = "-";
         } else {
-            if (op == Op::Multiply) {
+            if (op == Operation::Multiply) {
                 sym = "×";
             } else {
                 sym = "÷";
@@ -392,34 +442,35 @@ void mdn::gui::OpsController::runQuick(Op op, Dest dest) {
         }
         p.newName = names.value(a) + " " + sym + " " + names.value(b);
     }
+    Log_Debug3_T("Emitting " << p);
     emit planReady(p);
 }
 
 
-mdn::gui::OpsController::Dest mdn::gui::OpsController::stripDestToController(
-    OperationStrip::DestinationMode d
+mdn::gui::DestinationSimple mdn::gui::OpsController::stripDestToController(
+    DestinationSimple d
 ) const {
-    if (d == OperationStrip::DestinationMode::InPlace) {
-        return Dest::InPlace;
+    if (d == DestinationSimple::InPlace) {
+        return DestinationSimple::InPlace;
     } else {
-        return Dest::ToNew;
+        return DestinationSimple::ToNew;
     }
 }
 
 
-mdn::gui::OpsController::Op mdn::gui::OpsController::stripOpToController(
-    OperationStrip::Operation o
+mdn::gui::Operation mdn::gui::OpsController::stripOpToController(
+    Operation o
 ) const {
-    if (o == OperationStrip::Operation::Add) {
-        return Op::Add;
+    if (o == Operation::Add) {
+        return Operation::Add;
     } else {
-        if (o == OperationStrip::Operation::Subtract) {
-            return Op::Subtract;
+        if (o == Operation::Subtract) {
+            return Operation::Subtract;
         } else {
-            if (o == OperationStrip::Operation::Multiply) {
-                return Op::Multiply;
+            if (o == Operation::Multiply) {
+                return Operation::Multiply;
             } else {
-                return Op::Divide;
+                return Operation::Divide;
             }
         }
     }

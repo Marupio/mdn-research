@@ -1,6 +1,7 @@
 #pragma once
 
-#include "../library/GlobalConfig.hpp"
+#include "GlobalConfig.hpp"
+#include "Logger.hpp"
 
 // Interface class for Mdn2d number framework class, for Mdn2d to talk upwards to the framework
 // within which they exist
@@ -24,11 +25,13 @@ public:
     // Returns the framework's 'name', used in error messaging
     virtual void setName(const std::string& nameIn) {
         // Do nothing
+        Log_Debug("[" << nameIn << "]");
     }
 
     // Returns true if an Mdn2d exists with the given name, false otherwise
     virtual bool mdnNameExists(const std::string& nameIn) const {
         // default allows name collisions
+        Log_Debug("[" << nameIn << "]");
         return false;
     }
 
@@ -39,6 +42,7 @@ public:
         const std::string& newName
     ) {
         // Default always allows the name change
+        Log_Debug("o:[" << origName << "],n:[" << newName << "]");
         return newName;
     }
 
@@ -47,6 +51,7 @@ public:
         const std::string& suggestedName
     ) const {
         // Default always likes the suggestedName
+        Log_Debug("[" << suggestedName << "]");
         return suggestedName;
     }
 
