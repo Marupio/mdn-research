@@ -356,12 +356,12 @@ bool mdn::gui::Project::contains(std::string name, bool warnOnFailure) const {
         Log_Debug3_T("");
         return false;
     }
-    const Mdn2d& num = iter->second;
-    if (num.name() != name) {
-        Log_Debug2("Project does not contain '" << name << "'");
-        Log_Debug3_T("");
-        return false;
-    }
+    // const Mdn2d& num = iter->second;
+    // if (num.name() != name) {
+    //     Log_Debug2("Project does not contain '" << name << "'");
+    //     Log_Debug3_T("");
+    //     return false;
+    // }
     Log_Debug2("Project contains '" << name << "'");
     Log_Debug3_T("");
     return true;

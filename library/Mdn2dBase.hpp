@@ -134,6 +134,7 @@ public:
 
             // Assignment operator
             Mdn2dBase& operator=(const Mdn2dBase& other);
+            protected: Mdn2dBase& locked_operatorEquals(const Mdn2dBase& other); public:
 
             // Move operator
             Mdn2dBase(Mdn2dBase&& other) noexcept;

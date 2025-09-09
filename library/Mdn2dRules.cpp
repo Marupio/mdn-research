@@ -13,6 +13,14 @@
 
 
 mdn::Carryover mdn::Mdn2dRules::static_checkCarryover(Digit p, Digit x, Digit y, Digit base) {
+    Log_Debug4_H("");
+    If_Log_Showing_Debug4(
+        Log_Debug4("Checking with base " << static_cast<int>(base) << " ("
+            << static_cast<int>(p) << ":"
+            << static_cast<int>(x) << ","
+            << static_cast<int>(y) << ")"
+        );
+    );
     Carryover result = Carryover::Invalid;
     if (abs(p) > base) {
         result = Carryover::Required;
@@ -37,12 +45,7 @@ mdn::Carryover mdn::Mdn2dRules::static_checkCarryover(Digit p, Digit x, Digit y,
     }
 
     If_Log_Showing_Debug4(
-        Log_Debug4("Checking with base " << static_cast<int>(base) << " ("
-            << static_cast<int>(p) << ":"
-            << static_cast<int>(x) << ","
-            << static_cast<int>(y) << "): result = "
-            << CarryoverToName(result)
-        );
+        Log_Debug4_T("result = " << CarryoverToName(result));
     );
     return result;
 }
@@ -88,8 +91,8 @@ mdn::Mdn2dRules& mdn::Mdn2dRules::operator=(const Mdn2dRules& other) {
 mdn::Mdn2dRules::Mdn2dRules(Mdn2dRules&& other) noexcept :
     Mdn2dBase(std::move(other))
 {
-    auto lockOther = other.lockReadOnly();
     Log_Debug3("Move-copying Mdn2dRules");
+    auto lockOther = other.lockReadOnly();
     if (other.m_event == other.m_polymorphicNodes_event) {
         m_polymorphicNodes = std::move(other.m_polymorphicNodes);
         m_polymorphicNodes_event = m_event;
@@ -100,9 +103,9 @@ mdn::Mdn2dRules::Mdn2dRules(Mdn2dRules&& other) noexcept :
 mdn::Mdn2dRules& mdn::Mdn2dRules::operator=(Mdn2dRules&& other) noexcept {
     Mdn2dBase::operator=(std::move(other));
     if (this != &other) {
+        Log_Debug3("Setting Mdn2dRules equal to other, move-copy");
         auto lockThis = lockWriteable();
         auto lockOther = other.lockReadOnly();
-        Log_Debug3("Setting Mdn2dRules equal to other, move-copy");
         if (other.m_event == other.m_polymorphicNodes_event) {
             m_polymorphicNodes = std::move(other.m_polymorphicNodes);
             m_polymorphicNodes_event = m_event;
@@ -127,8 +130,8 @@ void mdn::Mdn2dRules::locked_setConfig(Mdn2dConfig newConfig) {
 
 
 mdn::Carryover mdn::Mdn2dRules::checkCarryover(const Coord& xy) const {
-    auto lock = lockReadOnly();
     Log_N_Debug2_H("At: " << xy);
+    auto lock = lockReadOnly();
     Carryover result = locked_checkCarryover(xy);
     If_Log_Showing_Debug2(
         Log_N_Debug2_T("result=" << CarryoverToName(result));
@@ -153,8 +156,8 @@ mdn::Carryover mdn::Mdn2dRules::locked_checkCarryover(const Coord& xy) const {
 
 
 mdn::CoordSet mdn::Mdn2dRules::carryover(const Coord& xy) {
-    auto lock = lockWriteable();
     Log_N_Debug2_H("At: " << xy);
+    auto lock = lockWriteable();
     CoordSet changed = locked_carryover(xy);
     internal_operationComplete();
     If_Log_Showing_Debug4(
@@ -240,7 +243,7 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryover(const Coord& xy, int carry) {
         Log_N_Debug4("no further carryovers in y, at " << xy_x << " setting to " << iy);
         locked_setValue(xy_x, ix);
     }
-    affectedCoords.merge(locked_carryoverCleanup(affectedCoords));
+    // affectedCoords.merge(locked_carryoverCleanup(affectedCoords));
     If_Log_Showing_Debug4(
         std::string coordsList(Tools::setToString<Coord>(affectedCoords, ','));
         Log_N_Debug4("affectedCoords=" << coordsList);
@@ -251,8 +254,8 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryover(const Coord& xy, int carry) {
 
 
 mdn::CoordSet mdn::Mdn2dRules::carryoverCleanup(const CoordSet& coords) {
-    auto lock = lockWriteable();
     Log_N_Debug2_H("Carryover clean up on " << coords.size() << " coords");
+    auto lock = lockWriteable();
     CoordSet changed = locked_carryoverCleanup(coords);
     // if (coords.size()) {
     // }
@@ -318,8 +321,8 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryoverCleanup(const CoordSet& coords) {
 
 
 mdn::CoordSet mdn::Mdn2dRules::carryoverCleanupAll() {
-    auto lock = lockWriteable();
     Log_N_Debug2_H("");
+    auto lock = lockWriteable();
     CoordSet changed = locked_carryoverCleanupAll();
     internal_operationComplete();
     Log_N_Debug2_T("result=[set of coords with " << changed.size() << " elements]");
@@ -339,8 +342,8 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryoverCleanupAll() {
 
 
 void mdn::Mdn2dRules::shift(int xDigits, int yDigits) {
-    auto lock = lockWriteable();
     Log_N_Debug2_H("shifting (" << xDigits << "," << yDigits << ")");
+    auto lock = lockWriteable();
     locked_shift(xDigits, yDigits);
     internal_operationComplete();
     Log_N_Debug2_T("")
@@ -348,10 +351,10 @@ void mdn::Mdn2dRules::shift(int xDigits, int yDigits) {
 
 
 void mdn::Mdn2dRules::shift(const Coord& xy) {
-    auto lock = lockWriteable();
     If_Log_Showing_Debug3(
         Log_N_Debug3_H("shifting (" << xy.x() << "," << xy.y() << ")");
     );
+    auto lock = lockWriteable();
     locked_shift(xy);
     internal_operationComplete();
     Log_N_Debug3_T("");
@@ -393,8 +396,8 @@ void mdn::Mdn2dRules::locked_shift(int xDigits, int yDigits) {
 
 
 void mdn::Mdn2dRules::shiftRight(int nDigits) {
-    auto lock = lockWriteable();
     Log_N_Debug2_H("shifting right (" << nDigits << ")");
+    auto lock = lockWriteable();
     locked_shiftRight(nDigits);
     internal_operationComplete();
     Log_N_Debug2_T("");
@@ -423,8 +426,8 @@ void mdn::Mdn2dRules::locked_shiftRight(int nDigits) {
 
 
 void mdn::Mdn2dRules::shiftLeft(int nDigits) {
-    auto lock = lockWriteable();
     Log_N_Debug2_H("shifting left (" << nDigits << ")");
+    auto lock = lockWriteable();
     locked_shiftLeft(nDigits);
     internal_operationComplete();
     Log_N_Debug2_T("");
@@ -453,8 +456,8 @@ void mdn::Mdn2dRules::locked_shiftLeft(int nDigits) {
 
 
 void mdn::Mdn2dRules::shiftUp(int nDigits) {
-    auto lock = lockWriteable();
     Log_N_Debug2_H("shifting up (" << nDigits << ")");
+    auto lock = lockWriteable();
     locked_shiftUp(nDigits);
     internal_operationComplete();
     Log_N_Debug2_T("");
@@ -483,8 +486,8 @@ void mdn::Mdn2dRules::locked_shiftUp(int nDigits) {
 
 
 void mdn::Mdn2dRules::shiftDown(int nDigits) {
-    auto lock = lockWriteable();
     Log_N_Debug2_H("shifting down (" << nDigits << ")");
+    auto lock = lockWriteable();
     locked_shiftDown(nDigits);
     internal_operationComplete();
     Log_N_Debug2_T("");
@@ -513,8 +516,8 @@ void mdn::Mdn2dRules::locked_shiftDown(int nDigits) {
 
 
 void mdn::Mdn2dRules::transpose() {
-    auto lock = lockWriteable();
     Log_N_Debug2_H("");
+    auto lock = lockWriteable();
     locked_transpose();
     internal_operationComplete();
     Log_N_Debug2_T("");
@@ -537,8 +540,8 @@ void mdn::Mdn2dRules::locked_transpose() {
 
 
 const mdn::CoordSet& mdn::Mdn2dRules::getPolymorphicNodes() const {
-    auto lock = lockReadOnly();
     Log_N_Debug2_H("");
+    auto lock = lockReadOnly();
     const mdn::CoordSet& coords = locked_getPolymorphicNodes();
     Log_N_Debug2_T("");
     return coords;

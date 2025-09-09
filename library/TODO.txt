@@ -28,7 +28,10 @@ Make Selection thread safe
 GUI library
 
 * Crash on close
-
+* Enter + ShiftEnter are backwards
+* Change font size needs to propogate to all Mdns
+* Be able to change config
+* 
 
 FUNCTIONALITY
 

@@ -178,8 +178,8 @@ mdn::Mdn2dBase::Mdn2dBase(const Mdn2dBase& other, std::string nameIn):
     m_modified(false),
     m_event(0)
 {
-    auto lock = other.lockReadOnly();
     Log_Debug3_H("copy ctor, copying " << other.m_name << ", newName=" << nameIn);
+    auto lock = other.lockReadOnly();
     if (m_name.empty()) {
         Log_Debug4("nameIn empty, generating new name from " << other.m_name);
         m_name = static_generateCopyName(other.m_name);
@@ -223,14 +223,38 @@ mdn::Mdn2dBase& mdn::Mdn2dBase::operator=(const Mdn2dBase& other) {
 }
 
 
+mdn::Mdn2dBase& mdn::Mdn2dBase::locked_operatorEquals(const Mdn2dBase& other) {
+    Log_Debug3_H("Setting " << m_name << " equal to " << other.m_name);
+    if (this != &other) {
+        Log_Debug3("other is not me, operator= should work...");
+        if (m_config.base() != other.m_config.base()) {
+            BaseMismatch err(m_config.base(), other.m_config.base());
+            Log_Error(err.what());
+            throw err;
+        }
+        m_config.setPrecision(other.m_config.precision());
+        m_raw = other.m_raw;
+        m_xIndex = other.m_xIndex;
+        m_yIndex = other.m_yIndex;
+        m_index = other.m_index;
+        m_bounds = other.m_bounds;
+        internal_modified();
+    } else {
+        Log_Warn("Attempting to set Mdn2d equal to itself");
+    }
+    Log_Debug3_T("");
+    return *this;
+}
+
+
 mdn::Mdn2dBase::Mdn2dBase(Mdn2dBase&& other) noexcept :
     m_config(other.m_config),
     m_name(other.m_name),
     m_modified(false),
     m_event(0)
 {
-    auto lock = other.lockReadOnly();
     Log_Debug3_H("move-copy ctor, copying " << other.m_name);
+    auto lock = other.lockReadOnly();
 
     m_raw = std::move(other.m_raw);
     m_xIndex = std::move(other.m_xIndex);
@@ -279,8 +303,8 @@ mdn::Mdn2dBase::~Mdn2dBase() {
 
 
 const mdn::Mdn2dConfig& mdn::Mdn2dBase::config() const {
-    auto lock = lockReadOnly();
     Log_N_Debug2("");
+    auto lock = lockReadOnly();
     return locked_config();
 }
 
@@ -292,8 +316,8 @@ const mdn::Mdn2dConfig& mdn::Mdn2dBase::locked_config() const {
 
 
 mdn::Mdn2dConfigImpact mdn::Mdn2dBase::assessConfigChange(const Mdn2dConfig& newConfig) {
-    auto lock = lockReadOnly();
     Log_N_Debug2("");
+    auto lock = lockReadOnly();
     return locked_assessConfigChange(newConfig);
 }
 
@@ -323,8 +347,8 @@ mdn::Mdn2dConfigImpact mdn::Mdn2dBase::locked_assessConfigChange(const Mdn2dConf
 
 
 void mdn::Mdn2dBase::setConfig(Mdn2dConfig& newConfig) {
-    auto lock = lockWriteable();
     Log_N_Debug2("");
+    auto lock = lockWriteable();
     locked_setConfig(newConfig);
 }
 
@@ -353,8 +377,8 @@ void mdn::Mdn2dBase::locked_setConfig(Mdn2dConfig newConfig) {
 
 
 void mdn::Mdn2dBase::registerObserver(MdnObserver* obs) const {
-    auto lock = lockWriteable();
     Log_N_Debug2("");
+    auto lock = lockWriteable();
     locked_registerObserver(obs);
 }
 
@@ -368,8 +392,8 @@ void mdn::Mdn2dBase::locked_registerObserver(MdnObserver* obs) const {
 
 
 void mdn::Mdn2dBase::unregisterObserver(MdnObserver* obs) const {
-    auto lock = lockWriteable();
     Log_N_Debug2("");
+    auto lock = lockWriteable();
     locked_unregisterObserver(obs);
 }
 
@@ -396,8 +420,8 @@ void mdn::Mdn2dBase::locked_unregisterObserver(MdnObserver* obs) const {
 
 
 const std::string& mdn::Mdn2dBase::name() const {
-    auto lock = lockReadOnly();
     Log_N_Debug2("");
+    auto lock = lockReadOnly();
     return locked_name();
 }
 
@@ -409,8 +433,8 @@ const std::string& mdn::Mdn2dBase::locked_name() const {
 
 
 std::string mdn::Mdn2dBase::setName(const std::string& nameIn) {
-    auto lock = lockWriteable();
     Log_N_Debug2("nameIn=" << nameIn);
+    auto lock = lockWriteable();
     return locked_setName(nameIn);
 }
 
@@ -665,8 +689,8 @@ mdn::Digit mdn::Mdn2dBase::locked_getValue(const Coord& xy) const {
 
 
 mdn::VecDigit mdn::Mdn2dBase::getRow(int y) const {
-    auto lock = lockReadOnly();
     Log_N_Debug2_H("");
+    auto lock = lockReadOnly();
     VecDigit result = locked_getRow(y);
     If_Log_Showing_Debug2(
         Log_N_Debug2_T("Row " << y << ": " << Tools::digitArrayToString(result));
@@ -685,8 +709,8 @@ mdn::VecDigit mdn::Mdn2dBase::locked_getRow(int y) const {
 
 
 void mdn::Mdn2dBase::getRow(int y, VecDigit& out) const {
-    auto lock = lockReadOnly();
     Log_N_Debug2_H("");
+    auto lock = lockReadOnly();
     locked_getRow(y, out);
     If_Log_Showing_Debug2(
         Log_N_Debug2_T("Row " << y << ": inplace" << Tools::digitArrayToString(out));
@@ -710,8 +734,8 @@ void mdn::Mdn2dBase::locked_getRow(int y, VecDigit& out) const {
 
 
 void mdn::Mdn2dBase::getRow(const Coord& xy, VecDigit& out) const {
-    auto lock = lockReadOnly();
     Log_N_Debug2_H("");
+    auto lock = lockReadOnly();
     locked_getRow(xy, out);
     If_Log_Showing_Debug2(
         Log_N_Debug2_T("Row " << xy << ": inplace" << Tools::digitArrayToString(out));
@@ -767,8 +791,8 @@ void mdn::Mdn2dBase::locked_getRow(const Coord& xy, VecDigit& out) const {
 
 
 void mdn::Mdn2dBase::getRow(const Coord& xy, int width, VecDigit& out) const {
-    auto lock = lockReadOnly();
     Log_N_Debug2("");
+    auto lock = lockReadOnly();
     locked_getRow(xy, width, out);
 }
 
@@ -799,8 +823,8 @@ void mdn::Mdn2dBase::locked_getRow(const Coord& xy, int width, VecDigit& out) co
 
 
 mdn::Rect mdn::Mdn2dBase::getAreaRows(VecVecDigit& out) const {
-    auto lock = lockReadOnly();
     Log_N_Debug2_H("");
+    auto lock = lockReadOnly();
     locked_getAreaRows(m_bounds, out);
     Log_N_Debug2_T("");
     return m_bounds;
@@ -808,8 +832,8 @@ mdn::Rect mdn::Mdn2dBase::getAreaRows(VecVecDigit& out) const {
 
 
 void mdn::Mdn2dBase::getAreaRows(const Rect& window, VecVecDigit& out) const {
-    auto lock = lockReadOnly();
     Log_N_Debug2_H("");
+    auto lock = lockReadOnly();
     locked_getAreaRows(window, out);
     Log_N_Debug2_T("");
 }
@@ -843,8 +867,8 @@ void mdn::Mdn2dBase::locked_getAreaRows(const Rect& window, VecVecDigit& out) co
 
 
 mdn::VecDigit mdn::Mdn2dBase::getCol(int x) const {
-    auto lock = lockReadOnly();
     Log_N_Debug2_H("");
+    auto lock = lockReadOnly();
     VecDigit result = locked_getCol(x);
     If_Log_Showing_Debug2(
         Log_N_Debug2_T("Column " << x << ": " << Tools::digitArrayToString(result));
@@ -863,8 +887,8 @@ mdn::VecDigit mdn::Mdn2dBase::locked_getCol(int x) const {
 
 
 void mdn::Mdn2dBase::getCol(int x, VecDigit& out) const {
-    auto lock = lockReadOnly();
     Log_N_Debug2_H("Column " << x);
+    auto lock = lockReadOnly();
     locked_getCol(x, out);
     If_Log_Showing_Debug2(
         Log_N_Debug2_T("Column " << x << ": inplace" << Tools::digitArrayToString(out));
@@ -889,8 +913,8 @@ void mdn::Mdn2dBase::locked_getCol(int x, VecDigit& out) const {
 
 
 void mdn::Mdn2dBase::getCol(const Coord& xy, int height, VecDigit& out) const {
-    auto lock = lockReadOnly();
     Log_N_Debug2("");
+    auto lock = lockReadOnly();
     locked_getCol(xy, height, out);
 }
 
@@ -921,8 +945,8 @@ void mdn::Mdn2dBase::locked_getCol(const Coord& xy, int height, VecDigit& out) c
 
 
 mdn::CoordSet mdn::Mdn2dBase::getNonZeroes(const Rect& window) const {
-    auto lock = lockReadOnly();
     Log_N_Debug2_H("Collecting non-zero coords in window: " << window);
+    auto lock = lockReadOnly();
     CoordSet result = locked_getNonZeroes(window);
     Log_N_Debug2_T("Returning set containing " << result.size() << " coords");
     return result;
@@ -988,8 +1012,8 @@ mdn::CoordSet mdn::Mdn2dBase::locked_getNonZeroes(const Rect& window) const {
 
 
 void mdn::Mdn2dBase::clear() {
-    auto lock = lockWriteable();
     Log_N_Debug2_H("");
+    auto lock = lockWriteable();
     locked_clear();
     internal_operationComplete();
     Log_N_Debug2_T("");
@@ -1005,8 +1029,8 @@ void mdn::Mdn2dBase::locked_clear() {
 
 
 bool mdn::Mdn2dBase::setToZero(const Coord& xy) {
-    auto lock = lockWriteable();
     Log_N_Debug2_H("Setting " << xy << " to zero");
+    auto lock = lockWriteable();
     bool possibleCarryOver = locked_setToZero(xy);
     internal_operationComplete();
     Log_N_Debug2_T("result=" << possibleCarryOver);
@@ -1075,7 +1099,6 @@ bool mdn::Mdn2dBase::locked_setToZero(const Coord& xy) {
 
 
 mdn::CoordSet mdn::Mdn2dBase::setToZero(const CoordSet& coords) {
-    auto lock = lockWriteable();
     If_Log_Showing_Debug3(
         std::string coordsList(Tools::setToString<Coord>(coords, ','));
         Log_N_Debug3_H("Zeroing coord set: " << coordsList);
@@ -1083,6 +1106,7 @@ mdn::CoordSet mdn::Mdn2dBase::setToZero(const CoordSet& coords) {
     If_Not_Log_Showing_Debug3(
         Log_N_Debug2_H("Zeroing set containing " << coords.size() << " coords");
     );
+    auto lock = lockWriteable();
     CoordSet changed = locked_setToZero(coords);
     internal_operationComplete();
     If_Log_Showing_Debug3(
@@ -1152,8 +1176,8 @@ mdn::CoordSet mdn::Mdn2dBase::locked_setToZero(const CoordSet& purgeSet) {
 
 
 mdn::CoordSet mdn::Mdn2dBase::setToZero(const Rect& window) {
-    auto lock = lockWriteable();
     Log_N_Debug2_H("Zeroing window: " << window);
+    auto lock = lockWriteable();
     CoordSet changed = locked_setToZero(window);
     internal_operationComplete();
     If_Log_Showing_Debug3(
@@ -1189,10 +1213,10 @@ mdn::CoordSet mdn::Mdn2dBase::locked_setToZero(const Rect& window) {
 
 
 bool mdn::Mdn2dBase::setValue(const Coord& xy, Digit value) {
-    auto lock = lockWriteable();
     If_Log_Showing_Debug2(
         Log_N_Debug2_H("Setting " << xy << " to " << static_cast<int>(value));
     );
+    auto lock = lockWriteable();
     bool possibleCarryOver = locked_setValue(xy, value);
     internal_modifiedAndComplete();
     Log_N_Debug2_T("result=" << possibleCarryOver);
@@ -1201,8 +1225,8 @@ bool mdn::Mdn2dBase::setValue(const Coord& xy, Digit value) {
 
 
 bool mdn::Mdn2dBase::setValue(const Coord& xy, int value) {
-    auto lock = lockWriteable();
     Log_N_Debug2_H("Setting " << xy << " to " << value);
+    auto lock = lockWriteable();
     bool possibleCarryOver = locked_setValue(xy, static_cast<Digit>(value));
     internal_modifiedAndComplete();
     Log_N_Debug2_T("result=" << possibleCarryOver);
@@ -1211,8 +1235,8 @@ bool mdn::Mdn2dBase::setValue(const Coord& xy, int value) {
 
 
 bool mdn::Mdn2dBase::setValue(const Coord& xy, long value) {
-    auto lock = lockWriteable();
     Log_N_Debug2_H("Setting " << xy << " to " << value);
+    auto lock = lockWriteable();
     bool possibleCarryOver = locked_setValue(xy, static_cast<Digit>(value));
     internal_modifiedAndComplete();
     Log_N_Debug2_T("result=" << possibleCarryOver);
@@ -1221,8 +1245,8 @@ bool mdn::Mdn2dBase::setValue(const Coord& xy, long value) {
 
 
 bool mdn::Mdn2dBase::setValue(const Coord& xy, long long value) {
-    auto lock = lockWriteable();
     Log_N_Debug2_H("Setting " << xy << " to " << value);
+    auto lock = lockWriteable();
     bool possibleCarryOver = locked_setValue(xy, static_cast<Digit>(value));
     internal_modifiedAndComplete();
     Log_N_Debug2_T("result=" << possibleCarryOver);
@@ -1270,8 +1294,8 @@ bool mdn::Mdn2dBase::locked_setValue(const Coord& xy, long long value) {
 
 
 void mdn::Mdn2dBase::setRow(const Coord& xy, const VecDigit& row) {
-    auto lock = lockWriteable();
     Log_N_Debug2_H("at " << xy);
+    auto lock = lockWriteable();
     locked_setRow(xy, row);
     Log_N_Debug2_T("");
 }
@@ -1311,8 +1335,8 @@ std::vector<std::string> mdn::Mdn2dBase::toStringCols(const TextWriteOptions& op
 std::vector<std::string> mdn::Mdn2dBase::saveTextPrettyRows(
     bool wideNegatives, bool alphanumeric
 ) const {
-    auto lock = lockReadOnly();
     Log_N_Debug2_H("");
+    auto lock = lockReadOnly();
     std::vector<std::string> result =
         locked_saveTextPrettyRows(m_bounds, wideNegatives, alphanumeric);
     Log_N_Debug2_T("result = " << result.size() << " rows of text");
@@ -1323,8 +1347,8 @@ std::vector<std::string> mdn::Mdn2dBase::saveTextPrettyRows(
 std::vector<std::string> mdn::Mdn2dBase::saveTextPrettyRows(
     Rect& window, bool wideNegatives, bool alphanumeric
 ) const {
-    auto lock = lockReadOnly();
     Log_N_Debug2_H("");
+    auto lock = lockReadOnly();
     std::vector<std::string> result =
         locked_saveTextPrettyRows(window, wideNegatives, alphanumeric);
     Log_N_Debug2_T("result = " << result.size() << " rows of text");
@@ -1346,8 +1370,8 @@ std::vector<std::string> mdn::Mdn2dBase::locked_saveTextPrettyRows(
 
 
 std::vector<std::string> mdn::Mdn2dBase::saveTextUtilityRows(CommaTabSpace delim) const {
-    auto lock = lockReadOnly();
     Log_N_Debug2_H("");
+    auto lock = lockReadOnly();
     std::vector<std::string> result =
         locked_saveTextUtilityRows(m_bounds, delim);
     Log_N_Debug2_T("result = " << result.size() << " rows of text");
@@ -1358,8 +1382,8 @@ std::vector<std::string> mdn::Mdn2dBase::saveTextUtilityRows(CommaTabSpace delim
 std::vector<std::string> mdn::Mdn2dBase::saveTextUtilityRows(
     Rect& window, CommaTabSpace delim
 ) const {
-    auto lock = lockReadOnly();
     Log_N_Debug2_H("");
+    auto lock = lockReadOnly();
     std::vector<std::string> result =
         locked_saveTextUtilityRows(window, delim);
     Log_N_Debug2_T("result = " << result.size() << " rows of text");
@@ -1383,8 +1407,8 @@ void mdn::Mdn2dBase::saveTextPretty(std::ostream& os,
     bool wideNegatives,
     bool alphanumeric
 ) const {
-    auto lock = lockReadOnly();
     Log_N_Debug2("");
+    auto lock = lockReadOnly();
     locked_saveTextPretty(os, wideNegatives, alphanumeric);
 }
 
@@ -1403,8 +1427,8 @@ void mdn::Mdn2dBase::locked_saveTextPretty(
 
 
 void mdn::Mdn2dBase::saveTextUtility(std::ostream& os, CommaTabSpace delim) const {
-    auto lock = lockReadOnly();
     Log_N_Debug2("");
+    auto lock = lockReadOnly();
     locked_saveTextUtility(os, delim);
 }
 
@@ -1419,8 +1443,8 @@ void mdn::Mdn2dBase::locked_saveTextUtility(std::ostream& os, CommaTabSpace deli
 
 
 void mdn::Mdn2dBase::rebuildMetadata() const {
-    auto lock = lockWriteable();
     Log_N_Debug2("");
+    auto lock = lockWriteable();
     locked_rebuildMetadata();
 }
 
@@ -1449,9 +1473,10 @@ void mdn::Mdn2dBase::locked_rebuildMetadata() const {
 
 
 bool mdn::Mdn2dBase::hasBounds() const {
+    Log_N_Debug2_H("");
     auto lock = lockReadOnly();
     bool result = locked_hasBounds();
-    Log_N_Debug2("Result: " << result);
+    Log_N_Debug2_T("Result: " << result);
     return result;
 }
 
@@ -1467,10 +1492,11 @@ bool mdn::Mdn2dBase::locked_hasBounds() const {
 
 
 const mdn::Rect& mdn::Mdn2dBase::bounds() const {
+    Log_Debug2_H("");
     auto lock = lockReadOnly();
     const Rect& bounds = locked_bounds();
     If_Log_Showing_Debug2(
-        Log_N_Debug2("Result: " << bounds);
+        Log_N_Debug2_T("Result: " << bounds);
     );
     return bounds;
 }
@@ -1520,8 +1546,8 @@ const std::unordered_map<int, mdn::MdnObserver*>&  mdn::Mdn2dBase::locked_data_o
 
 
 int mdn::Mdn2dBase::getPrecision() const {
-    auto lock = lockReadOnly();
     Log_N_Debug2_H("");
+    auto lock = lockReadOnly();
     int result = locked_getPrecision();
     Log_N_Debug2_T("result=" << result);
     return result;
@@ -1536,8 +1562,8 @@ int mdn::Mdn2dBase::locked_getPrecision() const {
 
 
 int mdn::Mdn2dBase::setPrecision(int newPrecision) {
-    auto lock = lockWriteable();
     Log_N_Debug2_H("New precision: " << newPrecision);
+    auto lock = lockWriteable();
     int nDropped = locked_setPrecision(newPrecision);
     internal_operationComplete();
     Log_N_Debug2_T("result=" << nDropped);
@@ -1559,8 +1585,8 @@ int mdn::Mdn2dBase::locked_setPrecision(int newPrecision) {
 
 
 mdn::PrecisionStatus mdn::Mdn2dBase::checkPrecisionWindow(const Coord& xy) const {
-    auto lock = lockReadOnly();
     Log_N_Debug3_H("At: " << xy);
+    auto lock = lockReadOnly();
     PrecisionStatus result = locked_checkPrecisionWindow(xy);
     If_Log_Showing_Debug3(
         Log_N_Debug3_T("result=" << PrecisionStatusToName(result));
@@ -1627,12 +1653,18 @@ void mdn::Mdn2dBase::internal_modifiedAndComplete() {
 
 
 mdn::Mdn2dBase::WritableLock mdn::Mdn2dBase::lockWriteable() const {
-    return m_lockTracker.lockWriteable(m_mutex);
+    Log_N_Debug4_H("");
+    WritableLock lock = m_lockTracker.lockWriteable(m_mutex);
+    Log_N_Debug4_T("returning lock");
+    return lock;
 }
 
 
 mdn::Mdn2dBase::ReadOnlyLock mdn::Mdn2dBase::lockReadOnly() const {
-    return m_lockTracker.lockReadOnly(m_mutex);
+    Log_N_Debug4_H("");
+    ReadOnlyLock lock = m_lockTracker.lockReadOnly(m_mutex);
+    Log_N_Debug4_T("returning lock");
+    return lock;
 }
 
 
@@ -1756,9 +1788,10 @@ void mdn::Mdn2dBase::internal_insertAddress(const Coord& xy) const {
 
 
 int mdn::Mdn2dBase::internal_purgeExcessDigits() {
+    Log_N_Debug3_H("");
     if (!locked_hasBounds()) {
         // No digits to bother keeping
-        Log_N_Debug3("No digits to consider");
+        Log_N_Debug3_T("No digits to consider");
         return 0;
     }
 
@@ -1782,22 +1815,24 @@ int mdn::Mdn2dBase::internal_purgeExcessDigits() {
         }
     }
     if (!purgeSet.empty()) {
-        If_Log_Showing_Debug(
-            Log_N_Debug_H(
+        If_Log_Showing_Debug4(
+            Log_N_Debug4_H(
                 "Purging " << purgeSet.size() << " digits, now below numerical precision window: "
                 << m_bounds << ", precision: " << m_config.precision()
             );
         );
         locked_setToZero(purgeSet);
-        Log_N_Debug_T("result=" << purgeSet.size());
+        Log_N_Debug4_T("result=" << purgeSet.size());
+        Log_N_Debug3_T("");
         return purgeSet.size();
     }
-    Log_N_Debug3("No digits purged");
+    Log_N_Debug3_T("No digits purged");
     return 0;
 }
 
 
 void mdn::Mdn2dBase::internal_updateBounds() {
+    Log_N_Debug4_H("");
     if (m_xIndex.empty() || m_yIndex.empty()) {
         m_bounds.clear();
         Log_N_Debug3("Updating bounds: no non-zero digits exist, there are no bounds");
@@ -1809,4 +1844,5 @@ void mdn::Mdn2dBase::internal_updateBounds() {
         m_bounds.set(itMinX->first, itMinY->first, itMaxX->first, itMaxY->first);
         Log_N_Debug3("Updating bounds, new bounds: " << m_bounds);
     }
+    Log_N_Debug4_T("");
 }

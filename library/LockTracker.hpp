@@ -92,6 +92,7 @@ public:
         void unlock() {
             if (engaged_) {
 #ifdef MDN_DEBUG
+                Log_Debug4("");
                 const void* key = static_cast<const void*>(lk_.mutex());
                 if (key) { // mutex() may be null if moved-from
                     auto it = g_lt_counts.wr.find(key);
@@ -112,6 +113,7 @@ public:
         void release() {
             if (engaged_) {
 #ifdef MDN_DEBUG
+                Log_Debug4("");
                 const void* key = static_cast<const void*>(lk_.mutex());
                 if (key) {
                     auto it = g_lt_counts.wr.find(key);
@@ -189,6 +191,7 @@ public:
         void unlock() {
             if (engaged_) {
 #ifdef MDN_DEBUG
+                Log_Debug4("");
                 const void* key = static_cast<const void*>(lk_.mutex());
                 if (key) {
                     auto it = g_lt_counts.rd.find(key);
@@ -205,6 +208,7 @@ public:
         void release() {
             if (engaged_) {
 #ifdef MDN_DEBUG
+                Log_Debug4("");
                 const void* key = static_cast<const void*>(lk_.mutex());
                 if (key) {
                     auto it = g_lt_counts.rd.find(key);
