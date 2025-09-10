@@ -155,8 +155,10 @@ public:
             protected: const Mdn2dConfig& locked_config() const; public:
 
             // Assess the impact of changing the config to the supplied newConfig
-            Mdn2dConfigImpact assessConfigChange(const Mdn2dConfig& newConfig);
-            protected: Mdn2dConfigImpact locked_assessConfigChange(const Mdn2dConfig& newConfig); public:
+            Mdn2dConfigImpact assessConfigChange(const Mdn2dConfig& newConfig) const;
+            protected:
+                Mdn2dConfigImpact locked_assessConfigChange(const Mdn2dConfig& newConfig) const;
+            public:
 
             // Change the config - can lead to any of the Mdn2dConfigImpact effects
             void setConfig(Mdn2dConfig& newConfig);

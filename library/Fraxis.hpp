@@ -55,5 +55,8 @@ inline Fraxis NameToFraxis(const std::string& name) {
     throw std::invalid_argument(oss.str());
 }
 
+inline std::ostream& operator<<(std::ostream& os, Fraxis f) {
+    return os << FraxisToName(f);
+}
 
 } // end namespace mdn

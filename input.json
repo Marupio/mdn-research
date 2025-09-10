@@ -1,6 +1,6 @@
 {
     "Logger": {
-        "Level": "Warn",
+        "Level": "Debug4",
         "Output": "C:/Users/daveg/OneDrive/Documents/Projects/MDN/mdn-research/output",
         "Filter": {
             "Comment_Exclude": [],

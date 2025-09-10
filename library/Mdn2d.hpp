@@ -85,18 +85,21 @@ public:
             void add(
                 const Coord& xy,
                 float realNum,
+                int nDigits, // truncate after this number of digits
                 bool overwrite=false,
                 Fraxis fraxis=Fraxis::Default
             );
             void add(
                 const Coord& xy,
                 double realNum,
+                int nDigits, // truncate after this number of digits
                 bool overwrite=false,
                 Fraxis fraxis=Fraxis::Default
             );
             protected: CoordSet locked_add(
                 const Coord& xy,
                 double realNum,
+                int nDigits, // truncate after this number of digits
                 bool overwrite=false,
                 Fraxis fraxis=Fraxis::Default
             ); public:
@@ -105,12 +108,14 @@ public:
             void subtract(
                 const Coord& xy,
                 float realNum,
+                int nDigits, // truncate after this number of digits
                 bool overwrite=false,
                 Fraxis fraxis=Fraxis::Default
             );
             void subtract(
                 const Coord& xy,
                 double realNum,
+                int nDigits, // truncate after this number of digits
                 bool overwrite=false,
                 Fraxis fraxis=Fraxis::Default
             );
@@ -191,29 +196,33 @@ public:
             void addFraxis(
                 const Coord& xy,
                 float fraction,
+                int nDigits,
                 bool overwrite=false,
                 Fraxis fraxis=Fraxis::Default
             );
             void addFraxis(
                 const Coord& xy,
                 double fraction,
+                int nDigits,
                 bool overwrite=false,
                 Fraxis fraxis=Fraxis::Default
             );
             protected: CoordSet locked_addFraxis(
-                const Coord& xy, double fraction, bool overwrite, Fraxis fraxis
+                const Coord& xy, double fraction, int nDigits, bool overwrite, Fraxis fraxis
             ); public:
 
             // Subtract a fractional value cascading along the fraxis
             void subtractFraxis(
                 const Coord& xy,
                 float fraction,
+                int nDigits,
                 bool overwrite=false,
                 Fraxis fraxis=Fraxis::Default
             );
             void subtractFraxis(
                 const Coord& xy,
                 double fraction,
+                int nDigits,
                 bool overwrite=false,
                 Fraxis fraxis=Fraxis::Default
             );
@@ -288,7 +297,7 @@ protected:
             //      x Direction: -1, 0, -1
             //      y Direction: 0, -1, 1
             CoordSet internal_fraxis(
-                const Coord& xy, double f, bool overwrite, int dX, int dY, int c
+                const Coord& xy, double f, int nDigits, bool overwrite, int dX, int dY, int c
             );
             CoordSet internal_fraxisCascade(const Coord& xy, Digit d, bool overwrite, int c);
 

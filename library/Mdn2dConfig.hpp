@@ -119,12 +119,17 @@ public:
 
     // Return the base
     int base() const { return m_base; }
-
     // Return the base as a Digit type
     Digit baseDigit() const { return m_baseDigit; }
-
     // Return the base as a double type
     double baseDouble() const { return m_baseDouble; }
+
+    // Return the base
+    void setBase(int base) {
+        m_base = base;
+        m_baseDigit = static_cast<Digit>(m_base);
+        m_baseDigit = static_cast<double>(m_base);
+    }
 
     // Return the numeric precision
     int precision() const { return m_precision; }

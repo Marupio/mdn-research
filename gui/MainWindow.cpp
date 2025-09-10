@@ -1,10 +1,12 @@
 #include "MainWindow.hpp"
 
+#include <QAction>
 #include <QApplication>
 #include <QEvent>
 #include <QInputDialog>
 #include <QLabel>
 #include <QList>
+#include <QMenu>
 #include <QMenuBar>
 #include <QResizeEvent>
 #include <QSignalBlocker>
@@ -12,10 +14,12 @@
 #include <QStatusBar>
 #include <QTabBar>
 #include <QTabWidget>
+#include <QToolButton>
 
 #include "OpsController.hpp"
 #include "MdnQtInterface.hpp"
 #include "NumberDisplayWidget.hpp"
+#include "ProjectPropertiesDialog.hpp"
 #include "../library/Logger.hpp"
 
 mdn::gui::MainWindow::MainWindow(QWidget *parent)
@@ -170,6 +174,35 @@ void mdn::gui::MainWindow::onProjectTabsChanged(int currentIndex)
 }
 
 
+void mdn::gui::MainWindow::onProjectProperties() {
+    Log_Debug2_H("");
+    if (!m_project) {
+        Log_Debug2_T("");
+        return;
+    }
+
+    ProjectPropertiesDialog dlg(m_project, this);
+    // You may show a path hint if you have one (or keep empty)
+    dlg.setInitial(
+        QString::fromStdString(m_project->name()),
+        QStringLiteral(""), // path hint, if any
+        m_project->config()
+    );
+    if (dlg.exec() != QDialog::Accepted) {
+        Log_Debug2_T("User rejected change");
+        return;
+    }
+
+    m_project->setName(MdnQtInterface::fromQString(dlg.projectName()));  // cheap, immediate
+    Log_Debug3_H("setGlobalConfig dispatch");
+    setGlobalConfig(dlg.chosenConfig());
+    Log_Debug3_T("setGlobalConfig return");
+
+    Log_Debug2_T("Done onProjectProperties");
+    // If tabs changed due to clearing or other effects, your existing logic keeps UI in sync.
+}
+
+
 void mdn::gui::MainWindow::onSplitterMoved(int pos, int index) {
     QList<int> sizes = m_splitter->sizes();
     int total = 0;
@@ -265,7 +298,7 @@ void mdn::gui::MainWindow::onOpsPlan(const OpsController::Plan& p) {
                 break;
             }
         }
-        m_project->insertMdn(std::move(ans), p.indexA + 1);
+        m_project->appendMdn(std::move(ans));
         syncTabsToProject();
         m_tabWidget->setCurrentIndex(p.indexA);
         if (m_ops) {
@@ -382,6 +415,59 @@ void mdn::gui::MainWindow::setGlobalFontSize(int pt) {
 }
 
 
+void mdn::gui::MainWindow::setGlobalConfig(Mdn2dConfig c) {
+    Log_Debug2_H("newConfig=" << c << ", currentConfig=" << m_globalConfig);
+    if (m_globalConfig == c) {
+        Log_Debug2_T("no changes");
+        return;
+    }
+    m_globalConfig = c;
+    m_project->setConfig(m_globalConfig);
+    updateStatusFraxisText(c.fraxis());
+
+    // Update all NDWs
+    for (int i = 0; i < m_tabWidget->count(); ++i) {
+        Log_Debug4("pushing change to tab " << i);
+        if (auto* ndw = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(i)))
+            ndw->model()->setConfig(c);
+    }
+    Log_Debug2_T("");
+}
+
+
+void mdn::gui::MainWindow::cycleFraxis() {
+    if (!m_project) {
+        return;
+    }
+
+    mdn::Mdn2dConfig cfg = m_project->config();
+    const mdn::Fraxis next = (cfg.fraxis() == mdn::Fraxis::X) ? mdn::Fraxis::Y : mdn::Fraxis::X;
+    cfg.setFraxis(next);
+
+    // Route through Project::setConfig so impact prompts/updates propagate to all tabs
+    // shows impact dialogs if needed
+    setGlobalConfig(cfg);
+}
+
+
+void mdn::gui::MainWindow::chooseFraxisX() {
+    if (!m_project) return;
+    mdn::Mdn2dConfig cfg = m_project->config();
+    if (cfg.fraxis() == mdn::Fraxis::X) return;
+    cfg.setFraxis(mdn::Fraxis::X);
+    setGlobalConfig(cfg);
+}
+
+
+void mdn::gui::MainWindow::chooseFraxisY() {
+    if (!m_project) return;
+    mdn::Mdn2dConfig cfg = m_project->config();
+    if (cfg.fraxis() == mdn::Fraxis::Y) return;
+    cfg.setFraxis(mdn::Fraxis::Y);
+    setGlobalConfig(cfg);
+}
+
+
 void mdn::gui::MainWindow::slotSelectNextTab()
 {
     Log_Debug3_H("slotSelectNextTab");
@@ -459,7 +545,11 @@ void mdn::gui::MainWindow::slotDebugShowAllTabs()
     {
         std::ostringstream oss;
         m_project->debugShowAllTabs(oss);
+        const Mdn2dConfig& c = m_project->config();
+        oss << std::endl;
+        oss << "\nconfig=" << c;
         Log_Info(oss.str());
+        // Log_Info("config=" <<
     }
     Log_Debug3_T("");
 }
@@ -514,6 +604,8 @@ void mdn::gui::MainWindow::createMenus() {
     fileMenu->addSeparator();
     fileMenu->addAction("Save Project", this, &mdn::gui::MainWindow::saveProjectRequested);
     fileMenu->addAction("Save Mdn2d", this, &mdn::gui::MainWindow::saveMdn2dRequested);
+    fileMenu->addSeparator();
+    fileMenu->addAction("Project Properties", this, &mdn::gui::MainWindow::onProjectProperties);
     fileMenu->addSeparator();
     fileMenu->addAction("Close Project", this, &mdn::gui::MainWindow::closeProjectRequested);
     fileMenu->addAction("Exit", this, &mdn::gui::MainWindow::close);
@@ -599,7 +691,8 @@ void mdn::gui::MainWindow::createNewProject() {
         m_project = nullptr;
     }
     m_project = new Project(this);
-    m_project->config().setMaster(*m_project);
+    m_globalConfig.setMaster(*m_project);
+    m_project->setConfig(m_globalConfig);
     if (m_project) {
         connect(m_project, &mdn::gui::Project::tabsAboutToChange,
                 this, &mdn::gui::MainWindow::onProjectTabsAboutToChange);
@@ -668,6 +761,12 @@ void mdn::gui::MainWindow::createTabs() {
             &NumberDisplayWidget::requestCycleEditMode,
             this,
             &MainWindow::cycleGlobalEditMode
+        );
+        connect(
+            ndw,
+            &NumberDisplayWidget::requestCycleFraxis,
+            this,
+            &MainWindow::cycleFraxis
         );
 
         // Push current global mode into the new widget
@@ -758,8 +857,10 @@ void mdn::gui::MainWindow::initOperationsUi() {
 
 void mdn::gui::MainWindow::createStatusBar()
 {
+    // Build status bar, from left to right
     auto* sb = statusBar();
 
+    // ~~~ Status mode button
     m_statusModeBtn = new QToolButton(this);
     m_statusModeBtn->setAutoRaise(true);
     m_statusModeBtn->setToolButtonStyle(Qt::ToolButtonTextOnly);
@@ -771,24 +872,89 @@ void mdn::gui::MainWindow::createStatusBar()
     m_modeMenu->addAction("ADD +", this, &MainWindow::chooseModeAdd);
     m_modeMenu->addAction("SUB −", this, &MainWindow::chooseModeSubtract);
     m_statusModeBtn->setMenu(m_modeMenu);
-    m_statusModeBtn->setPopupMode(QToolButton::MenuButtonPopup); // right side arrow; right-click opens menu
-
+    // right side arrow; right-click opens menu
+    m_statusModeBtn->setPopupMode(QToolButton::MenuButtonPopup);
     sb->addPermanentWidget(m_statusModeBtn);
 
-    m_statusMode   = new QLabel(this);
+    // ~~~ Fraxis button
+    m_statusFraxisBtn = new QToolButton(this);
+    m_statusFraxisBtn->setAutoRaise(true);
+    m_statusFraxisBtn->setToolTip(tr("Fraxis (click to toggle; right-click to choose)"));
+    m_statusFraxisBtn->setToolButtonStyle(Qt::ToolButtonTextOnly);
+
+    // Seed initial label from project config
+    if (m_project) {
+        updateStatusFraxisText(m_globalConfig.fraxis());
+    } else {
+        updateStatusFraxisText(mdn::Fraxis::X);
+    }
+
+    // Context menu to pick X or Y
+    buildFraxisMenu();
+
+    // Left-click: toggle X ↔ Y
+    connect(
+        m_statusFraxisBtn,
+        &QToolButton::clicked,
+        this,
+        &MainWindow::cycleFraxis
+    );
+
+    statusBar()->addPermanentWidget(m_statusFraxisBtn);
+
+    // ~~~ Cursor and selection text
     m_statusCursor = new QLabel(this);
     m_statusSel    = new QLabel(this);
 
-    m_statusMode->setText("OVER");
     m_statusCursor->setText("(0,0)");
     m_statusSel->setText("(empty)");
 
     // Left to right; make them compact
-    sb->addPermanentWidget(m_statusMode,   0);
-    sb->addPermanentWidget(new QLabel("  |  ", this), 0);
     sb->addPermanentWidget(m_statusCursor, 0);
     sb->addPermanentWidget(new QLabel("  |  ", this), 0);
-    sb->addPermanentWidget(m_statusSel,    1); // stretch last one a bit
+    // stretch last one a bit
+    sb->addPermanentWidget(m_statusSel, 1);
+}
+
+
+void mdn::gui::MainWindow::buildFraxisMenu() {
+    m_fraxisMenu = new QMenu(this);
+    m_fraxisMenu->addAction("X", this, &MainWindow::chooseFraxisX);
+    m_fraxisMenu->addAction("Y", this, &MainWindow::chooseFraxisY);
+    m_statusFraxisBtn->setMenu(m_fraxisMenu);
+    // right side arrow; right-click opens menu
+    m_statusFraxisBtn->setPopupMode(QToolButton::MenuButtonPopup);
+}
+
+
+void mdn::gui::MainWindow::updateStatusFraxisText(mdn::Fraxis f) {
+    Log_Debug2_H("f=" << f);
+    if (!m_statusFraxisBtn) {
+        Log_Debug2_T("button missing");
+        return;
+    }
+    const QString text = (f == mdn::Fraxis::Y) ? QStringLiteral("FY") : QStringLiteral("FX");
+    m_statusFraxisBtn->setText(text);
+
+    // reflect state in the popup menu (if present)
+    switch (f) {
+        case Fraxis::X: {
+            Log_Debug4("Setting fraxis status to 'X'");
+            m_statusFraxisBtn->setText("X");
+            break;
+        }
+        case Fraxis::Y: {
+            Log_Debug4("Setting fraxis status to 'Y'");
+            m_statusFraxisBtn->setText("Y");
+            break;
+        }
+        default: {
+            Log_Warn("Setting fraxis status to '?'");
+            m_statusFraxisBtn->setText("?");
+            break;
+        }
+    }
+    Log_Debug2_T("");
 }
 
 

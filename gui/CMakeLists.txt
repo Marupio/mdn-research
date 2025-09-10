@@ -33,6 +33,7 @@ add_executable(mdn_gui
     OpsController.hpp OpsController.cpp
     OperationHistory.ui
     Project.hpp Project.cpp
+    ProjectPropertiesDialog.hpp ProjectPropertiesDialog.cpp
     QtLoggingBridge.hpp QtLoggingBridge.cpp
 )
 

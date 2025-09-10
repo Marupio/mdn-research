@@ -228,6 +228,14 @@ void mdn::gui::Project::updateSelection() const {
 }
 
 
+mdn::Mdn2dConfigImpact mdn::gui::Project::assessConfigChange(Mdn2dConfig cfg) const {
+    // Assume config is the same across all Mdn2d's
+    const Mdn2d& first = firstMdn();
+    Mdn2dConfigImpact impact = first.assessConfigChange(cfg);
+    return impact;
+}
+
+
 void mdn::gui::Project::setConfig(Mdn2dConfig newConfig) {
     Log_Debug2_H("newConfig=" << newConfig);
     if (m_data.empty()) {
@@ -1045,17 +1053,13 @@ void mdn::gui::Project::debugShowAllTabs(std::ostream& os) const {
         const int index = it->first;
         Log_Debug4("index=" << index);
         const Mdn2d& entry = it->second;
-        Log_Debug4("");
         const Selection& currSel = entry.selection();
-        Log_Debug4("");
         const std::string& name = entry.name();
         Log_Debug4("name=" << name);
         const int addrIndex = m_addressingNameToIndex.at(name);
-        Log_Debug4("");
         const std::string& addrName = m_addressingIndexToName.at(index);
-        Log_Debug4("");
-        os << index << "\t[" << name << "]\t(" << addrIndex << ",[" << addrName << "])\n";
-        Log_Debug4("");
+        os << index << "\t[" << name << "]\t(" << addrIndex << ",[" << addrName << "])";
+        os << "\t" << entry.config() << "\n";
     }
     Log_Debug3_T("");
     os << std::endl;

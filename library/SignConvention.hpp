@@ -14,7 +14,7 @@ namespace mdn {
 
 enum class SignConvention {
     Invalid,
-    Default,
+    Neutral,
     Positive,
     Negative
 };
@@ -22,7 +22,7 @@ enum class SignConvention {
 const std::vector<std::string> SignConventionNames(
     {
         "Invalid",
-        "Default",  // Or, do not change
+        "Neutral",  // Or, do not change
         "Positive",
         "Negative"
     }

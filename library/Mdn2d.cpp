@@ -194,33 +194,35 @@ mdn::CoordSet mdn::Mdn2d::locked_divide(const Mdn2d& rhs, Mdn2d& ans, Fraxis fra
 }
 
 
-void mdn::Mdn2d::add(const Coord& xy, float realNum, bool overwrite, Fraxis fraxis) {
+void mdn::Mdn2d::add(const Coord& xy, float realNum, int nDigits, bool overwrite, Fraxis fraxis) {
     If_Log_Showing_Debug2(
         Log_N_Debug2_H("add " << realNum << ", fraxis: " << FraxisToName(fraxis));
     );
     auto lock = lockWriteable();
     internal_checkFraxis(fraxis);
-    locked_carryoverCleanup(locked_add(xy, static_cast<double>(realNum), overwrite, fraxis));
+    locked_carryoverCleanup(
+        locked_add(xy, static_cast<double>(realNum), nDigits, overwrite, fraxis)
+    );
     internal_operationComplete();
     Log_N_Debug2_T("");
 }
 
 
-void mdn::Mdn2d::add(const Coord& xy, double realNum, bool overwrite, Fraxis fraxis) {
+void mdn::Mdn2d::add(const Coord& xy, double realNum, int nDigits, bool overwrite, Fraxis fraxis) {
     Log_N_Debug2_H("");
     auto lock = lockWriteable();
     internal_checkFraxis(fraxis);
     If_Log_Showing_Debug2(
         Log_N_Debug2("add " << realNum << ", fraxis: " << FraxisToName(fraxis));
     );
-    locked_carryoverCleanup(locked_add(xy, realNum, overwrite, fraxis));
+    locked_carryoverCleanup(locked_add(xy, realNum, nDigits, overwrite, fraxis));
     internal_operationComplete();
     Log_N_Debug2_T("");
 }
 
 
 mdn::CoordSet mdn::Mdn2d::locked_add(
-    const Coord& xy, double realNum, bool overwrite, Fraxis fraxis
+    const Coord& xy, double realNum, int nDigits, bool overwrite, Fraxis fraxis
 ) {
     Log_N_Debug3_H("");
     If_Log_Showing_Debug3(
@@ -229,34 +231,40 @@ mdn::CoordSet mdn::Mdn2d::locked_add(
     double fracPart, intPart;
     fracPart = modf(realNum, &intPart);
     CoordSet changed = locked_add(xy, static_cast<long>(intPart), overwrite);
-    changed.merge(locked_addFraxis(xy, fracPart, overwrite, fraxis));
+    changed.merge(locked_addFraxis(xy, fracPart, nDigits, overwrite, fraxis));
     internal_operationComplete();
     Log_N_Debug3_T("changed " << changed.size() << " digits");
     return changed;
 }
 
 
-void mdn::Mdn2d::subtract(const Coord& xy, float realNum, bool overwrite, Fraxis fraxis) {
+void mdn::Mdn2d::subtract(
+    const Coord& xy, float realNum, int nDigits, bool overwrite, Fraxis fraxis
+) {
     Log_N_Debug2_H("");
     auto lock = lockWriteable();
     internal_checkFraxis(fraxis);
     If_Log_Showing_Debug2(
         Log_N_Debug2_H("subtract " << realNum << ", fraxis: " << FraxisToName(fraxis));
     );
-    locked_carryoverCleanup(locked_add(xy, static_cast<double>(-realNum), overwrite, fraxis));
+    locked_carryoverCleanup(
+        locked_add(xy, static_cast<double>(-realNum), nDigits, overwrite, fraxis)
+    );
     internal_operationComplete();
     Log_N_Debug2_T("");
 }
 
 
-void mdn::Mdn2d::subtract(const Coord& xy, double realNum, bool overwrite, Fraxis fraxis) {
+void mdn::Mdn2d::subtract(
+    const Coord& xy, double realNum, int nDigits, bool overwrite, Fraxis fraxis
+) {
     Log_N_Debug2_H("");
     auto lock = lockWriteable();
     internal_checkFraxis(fraxis);
     If_Log_Showing_Debug2(
         Log_N_Debug2_H("subtract " << realNum << ", fraxis: " << FraxisToName(fraxis));
     );
-    locked_carryoverCleanup(locked_add(xy, -realNum, overwrite, fraxis));
+    locked_carryoverCleanup(locked_add(xy, -realNum, nDigits, overwrite, fraxis));
     internal_operationComplete();
     Log_N_Debug2_T("");
 }
@@ -418,34 +426,40 @@ void mdn::Mdn2d::subtract(const Coord& xy, long long value, bool overwrite, Frax
 }
 
 
-void mdn::Mdn2d::addFraxis(const Coord& xy, float fraction, bool overwrite, Fraxis fraxis) {
+void mdn::Mdn2d::addFraxis(
+    const Coord& xy, float fraction, int nDigits, bool overwrite, Fraxis fraxis
+) {
     If_Log_Showing_Debug2(
         Log_N_Debug2_H(
             "at " << xy << ", add fraction " << fraction << ", fraxis: " << FraxisToName(fraxis)
         );
     );
     auto lock = lockWriteable();
-    locked_carryoverCleanup(locked_addFraxis(xy, static_cast<double>(fraction), overwrite, fraxis));
+    locked_carryoverCleanup(
+        locked_addFraxis(xy, static_cast<double>(fraction), nDigits, overwrite, fraxis)
+    );
     internal_operationComplete();
     Log_N_Debug2_T("");
 }
 
 
-void mdn::Mdn2d::addFraxis(const Coord& xy, double fraction, bool overwrite, Fraxis fraxis) {
+void mdn::Mdn2d::addFraxis(
+    const Coord& xy, double fraction, int nDigits, bool overwrite, Fraxis fraxis
+) {
     If_Log_Showing_Debug2(
         Log_N_Debug2_H(
             "at " << xy << ", add fraction " << fraction << ", fraxis: " << FraxisToName(fraxis)
         );
     );
     auto lock = lockWriteable();
-    locked_carryoverCleanup(locked_addFraxis(xy, fraction, overwrite, fraxis));
+    locked_carryoverCleanup(locked_addFraxis(xy, fraction, nDigits, overwrite, fraxis));
     internal_operationComplete();
     Log_N_Debug2_T("");
 }
 
 
 mdn::CoordSet mdn::Mdn2d::locked_addFraxis(
-    const Coord& xy, double fraction, bool overwrite, Fraxis fraxis
+    const Coord& xy, double fraction, int nDigits, bool overwrite, Fraxis fraxis
 ) {
     if (fraction < -1.0 || fraction > 1.0) {
         std::invalid_argument error(
@@ -464,10 +478,10 @@ mdn::CoordSet mdn::Mdn2d::locked_addFraxis(
     CoordSet changed;
     switch(fraxis) {
         case Fraxis::X:
-            changed = internal_fraxis(xy.translatedX(-1), fraction, overwrite, -1, 0, -1);
+            changed = internal_fraxis(xy.translatedX(-1), fraction, nDigits, overwrite, -1, 0, -1);
             break;
         case Fraxis::Y:
-            changed = internal_fraxis(xy.translatedY(-1), fraction, overwrite, 0, -1, 1);
+            changed = internal_fraxis(xy.translatedY(-1), fraction, nDigits, overwrite, 0, -1, 1);
             break;
         default:
             std::ostringstream oss;
@@ -482,7 +496,9 @@ mdn::CoordSet mdn::Mdn2d::locked_addFraxis(
 }
 
 
-void mdn::Mdn2d::subtractFraxis(const Coord& xy, float fraction, bool overwrite, Fraxis fraxis) {
+void mdn::Mdn2d::subtractFraxis(
+    const Coord& xy, float fraction, int nDigits, bool overwrite, Fraxis fraxis
+) {
     If_Log_Showing_Debug2(
         Log_N_Debug2_H(
             "at " << xy << ", subtract fraction " << fraction << ", fraxis: "
@@ -491,14 +507,16 @@ void mdn::Mdn2d::subtractFraxis(const Coord& xy, float fraction, bool overwrite,
     );
     auto lock = lockWriteable();
     locked_carryoverCleanup(
-        locked_addFraxis(xy, -static_cast<double>(fraction), overwrite, fraxis)
+        locked_addFraxis(xy, -static_cast<double>(fraction), nDigits, overwrite, fraxis)
     );
     internal_operationComplete();
     Log_N_Debug2_T("");
 }
 
 
-void mdn::Mdn2d::subtractFraxis(const Coord& xy, double fraction, bool overwrite, Fraxis fraxis) {
+void mdn::Mdn2d::subtractFraxis(
+    const Coord& xy, double fraction, int nDigits, bool overwrite, Fraxis fraxis
+) {
     If_Log_Showing_Debug2(
         Log_N_Debug2_H(
             "at " << xy << ", subtract fraction " << fraction << ", fraxis: "
@@ -506,7 +524,7 @@ void mdn::Mdn2d::subtractFraxis(const Coord& xy, double fraction, bool overwrite
         );
     );
     auto lock = lockWriteable();
-    locked_carryoverCleanup(locked_addFraxis(xy, -fraction, overwrite, fraxis));
+    locked_carryoverCleanup(locked_addFraxis(xy, -fraction, nDigits, overwrite, fraxis));
     internal_operationComplete();
     Log_N_Debug2_T("");
 }
@@ -780,7 +798,7 @@ void mdn::Mdn2d::internal_checkFraxis(Fraxis& fraxis) const {
 
 
 mdn::CoordSet mdn::Mdn2d::internal_fraxis(
-    const Coord& xy, double f, bool overwrite, int dX, int dY, int c
+    const Coord& xy, double f, int nDigits, bool overwrite, int dX, int dY, int c
 ) {
     #ifdef MDN_DEBUG
         if (f < -1.0 || f > 1.0)
@@ -792,13 +810,16 @@ mdn::CoordSet mdn::Mdn2d::internal_fraxis(
         }
     #endif
     Log_N_Debug3_H(
-        "fraxis at " << xy << ", fraction: " << f << ", delta: ("
+        "fraxis at " << xy << ", fraction: " << f << ", nDigits: " << nDigits << ", delta: ("
         << dX << "," << dY << ",c" << c << ")"
     );
 
     CoordSet changed;
 
-    int count = 0;
+    if (nDigits < 0) {
+        nDigits = m_config.precision();
+    }
+    // --nDigits;
 
     // Calculate next digit
     Coord xyWorking(xy);
@@ -811,9 +832,9 @@ mdn::CoordSet mdn::Mdn2d::internal_fraxis(
             << "loop: prec=" << precisionOkay << ", num=" << numericsOkay
         );
     );
-    while (precisionOkay && numericsOkay && ++count < 1000) {
+    while (precisionOkay && numericsOkay && nDigits--) {
         f *= m_config.baseDouble();
-        Digit d(f);
+        Digit d = nDigits ? static_cast<Digit>(f) : static_cast<Digit>(std::round(f));
         if (d != 0) {
             changed.merge(locked_add(xyWorking, d, overwrite));
             changed.merge(internal_fraxisCascade(xyWorking, d, overwrite, c));
@@ -831,13 +852,13 @@ mdn::CoordSet mdn::Mdn2d::internal_fraxis(
             );
         );
     }
-    if (precisionOkay && numericsOkay) {
-        Log_N_Warn(
-            "Internal error: possible infinite loop detected in internal_fraxis algorithm.\n"
-            << "parameters: fraxis at " << xy << ", fraction: " << f << ", delta: ("
-            << dX << "," << dY << ",c" << c << ")"
-        );
-    }
+    // if (precisionOkay && numericsOkay) {
+    //     Log_N_Warn(
+    //         "Internal error: possible infinite loop detected in internal_fraxis algorithm.\n"
+    //         << "parameters: fraxis at " << xy << ", fraction: " << f << ", delta: ("
+    //         << dX << "," << dY << ",c" << c << ")"
+    //     );
+    // }
 
     if (changed.size()) {
         internal_modified();

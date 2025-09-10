@@ -138,6 +138,9 @@ public:
             return m_config;
         }
 
+        // Assess the impact of changing the config to the given value
+        Mdn2dConfigImpact assessConfigChange(Mdn2dConfig cfg) const;
+
         // Setter for m_config requires resetting of the Mdn2d's
         void setConfig(Mdn2dConfig newConfig);
 

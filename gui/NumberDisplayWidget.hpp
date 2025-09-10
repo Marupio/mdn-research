@@ -62,6 +62,8 @@ public:
     // Bindings
     void setProject(Project* proj);
     void setModel(Mdn2d* mdn, Selection* sel);
+    Mdn2d* model() { return m_model; }
+    const Mdn2d* model() const { return m_model; }
 
     // Styling
     inline void setTheme(const Theme& t) {
@@ -101,6 +103,7 @@ signals:
     void requestCycleEditMode(bool forward);
     void requestToggleEditMode(EditMode m);
     void requestSetEditMode(EditMode m);
+    void requestCycleFraxis();
 
 Q_SIGNALS:
     void requestSelectNextTab();
@@ -185,7 +188,12 @@ private:
     // how: direction to move, stayInside: if there's a selection rectangle, true=stay inside it
     void moveCursorAfterSubmit(SubmitMove how, bool stayInside);
     QString stripSign(const QString& s, bool& isNeg) const;
-    double parseBaseRealMagnitude(const QString& body, int base, bool& ok) const;
+    double parseBaseRealMagnitude(
+        const QString& body,
+        int base,
+        int& nFracDigitsOut,
+        bool& ok
+    ) const;
     long long parseBaseIntMagnitude(const QString& body, int base, bool& ok) const;
 
     // Private member data

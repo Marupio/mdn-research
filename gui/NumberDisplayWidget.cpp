@@ -470,6 +470,11 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
             e->accept();
             return;
         }
+        if (e->key() == Qt::Key_F4) {
+            emit requestCycleFraxis();
+            e->accept();
+            return;
+        }
     }
 
     // Navigation keys:
@@ -1058,13 +1063,14 @@ void mdn::gui::NumberDisplayWidget::commitCellEdit(SubmitMove how, bool stayInsi
 
     if (hasDot) {
         bool ok = false;
-        const double mag = parseBaseRealMagnitude(body, base, ok);
+        int nFracDigits;
+        const double mag = parseBaseRealMagnitude(body, base, nFracDigits, ok);
         const double val = neg ? -mag : mag;
         if (ok) {
             if (m_mode == EditMode::Subtract) {
-                m_model->subtract(xy, val, overwrite, m_model->config().fraxis());
+                m_model->subtract(xy, val, nFracDigits, overwrite, m_model->config().fraxis());
             } else {
-                m_model->add(xy, val, overwrite, m_model->config().fraxis());
+                m_model->add(xy, val, nFracDigits, overwrite, m_model->config().fraxis());
             }
         }
     } else {
@@ -1327,7 +1333,12 @@ QString mdn::gui::NumberDisplayWidget::stripSign(const QString& s, bool& isNeg) 
 }
 
 
-double mdn::gui::NumberDisplayWidget::parseBaseRealMagnitude(const QString& body, int base, bool& ok) const
+double mdn::gui::NumberDisplayWidget::parseBaseRealMagnitude(
+    const QString& body,
+    int base,
+    int& nFracDigitsOut,
+    bool& ok
+) const
 {
     ok = false;
     QString intPart;
@@ -1339,6 +1350,7 @@ double mdn::gui::NumberDisplayWidget::parseBaseRealMagnitude(const QString& body
         intPart = body.left(dot);
         fracPart = body.mid(dot + 1);
     }
+    nFracDigitsOut = fracPart.size();
 
     double value = 0.0;
     for (int i = 0; i < intPart.size(); ++i) {

@@ -93,7 +93,7 @@ bool mdn::Mdn2dConfig::checkConfig() const {
         (
             (m_signConvention == SignConvention::Positive) ||
             (m_signConvention == SignConvention::Negative) ||
-            (m_signConvention == SignConvention::Default)
+            (m_signConvention == SignConvention::Neutral)
         ) &&
         ((m_fraxis == Fraxis::X) || (m_fraxis == Fraxis::Y))
     );
@@ -108,7 +108,7 @@ void mdn::Mdn2dConfig::validateConfig() const {
         oss << "    base = " << m_base << ", expecting be 2 .. 32" << std::endl;
         oss << "    precision = " << m_precision << ", must be > 0" << std::endl;
         oss << "    signConvention = " << SignConventionToName(m_signConvention);
-        oss << ", expecting: 'Default', 'Positive', or 'Negative'" << std::endl;
+        oss << ", expecting: 'Neutral', 'Positive', or 'Negative'" << std::endl;
         oss << "    maxCarryoverIters = " << m_maxCarryoverIters << std::endl;
         oss << "    fraxis = " << FraxisToName(m_fraxis)
             << ", expecting 'X' or 'Y'";
@@ -131,14 +131,14 @@ bool mdn::Mdn2dConfig::operator==(const Mdn2dConfig& rhs) const {
     bool result = (
         rhs.m_base == m_base &&
         rhs.m_precision == m_precision &&
-        rhs.m_signConvention == m_signConvention
+        rhs.m_signConvention == m_signConvention &&
+        rhs.m_maxCarryoverIters == m_maxCarryoverIters &&
+        rhs.m_fraxis == m_fraxis
     );
     If_Log_Showing_Debug3(
-        if (!result) {
-            Log_Debug3(
-                "rhs=" << rhs << ", lhs=" << *this
-            );
-        }
+        Log_Debug3(
+            "rhs=" << rhs << ", lhs=" << *this
+        );
     );
     return result;
 }

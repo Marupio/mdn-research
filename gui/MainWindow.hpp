@@ -44,6 +44,7 @@ private slots:
     void onTabContextMenu(const QPoint& pos);
     void onProjectTabsAboutToChange();
     void onProjectTabsChanged(int currentIndex);
+    void onProjectProperties();
 
     void onSplitterMoved(int pos, int index);
     void onCommandSubmitted(const QString& text);
@@ -60,6 +61,12 @@ private slots:
     void chooseModeSubtract();
 
     void setGlobalFontSize(int pt);
+    void setGlobalConfig(Mdn2dConfig c);
+
+    // Fraxis control
+    void cycleFraxis();
+    void chooseFraxisX();
+    void chooseFraxisY();
 
     void slotSelectNextTab();
     void slotSelectPrevTab();
@@ -79,6 +86,10 @@ private:
     void createTabForIndex(int index);
     void initOperationsUi();
     void createStatusBar();
+
+    // Fraxis helpers
+    void updateStatusFraxisText(mdn::Fraxis f);
+    void buildFraxisMenu();
 
     void onTabMoved(int from, int to);
     void onTabCloseRequested(int index);
@@ -113,8 +124,11 @@ private:
     QLabel* m_statusSel = nullptr;
     QToolButton* m_statusModeBtn = nullptr;
     QMenu* m_modeMenu = nullptr;
+    QToolButton* m_statusFraxisBtn{nullptr};
+    QMenu*       m_fraxisMenu{nullptr};
 
     int m_globalFontSize = 11;
+    Mdn2dConfig m_globalConfig;
 
     OpsController* m_ops{nullptr};
     Project* m_project = nullptr;

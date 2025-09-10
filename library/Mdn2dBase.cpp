@@ -315,14 +315,16 @@ const mdn::Mdn2dConfig& mdn::Mdn2dBase::locked_config() const {
 }
 
 
-mdn::Mdn2dConfigImpact mdn::Mdn2dBase::assessConfigChange(const Mdn2dConfig& newConfig) {
+mdn::Mdn2dConfigImpact mdn::Mdn2dBase::assessConfigChange(const Mdn2dConfig& newConfig) const {
     Log_N_Debug2("");
     auto lock = lockReadOnly();
     return locked_assessConfigChange(newConfig);
 }
 
 
-mdn::Mdn2dConfigImpact mdn::Mdn2dBase::locked_assessConfigChange(const Mdn2dConfig& newConfig) {
+mdn::Mdn2dConfigImpact mdn::Mdn2dBase::locked_assessConfigChange(
+    const Mdn2dConfig& newConfig
+) const {
     Log_N_Debug3_H("assessing new: " << newConfig << " against old: " << m_config);
 
     Mdn2dConfigImpact result = Mdn2dConfigImpact::Unknown;
