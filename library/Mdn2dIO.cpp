@@ -793,6 +793,17 @@ void mdn::Mdn2dIO::saveBinary(
     const Mdn2dBase& src,
     std::ostream& os
 ) {
+    Log_Debug2_H("");
+    auto lock = src.lockReadOnly();
+    locked_saveBinary(src, os);
+    Log_Debug2_T("");
+}
+
+
+void mdn::Mdn2dIO::locked_saveBinary(
+    const Mdn2dBase& src,
+    std::ostream& os
+) {
     Log_Debug3_H("");
     const char magic[6] = {'M','D','N','2','D','\0'};
     os.write(magic, 6);
@@ -873,7 +884,7 @@ void mdn::Mdn2dIO::locked_loadBinary(
     char magic[6] = {0};
     is.read(magic, 6);
     if (std::memcmp(magic, "MDN2D\0", 6) != 0) {
-        std::runtime_error err("Invalid MDN2D binary magic");
+        ReadError err("Invalid Mdn2d file marker");
         Log_Error(err.what());
         throw err;
     }
@@ -881,7 +892,9 @@ void mdn::Mdn2dIO::locked_loadBinary(
     std::uint16_t ver = 0;
     is.read(reinterpret_cast<char*>(&ver), sizeof(ver));
     if (ver != 1) {
-        std::runtime_error err("Unsupported MDN2D binary version");
+        ReadError err(
+            "Unsupported Mdn2d version: expecting version 1, got version " + std::to_string(ver)
+        );
         Log_Error(err.what());
         throw err;
     }
@@ -906,7 +919,9 @@ void mdn::Mdn2dIO::locked_loadBinary(
     is.read(reinterpret_cast<char*>(&sign8), sizeof(sign8));
 
     if (base32 < 2 || base32 > 32) {
-        std::runtime_error err("Unsupported base in MDN2D binary (must be 2..32)");
+        ReadError err(
+            "Unsupported base in Mdn2d binary, expecting 2..32, got " + std::to_string(base32)
+        );
         Log_Error(err.what());
         throw err;
     }

@@ -65,6 +65,7 @@ Cursor input behaviour
     I want a status bar entry indicating mode: ADD + | SUB - | OVER
 
 Restore leads to NDW digit grid being blank
+"Save changes?"
 
 Within-selection cursor movement:
     * tab + shift tab (right and left) wrapping movements within the selection rectangle

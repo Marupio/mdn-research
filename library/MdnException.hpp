@@ -99,6 +99,13 @@ public:
         : MdnException("Invalid argument detected: " + description) {};
 };
 
+// Read error
+class MDN_API ReadError : public MdnException {
+public:
+    ReadError(const std::string& description)
+        : MdnException("Read error: " + description) {};
+};
+
 // Cannot perform the operation for the given described reason
 class MDN_API InvalidOperation : public MdnException {
 public:

@@ -30,13 +30,13 @@ class MainWindow : public QMainWindow {
 
 public:
     MainWindow(QWidget *parent = nullptr);
+    ~MainWindow() override;
 
 signals:
     void newProjectRequested();
     void newMdn2dRequested();
     void openProjectRequested();
     void openMdn2dRequested();
-    void saveProjectRequested();
     void saveMdn2dRequested();
     void closeProjectRequested();
 
@@ -45,6 +45,10 @@ private slots:
     void onProjectTabsAboutToChange();
     void onProjectTabsChanged(int currentIndex);
     void onProjectProperties();
+
+    // File menu operations
+    bool onSaveProject();
+    bool onOpenProject();
 
     void onSplitterMoved(int pos, int index);
     void onCommandSubmitted(const QString& text);
@@ -87,10 +91,14 @@ private:
     void initOperationsUi();
     void createStatusBar();
 
+    // ProjectProperties window
+    void doProjectProperties();
+
     // Fraxis helpers
     void updateStatusFraxisText(mdn::Fraxis f);
     void buildFraxisMenu();
 
+    // Tab operations
     void onTabMoved(int from, int to);
     void onTabCloseRequested(int index);
     void renameTab(int index);
@@ -98,6 +106,8 @@ private:
     void copyTab(int index);
     void pasteTab(int insertAt);
     void syncTabsToProject();
+
+    // Status bar
     void updateStatusModeText(NumberDisplayWidget::EditMode m);
     void updateStatusSelectionText(const mdn::Selection& s);
 

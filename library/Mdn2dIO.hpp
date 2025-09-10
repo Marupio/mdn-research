@@ -7,6 +7,7 @@
 
 #include "GlobalConfig.hpp"
 #include "Mdn2dBase.hpp"
+#include "MdnException.hpp"
 #include "Rect.hpp"
 #include "TextOptions.hpp"
 #include "Tools.hpp"

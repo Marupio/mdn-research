@@ -1,5 +1,9 @@
 #include "Project.hpp"
 
+#include <cstdint>
+#include <fstream>
+#include <limits>
+
 #include <QClipboard>
 #include <QGuiApplication>
 #include <QJsonArray>
@@ -13,7 +17,9 @@
 #include "../library/Rect.hpp"
 #include "../library/SignConvention.hpp"
 #include "../library/Tools.hpp"
+
 #include "Clipboard.hpp"
+#include "GuiTools.hpp"
 #include "MainWindow.hpp"
 #include "MdnQtInterface.hpp"
 
@@ -1040,6 +1046,162 @@ void mdn::gui::Project::deleteSelection() {
             Log_Debug2_T("Zeroed " << changed.size() << " digits");
         );
     }
+}
+
+
+bool mdn::gui::Project::saveToFile(const std::string& path) const {
+    Log_Debug2_H("path=" << path);
+    std::ofstream out(path, std::ios::binary);
+    if (!out) {
+        Log_ErrorQ("Failed to open for write: " << path);
+        return false;
+    }
+    saveBinary(out);
+    const bool ok = static_cast<bool>(out);
+    Log_Debug2_T("");
+    return ok;
+}
+
+
+std::unique_ptr<mdn::gui::Project> mdn::gui::Project::loadFromFile(
+    MainWindow* parent, const std::string& path
+) {
+    Log_Debug2_H("path=" << path);
+    std::ifstream in(path, std::ios::binary);
+    if (!in) {
+        Log_ErrorQ("Failed to open for read: " << path);
+        return nullptr;
+    }
+    auto proj = loadBinary(parent, in);
+    Log_Debug2_T("");
+    return proj;
+}
+
+
+void mdn::gui::Project::saveBinary(std::ostream& out) const {
+    // Magic + version so we can evolve: "MDNPRJ"
+    const char magic[8] = {'M','D','N','P','R','J','\0','\0'};
+    out.write(magic, 8);
+    const uint32_t version = 1;
+    GuiTools::binaryWrite(out, version);
+
+    // Name
+    GuiTools::binaryWriteString(out, m_name);
+
+    // Global config (store the 5 knobs your dialog manipulates)
+    // base, precision, signConvention, maxCarryOverIters, fraxis
+    GuiTools::binaryWrite(out, static_cast<int32_t>(m_config.base()));
+    GuiTools::binaryWrite(out, static_cast<int32_t>(m_config.precision()));
+    GuiTools::binaryWrite(out, static_cast<int32_t>(static_cast<int>(m_config.signConvention())));
+    GuiTools::binaryWrite(out, static_cast<int32_t>(m_config.maxCarryoverIters()));
+    GuiTools::binaryWrite(out, static_cast<int32_t>(static_cast<int>(m_config.fraxis())));
+
+    // Active tab index
+    GuiTools::binaryWrite(out, static_cast<int32_t>(m_activeIndex));
+
+    // Count
+    const uint32_t count = static_cast<uint32_t>(m_data.size());
+    GuiTools::binaryWrite(out, count);
+
+    // We persist tabs in ascending gui index to be stable/readable
+    // We also store each tab's name explicitly from addressing maps.
+    // (Project rebuilds addressing when inserting/appending.)
+    std::vector<int> indices; indices.reserve(count);
+    indices.reserve(count);
+    for (const auto& kv : m_data) indices.push_back(kv.first);
+    std::sort(indices.begin(), indices.end());
+
+    for (int idx : indices) {
+        // Tab header
+        GuiTools::binaryWrite(out, static_cast<int32_t>(idx));
+        auto itName = m_addressingIndexToName.find(idx);
+        std::string tabName = (itName != m_addressingIndexToName.end()) ? itName->second
+                                                                        : std::string{};
+        GuiTools::binaryWriteString(out, tabName);
+
+        // Payload
+        const Mdn2d& num = m_data.at(idx);
+        num.saveBinary(out);  // <<=== call into Mdn2d's binary saver
+        if (!out) {
+            Log_ErrorQ("Failed while writing Mdn2d payload for tab " << idx);
+            return;
+        }
+    }
+}
+
+
+std::unique_ptr<mdn::gui::Project> mdn::gui::Project::loadBinary(
+    MainWindow* parent, std::istream& in
+) {
+    // Magic + version
+    char magic[8] = {};
+    in.read(magic, 8);
+    if (std::memcmp(magic, "MDNPRJ", 6) != 0) {
+        Log_ErrorQ("Bad project magic; not an MDN Project file");
+        return nullptr;
+    }
+    uint32_t version = 0; GuiTools::binaryRead(in, version);
+    if (version != 1) {
+        Log_ErrorQ("Unsupported project version: " << version);
+        return nullptr;
+    }
+
+    // Name
+    std::string projName = GuiTools::binaryReadString(in);
+
+    // Config (same order as saved)
+    int32_t base=10, precision=32, sign=0, maxIters=20, fraxis=0;
+    GuiTools::binaryRead(in, base); GuiTools::binaryRead(in, precision); GuiTools::binaryRead(in, sign); GuiTools::binaryRead(in, maxIters); GuiTools::binaryRead(in, fraxis);
+
+    // Active index
+    int32_t activeIdx = 0; GuiTools::binaryRead(in, activeIdx);
+
+    // Create an empty project (0 start tabs so we fully control content)
+    std::unique_ptr<Project> proj(new Project(parent, projName, 0));
+    // Build config instance and apply through your normal path (so UI/consumers stay coherent)
+    {
+        Mdn2dConfig cfg(
+            base,
+            precision,
+            static_cast<mdn::SignConvention>(sign),
+            maxIters,
+            static_cast<mdn::Fraxis>(fraxis)
+        );
+        proj->setConfig(cfg); // pushes to numbers later too (your setConfig logic) :contentReference[oaicite:2]{index=2}
+    }
+
+    // Count
+    uint32_t count = 0; GuiTools::binaryRead(in, count);
+
+    // Read each tab, preserving indices; let each Mdn2d load itself.
+    // We *append/insert* using your existing API, which rebuilds addressing maps.
+    // (Matches how the constructor seeds new tabs and appendMdn wires maps.) :contentReference[oaicite:3]{index=3}
+    for (uint32_t k = 0; k < count; ++k) {
+        int32_t idx = 0; GuiTools::binaryRead(in, idx);
+        std::string tabName = GuiTools::binaryReadString(in);
+
+        // Create a fresh number with project config + correct name
+        Mdn2d num = Mdn2d::NewInstance(proj->m_config, tabName); // mirrors normal create path :contentReference[oaicite:4]{index=4}
+
+        // Load payload
+        try {
+            num.loadBinary(in);
+        } catch (ReadError err) {
+            Log_ErrorQ("Failed to read Mdn2d for tab " << idx << ": " << err.what());
+            return nullptr;
+        }
+
+        // Insert at the right position (use your existing function to keep maps in sync)
+        proj->insertMdn(std::move(num), idx); // handles out-of-range as "place at end" per your docs :contentReference[oaicite:5]{index=5}
+    }
+
+    // Restore active tab (clamp just in case)
+    if (proj->size() > 0) {
+        int ai = std::max(0, std::min(activeIdx, static_cast<int>(proj->size()) - 1));
+        proj->setActiveMdn(ai);
+    }
+
+    return proj;
 }
 
 

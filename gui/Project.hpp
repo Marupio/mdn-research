@@ -38,6 +38,9 @@ protected:
     // Name of this project
     std::string m_name;
 
+    // Path to folder holding this project (only when saved)
+    std::string m_path;
+
     // Config for all numbers in this project
     Mdn2dConfig m_config;
 
@@ -94,6 +97,18 @@ public:
         inline void setName(const std::string& nameIn) override {
             m_name = nameIn;
         }
+
+        // Returns the framework's 'path'
+        inline std::string path() const {
+            return m_path;
+        }
+
+        // Set the project path
+        inline void setPath(const std::string& pathIn) {
+            m_path = pathIn;
+        }
+
+
 
         // Returns true if an Mdn2d exists with the given name, false otherwise
         inline bool mdnNameExists(const std::string& nameIn) const override {
@@ -323,14 +338,24 @@ public:
         //  deletes the data enclosed by the selection.
         void deleteSelection();
 
-    // Debug
+    // Binary save / load
 
-    // Validate internals - all member data is indexed correctly, throws if not
-    void validateInternals(bool logResult) const;
+        // Binary persistence
+        bool saveToFile(const std::string& path) const;
+        static std::unique_ptr<Project> loadFromFile(MainWindow* parent, const std::string& path);
 
-    // Print out all tabs and status to Log_Info
-    void debugShowAllTabs(std::ostream& os) const;
+        // Lower-level (stream) variants, handy for unit tests
+        void saveBinary(std::ostream& out) const;
+        static std::unique_ptr<Project> loadBinary(MainWindow* parent, std::istream& in);
 
+
+    // ~~~ Debug
+
+        // Validate internals - all member data is indexed correctly, throws if not
+        void validateInternals(bool logResult) const;
+
+        // Print out all tabs and status to Log_Info
+        void debugShowAllTabs(std::ostream& os) const;
 };
 
 } // end namespace gui

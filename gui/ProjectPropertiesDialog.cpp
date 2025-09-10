@@ -130,9 +130,11 @@ void ProjectPropertiesDialog::buildUi() {
 }
 
 
-void ProjectPropertiesDialog::setInitial(const QString& pname,
-                                         const QString& pathHint,
-                                         const Mdn2dConfig& cfg) {
+void ProjectPropertiesDialog::setInitial(
+    const QString& pname,
+    const QString& pathHint,
+    const Mdn2dConfig& cfg
+) {
     m_nameEdit->setText(pname);
     m_pathEdit->setText(pathHint);
 

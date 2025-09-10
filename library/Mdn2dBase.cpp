@@ -1066,7 +1066,7 @@ bool mdn::Mdn2dBase::locked_setToZero(const Coord& xy) {
                 << "coord: " << xy << "\n"
                 << "Rebuilding metadata.\n"
             );
-            rebuildMetadata();
+            locked_rebuildMetadata();
             xit = m_xIndex.find(xy.x());
             yit = m_yIndex.find(xy.y());
         }
@@ -1442,6 +1442,52 @@ void mdn::Mdn2dBase::locked_saveTextUtility(std::ostream& os, CommaTabSpace deli
     for (auto riter = txt.rbegin(); riter != txt.rend(); ++riter) {
         os << *riter << std::endl;
     }
+}
+
+
+void mdn::Mdn2dBase::loadText(std::istream& is) {
+    Log_N_Debug_H("");
+    auto lock = lockWriteable();
+    locked_loadText(is);
+    Log_N_Debug_T("");
+}
+
+
+void mdn::Mdn2dBase::locked_loadText(std::istream& is) {
+    Log_N_Debug2_H("")
+    Mdn2dIO::locked_loadText(is, *this);
+    locked_rebuildMetadata();
+    Log_N_Debug2_T("")
+}
+
+
+void mdn::Mdn2dBase::saveBinary(std::ostream& os) const {
+    Log_N_Debug_H("");
+    auto lock = lockReadOnly();
+    locked_saveBinary(os);
+    Log_N_Debug_T("");
+}
+
+
+void mdn::Mdn2dBase::locked_saveBinary(std::ostream& os) const {
+    Log_N_Debug2_H("")
+    Mdn2dIO::locked_saveBinary(*this, os);
+    Log_N_Debug2_T("")
+}
+
+void mdn::Mdn2dBase::loadBinary(std::istream& is) {
+    Log_N_Debug_H("");
+    auto lock = lockWriteable();
+    locked_loadBinary(is);
+    Log_N_Debug_T("");
+}
+
+
+void mdn::Mdn2dBase::locked_loadBinary(std::istream& is) {
+    Log_N_Debug2_H("")
+    Mdn2dIO::locked_loadBinary(is, *this);
+    locked_rebuildMetadata();
+    Log_N_Debug2_T("")
 }
 
 

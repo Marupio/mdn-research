@@ -3,14 +3,18 @@
 #include <QAction>
 #include <QApplication>
 #include <QEvent>
+#include <QFileDialog>
+#include <QFileInfo>
 #include <QInputDialog>
 #include <QLabel>
 #include <QList>
 #include <QMenu>
 #include <QMenuBar>
+#include <QMessageBox>
 #include <QResizeEvent>
 #include <QSignalBlocker>
 #include <QSplitter>
+#include <QStandardPaths>
 #include <QStatusBar>
 #include <QTabBar>
 #include <QTabWidget>
@@ -34,6 +38,34 @@ mdn::gui::MainWindow::MainWindow(QWidget *parent)
     setupLayout();
     setWindowTitle("MDN Editor");
     Log_Debug2_T("");
+}
+
+
+// MainWindow.cpp
+mdn::gui::MainWindow::~MainWindow()
+{
+    // 1) Guard against app-wide signals firing during teardown.
+    if (qApp) {
+        disconnect(qApp, &QApplication::focusChanged,
+                   this, &mdn::gui::MainWindow::onAppFocusChanged);
+    }
+
+    // 2) Stop splitter -> MainWindow traffic, and remove event filter.
+    if (m_splitter) {
+        m_splitter->removeEventFilter(this);
+        disconnect(m_splitter, &QSplitter::splitterMoved,
+                   this, &mdn::gui::MainWindow::onSplitterMoved);
+    }
+
+    // 3) Project is a QObject child of MainWindow (Project(this)), disconnect here for clarity.
+    if (m_project) {
+        disconnect(m_project, nullptr, this, nullptr);
+    }
+
+    // 4) Being extra cautious: nuke OpsController hookups.
+    if (m_ops) {
+        disconnect(m_ops, nullptr, this, nullptr);
+    }
 }
 
 
@@ -175,31 +207,120 @@ void mdn::gui::MainWindow::onProjectTabsChanged(int currentIndex)
 
 
 void mdn::gui::MainWindow::onProjectProperties() {
+    doProjectProperties();
+}
+
+
+bool mdn::gui::MainWindow::onSaveProject() {
     Log_Debug2_H("");
     if (!m_project) {
+        Log_WarnQ("No project open, cannot save");
         Log_Debug2_T("");
-        return;
+        return false;
     }
+    // Suggest default path in Documents with project name
+    QString suggestedPath = QString::fromStdString(m_project->path());
+    if (suggestedPath.size() == 0) {
+        QString docs = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+        suggestedPath = docs + "/";
+    }
+    QString suggested = suggestedPath + QString::fromStdString(m_project->name()) + ".mdnproj";
 
-    ProjectPropertiesDialog dlg(m_project, this);
-    // You may show a path hint if you have one (or keep empty)
-    dlg.setInitial(
-        QString::fromStdString(m_project->name()),
-        QStringLiteral(""), // path hint, if any
-        m_project->config()
+    QString path = QFileDialog::getSaveFileName(
+        this,
+        tr("Save Project"),
+        suggested,
+        tr("MDN Project (*.mdnproj);;All Files (*)")
     );
-    if (dlg.exec() != QDialog::Accepted) {
-        Log_Debug2_T("User rejected change");
-        return;
+
+    if (path.isEmpty()) {
+        Log_Debug2_T("user cancelled")
+        return false;
     }
 
-    m_project->setName(MdnQtInterface::fromQString(dlg.projectName()));  // cheap, immediate
-    Log_Debug3_H("setGlobalConfig dispatch");
-    setGlobalConfig(dlg.chosenConfig());
-    Log_Debug3_T("setGlobalConfig return");
+    bool ok = m_project->saveToFile(path.toStdString());
+    if (!ok) {
+        QMessageBox::warning(
+            this,
+            tr("Save Project"),
+            tr("Failed to save project.")
+        );
+        Log_Debug2_T("failed")
+        return false;
+    }
 
-    Log_Debug2_T("Done onProjectProperties");
-    // If tabs changed due to clearing or other effects, your existing logic keeps UI in sync.
+    // Convert to folder only
+    QFileInfo info(path);
+    QString folder = info.absolutePath();
+
+    // Pass to project
+    m_project->setPath(folder.toStdString());
+    statusBar()->showMessage(tr("Project saved"), 2000);
+    Log_Debug2_T("ok")
+    return true;
+}
+
+
+bool mdn::gui::MainWindow::onOpenProject() {
+    Log_Debug2_H("");
+
+    QString docs = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+
+    QString path = QFileDialog::getOpenFileName(
+        this,
+        tr("Open Project"),
+        docs,
+        tr("MDN Project (*.mdnproj);;All Files (*)")
+    );
+
+    if (path.isEmpty()) {
+        Log_Debug2_T("user cancelled")
+        return false;
+    }
+
+    if (m_project) {
+        QMessageBox::StandardButton reply = QMessageBox::question(
+            this,
+            "Save Project",
+            QString("If you proceed, any unsaved changes will be lost.\n\n") +
+                QString("Do you want to save the existing project?"),
+            QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel,
+            QMessageBox::Yes // Default button
+        );
+        if (reply == QMessageBox::Yes) {
+            bool success = onSaveProject();
+            if (!success) {
+                // User chose to save, but saving failed.  Do not proceed.
+                Log_Debug2_T("Failed to save on request");
+                return false;
+            }
+        } else if (reply == QMessageBox::Cancel) {
+            Log_Debug2("User cancelled when asked to save");
+            return false;
+        }
+        delete m_project;
+        m_project = nullptr;
+    }
+
+    std::unique_ptr<Project> ptr = Project::loadFromFile(this, path.toStdString());
+    if (!ptr.get()) {
+        // Load failed
+        Log_Debug2_T("Read failed");
+        return false;
+    }
+    m_project = ptr.release();
+
+    // Remember the folder path of the opened project
+    QFileInfo info(path);
+    QString folder = info.absolutePath();
+    QString fileName = info.baseName();
+    m_project->setPath(folder.toStdString());
+    m_project->setName(fileName.toStdString());
+
+    syncTabsToProject();
+    statusBar()->showMessage(tr("Project loaded"), 2000);
+    Log_Debug2_T("ok")
+    return true;
 }
 
 
@@ -599,10 +720,10 @@ void mdn::gui::MainWindow::createMenus() {
     fileMenu->addAction("New Project", this, &mdn::gui::MainWindow::newProjectRequested);
     fileMenu->addAction("New Mdn2d", this, &mdn::gui::MainWindow::newMdn2dRequested);
     fileMenu->addSeparator();
-    fileMenu->addAction("Open Project", this, &mdn::gui::MainWindow::openProjectRequested);
+    fileMenu->addAction("Open Project", this, &mdn::gui::MainWindow::onOpenProject);
     fileMenu->addAction("Open Mdn2d", this, &mdn::gui::MainWindow::openMdn2dRequested);
     fileMenu->addSeparator();
-    fileMenu->addAction("Save Project", this, &mdn::gui::MainWindow::saveProjectRequested);
+    fileMenu->addAction("Save Project", this, &mdn::gui::MainWindow::onSaveProject);
     fileMenu->addAction("Save Mdn2d", this, &mdn::gui::MainWindow::saveMdn2dRequested);
     fileMenu->addSeparator();
     fileMenu->addAction("Project Properties", this, &mdn::gui::MainWindow::onProjectProperties);
@@ -686,13 +807,16 @@ void mdn::gui::MainWindow::setupLayout() {
 
 void mdn::gui::MainWindow::createNewProject() {
     Log_Debug3_H("");
+
     if (m_project) {
+        // TODO "Save changes?"
         delete m_project;
         m_project = nullptr;
     }
+
     m_project = new Project(this);
     m_globalConfig.setMaster(*m_project);
-    m_project->setConfig(m_globalConfig);
+    doProjectProperties();
     if (m_project) {
         connect(m_project, &mdn::gui::Project::tabsAboutToChange,
                 this, &mdn::gui::MainWindow::onProjectTabsAboutToChange);
@@ -914,6 +1038,35 @@ void mdn::gui::MainWindow::createStatusBar()
     sb->addPermanentWidget(new QLabel("  |  ", this), 0);
     // stretch last one a bit
     sb->addPermanentWidget(m_statusSel, 1);
+}
+
+
+void mdn::gui::MainWindow::doProjectProperties() {
+    Log_Debug2_H("");
+    if (!m_project) {
+        Log_Debug2_T("");
+        return;
+    }
+
+    ProjectPropertiesDialog dlg(m_project, this);
+    // You may show a path hint if you have one (or keep empty)
+    dlg.setInitial(
+        QString::fromStdString(m_project->name()),
+        QString::fromStdString(m_project->path()),
+        m_project->config()
+    );
+    if (dlg.exec() != QDialog::Accepted) {
+        Log_Debug2_T("User rejected change");
+        return;
+    }
+
+    m_project->setName(MdnQtInterface::fromQString(dlg.projectName()));  // cheap, immediate
+    Log_Debug3_H("setGlobalConfig dispatch");
+    setGlobalConfig(dlg.chosenConfig());
+    Log_Debug3_T("setGlobalConfig return");
+
+    Log_Debug2_T("Done projectProperties window");
+    // If tabs changed due to clearing or other effects, your existing logic keeps UI in sync.
 }
 
 

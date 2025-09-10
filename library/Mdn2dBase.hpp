@@ -390,19 +390,32 @@ public:
                 ) const;
             public:
 
+
         // *** Save / load
 
+            // Save in text format
             void saveTextPretty(std::ostream& os, bool wideNegatives, bool alphanumeric) const;
             protected: void locked_saveTextPretty(
                 std::ostream& os,
                 bool wideNegatives,
                 bool alphanumeric
             ) const; public:
-
             void saveTextUtility(std::ostream& os, CommaTabSpace delim) const;
             protected:
                 void locked_saveTextUtility(std::ostream& os, CommaTabSpace delim) const;
             public:
+
+            // Load in text format - Automatically detects pretty / utility format
+            void loadText(std::istream& is);
+            protected: void locked_loadText(std::istream& is); public:
+
+            // Save in binary format
+            void saveBinary(std::ostream& os) const;
+            protected: void locked_saveBinary(std::ostream& os) const; public:
+
+            // Load in binary format
+            void loadBinary(std::istream& is);
+            protected: void locked_loadBinary(std::istream& is); public:
 
 
         // *** Transformations
