@@ -318,4 +318,8 @@ inline Mdn2d operator/(Mdn2d lhs, const Mdn2d& rhs) { return lhs /= rhs; }
 
 inline Mdn2d operator*(Mdn2d lhs, int scalar) { return lhs *= scalar; }
 
+
+// static Mdn2d DummyMdn2d;
+
+
 } // end namespace mdn

@@ -23,6 +23,13 @@
 #include "MainWindow.hpp"
 #include "MdnQtInterface.hpp"
 
+#ifdef MDN_DEBUG
+    #define CHECK_INDEX(i, retval) if (!checkIndex(i)) { return retval; }
+    #define CHECK_NAME(name, retval) if (indexOfMdn(name) < 0) { return retval; }
+#else
+    #define CHECK_INDEX(i, retval) do {} while (false);
+    #define CHECK_NAME(name, retval) do {} while (false);
+#endif
 
 int mdn::gui::Project::m_untitledNumber = 0;
 
@@ -138,10 +145,40 @@ void mdn::gui::Project::shiftMdnTabsLeft(int start, int end, int shift) {
 }
 
 
+bool mdn::gui::Project::checkIndex(int i) const {
+    Log_Debug4_H("i=" << i);
+    if (m_data.empty()) {
+        Log_Debug3("Empty data");
+        Log_Debug4_T("");
+        return false;
+    }
+    int maxIndex = m_data.size() - 1;
+    if (i < 0 || i > maxIndex) {
+        Log_Debug3("Index out-of-range: " << i << " (0 .. " << maxIndex << ")");
+        Log_Debug4_T("");
+        return false;
+    }
+    const auto iter = m_data.find(i);
+    if (iter == m_data.cend()) {
+        InvalidArgument err("Internal Error: Index is in range but not available");
+        Log_ErrorQ(err.what());
+        throw err;
+    }
+    return true;
+}
+
+
+bool mdn::gui::Project::checkName(const std::string& name) const {
+    Log_Debug4_H("name=" << name);
+    return indexOfMdn(name) >= 0;
+}
+
+
 mdn::gui::Project::Project(MainWindow* parent, std::string name, int nStartMdn):
     QObject(parent),
     m_parent(parent),
-    m_name(name)
+    m_name(name),
+    m_activeIndex(0)
 {
     if (m_name.empty()) {
         m_name = "untitled-" + std::to_string(m_untitledNumber++);
@@ -150,18 +187,22 @@ mdn::gui::Project::Project(MainWindow* parent, std::string name, int nStartMdn):
         "Creating a new Project " << (parent ? "(with parent)" : "(no parent)")
             << " '" << name << "' with " << nStartMdn << " starting tabs"
     );
-    if (nStartMdn == 0) {
-        nStartMdn += 1;
+    if (nStartMdn < 1) {
+        setNoActiveMdn();
+    } else {
+        if (name.empty()) {
+            name = "Mdn0";
+        }
+        for (int i = 0; i < nStartMdn; ++i) {
+            Log_Debug3("Project constructor, Mdn index " << i);
+            std::string nextName = Project::suggestName(name);
+            Log_Debug3("Got name=[" << nextName << "], constructor dispatch");
+            Mdn2d newMdn = Mdn2d::NewInstance(m_config, nextName);
+            Log_Debug2("Creating Mdn {'" << nextName << "', " << i << "}");
+            appendMdn(std::move(newMdn));
+        }
+        setActiveMdn(0);
     }
-    for (int i = 0; i < nStartMdn; ++i) {
-        Log_Debug3("Project constructor, Mdn index " << i);
-        std::string nextName = Project::suggestName("Mdn0");
-        Log_Debug3("Got name=[" << nextName << "], constructor dispatch");
-        Mdn2d newMdn = Mdn2d::NewInstance(m_config, nextName);
-        Log_Debug2("Creating Mdn {'" << nextName << "', " << i << "}");
-        appendMdn(std::move(newMdn));
-    }
-    setActiveMdn(0);
     Log_Debug_T("");
 }
 
@@ -236,8 +277,14 @@ void mdn::gui::Project::updateSelection() const {
 
 mdn::Mdn2dConfigImpact mdn::gui::Project::assessConfigChange(Mdn2dConfig cfg) const {
     // Assume config is the same across all Mdn2d's
-    const Mdn2d& first = firstMdn();
-    Mdn2dConfigImpact impact = first.assessConfigChange(cfg);
+    Log_Debug3_H("config=" << config);
+    const Mdn2d* first = firstMdn();
+    if (!first) {
+        Log_Debug3_T("No Mdns available, returning Unknown");
+        return Mdn2dConfigImpact::Unknown;
+    }
+    Mdn2dConfigImpact impact = first->assessConfigChange(cfg);
+    Log_Debug3_T("Impact = " << Mdn2dConfigImpactToName(impact));
     return impact;
 }
 
@@ -253,8 +300,13 @@ void mdn::gui::Project::setConfig(Mdn2dConfig newConfig) {
     m_config.setMaster(*this);
 
     // For now, assume config is the same across all Mdn2d's
-    Mdn2d& first = firstMdn();
-    Mdn2dConfigImpact impact = first.assessConfigChange(newConfig);
+    Mdn2d* first = firstMdn();
+    if (!first) {
+        Log_Debug2_T("No Mdns available, setting global config to " << newConfig);
+        m_config = newConfig;
+        return;
+    }
+    Mdn2dConfigImpact impact = first->assessConfigChange(newConfig);
     If_Log_Showing_Debug4(
         Log_Debug4(
             "Config change impact: " << Mdn2dConfigImpactToName(impact) << ", i.e. "
@@ -350,80 +402,81 @@ void mdn::gui::Project::setConfig(Mdn2dConfig newConfig) {
 }
 
 
-bool mdn::gui::Project::contains(std::string name, bool warnOnFailure) const {
-    Log_Debug3_H("name='" << name << "', warn=" << warnOnFailure);
+bool mdn::gui::Project::contains(std::string name) const {
+    Log_Debug3_H("name='" << name << "'");
+    if (m_data.empty()) {
+        Log_Debug2("Data empty, does not contain '" << name << "'");
+        Log_Debug3_T("");
+        return false;
+    }
     int index = indexOfMdn(name);
     if (index < 0) {
-        if (warnOnFailure) {
-            Log_WarnQ("Mdn2d with name '" << name << "' does not exist.");
-        }
         Log_Debug2("Project does not contain '" << name << "'");
         Log_Debug3_T("");
         return false;
     }
-    const auto iter = m_data.find(index);
-    if (iter == m_data.cend()) {
-        if (warnOnFailure) {
-            Log_WarnQ("Mdn2d with name '" << name << "' exists in addressing but not in data.");
-        }
-        Log_Debug2("Project does not contain '" << name << "', but it is in addressing.");
-        Log_Debug3_T("");
-        return false;
-    }
-    // const Mdn2d& num = iter->second;
-    // if (num.name() != name) {
-    //     Log_Debug2("Project does not contain '" << name << "'");
-    //     Log_Debug3_T("");
-    //     return false;
-    // }
+    // #ifdef MDN_DEBUG
+    //     const auto iter = m_data.find(index);
+    //     if (iter == m_data.cend()) {
+    //         Log_Debug2("Project does not contain '" << name << "', but it is in addressing.");
+    //         Log_Debug3_T("");
+    //         return false;
+    //     }
+    // #endif
     Log_Debug2("Project contains '" << name << "'");
     Log_Debug3_T("");
     return true;
 }
 
 
-bool mdn::gui::Project::contains(int i, bool warnOnFailure) const {
-    const auto iter = m_data.find(i);
-    if (iter == m_data.cend()) {
-        if (warnOnFailure) {
-            Log_WarnQ("Invalid index (" << i << "), expecting 0 .. " << (m_data.size() - 1));
-        }
-
-        Log_Debug2("Project does not contain tab " << i);
-        return false;
-    }
-    Log_Debug2("Project contains tab " << i);
-    return true;
+bool mdn::gui::Project::contains(int i) const {
+    Log_Debug3("i=" << i);
+    return checkIndex(i);
 }
 
 
 int mdn::gui::Project::indexOfMdn(std::string name) const {
-    const auto iter = m_addressingNameToIndex.find(name);
-    if (iter == m_addressingNameToIndex.cend()) {
-        Log_Debug2("Project does not contain '" << name << "'");
+    Log_Debug4_H("name=" << name);
+    if (m_data.empty()) {
+        Log_Debug3("Empty data");
+        Log_Debug4_T("");
         return -1;
     }
-    Log_Debug2("Project does contain {'" << name << "', " << iter->second << "}");
+    const auto iter = m_addressingNameToIndex.find(name);
+    if (iter == m_addressingNameToIndex.cend()) {
+        Log_Debug3("Name [" << name << "] not present in the index");
+        Log_Debug4_T("");
+        return -1;
+    }
+    Log_Debug3("found [" << name << "] at " << iter->second);
+    Log_Debug4_T("");
     return iter->second;
 }
 
 
 std::string mdn::gui::Project::nameOfMdn(int i) const {
+    Log_Debug4_H("i=" << i);
     const auto iter = m_addressingIndexToName.find(i);
     if (iter == m_addressingIndexToName.cend()) {
         Log_Debug2("Name of " << i << " (does not exist) returning empty string");
+        Log_Debug4_T("");
         return "";
     }
     Log_Debug2("Name of " << i << " = '" << iter->second << "'");
+    Log_Debug4_T("");
     return iter->second;
 }
 
 
 std::string mdn::gui::Project::renameMdn(int i, const std::string& newName) {
     Log_Debug3_H("i=" << i << ", newName=" << newName);
-    Mdn2d& tgt = getMdn(i);
-    std::string currentName = tgt.name();
-    std::string actualName = tgt.setName(newName);
+    Mdn2d* tgt = getMdn(i);
+    if (!tgt) {
+        Log_Debug3_T("Could not locate mdn at index " << i << ", failed");
+        return "";
+    }
+    std::string currentName = tgt->name();
+    std::string actualName = tgt->setName(newName);
     Log_Debug2(
         "renaming tab {'" << currentName << "', " << i << "} to "
             << "{'" << actualName << "', " << i << "} (wanted '" << newName << "')"
@@ -431,7 +484,16 @@ std::string mdn::gui::Project::renameMdn(int i, const std::string& newName) {
     m_addressingNameToIndex.erase(currentName);
     m_addressingNameToIndex[actualName] = i;
     m_addressingIndexToName[i] = actualName;
-    Log_Debug3_T("");
+    Log_Debug3_T("renaming complete, wanted: [" << newName << "], got: [" << actualName << "]");
+    return actualName;
+}
+
+
+std::string mdn::gui::Project::renameMdn(const std::string& oldName, const std::string& newName) {
+    Log_Debug3_H("from [" << oldName << "] to [" << newName << "]");
+    int i = indexOfMdn(oldName);
+    std::string actualName = renameMdn(i, newName);
+    Log_Debug3_T("returning [" << actualName << "]");
     return actualName;
 }
 
@@ -459,8 +521,11 @@ std::vector<std::string> mdn::gui::Project::toc() const {
             fail = "More than one Mdn assigned to tab " + std::to_string(index);
             break;
         }
-        const Mdn2d& src = getMdn(index);
-        std::string strName = src.name();
+        const Mdn2d* src = getMdn(index);
+        if (!src) {
+            fail = "Could not acquire an Mdn2d with index " + std::to_string(index);
+        }
+        std::string strName = src->name();
         {
             const auto iter = m_addressingIndexToName.find(index);
             if (iter == m_addressingIndexToName.cend()) {
@@ -536,57 +601,100 @@ std::vector<std::string> mdn::gui::Project::toc() const {
 }
 
 
-const mdn::Mdn2d& mdn::gui::Project::activeMdn() const {
+const mdn::Mdn2d* mdn::gui::Project::activeMdn() const {
     Log_Debug3_H("");
+    if (m_data.empty()) {
+        Log_Debug2("Empty data - no Mdns, returning nullptr");
+        Log_Debug3_T("");
+        return nullptr;
+    }
+    if (m_activeIndex == -1) {
+        Log_Debug2("No active Mdn, returning nullptr");
+        Log_Debug3_T("");
+        return nullptr;
+    }
+    int maxIndex = m_data.size() - 1;
+    if (m_activeIndex < 0 || m_activeIndex > maxIndex) {
+        std::ostringstream oss;
+        oss << "Active index out-of-range: " << m_activeIndex << " (0 .. " << maxIndex << ")";
+        InvalidState err(oss.str());
+        Log_ErrorQ(err.what());
+        throw err;
+    }
     if (!contains(m_activeIndex)) {
-        InvalidState err("Project has no valid index");
+        InvalidState err("Internal Error: Active index is not available");
         Log_ErrorQ(err.what());
         throw err;
     }
     Log_Debug3_T("");
-    return m_data.at(m_activeIndex);
+    return &(m_data.at(m_activeIndex));
 }
-mdn::Mdn2d& mdn::gui::Project::activeMdn() {
+mdn::Mdn2d* mdn::gui::Project::activeMdn() {
     Log_Debug3_H("");
+    if (m_data.empty()) {
+        Log_Debug2("Empty data - no Mdns, returning nullptr");
+        Log_Debug3_T("");
+        return nullptr;
+    }
+    if (m_activeIndex == -1) {
+        Log_Debug2("No active Mdn, returning nullptr");
+        Log_Debug3_T("");
+        return nullptr;
+    }
+    int maxIndex = m_data.size() - 1;
+    if (m_activeIndex < 0 || m_activeIndex > maxIndex) {
+        std::ostringstream oss;
+        oss << "Active index out-of-range: " << m_activeIndex << " (0 .. " << maxIndex << ")";
+        InvalidState err(oss.str());
+        Log_ErrorQ(err.what());
+        throw err;
+    }
     if (!contains(m_activeIndex)) {
-        InvalidState err("Project has no valid index");
+        InvalidState err("Internal Error: Active index is not available");
         Log_ErrorQ(err.what());
         throw err;
     }
     Log_Debug3_T("");
-    return m_data[m_activeIndex];
+    return &(m_data.at(m_activeIndex));
 }
 
 
-const mdn::Selection& mdn::gui::Project::activeSelection() const {
+const mdn::Selection* mdn::gui::Project::activeSelection() const {
     Log_Debug3_H("");
-    if (!contains(m_activeIndex)) {
-        InvalidState err("Project has no valid index");
-        Log_ErrorQ(err.what());
-        throw err;
+    const Mdn2d* src(activeMdn());
+    if (!src) {
+        Log_Debug3_T("No activeMdn, therefor no active selection");
+        return nullptr;
     }
     Log_Debug3_T("");
-    return m_data.at(m_activeIndex).selection();
+    return &(src->selection());
 }
-mdn::Selection& mdn::gui::Project::activeSelection() {
+mdn::Selection* mdn::gui::Project::activeSelection() {
     Log_Debug3_H("");
-    if (!contains(m_activeIndex)) {
-        InvalidState err("Project has no valid index");
-        Log_ErrorQ(err.what());
-        throw err;
+    Mdn2d* src(activeMdn());
+    if (!src) {
+        Log_Debug3_T("No activeMdn, therefor no active selection");
+        return nullptr;
     }
     Log_Debug3_T("");
-    return m_data[m_activeIndex].selection();
+    return &(src->selection());
+}
+
+
+void mdn::gui::Project::setNoActiveMdn() {
+    Log_Debug4("Setting active index to -1");
+    m_activeIndex = -1;
 }
 
 
 void mdn::gui::Project::setActiveMdn(int i) {
     Log_Debug3_H("index=" << i);
-    if (!contains(i, true)) {
+    if (!contains(i)) {
         Log_Debug2("Failed to set activeMdn to " << i << ", does not exist");
         Log_Debug3_T("");
         return;
     }
+    Log_Debug4("Setting active index=" << i);
     m_activeIndex = i;
     If_Log_Showing_Debug2(
         auto iter = m_data.find(i);
@@ -601,7 +709,7 @@ void mdn::gui::Project::setActiveMdn(std::string name) {
     Log_Debug3_H("name='" << name << "'");
     int i = indexOfMdn(name);
     if (i < 0) {
-        Log_WarnQ("Failed to acquire index for Mdn2d '" << name << "'");
+        Log_Warn("Failed to acquire index for Mdn2d '" << name << "'");
         Log_Debug3_T("");
         return;
     }
@@ -611,75 +719,108 @@ void mdn::gui::Project::setActiveMdn(std::string name) {
 }
 
 
-const mdn::Selection& mdn::gui::Project::getSelection(int i) const {
-    Log_Debug3("" << i);
-    return getMdn(i).selection();
-}
-mdn::Selection& mdn::gui::Project::getSelection(int i) {
-    Log_Debug3("");
-    return getMdn(i).selection();
-}
-
-
-const mdn::Selection& mdn::gui::Project::getSelection(std::string name) const {
-    Log_Debug3("");
-    return getMdn(name).selection();
-}
-mdn::Selection& mdn::gui::Project::getSelection(std::string name) {
-    Log_Debug3("");
-    return getMdn(name).selection();
-}
-
-
-const mdn::Mdn2d& mdn::gui::Project::getMdn(int i) const {
-    Log_Debug3("");
-    return m_data.at(i);
-}
-mdn::Mdn2d& mdn::gui::Project::getMdn(int i) {
-    Log_Debug3("");
-    return m_data.at(i);
-}
-
-
-const mdn::Mdn2d& mdn::gui::Project::getMdn(std::string name) const {
-    Log_Debug3("");
-
-    int index = m_addressingNameToIndex.at(name);
-    if (index < 0) {
-        InvalidState err("Project has no valid index");
-        Log_ErrorQ(err.what());
-        throw err;
+const mdn::Selection* mdn::gui::Project::getSelection(int i) const {
+    Log_Debug3_H("" << i);
+    const Mdn2d* src(getMdn(i));
+    if (!src) {
+        Log_Debug3_T("Index " << i << " did not give a valid Mdn2d");
+        return nullptr;
     }
-    return m_data.at(index);
+    Log_Debug3_T("")
+    return &(src->selection());
 }
-mdn::Mdn2d& mdn::gui::Project::getMdn(std::string name) {
-    Log_Debug3("");
-    int index = m_addressingNameToIndex.at(name);
-    if (index < 0) {
-        InvalidState err("Project has no valid index");
-        Log_ErrorQ(err.what());
-        throw err;
+mdn::Selection* mdn::gui::Project::getSelection(int i) {
+    Log_Debug3_H("" << i);
+    Mdn2d* src(getMdn(i));
+    if (!src) {
+        Log_Debug3_T("Index " << i << " did not give a valid Mdn2d");
+        return nullptr;
     }
-    return m_data.at(index);
+    Log_Debug3_T("")
+    return &(src->selection());
 }
 
 
-const mdn::Mdn2d& mdn::gui::Project::firstMdn() const {
+const mdn::Selection* mdn::gui::Project::getSelection(std::string name) const {
+    Log_Debug3_H(name);
+    const Mdn2d* src(getMdn(name));
+    if (!src) {
+        Log_Debug3_T("No valid Mdn named [" << name << "]");
+        return nullptr;
+    }
+    Log_Debug3_T("")
+    return &(src->selection());
+}
+mdn::Selection* mdn::gui::Project::getSelection(std::string name) {
+    Log_Debug3_H(name);
+    Mdn2d* src(getMdn(name));
+    if (!src) {
+        Log_Debug3_T("No valid Mdn named [" << name << "]");
+        return nullptr;
+    }
+    Log_Debug3_T("")
+    return &(src->selection());
+}
+
+
+const mdn::Mdn2d* mdn::gui::Project::getMdn(int i) const {
+    Log_Debug3_H("i=" << i);
+    if (!checkIndex(i)) {
+        Log_Debug3_T("Not a valid index");
+        return nullptr;
+    }
+    Log_Debug3_T("");
+    return &(m_data.at(i));
+}
+mdn::Mdn2d* mdn::gui::Project::getMdn(int i) {
+    Log_Debug3_H("i=" << i);
+    if (!checkIndex(i)) {
+        Log_Debug3_T("Not a valid index");
+        return nullptr;
+    }
+    Log_Debug3_T("");
+    return &(m_data[i]);
+}
+
+
+const mdn::Mdn2d* mdn::gui::Project::getMdn(std::string name) const {
+    Log_Debug3_H(name);
+    int i = indexOfMdn(name);
+    if (i < 0) {
+        Log_Debug3_T("Could not locate Mdn [" << name << "]");
+        return nullptr;
+    }
+    Log_Debug3_T("returning mdn at index " << i);
+    return &(m_data.at(i));
+}
+mdn::Mdn2d* mdn::gui::Project::getMdn(std::string name) {
+    Log_Debug3_H(name);
+    int i = indexOfMdn(name);
+    if (i < 0) {
+        Log_Debug3_T("Could not locate Mdn [" << name << "]");
+        return nullptr;
+    }
+    Log_Debug3_T("returning mdn at index " << i);
+    return &(m_data[i]);
+}
+
+
+const mdn::Mdn2d* mdn::gui::Project::firstMdn() const {
     Log_Debug3("");
     return getMdn(0);
 }
-mdn::Mdn2d& mdn::gui::Project::firstMdn() {
+mdn::Mdn2d* mdn::gui::Project::firstMdn() {
     Log_Debug3("");
     return getMdn(0);
 }
 
 
-const mdn::Mdn2d& mdn::gui::Project::lastMdn() const {
+const mdn::Mdn2d* mdn::gui::Project::lastMdn() const {
     Log_Debug3("");
     int lastI = m_data.size() - 1;
     return getMdn(lastI);
 }
-mdn::Mdn2d& mdn::gui::Project::lastMdn() {
+mdn::Mdn2d* mdn::gui::Project::lastMdn() {
     Log_Debug3("");
     int lastI = m_data.size() - 1;
     return getMdn(lastI);
@@ -719,7 +860,7 @@ void mdn::gui::Project::insertMdn(Mdn2d&& mdn, int index) {
         newName = origName;
     }
     if (!oss.str().empty()) {
-        Log_WarnQ(oss.str());
+        Log_Warn(oss.str());
     }
 
     // Shift addressing over
@@ -733,6 +874,9 @@ void mdn::gui::Project::insertMdn(Mdn2d&& mdn, int index) {
     Log_Debug2("Inserting {'" << newName << "'," << index << "} into indices");
     m_addressingNameToIndex.insert({newName, index});
     m_addressingIndexToName.insert({index, newName});
+    if (contains("__mdn_Project_dummyMdn")) {
+        deleteMdn("__mdn_Project_dummyMdn");
+    }
     Q_EMIT tabsChanged(index);
     Log_Debug2_T("");
 }
@@ -821,7 +965,7 @@ bool mdn::gui::Project::moveMdn(const std::string& name, int toIndex) {
     Log_Debug2_H("Moving '" << name << "' to " << toIndex);
     int fromIndex = indexOfMdn(name);
     if (fromIndex < 0) {
-        Log_WarnQ("Mdn2d with name '" << name << "' does not exist.");
+        Log_Warn("Mdn2d with name '" << name << "' does not exist.");
         Log_Debug2_T("Returning false");
         return false;
     }
@@ -972,7 +1116,7 @@ bool mdn::gui::Project::pasteOnSelection(int index) {
             ay = selRect.bottom();
         } else {
             // Size mismatch in grid context
-            Log_WarnQ(
+            Log_Warn(
                 "Paste data (" << SW << "x" << SH << ") incompatible with current selection ("
                     << W << "x" << H
             );
@@ -1053,7 +1197,7 @@ bool mdn::gui::Project::saveToFile(const std::string& path) const {
     Log_Debug2_H("path=" << path);
     std::ofstream out(path, std::ios::binary);
     if (!out) {
-        Log_ErrorQ("Failed to open for write: " << path);
+        Log_Error("Failed to open for write: " << path);
         return false;
     }
     saveBinary(out);
@@ -1098,6 +1242,7 @@ void mdn::gui::Project::saveBinary(std::ostream& out) const {
 
     // Active tab index
     GuiTools::binaryWrite(out, static_cast<int32_t>(m_activeIndex));
+    Log_Debug4("Got activeIndex=" << m_activeIndex);
 
     // Count
     const uint32_t count = static_cast<uint32_t>(m_data.size());
@@ -1133,16 +1278,19 @@ void mdn::gui::Project::saveBinary(std::ostream& out) const {
 std::unique_ptr<mdn::gui::Project> mdn::gui::Project::loadBinary(
     MainWindow* parent, std::istream& in
 ) {
+    Log_Debug3_H("");
     // Magic + version
     char magic[8] = {};
     in.read(magic, 8);
     if (std::memcmp(magic, "MDNPRJ", 6) != 0) {
-        Log_ErrorQ("Bad project magic; not an MDN Project file");
+        Log_ErrorQ("Bad file header; not an MDN Project file");
+        Log_Debug3_T("");
         return nullptr;
     }
     uint32_t version = 0; GuiTools::binaryRead(in, version);
     if (version != 1) {
         Log_ErrorQ("Unsupported project version: " << version);
+        Log_Debug3_T("")
         return nullptr;
     }
 
@@ -1157,6 +1305,7 @@ std::unique_ptr<mdn::gui::Project> mdn::gui::Project::loadBinary(
     int32_t activeIdx = 0; GuiTools::binaryRead(in, activeIdx);
 
     // Create an empty project (0 start tabs so we fully control content)
+    Log_Debug3("Creating new project");
     std::unique_ptr<Project> proj(new Project(parent, projName, 0));
     // Build config instance and apply through your normal path (so UI/consumers stay coherent)
     {
@@ -1180,6 +1329,7 @@ std::unique_ptr<mdn::gui::Project> mdn::gui::Project::loadBinary(
         int32_t idx = 0; GuiTools::binaryRead(in, idx);
         std::string tabName = GuiTools::binaryReadString(in);
 
+        Log_Debug4("Creating {'" << tabName << "'," << idx << "}");
         // Create a fresh number with project config + correct name
         Mdn2d num = Mdn2d::NewInstance(proj->m_config, tabName); // mirrors normal create path :contentReference[oaicite:4]{index=4}
 
@@ -1192,15 +1342,23 @@ std::unique_ptr<mdn::gui::Project> mdn::gui::Project::loadBinary(
         }
 
         // Insert at the right position (use your existing function to keep maps in sync)
+        Log_Debug4("Inserting new mdn, {'" << tabName << "'," << idx << "}");
         proj->insertMdn(std::move(num), idx); // handles out-of-range as "place at end" per your docs :contentReference[oaicite:5]{index=5}
     }
 
-    // Restore active tab (clamp just in case)
-    if (proj->size() > 0) {
-        int ai = std::max(0, std::min(activeIdx, static_cast<int>(proj->size()) - 1));
-        proj->setActiveMdn(ai);
+    int want = activeIdx;
+    if (want < 0) {
+        want = 0;
     }
-
+    if (proj->size() == 0) {
+        proj->setNoActiveMdn();
+    } else {
+        if (want >= proj->size()) {
+            want = proj->size() - 1;
+        }
+        proj->setActiveMdn(want);
+    }
+    Log_Debug3_T("");
     return proj;
 }
 

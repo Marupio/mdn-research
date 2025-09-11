@@ -298,6 +298,7 @@ bool mdn::gui::MainWindow::onOpenProject() {
             Log_Debug2("User cancelled when asked to save");
             return false;
         }
+        Log_Debug3("Deleting existing project");
         delete m_project;
         m_project = nullptr;
     }
@@ -310,6 +311,12 @@ bool mdn::gui::MainWindow::onOpenProject() {
     }
     m_project = ptr.release();
 
+    connect(m_project, &mdn::gui::Project::tabsAboutToChange,
+            this, &mdn::gui::MainWindow::onProjectTabsAboutToChange);
+    connect(m_project, &mdn::gui::Project::tabsChanged,
+            this, &mdn::gui::MainWindow::onProjectTabsChanged);
+
+
     // Remember the folder path of the opened project
     QFileInfo info(path);
     QString folder = info.absolutePath();
@@ -318,6 +325,12 @@ bool mdn::gui::MainWindow::onOpenProject() {
     m_project->setName(fileName.toStdString());
 
     syncTabsToProject();
+
+    const int ai = m_project->activeIndex();
+    if (ai >= 0 && ai < m_tabWidget->count()) {
+        m_tabWidget->setCurrentIndex(ai);
+    }
+
     statusBar()->showMessage(tr("Project loaded"), 2000);
     Log_Debug2_T("ok")
     return true;

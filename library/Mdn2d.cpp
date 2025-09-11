@@ -901,3 +901,6 @@ mdn::Mdn2d mdn::Mdn2d::internal_copyMultiplyAndShift(int value, const Coord& shi
     Log_N_Debug4_T("");
     return temp;
 }
+
+
+// mdn::Mdn2d mdn::DummyMdn2d("__mdn_Mdn2d_dummy");
