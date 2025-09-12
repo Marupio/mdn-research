@@ -35,9 +35,6 @@ public:
 signals:
     void newProjectRequested();
     void newMdn2dRequested();
-    void openProjectRequested();
-    void openMdn2dRequested();
-    void saveMdn2dRequested();
     void closeProjectRequested();
 
 private slots:
@@ -49,6 +46,8 @@ private slots:
     // File menu operations
     bool onSaveProject();
     bool onOpenProject();
+    bool onSaveMdn2d();
+    bool onOpenMdn2d();
 
     void onSplitterMoved(int pos, int index);
     void onCommandSubmitted(const QString& text);

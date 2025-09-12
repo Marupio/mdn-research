@@ -252,9 +252,12 @@ bool mdn::gui::MainWindow::onSaveProject() {
     // Convert to folder only
     QFileInfo info(path);
     QString folder = info.absolutePath();
+    QString baseName = info.baseName();
 
     // Pass to project
     m_project->setPath(folder.toStdString());
+    m_project->setName(baseName.toStdString());
+    setWindowTitle(baseName);
     statusBar()->showMessage(tr("Project saved"), 2000);
     Log_Debug2_T("ok")
     return true;
@@ -320,9 +323,10 @@ bool mdn::gui::MainWindow::onOpenProject() {
     // Remember the folder path of the opened project
     QFileInfo info(path);
     QString folder = info.absolutePath();
-    QString fileName = info.baseName();
+    QString baseName = info.baseName();
     m_project->setPath(folder.toStdString());
-    m_project->setName(fileName.toStdString());
+    m_project->setName(baseName.toStdString());
+    setWindowTitle(baseName);
 
     syncTabsToProject();
 
@@ -333,6 +337,171 @@ bool mdn::gui::MainWindow::onOpenProject() {
 
     statusBar()->showMessage(tr("Project loaded"), 2000);
     Log_Debug2_T("ok")
+    return true;
+}
+
+
+bool mdn::gui::MainWindow::onSaveMdn2d() {
+    Log_Debug2_H("");
+
+    if (!m_project) {
+        Log_WarnQ("No project open, cannot save Mdn2d");
+        Log_Debug2_T("no project");
+        return false;
+    }
+
+    const int idx = m_tabWidget ? m_tabWidget->currentIndex() : m_project->activeIndex();
+    if (idx < 0) {
+        Log_WarnQ("No active tab to save");
+        Log_Debug2_T("no active");
+        return false;
+    }
+
+    Mdn2d* src = m_project->getMdn(idx);
+    if (!src) {
+        Log_WarnQ("Failed to acquire Mdn for tab " << idx << ", cannot save");
+        Log_Debug2_T("");
+        return false;
+    }
+    const QString baseName = QString::fromStdString(src->name());
+
+    QString suggestedDir = QString::fromStdString(m_project->path());
+    if (suggestedDir.isEmpty()) {
+        suggestedDir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+    }
+
+    const QString filters =
+        tr("Binary (*.mdn2d);;"
+           "Pretty text (*.mdn2p);;"
+           "Utility text (*.mdn2t);;"
+           "All Files (*)");
+
+    QString selectedFilter;
+    QString path = QFileDialog::getSaveFileName(
+        this,
+        tr("Save Number"),
+        suggestedDir + "/" + baseName + ".mdn2d",
+        filters,
+        &selectedFilter
+    );
+
+    if (path.isEmpty()) {
+        Log_Debug2_T("cancelled");
+        return false;
+    }
+
+    QFileInfo info(path);
+    QString ext = info.suffix().toLower();
+    if (selectedFilter.contains("Binary") && ext != "mdn2d") {
+        path += ".mdn2d";
+    } else if (selectedFilter.contains("Pretty") && ext != "mdn2p") {
+        path += ".mdn2p";
+    } else if (selectedFilter.contains("Utility") && ext != "mdn2t") {
+        path += ".mdn2t";
+    }
+
+    std::ofstream ofs(path.toStdString(), std::ios::binary);
+    if (!ofs.is_open()) {
+        QMessageBox::warning(this, tr("Save Number"), tr("Cannot open file for writing."));
+        Log_Debug2_T("open fail");
+        return false;
+    }
+
+    if (selectedFilter.contains("Binary")) {
+        src->saveBinary(ofs);
+    } else if (selectedFilter.contains("Pretty")) {
+        src->saveTextPretty(ofs, true, true);
+    } else if (selectedFilter.contains("Utility")) {
+        using CTS = mdn::CommaTabSpace;
+        src->saveTextUtility(ofs, CTS::Comma);
+    } else {
+        if (ext == "mdn2d") {
+            src->saveBinary(ofs);
+        } else if (ext == "mdn2p") {
+            src->saveTextPretty(ofs, true, true);
+        } else if (ext == "mdn2t") {
+            using CTS = mdn::CommaTabSpace;
+            src->saveTextUtility(ofs, CTS::Comma);
+        } else {
+            src->saveBinary(ofs);
+        }
+    }
+
+    const bool ok = ofs.good();
+    if (!ok) {
+        QMessageBox::warning(this, tr("Save Number"), tr("Failed to write file."));
+        Log_Debug2_T("write fail");
+        return false;
+    }
+
+    statusBar()->showMessage(tr("Number saved"), 2000);
+    Log_Debug2_T("ok");
+    return true;
+}
+
+
+bool mdn::gui::MainWindow::onOpenMdn2d() {
+    Log_Debug2_H("");
+
+    if (!m_project) {
+        Log_WarnQ("No project open, cannot load Mdn2d");
+        Log_Debug2_T("no project");
+        return false;
+    }
+
+    QString startDir = QString::fromStdString(m_project->path());
+    if (startDir.isEmpty()) {
+        startDir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+    }
+
+    const QString filters =
+        tr("Binary (*.mdn2d);;"
+           "Pretty text (*.mdn2p);;"
+           "Utility text (*.mdn2t);;"
+           "All Files (*)");
+
+    QString path = QFileDialog::getOpenFileName(
+        this,
+        tr("Open Number"),
+        startDir,
+        filters
+    );
+
+    if (path.isEmpty()) {
+        Log_Debug2_T("cancelled");
+        return false;
+    }
+
+    std::ifstream ifs(path.toStdString(), std::ios::binary);
+    if (!ifs.is_open()) {
+        QMessageBox::warning(this, tr("Open Number"), tr("Cannot open file for reading."));
+        Log_Debug2_T("open fail");
+        return false;
+    }
+
+    Mdn2d num = Mdn2d::NewInstance(m_project->config(), "");
+    const QString ext = QFileInfo(path).suffix().toLower();
+
+    try {
+        if (ext == "mdn2d") {
+            num.loadBinary(ifs);
+        } else {
+            num.loadText(ifs);
+        }
+    } catch (const std::exception& e) {
+        QMessageBox::warning(this, tr("Open Number"), tr("Failed to load number."));
+        Log_Error(e.what());
+        Log_Debug2_T("load fail");
+        return false;
+    }
+
+    num.setConfig(m_project->config());
+    // appends to end by convention
+    m_project->appendMdn(std::move(num));
+    // rebuild tabs; preserves current selection logic
+    syncTabsToProject();
+    statusBar()->showMessage(tr("Number loaded"), 2000);
+    Log_Debug2_T("ok");
     return true;
 }
 
@@ -742,10 +911,10 @@ void mdn::gui::MainWindow::createMenus() {
     fileMenu->addAction("New Mdn2d", this, &mdn::gui::MainWindow::newMdn2dRequested);
     fileMenu->addSeparator();
     fileMenu->addAction("Open Project", this, &mdn::gui::MainWindow::onOpenProject);
-    fileMenu->addAction("Open Mdn2d", this, &mdn::gui::MainWindow::openMdn2dRequested);
+    fileMenu->addAction("Open Mdn2d", this, &mdn::gui::MainWindow::onOpenMdn2d);
     fileMenu->addSeparator();
     fileMenu->addAction("Save Project", this, &mdn::gui::MainWindow::onSaveProject);
-    fileMenu->addAction("Save Mdn2d", this, &mdn::gui::MainWindow::saveMdn2dRequested);
+    fileMenu->addAction("Save Mdn2d", this, &mdn::gui::MainWindow::onSaveMdn2d);
     fileMenu->addSeparator();
     fileMenu->addAction("Project Properties", this, &mdn::gui::MainWindow::onProjectProperties);
     fileMenu->addSeparator();
@@ -1092,7 +1261,8 @@ void mdn::gui::MainWindow::doProjectProperties() {
         return;
     }
 
-    m_project->setName(MdnQtInterface::fromQString(dlg.projectName()));  // cheap, immediate
+    m_project->setName(MdnQtInterface::fromQString(dlg.projectName()));
+    setWindowTitle(dlg.projectName());
     Log_Debug3_H("setGlobalConfig dispatch");
     setGlobalConfig(dlg.chosenConfig());
     Log_Debug3_T("setGlobalConfig return");

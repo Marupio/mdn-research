@@ -56,9 +56,9 @@ static Operation StringToOperation(const std::string& s) {
         return Operation::Subtract;
     } else if (s == "Multiply" || s == "×") {
         return Operation::Multiply;
-    } else if (s == "Divide" || s == "÷") {
-        return Operation::Divide;
     }
+    // s == "Divide" || s == "÷"
+    return Operation::Divide;
 }
 
 // static std::string OperationToString(const Operation& o) {

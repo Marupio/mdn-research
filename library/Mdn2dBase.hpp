@@ -161,9 +161,9 @@ public:
             public:
 
             // Change the config - can lead to any of the Mdn2dConfigImpact effects
-            void setConfig(Mdn2dConfig& newConfig);
+            void setConfig(const Mdn2dConfig& newConfig);
             // Locked version *copies* config - everyone has their own copy
-            protected: virtual void locked_setConfig(Mdn2dConfig newConfig); public:
+            protected: virtual void locked_setConfig(const Mdn2dConfig& newConfig); public:
 
 
         // *** Observers

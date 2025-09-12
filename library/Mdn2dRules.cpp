@@ -115,7 +115,7 @@ mdn::Mdn2dRules& mdn::Mdn2dRules::operator=(Mdn2dRules&& other) noexcept {
 }
 
 
-void mdn::Mdn2dRules::locked_setConfig(Mdn2dConfig newConfig) {
+void mdn::Mdn2dRules::locked_setConfig(const Mdn2dConfig& newConfig) {
     Log_N_Debug3_H("");
     SignConvention origSc = m_config.signConvention();
     SignConvention newSc = newConfig.signConvention();

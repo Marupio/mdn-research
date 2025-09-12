@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <cstring>
 #include <fstream>
 #include <limits>
 

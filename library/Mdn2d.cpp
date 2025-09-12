@@ -145,7 +145,8 @@ void mdn::Mdn2d::multiply(const Mdn2d& rhs, Mdn2d& ans) const {
     auto lockThis = lockReadOnly();
     ReadOnlyLock* lockRhsPtr;
     if (&rhs != this) {
-        lockRhsPtr = &(rhs.lockReadOnly());
+        auto lockRhs = rhs.lockReadOnly();
+        lockRhsPtr = &lockRhs;
     }
     auto lockAns = ans.lockWriteable();
     CoordSet changed = locked_multiply(rhs, ans);
@@ -667,7 +668,8 @@ mdn::Mdn2d& mdn::Mdn2d::operator+=(const Mdn2d& rhs) {
     auto lock = lockWriteable();
     ReadOnlyLock* lockRhsPtr;
     if (&rhs != this) {
-        lockRhsPtr = &(rhs.lockReadOnly());
+        auto lockRhs = rhs.lockReadOnly();
+        lockRhsPtr = &lockRhs;
     }
     CoordSet changed = locked_plusEquals(rhs);
     locked_carryoverCleanup(changed);
@@ -693,7 +695,8 @@ mdn::Mdn2d& mdn::Mdn2d::operator-=(const Mdn2d& rhs) {
     auto lock = lockWriteable();
     ReadOnlyLock* lockRhsPtr;
     if (&rhs != this) {
-        lockRhsPtr = &(rhs.lockReadOnly());
+        auto lockRhs = rhs.lockReadOnly();
+        lockRhsPtr = &lockRhs;
     }
     CoordSet changed = locked_minusEquals(rhs);
     locked_carryoverCleanup(changed);
@@ -719,7 +722,8 @@ mdn::Mdn2d& mdn::Mdn2d::operator*=(const Mdn2d& rhs) {
     auto lock = lockWriteable();
     ReadOnlyLock* lockRhsPtr;
     if (&rhs != this) {
-        lockRhsPtr = &(rhs.lockReadOnly());
+        auto lockRhs = rhs.lockReadOnly();
+        lockRhsPtr = &lockRhs;
     }
     locked_carryoverCleanup(locked_timesEquals(rhs));
     internal_operationComplete();

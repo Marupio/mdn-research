@@ -348,14 +348,14 @@ mdn::Mdn2dConfigImpact mdn::Mdn2dBase::locked_assessConfigChange(
 }
 
 
-void mdn::Mdn2dBase::setConfig(Mdn2dConfig& newConfig) {
+void mdn::Mdn2dBase::setConfig(const Mdn2dConfig& newConfig) {
     Log_N_Debug2("");
     auto lock = lockWriteable();
     locked_setConfig(newConfig);
 }
 
 
-void mdn::Mdn2dBase::locked_setConfig(Mdn2dConfig newConfig) {
+void mdn::Mdn2dBase::locked_setConfig(const Mdn2dConfig& newConfig) {
     Log_N_Debug3_H("applying new config: " << newConfig);
 
     if (newConfig.base() != m_config.base()) {

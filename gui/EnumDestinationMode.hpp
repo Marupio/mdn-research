@@ -36,9 +36,9 @@ static DestinationMode StringToDestinationMode(const std::string& s) {
         return DestinationMode::OverwriteA;
     } else if (s == "OverwriteB") {
         return DestinationMode::OverwriteB;
-    } else if (s == "CreateNew") {
-        return DestinationMode::CreateNew;
     }
+    // s == "CreateNew"
+    return DestinationMode::CreateNew;
 }
 static QString DestinationModeToQString(const DestinationMode& d) {
     return MdnQtInterface::toQString(DestinationModeToString(d));
@@ -74,9 +74,9 @@ static std::string DestinationSimpleToString(const DestinationSimple& d) {
 static DestinationSimple StringToDestinationSimple(const std::string& s) {
     if (s == "InPlace") {
         return DestinationSimple::InPlace;
-    } else if (s == "ToNew") {
-        return DestinationSimple::ToNew;
     }
+    // s == "ToNew"
+    return DestinationSimple::ToNew;
 }
 static QString DestinationSimpleToQString(const DestinationSimple& d) {
     return MdnQtInterface::toQString(DestinationSimpleToString(d));
