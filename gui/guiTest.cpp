@@ -75,12 +75,16 @@ int main(int argc, char** argv)
 
     // 7) Quick data access smoke test
     if (proj.contains("A")) {
-        Mdn2d& mdnA = proj.getMdn("A");
-        Selection& selA = mdnA.selection();
+        Mdn2d* mdnA = proj.getMdn("A");
+        if (!mdnA) {
+            Log_Info("Failed to acquire mdn 'A', cannot continue.");
+            return -1;
+        }
+        Selection& selA = mdnA->selection();
         Log_Info("Accessed 'A': bounds=" << selA.rect()); // relies on Selection’s ostream<<
         // Touch a digit (origin) to ensure model mutability works in this context:
-        mdnA.setValue(COORD_ORIGIN, 7);
-        Log_Info("Set 'A'(0,0)=7; now value=" << (int)mdnA.getValue(COORD_ORIGIN));
+        mdnA->setValue(COORD_ORIGIN, 7);
+        Log_Info("Set 'A'(0,0)=7; now value=" << (int)mdnA->getValue(COORD_ORIGIN));
     }
 
     // 8) Deletion test

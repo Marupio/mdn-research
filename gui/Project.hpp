@@ -161,10 +161,10 @@ public:
         }
 
         // Assess the impact of changing the config to the given value
-        Mdn2dConfigImpact assessConfigChange(Mdn2dConfig cfg) const;
+        Mdn2dConfigImpact assessConfigChange(Mdn2dConfig config) const;
 
         // Setter for m_config requires resetting of the Mdn2d's
-        void setConfig(Mdn2dConfig newConfig);
+        void setConfig(Mdn2dConfig config);
 
 
         // *** MDN Accessors
@@ -291,8 +291,12 @@ public:
             Log_Debug3_H(
                 "dxCols=" << dxCols << ",dyRows=" << dyRows << ",activeIndex=" << m_activeIndex
             );
-            Selection& sel = activeSelection();
-            sel.setPageStep(dxCols, dyRows);
+            Selection* sel = activeSelection();
+            if (!sel) {
+                Log_Debug3_T("No valid selection, cannot complete task");
+                return;
+            }
+            sel->setPageStep(dxCols, dyRows);
             Log_Debug3_T("");
         }
 

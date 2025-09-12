@@ -1,5 +1,6 @@
 #include "Project.hpp"
 
+#include <algorithm>
 #include <cstdint>
 #include <fstream>
 #include <limits>
@@ -275,7 +276,7 @@ void mdn::gui::Project::updateSelection() const {
 }
 
 
-mdn::Mdn2dConfigImpact mdn::gui::Project::assessConfigChange(Mdn2dConfig cfg) const {
+mdn::Mdn2dConfigImpact mdn::gui::Project::assessConfigChange(Mdn2dConfig config) const {
     // Assume config is the same across all Mdn2d's
     Log_Debug3_H("config=" << config);
     const Mdn2d* first = firstMdn();
@@ -283,17 +284,17 @@ mdn::Mdn2dConfigImpact mdn::gui::Project::assessConfigChange(Mdn2dConfig cfg) co
         Log_Debug3_T("No Mdns available, returning Unknown");
         return Mdn2dConfigImpact::Unknown;
     }
-    Mdn2dConfigImpact impact = first->assessConfigChange(cfg);
+    Mdn2dConfigImpact impact = first->assessConfigChange(config);
     Log_Debug3_T("Impact = " << Mdn2dConfigImpactToName(impact));
     return impact;
 }
 
 
-void mdn::gui::Project::setConfig(Mdn2dConfig newConfig) {
-    Log_Debug2_H("newConfig=" << newConfig);
+void mdn::gui::Project::setConfig(Mdn2dConfig config) {
+    Log_Debug2_H("config=" << config);
     if (m_data.empty()) {
-        m_config = newConfig;
-        Log_Debug("Changed config to " << newConfig);
+        m_config = config;
+        Log_Debug("Changed config to " << config);
         Log_Debug2_T("No impact");
         return;
     }
@@ -302,11 +303,11 @@ void mdn::gui::Project::setConfig(Mdn2dConfig newConfig) {
     // For now, assume config is the same across all Mdn2d's
     Mdn2d* first = firstMdn();
     if (!first) {
-        Log_Debug2_T("No Mdns available, setting global config to " << newConfig);
-        m_config = newConfig;
+        Log_Debug2_T("No Mdns available, setting global config to " << config);
+        m_config = config;
         return;
     }
-    Mdn2dConfigImpact impact = first->assessConfigChange(newConfig);
+    Mdn2dConfigImpact impact = first->assessConfigChange(config);
     If_Log_Showing_Debug4(
         Log_Debug4(
             "Config change impact: " << Mdn2dConfigImpactToName(impact) << ", i.e. "
@@ -318,8 +319,8 @@ void mdn::gui::Project::setConfig(Mdn2dConfig newConfig) {
     );
     switch (impact) {
         case Mdn2dConfigImpact::NoImpact: {
-            m_config = newConfig;
-            Log_Debug("Changed config to " << newConfig);
+            m_config = config;
+            Log_Debug("Changed config to " << config);
             Log_Debug2_T("");
             return;
         }
@@ -334,11 +335,11 @@ void mdn::gui::Project::setConfig(Mdn2dConfig newConfig) {
 
             if (reply == QMessageBox::Yes) {
                 for (auto& [index, tgt] : m_data) {
-                    tgt.setConfig(newConfig);
+                    tgt.setConfig(config);
                 }
-                m_config = newConfig;
+                m_config = config;
                 Log_Debug(
-                    "Changing config to: " << newConfig << ", impact: "
+                    "Changing config to: " << config << ", impact: "
                         << Mdn2dConfigImpactToName(impact)
                 );
                 Log_Debug2_T("");
@@ -346,7 +347,7 @@ void mdn::gui::Project::setConfig(Mdn2dConfig newConfig) {
             } else {
                 // User cancelled
                 Log_Debug(
-                    "User cancelled changing config to: " << newConfig << ", impact: "
+                    "User cancelled changing config to: " << config << ", impact: "
                         << Mdn2dConfigImpactToName(impact)
                 );
                 Log_Debug2_T("");
@@ -372,11 +373,11 @@ void mdn::gui::Project::setConfig(Mdn2dConfig newConfig) {
 
             if (reply == QMessageBox::Yes) {
                 for (auto& [index, tgt] : m_data) {
-                    tgt.setConfig(newConfig);
+                    tgt.setConfig(config);
                 }
-                m_config = newConfig;
+                m_config = config;
                 Log_Debug(
-                    "Changing config to: " << newConfig << ", impact: "
+                    "Changing config to: " << config << ", impact: "
                         << Mdn2dConfigImpactToName(impact)
                 );
                 Log_Debug2_T("");
@@ -384,7 +385,7 @@ void mdn::gui::Project::setConfig(Mdn2dConfig newConfig) {
             } else {
                 // User cancelled
                 Log_Debug(
-                    "User cancelled changing config to: " << newConfig << ", impact: "
+                    "User cancelled changing config to: " << config << ", impact: "
                         << Mdn2dConfigImpactToName(impact)
                 );
                 Log_Debug2_T("");
@@ -830,7 +831,10 @@ mdn::Mdn2d* mdn::gui::Project::lastMdn() {
 void mdn::gui::Project::insertMdn(Mdn2d&& mdn, int index) {
     Log_Debug2_H("");
     Log_Debug("inserting tab {'" << mdn.name() << "', " << index << "}");
+
+    Log_Debug3_H("Emitting tabsAboutToChange");
     Q_EMIT tabsAboutToChange();
+    Log_Debug3_T("Done emitting tabsAboutToChange");
 
     // For warning messages
     std::ostringstream oss;
@@ -877,30 +881,43 @@ void mdn::gui::Project::insertMdn(Mdn2d&& mdn, int index) {
     if (contains("__mdn_Project_dummyMdn")) {
         deleteMdn("__mdn_Project_dummyMdn");
     }
+    Log_Debug3_H("Emitting tabsChanged");
     Q_EMIT tabsChanged(index);
+    Log_Debug3_T("Done emitting tabsChanged");
+
     Log_Debug2_T("");
 }
 
 
 std::pair<int, std::string> mdn::gui::Project::duplicateMdn(int index) {
     Log_Debug2_H("index=" << index);
-    Mdn2d& src = getMdn(index);
-    Log_Debug("duplicating {'" << src.name() << "', " << index << "}");
+    if (!checkIndex(index)) {
+        std::pair<int, std::string> fail(-1, "");
+        Log_Debug2_T("failed checkIndex, returning fail");
+        return fail;
+    }
+    Mdn2d* src = getMdn(index);
+    // Since we've done checkIndex, it's okay to assume src is valid
+    DBAssertQ(src, "checkIndex said " + std::to_string(index) + " should be valid, but it is not");
+    Log_Debug3("duplicating {'" << src->name() << "', " << index << "}");
     std::pair<int, std::string> result;
-    Mdn2d dup = Mdn2d::Duplicate(src);
-    Log_Debug("inserting new mdn {'" << dup.name() << "', " << index+1 << "}");
+    Mdn2d dup = Mdn2d::Duplicate(*src);
+    Log_Debug(
+        "duplicating: {'" << src->name() << "', " << index << "} --> "
+        "{'" << dup.name() << "', " << index+1 << "}"
+    );
     insertMdn(std::move(dup), index + 1);
-    Mdn2d& insertedDup = getMdn(index + 1);
+    Mdn2d* insertedDup = getMdn(index + 1);
 
     // TODO create operator= for Selections
-    Selection& sel = src.selection();
-    Selection& idSel = insertedDup.selection();
+    Selection& sel = src->selection();
+    Selection& idSel = insertedDup->selection();
 
     idSel.setRect(sel.rect());
     idSel.setCursor0(sel.cursor0());
     idSel.setCursor1(sel.cursor1());
     result = std::pair<int, std::string>(index+1, dup.name());
-    Mdn2d& check = getMdn(index + 1);
+    Mdn2d* check = getMdn(index + 1);
     Log_Debug2_T("Returning {'" << result.second << "', " << result.first << "}");
     return result;
 }
@@ -914,8 +931,9 @@ std::pair<int, std::string> mdn::gui::Project::duplicateMdn(const std::string& n
         Log_Debug2_T("");
         return std::pair<int, std::string>(-1, "");
     }
-    Log_Debug2_T("");
-    return duplicateMdn(index);
+    std::pair<int, std::string> result = duplicateMdn(index);
+    Log_Debug2_T("returning {'" << result.second << "', " << result.first << "}");
+    return result;
 }
 
 
@@ -926,15 +944,21 @@ bool mdn::gui::Project::moveMdn(int fromIndex, int toIndex) {
         return true;
     }
     Log_Debug2_H("from " << fromIndex << " to " << toIndex);
-    if (!contains(fromIndex, true)) {
+    if (!checkIndex(fromIndex)) {
         Log_Debug2_T("Not a valid fromIndex, returning false");
         return false;
     }
+
+    Log_Debug3_H("Emitting tabsAboutToChange");
     Q_EMIT tabsAboutToChange();
+    Log_Debug3_T("Done emitting tabsAboutToChange");
+
     std::string mdnName(nameOfMdn(fromIndex));
-    Log_Debug(
-        "Moving {'" << mdnName << "', " << fromIndex << "} to " << toIndex
+    DBAssertQ(
+        !mdnName.empty(),
+        "Index " + std::to_string(fromIndex) + " should be valid, but is not"
     );
+    Log_Debug("Moving {'" << mdnName << "', " << fromIndex << "} to " << toIndex);
     // Extract the number and erase the addressing metadata
     Log_Debug2("Extracting {'" << mdnName << "', " << fromIndex << "}");
     auto node = m_data.extract(fromIndex);
@@ -955,8 +979,12 @@ bool mdn::gui::Project::moveMdn(int fromIndex, int toIndex) {
     Log_Debug2("Inserting {'" << mdnName << "'," << toIndex << "} into indices");
     m_addressingIndexToName.insert({toIndex, name});
     m_addressingNameToIndex.insert({name, toIndex});
+
+    Log_Debug3_H("Emitting tabsChanged");
     Q_EMIT tabsChanged(toIndex);
-    Log_Debug2_T("");
+    Log_Debug3_T("Done emitting tabsChanged");
+
+    Log_Debug2_T("returning true");
     return true;
 }
 
@@ -980,20 +1008,41 @@ bool mdn::gui::Project::moveMdn(const std::string& name, int toIndex) {
 
 bool mdn::gui::Project::deleteMdn(int index) {
     Log_Debug2_H("deleting " << index);
-    if (!contains(index, true)) {
+    if (!checkIndex(index)) {
         Log_Debug2_T("Not a valid index, returning false");
         return false;
     }
     std::string name = nameOfMdn(index);
+    DBAssertQ(
+        !name.empty(),
+        "Index " + std::to_string(index) + " should be valid, but is not"
+    );
     Log_Debug("Deleting {'" << name << "', " << index << "} from data");
+
+    Log_Debug3_H("Emitting tabsAboutToChange");
     Q_EMIT tabsAboutToChange();
+    Log_Debug3_T("Done emitting tabsAboutToChange");
+
     m_data.erase(index);
     Log_Debug("Deleting {'" << name << "', " << index << "} from index");
     m_addressingIndexToName.erase(index);
     m_addressingNameToIndex.erase(name);
     Log_Debug2("shifting tabs from " << index << " <--");
     shiftMdnTabsLeft(index+1);
+
+    if (m_data.empty()) {
+        setNoActiveMdn();
+    } else {
+        int maxIndex = m_data.size()-1;
+        index = std::max(index, 0);
+        index = std::min(index, maxIndex);
+        setActiveMdn(index);
+    }
+
+    Log_Debug3_H("Emitting tabsChanged");
     Q_EMIT tabsChanged(index);
+    Log_Debug3_T("Done emitting tabsChanged");
+
     Log_Debug2_T("");
     return true;
 }
@@ -1001,37 +1050,28 @@ bool mdn::gui::Project::deleteMdn(int index) {
 
 bool mdn::gui::Project::deleteMdn(const std::string& name) {
     Log_Debug2_H("Deleting '" << name << "'");
-    if (!contains(name, true)) {
-        Log_Debug2_T("Not a valid name, returning false");
+    int index = indexOfMdn(name);
+    if (index < 0) {
+        Log_Warn("Mdn2d with name '" << name << "' does not exist.");
+        Log_Debug2_T("Returning false");
         return false;
     }
-    int index = indexOfMdn(name);
-    AssertQ(index >= 0, "Failed to find the index of contained Mdn2d '" << name << "'.");
-    Log_Debug("Deleting {'" << name << "', " << index << "} from data");
-    Q_EMIT tabsAboutToChange();
-    m_data.erase(index);
-    Log_Debug("Deleting {'" << name << "', " << index << "} from index");
-    m_addressingIndexToName.erase(index);
-    m_addressingNameToIndex.erase(name);
-    Log_Debug2("shifting tabs from " << index << " <--");
-    shiftMdnTabsLeft(index+1);
-    Q_EMIT tabsChanged(index);
-    Log_Debug2_T("Success, returning true");
-    return true;
+    bool result = deleteMdn(index);
+    Log_Debug2_T("returning " << result);
+    return result;
 }
 
 
 void mdn::gui::Project::copySelection() const {
     Log_Debug2_H("");
-    const Selection& sel = activeSelection();
-    const Mdn2d& src = sel.ref();
-    if (!sel.rect().isValid()) {
-        Log_Debug("Selection has no rectangular selection, cannot continue")
+    const Selection* sel = activeSelection();
+    if (!sel || !sel->rect().isValid()) {
+        Log_Debug("No valid rectangular selection, cannot copy")
         Log_Debug2_T("");
         return;
     }
-    Rect r = sel.rect();
-    // r.fixOrdering();
+    const Mdn2d& src = sel->ref();
+    Rect r = sel->rect();
     Log_Debug("Copying Mdn '" << src.name() << "', " << r);
     Clipboard::encodeRectToClipboard(
         src, r, QStringLiteral("rect"), QString::fromStdString(src.name())
@@ -1042,18 +1082,24 @@ void mdn::gui::Project::copySelection() const {
 
 void mdn::gui::Project::copyMdn(int index) const {
     Log_Debug2_H("copying " << index);
-    const Mdn2d& src = getMdn(index);
-    if (!src.hasBounds()) {
-        // Nothing to copy (empty MDN)
-        Log_Debug("Nothing to copy, Mdn '" << src.name() << "' has no digits");
+    const Mdn2d* src = getMdn(index);
+    if (!src) {
+        Log_Debug("No valid Mdn at index " << index << ", cannot copy");
         Log_Debug2_T("");
         return;
     }
 
-    const Rect b = src.bounds();
-    Log_Debug("Copying Mdn '" << src.name() << "' with bounds " << b);
+    if (!src->hasBounds()) {
+        // Nothing to copy (empty MDN)
+        Log_Debug("Nothing to copy, Mdn '" << src->name() << "' has no digits");
+        Log_Debug2_T("");
+        return;
+    }
+
+    const Rect b = src->bounds();
+    Log_Debug("Copying Mdn '" << src->name() << "' with bounds " << b);
     Clipboard::encodeRectToClipboard(
-        src, b, QStringLiteral("mdn"), QString::fromStdString(src.name())
+        *src, b, QStringLiteral("mdn"), QString::fromStdString(src->name())
     );
     Log_Debug2_T("");
 }
@@ -1087,9 +1133,14 @@ bool mdn::gui::Project::pasteOnSelection(int index) {
     //      required: if target is 1x1, paste okay, use that as bottom left anchor, otherwise
     //      the size must match exactly
     Log_Debug2_H("Pasting, with mdn index=" << index);
-    Selection& sel = activeSelection();
-    Mdn2d& dst = sel.ref();
-    Rect selRect = sel.rect();
+    Selection* sel = activeSelection();
+    if (!sel) {
+        Log_Debug("No valid active selection, cannot paste");
+        Log_Debug2_T("Returning false");
+        return false;
+    }
+    Mdn2d& dst = sel->ref();
+    Rect selRect = sel->rect();
     Clipboard::DecodedPaste p = Clipboard::decodeClipboard();
     if (!p.valid()) {
         return false;
@@ -1174,9 +1225,14 @@ bool mdn::gui::Project::pasteOnSelection(int index) {
 
 void mdn::gui::Project::deleteSelection() {
     Log_Debug2_H("");
-    Selection& sel = activeSelection();
-    Mdn2d& dst = sel.ref();
-    Rect r = sel.rect();
+    Selection* sel = activeSelection();
+    if (!sel) {
+        Log_Debug("No valid active selection, cannot delete");
+        Log_Debug2_T("");
+        return;
+    }
+    Mdn2d& dst = sel->ref();
+    Rect r = sel->rect();
     if (r.empty()) {
         deleteMdn(dst.name());
         Log_Debug2_T("Success, deleted entire Mdn");

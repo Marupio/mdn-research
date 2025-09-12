@@ -361,9 +361,17 @@ void mdn::gui::MainWindow::onOpsPlan(const OpsController::Plan& p) {
         return;
     }
 
-    Mdn2d& a = m_project->getMdn(p.indexA);
-    Mdn2d& b = m_project->getMdn(p.indexB);
-
+    Mdn2d* aPtr = m_project->getMdn(p.indexA);
+    Mdn2d* bPtr = m_project->getMdn(p.indexB);
+    if (!aPtr || !bPtr) {
+        Log_WarnQ(
+            "Failed to acquire reference to Mdn2d operand, either "
+                << p.indexA << " or " << p.indexB << ", cannot continue.";
+        );
+        return;
+    }
+    Mdn2d& a = *aPtr;
+    Mdn2d& b = *bPtr;
     if (p.dest == DestinationSimple::InPlace) {
         switch (p.op) {
             case Operation::Add: {
@@ -856,13 +864,19 @@ void mdn::gui::MainWindow::createTabs() {
     const std::unordered_map<int, std::string>& tabNames(m_project->data_addressingIndexToName());
     std::vector<std::string> names(m_project->toc());
     for (int index = 0; index < names.size(); ++index) {
-        Mdn2d& src = m_project->getMdn(index);
-        Log_Debug4("Creating tab {'" << src.name() << "', " << index << "}");
-        Selection& sel = m_project->getSelection(index);
+        Mdn2d* src = m_project->getMdn(index);
+        if (!src) {
+            Log_WarnQ("Failed to acquire Mdn for tab " << index << ", cannot continue");
+            Log_Debug3_T("");
+            return;
+        }
+        Log_Debug4("Creating tab {'" << src->name() << "', " << index << "}");
+        Selection& sel = src->selection();
+
         auto* ndw = new NumberDisplayWidget;
         ndw->setProject(m_project);
         ndw->setFocusPolicy(Qt::StrongFocus);
-        ndw->setModel(&src, &sel);
+        ndw->setModel(src, &sel);
 
         connect(ndw, &NumberDisplayWidget::statusCursorChanged, this,
             [this](int x, int y){
@@ -958,15 +972,20 @@ void mdn::gui::MainWindow::createTabs() {
 
 void mdn::gui::MainWindow::createTabForIndex(int index) {
     Log_Debug3_H("index=" << index);
-    Mdn2d& entry = m_project->getMdn(index);
-    Selection& sel = entry.selection();
+    Mdn2d* src = m_project->getMdn(index);
+    if (!src) {
+        Log_WarnQ("Failed to acquire Mdn for index " << index << ", cannot continue.");
+        return;
+    }
+
+    Selection& sel = src->selection();
     auto* view = new NumberDisplayWidget;
     view->setProject(m_project);
-    view->setModel(&entry, &sel);
+    view->setModel(src, &sel);
 
-    const std::string& tabName(entry.name());
+    const std::string& tabName(src->name());
     QString tabNameQ = QString::fromStdString(tabName);
-    Log_Debug4("insertTab(" << index << ", " << entry.name());
+    Log_Debug4("insertTab(" << index << ", " << src->name());
     int tab = m_tabWidget->insertTab(index, view, tabNameQ);
     m_tabWidget->setCurrentIndex(tab);
     view->setFocus();
@@ -1241,15 +1260,18 @@ void mdn::gui::MainWindow::syncTabsToProject() {
     const int n = m_tabWidget->count();
     for (int i = 0; i < n; ++i) {
         auto* view = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(i));
+
         if (!view) {
             continue;
         }
+        Mdn2d* srcNum = m_project->getMdn(i);
+        if (!srcNum) {
+            continue;
+        }
+        Selection& srcSel = srcNum->selection();
 
-        Mdn2d& srcNum = m_project->getMdn(i);
-        Selection& srcSel = srcNum.selection();
-
-        view->setModel(&srcNum, &srcSel);
-        m_tabWidget->setTabText(i, QString::fromStdString(srcNum.name())); // add mdnName(int)
+        view->setModel(srcNum, &srcSel);
+        m_tabWidget->setTabText(i, QString::fromStdString(srcNum->name())); // add mdnName(int)
     }
     if (m_ops) {
         m_ops->refreshTabNames();
