@@ -1665,14 +1665,22 @@ int mdn::Mdn2dBase::setPrecision(int newPrecision) {
 
 
 int mdn::Mdn2dBase::locked_setPrecision(int newPrecision) {
+    Log_N_Debug3_H("newPrecision=" << newPrecision);
     int oldPrecision = m_config.precision();
     m_config.setPrecision(newPrecision);
     Log_N_Debug3("Precision was: " << oldPrecision << ", new value: " << newPrecision);
 
     if (oldPrecision < newPrecision)
     {
-        return internal_purgeExcessDigits();
+        Log_N_Debug3_H(
+            "purging excess digits, oldPrecision=" << oldPrecision << ", newPrecision="
+                << newPrecision
+        );
+        int result = internal_purgeExcessDigits();
+        Log_N_Debug3_T("returning " << result);
+        return result;
     }
+    Log_N_Debug3_T("");
     return 0;
 }
 

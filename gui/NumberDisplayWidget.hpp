@@ -139,7 +139,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent*) override;
     void wheelEvent(QWheelEvent* e) override;
     void resizeEvent(QResizeEvent* event) override;
-    // Prevent Qt's default Tab/Shift+Tab focus traversal so we can use them for grid nav
+    void changeEvent(QEvent* event) override;
     bool focusNextPrevChild(bool) override { return false; }
 
 private:
@@ -226,6 +226,8 @@ private:
     bool m_dragging{false};
     int m_dragAnchorX{0};
     int m_dragAnchorY{0};
+
+    bool m_deferPostRestore{ false };
 
     // In-cell editor
     QLineEdit* m_cellEditor{nullptr};

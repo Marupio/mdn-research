@@ -110,6 +110,7 @@
     "coroutine": "cpp",
     "resumable": "cpp",
     "qjsondocument": "cpp",
-    "qmenu": "cpp"
+    "qmenu": "cpp",
+    "qkeyevent": "cpp"
   }
 }

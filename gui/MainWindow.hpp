@@ -80,6 +80,7 @@ private slots:
 
 protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
+    void changeEvent(QEvent* e) override;
 
 private:
     void createSplitter();

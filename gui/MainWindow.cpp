@@ -18,6 +18,7 @@
 #include <QStatusBar>
 #include <QTabBar>
 #include <QTabWidget>
+#include <QTimer>
 #include <QToolButton>
 
 #include "OpsController.hpp"
@@ -916,8 +917,51 @@ bool mdn::gui::MainWindow::eventFilter(QObject* watched, QEvent* event) {
     if (event->type() == QEvent::WindowActivate) {
         focusActiveGrid();
     }
+    if (event->type() == QEvent::WindowStateChange) {
+        if (isMaximized() == false && isFullScreen() == false) {
+            QTimer::singleShot(
+                0,
+                this,
+                [this]() {
+                    applySplitRatio();
+                }
+            );
+        }
+    }
 
     return QMainWindow::eventFilter(watched, event);
+}
+
+
+void mdn::gui::MainWindow::changeEvent(QEvent* e)
+{
+    Log_Debug3_H("");
+
+    if (!m_splitter)
+    {
+        Log_Debug3_T("");
+        QMainWindow::changeEvent(e);
+        return;
+    }
+
+    // if (e->type() == QEvent::WindowStateChange)
+    // {
+    //     applySplitRatio();
+    // }
+    if (e->type() == QEvent::WindowStateChange)
+    {
+        QTimer::singleShot(0, this, [this]() { applySplitRatio(); });
+    }
+    else
+    {
+        if (e->type() == QEvent::Show)
+        {
+            applySplitRatio();
+        }
+    }
+
+    Log_Debug3_T("");
+    QMainWindow::changeEvent(e);
 }
 
 

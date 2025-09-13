@@ -531,7 +531,7 @@ void mdn::Mdn2dRules::locked_transpose() {
     for (const auto& [xy, digit] : m_raw) {
         temp.locked_setValue(Coord(xy.y(), xy.x()), digit);
     }
-    operator=(temp);
+    locked_operatorEquals(temp);
     if (m_raw.size()) {
         internal_modified();
     }

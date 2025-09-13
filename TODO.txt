@@ -30,8 +30,9 @@ GUI library
 * Crash on close
 * Enter + ShiftEnter are backwards
 * Change font size needs to propogate to all Mdns
-* Be able to change config
-
+* Be able to change config - config button
+* Starts cursor top left - put in middle
+* Starts last Mdn, should be first
 
 FUNCTIONALITY
 

@@ -157,16 +157,21 @@ void mdn::Mdn2d::multiply(const Mdn2d& rhs, Mdn2d& ans) const {
 
 mdn::CoordSet mdn::Mdn2d::locked_multiply(const Mdn2d& rhs, Mdn2d& ans) const {
     Log_N_Debug3_H("ans(" << ans.m_name << ") = *this(" << m_name << ") x rhs(" << rhs.m_name << ")");
+    int thisPrecision = locked_getPrecision();
+    int rhsPrecision = rhs.locked_getPrecision();
+    int sumPrecision = thisPrecision + rhsPrecision;
+    ans.locked_setPrecision(sumPrecision);
     ans.locked_clear();
     for (const auto& [xy, digit] : rhs.m_raw) {
         int id = static_cast<int>(digit);
         // ans += (this x rhs_id).shift(rhs_xy)
         Log_N_Debug4("multiply loop: " << xy << ", " << static_cast<int>(digit));
         Mdn2d temp(internal_copyMultiplyAndShift(id, xy));
-        Log_N_Debug4("got temp");
         ans.locked_plusEquals(std::move(temp));
         Log_N_Debug4("Done plusEquals step");
     }
+    int finalPrecision = std::round(sumPrecision*0.5);
+    ans.locked_setPrecision(finalPrecision);
     Log_N_Debug3_T("ans has " << ans.m_index.size() << " changed digits");
     return ans.m_index;
 }
@@ -595,7 +600,7 @@ mdn::CoordSet mdn::Mdn2d::locked_multiply(long value) {
         long vxd = value*static_cast<long>(digit);
         changed.merge(temp.locked_add(xy, vxd));
     }
-    operator=(temp);
+    locked_operatorEquals(temp);
     Log_N_Debug3_T("changed " << changed.size() << " digits");
     return changed;
 }
@@ -611,7 +616,7 @@ mdn::CoordSet mdn::Mdn2d::locked_multiply(long long value) {
         long long vxd = value*static_cast<long long>(digit);
         changed.merge(temp.locked_add(xy, vxd));
     }
-    operator=(temp);
+    locked_operatorEquals(temp);
     Log_N_Debug3_T("changed " << changed.size() << " digits");
     return changed;
 }
@@ -737,7 +742,7 @@ mdn::CoordSet mdn::Mdn2d::locked_timesEquals(const Mdn2d& rhs) {
     Mdn2d temp = NewInstance(m_config);
     auto tempLock = temp.lockWriteable();
     CoordSet changed = locked_multiply(rhs, temp);
-    operator=(temp);
+    locked_operatorEquals(temp);
     Log_N_Debug3_T("changed " << changed.size() << " digits");
     return changed;
 }
@@ -749,7 +754,7 @@ mdn::Mdn2d& mdn::Mdn2d::operator/=(const Mdn2d& rhs) {
     auto lock = lockWriteable();
     auto tempLock = temp.lockWriteable();
     CoordSet changed = locked_divide(rhs, temp);
-    operator=(temp);
+    locked_operatorEquals(temp);
     locked_carryoverCleanup(changed);
     internal_operationComplete();
     Log_N_Debug3_T("");

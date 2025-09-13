@@ -748,10 +748,17 @@ void mdn::gui::NumberDisplayWidget::wheelEvent(QWheelEvent* e) {
 
 
 void mdn::gui::NumberDisplayWidget::resizeEvent(QResizeEvent* e) {
+    Log_Debug3_H("");
     captureCursorFractions();
     QWidget::resizeEvent(e);
     recalcGridGeometry();
     restoreCursorFractions();
+
+    if (m_deferPostRestore) {
+        m_deferPostRestore = false;
+        restoreCursorFractions();
+    }
+
     if (m_selection) {
         const int pageCols = std::max(1, (m_cols - 1) / 3);
         const int pageRows = std::max(1, (m_rows - 1) / 3);
@@ -761,6 +768,23 @@ void mdn::gui::NumberDisplayWidget::resizeEvent(QResizeEvent* e) {
         positionCellEditor();
     }
     update();
+    Log_Debug3_T("");
+}
+
+
+void mdn::gui::NumberDisplayWidget::changeEvent(QEvent* event)
+{
+    Log_Debug3_H("");
+    if (event->type() == QEvent::WindowStateChange) {
+        captureCursorFractions();
+        m_deferPostRestore = true;
+        update();
+        Log_Debug3_T("");
+        return;
+    }
+
+    QWidget::changeEvent(event);
+    Log_Debug3_T("");
 }
 
 
