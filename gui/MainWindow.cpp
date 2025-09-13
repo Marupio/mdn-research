@@ -1476,7 +1476,9 @@ void mdn::gui::MainWindow::syncTabsToProject() {
 
 
 void mdn::gui::MainWindow::updateStatusModeText(NumberDisplayWidget::EditMode m) {
-    if (!m_statusMode) {
+    Log_Debug3_H(NumberDisplayWidget::EditModeToString(m));
+    if (!m_statusModeBtn) {
+        Log_Debug3_T("Missing statusMode pieces");
         return;
     }
     switch (m) {
@@ -1493,6 +1495,7 @@ void mdn::gui::MainWindow::updateStatusModeText(NumberDisplayWidget::EditMode m)
             break;
         }
     }
+    Log_Debug3_T("");
 }
 
 

@@ -20,23 +20,24 @@ Make Selection thread safe
 
 * Propogate ErrorPolicy * ON HOLD *
 * Propogate InputHandling * ON HOLD *
-* Propogate new Rect iterabilitiness
-* Change Mdn2dIO into a layer on the Mdn2d class structure
+* Propogate new Rect iterabilitiness * ON HOLD *
+* Change Mdn2dIO into a layer on the Mdn2d class structure * ON HOLD *
 * Consider adding namespace extensions: mdn::algo (algorithm), mdn::io
 * Get rid of invalidReason in Mdn2dConfig
 
 GUI library
 
-* Crash on close
-* Enter + ShiftEnter are backwards
 * Change font size needs to propogate to all Mdns
-* Be able to change config
+* Add config button? - Be able to change config
 
 
 FUNCTIONALITY
 
+Start menu - New, Open, Recent
+Problem with precision
+
+
 Clear all button
-Truncate decimal numbers
 
 Finish Selection cursor iterate functions
 NDW::moveCursorAfterSubmit
