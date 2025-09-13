@@ -130,7 +130,6 @@ private:
     // Command History (lower pane)
     CommandWidget* m_command = nullptr;
 
-    QLabel* m_statusMode = nullptr;
     QLabel* m_statusCursor = nullptr;
     QLabel* m_statusSel = nullptr;
     QToolButton* m_statusModeBtn = nullptr;

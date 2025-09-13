@@ -2,7 +2,8 @@
     "Logger": {
         "Level": "Debug4",
         "WindowsOutput": "C:/Users/daveg/OneDrive/Documents/Projects/MDN/mdn-research/output",
-        "Output": "C:/Users/daveg/OneDrive/Documents/Projects/MDN/mdn-research/output",
+        "Output_": "C:/Users/daveg/OneDrive/Documents/Projects/MDN/mdn-research/output",
+        "Output": "/home/dave/GADEN/MDN/mdn-research/output",
         "LinuxOutput": "/home/dave/GADEN/MDN/mdn-research/output",
         "Filter": {
             "Comment_Exclude": [],
