@@ -166,6 +166,7 @@ bool mdn::gui::Project::checkIndex(int i) const {
         Log_ErrorQ(err.what());
         throw err;
     }
+    Log_Debug4_T("index okay")
     return true;
 }
 
@@ -643,19 +644,21 @@ mdn::Mdn2d* mdn::gui::Project::activeMdn() {
         Log_Debug3_T("");
         return nullptr;
     }
-    int maxIndex = m_data.size() - 1;
-    if (m_activeIndex < 0 || m_activeIndex > maxIndex) {
-        std::ostringstream oss;
-        oss << "Active index out-of-range: " << m_activeIndex << " (0 .. " << maxIndex << ")";
-        InvalidState err(oss.str());
-        Log_ErrorQ(err.what());
-        throw err;
-    }
-    if (!contains(m_activeIndex)) {
-        InvalidState err("Internal Error: Active index is not available");
-        Log_ErrorQ(err.what());
-        throw err;
-    }
+    #ifdef MDN_DEBUG
+        if (!checkIndex(m_activeIndex)) {
+            int maxIndex = m_data.size() - 1;
+            std::ostringstream oss;
+            oss << "Active index out-of-range: " << m_activeIndex << " (0 .. " << maxIndex << ")";
+            InvalidState err(oss.str());
+            Log_ErrorQ(err.what());
+            throw err;
+        }
+        if (!contains(m_activeIndex)) {
+            InvalidState err("Internal Error: Active index is not available");
+            Log_ErrorQ(err.what());
+            throw err;
+        }
+    #endif
     Log_Debug3_T("");
     return &(m_data.at(m_activeIndex));
 }

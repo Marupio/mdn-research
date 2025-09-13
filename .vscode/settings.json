@@ -109,6 +109,7 @@
     "qlineedit": "cpp",
     "coroutine": "cpp",
     "resumable": "cpp",
-    "qjsondocument": "cpp"
+    "qjsondocument": "cpp",
+    "qmenu": "cpp"
   }
 }

@@ -89,8 +89,8 @@ void mdn::gui::MainWindow::onTabContextMenu(const QPoint& pos)
     QAction* actDuplicate = menu.addAction("Duplicate");
     QAction* actCopy      = menu.addAction("Copy");
     QAction* actPaste     = menu.addAction("Paste");
-    // QAction* actMoveLeft  = menu.addAction("Move Left");
-    // QAction* actMoveRight = menu.addAction("Move Right");
+    menu.addSeparator();
+    QAction* actSaveAs    = menu.addAction("Save as...");
     menu.addSeparator();
     QAction* actDelete    = menu.addAction("Delete");
 
@@ -111,20 +111,12 @@ void mdn::gui::MainWindow::onTabContextMenu(const QPoint& pos)
     } else if (picked == actCopy) {
         m_project->copyMdn(index);
     } else if (picked == actPaste) {
-        pasteTab(index + 1);               // insert after current tab
-    // } else if (picked == actMoveLeft) {
-    //     bool moveMdn(int fromIndex, int toIndex);
-    //     m_project->moveMdn(index, index-1);
-    //     // const int to = std::max(0, index - 1);
-    //     // if (to != index) onTabMoved(index, to);  // reuse your mover
-    //     // // QTabWidget move for UI:
-    //     // m_tabWidget->tabBar()->moveTab(index, to);
-    // } else if (picked == actMoveRight) {
-    //     const int to = std::min(index + 1, m_tabWidget->count() - 1);
-    //     if (to != index) onTabMoved(index, to);
-    //     m_tabWidget->tabBar()->moveTab(index, to);
+        // insert after current tab
+        pasteTab(index + 1);
+    } else if (picked == actSaveAs) {
+        onSaveMdn2d(index);
     } else if (picked == actDelete) {
-        onTabCloseRequested(index);           // reuse your close handler
+        onTabCloseRequested(index);
     }
     Log_Debug3_T("");
 }
@@ -302,8 +294,7 @@ bool mdn::gui::MainWindow::onOpenProject() {
             return false;
         }
         Log_Debug3("Deleting existing project");
-        delete m_project;
-        m_project = nullptr;
+        onCloseProject();
     }
 
     std::unique_ptr<Project> ptr = Project::loadFromFile(this, path.toStdString());
@@ -328,20 +319,21 @@ bool mdn::gui::MainWindow::onOpenProject() {
     m_project->setName(baseName.toStdString());
     setWindowTitle(baseName);
 
-    syncTabsToProject();
-
-    const int ai = m_project->activeIndex();
-    if (ai >= 0 && ai < m_tabWidget->count()) {
-        m_tabWidget->setCurrentIndex(ai);
-    }
-
+    onProjectTabsChanged(m_project->activeIndex());
+    // syncTabsToProject();
+    // const int ai = m_project->activeIndex();
+    // if (ai >= 0 && ai < m_tabWidget->count()) {
+    //     m_tabWidget->setCurrentIndex(ai);
+    // }
+    m_globalConfig.setMaster(*m_project);
+    setGlobalConfig(m_globalConfig);
     statusBar()->showMessage(tr("Project loaded"), 2000);
     Log_Debug2_T("ok")
     return true;
 }
 
 
-bool mdn::gui::MainWindow::onSaveMdn2d() {
+bool mdn::gui::MainWindow::onSaveMdn2d(int idx) {
     Log_Debug2_H("");
 
     if (!m_project) {
@@ -350,7 +342,9 @@ bool mdn::gui::MainWindow::onSaveMdn2d() {
         return false;
     }
 
-    const int idx = m_tabWidget ? m_tabWidget->currentIndex() : m_project->activeIndex();
+    if (idx < 0) {
+        idx = m_tabWidget ? m_tabWidget->currentIndex() : m_project->activeIndex();
+    }
     if (idx < 0) {
         Log_WarnQ("No active tab to save");
         Log_Debug2_T("no active");
@@ -502,6 +496,40 @@ bool mdn::gui::MainWindow::onOpenMdn2d() {
     syncTabsToProject();
     statusBar()->showMessage(tr("Number loaded"), 2000);
     Log_Debug2_T("ok");
+    return true;
+}
+
+
+bool mdn::gui::MainWindow::onCloseProject() {
+    Log_Debug2_H("");
+    if (!m_project) {
+        Log_Debug2_T("no project, returning false");
+        return false;
+    }
+    if (m_tabWidget) {
+        QSignalBlocker blockTabs(m_tabWidget);
+
+        const int n = m_tabWidget->count();
+        for (int i = n - 1; i >= 0; --i) {
+            QWidget* w = m_tabWidget->widget(i);
+            m_tabWidget->removeTab(i);
+            delete w;
+        }
+    }
+
+    disconnect(m_project, nullptr, this, nullptr);
+
+    delete m_project;
+    m_project = nullptr;
+
+    setWindowTitle(QStringLiteral("MDN Editor"));
+    if (statusBar()) {
+        statusBar()->clearMessage();
+    }
+
+    focusActiveGrid();
+
+    Log_Debug2_T("project deleted, returning true");
     return true;
 }
 
@@ -726,9 +754,9 @@ void mdn::gui::MainWindow::setGlobalFontSize(int pt) {
 }
 
 
-void mdn::gui::MainWindow::setGlobalConfig(Mdn2dConfig c) {
+void mdn::gui::MainWindow::setGlobalConfig(Mdn2dConfig c, bool force) {
     Log_Debug2_H("newConfig=" << c << ", currentConfig=" << m_globalConfig);
-    if (m_globalConfig == c) {
+    if (!force && m_globalConfig == c) {
         Log_Debug2_T("no changes");
         return;
     }
@@ -970,6 +998,12 @@ void mdn::gui::MainWindow::setupLayout() {
         this,
         &mdn::gui::MainWindow::onTabContextMenu
     );
+    connect(
+        bar,
+        &QTabBar::tabBarDoubleClicked,
+        this,
+        &mdn::gui::MainWindow::renameTab
+    );
 
     // For now, Project will be held by MainWindow
     Log_Debug3("Dispatch - createNewProject");
@@ -1018,124 +1052,30 @@ void mdn::gui::MainWindow::createNewProject() {
 
 
 void mdn::gui::MainWindow::createTabs() {
-    Log_Debug3_H("");
+    Log_Debug2_H("");
     {
         mdn::Logger& loginst = mdn::Logger::instance();
         std::string dbind = loginst.debug_indentenators();
         loginst.info(dbind);
     }
-    if (!m_project) {
-        // Nothing to do
-        Log_Debug3_T("No project");
+    if (!m_project || !m_tabWidget) {
+        Log_Debug2_T("No project or tabWidget");
         return;
     }
 
-    const std::unordered_map<int, std::string>& tabNames(m_project->data_addressingIndexToName());
-    std::vector<std::string> names(m_project->toc());
-    for (int index = 0; index < names.size(); ++index) {
-        Mdn2d* src = m_project->getMdn(index);
-        if (!src) {
-            Log_WarnQ("Failed to acquire Mdn for tab " << index << ", cannot continue");
-            Log_Debug3_T("");
-            return;
-        }
-        Log_Debug4("Creating tab {'" << src->name() << "', " << index << "}");
-        Selection& sel = src->selection();
-
-        auto* ndw = new NumberDisplayWidget;
-        ndw->setProject(m_project);
-        ndw->setFocusPolicy(Qt::StrongFocus);
-        ndw->setModel(src, &sel);
-
-        connect(ndw, &NumberDisplayWidget::statusCursorChanged, this,
-            [this](int x, int y){
-                if (m_statusCursor)
-                    m_statusCursor->setText(QStringLiteral("(%1,%2)").arg(x).arg(y));
-            });
-        connect(
-            ndw,
-            &NumberDisplayWidget::statusSelectionChanged,
-            this,
-            &MainWindow::updateStatusSelectionText
-        );
-        connect(
-            ndw,
-            &NumberDisplayWidget::editModeChanged,
-            this,
-            &MainWindow::onEditModeChanged
-        );
-        connect(
-            ndw,
-            &NumberDisplayWidget::requestSetEditMode,
-            this,
-            &MainWindow::setGlobalEditMode
-        );
-        connect(
-            ndw,
-            &NumberDisplayWidget::requestToggleEditMode,
-            this,
-            &MainWindow::toggleGlobalEditMode
-        );
-        connect(
-            ndw,
-            &NumberDisplayWidget::requestCycleEditMode,
-            this,
-            &MainWindow::cycleGlobalEditMode
-        );
-        connect(
-            ndw,
-            &NumberDisplayWidget::requestCycleFraxis,
-            this,
-            &MainWindow::cycleFraxis
-        );
-
-        // Push current global mode into the new widget
-        ndw->setEditMode(m_globalMode);
-
-        connect(
-            ndw,
-            &NumberDisplayWidget::requestFontSizeChange,
-            this,
-            &MainWindow::setGlobalFontSize
-        );
-
-        std::string name = names[index];
-        Log_Debug4("addTab(" << name << ")");
-        QString qname = MdnQtInterface::toQString(name);
-        int tab = m_tabWidget->addTab(ndw, qname);
-        connect(
-            ndw,
-            &mdn::gui::NumberDisplayWidget::requestSelectNextTab,
-            this,
-            &mdn::gui::MainWindow::slotSelectNextTab
-        );
-        connect(
-            ndw,
-            &mdn::gui::NumberDisplayWidget::requestSelectPrevTab,
-            this,
-            &mdn::gui::MainWindow::slotSelectPrevTab
-        );
-        connect(
-            ndw,
-            &mdn::gui::NumberDisplayWidget::requestMoveTabRight,
-            this,
-            &mdn::gui::MainWindow::slotMoveTabRight
-        );
-        connect(
-            ndw,
-            &mdn::gui::NumberDisplayWidget::requestMoveTabLeft,
-            this,
-            &mdn::gui::MainWindow::slotMoveTabLeft
-        );
-        connect(
-            ndw,
-            &mdn::gui::NumberDisplayWidget::requestDebugShowAllTabs,
-            this,
-            &mdn::gui::MainWindow::slotDebugShowAllTabs
-        );
+    std::vector<int> indices;
+    indices.reserve(m_project->size());
+    for (const auto& kv : m_project->data_addressingIndexToName()) {
+        indices.push_back(kv.first);
     }
+    std::sort(indices.begin(), indices.end());
+
+    for (int idx : indices) {
+        createTabForIndex(idx);
+    }
+
     updateStatusModeText(m_globalMode);
-    Log_Debug3_T("");
+    Log_Debug2_T("");
 }
 
 
@@ -1148,16 +1088,100 @@ void mdn::gui::MainWindow::createTabForIndex(int index) {
     }
 
     Selection& sel = src->selection();
-    auto* view = new NumberDisplayWidget;
-    view->setProject(m_project);
-    view->setModel(src, &sel);
+    auto* ndw = new NumberDisplayWidget;
+    ndw->setProject(m_project);
+    ndw->setFocusPolicy(Qt::StrongFocus);
+    ndw->setModel(src, &sel);
 
-    const std::string& tabName(src->name());
-    QString tabNameQ = QString::fromStdString(tabName);
-    Log_Debug4("insertTab(" << index << ", " << src->name());
-    int tab = m_tabWidget->insertTab(index, view, tabNameQ);
+    connect(ndw, &NumberDisplayWidget::statusCursorChanged, this,
+        [this](int x, int y){
+            if (m_statusCursor)
+                m_statusCursor->setText(QStringLiteral("(%1,%2)").arg(x).arg(y));
+        });
+    connect(
+        ndw,
+        &NumberDisplayWidget::statusSelectionChanged,
+        this,
+        &MainWindow::updateStatusSelectionText
+    );
+    connect(
+        ndw,
+        &NumberDisplayWidget::editModeChanged,
+        this,
+        &MainWindow::onEditModeChanged
+    );
+    connect(
+        ndw,
+        &NumberDisplayWidget::requestSetEditMode,
+        this,
+        &MainWindow::setGlobalEditMode
+    );
+    connect(
+        ndw,
+        &NumberDisplayWidget::requestToggleEditMode,
+        this,
+        &MainWindow::toggleGlobalEditMode
+    );
+    connect(
+        ndw,
+        &NumberDisplayWidget::requestCycleEditMode,
+        this,
+        &MainWindow::cycleGlobalEditMode
+    );
+    connect(
+        ndw,
+        &NumberDisplayWidget::requestCycleFraxis,
+        this,
+        &MainWindow::cycleFraxis
+    );
+
+    // Push current global mode into the new widget
+    ndw->setEditMode(m_globalMode);
+
+    connect(
+        ndw,
+        &NumberDisplayWidget::requestFontSizeChange,
+        this,
+        &MainWindow::setGlobalFontSize
+    );
+
+    std::string name = src->name();
+    Log_Debug4("addTab(" << name << ")");
+    QString qname = MdnQtInterface::toQString(name);
+    int tab = m_tabWidget->addTab(ndw, qname);
+    connect(
+        ndw,
+        &mdn::gui::NumberDisplayWidget::requestSelectNextTab,
+        this,
+        &mdn::gui::MainWindow::slotSelectNextTab
+    );
+    connect(
+        ndw,
+        &mdn::gui::NumberDisplayWidget::requestSelectPrevTab,
+        this,
+        &mdn::gui::MainWindow::slotSelectPrevTab
+    );
+    connect(
+        ndw,
+        &mdn::gui::NumberDisplayWidget::requestMoveTabRight,
+        this,
+        &mdn::gui::MainWindow::slotMoveTabRight
+    );
+    connect(
+        ndw,
+        &mdn::gui::NumberDisplayWidget::requestMoveTabLeft,
+        this,
+        &mdn::gui::MainWindow::slotMoveTabLeft
+    );
+    connect(
+        ndw,
+        &mdn::gui::NumberDisplayWidget::requestDebugShowAllTabs,
+        this,
+        &mdn::gui::MainWindow::slotDebugShowAllTabs
+    );
+
     m_tabWidget->setCurrentIndex(tab);
-    view->setFocus();
+    ndw->setFocus();
     Log_Debug3_T("");
 }
 
@@ -1434,6 +1458,7 @@ void mdn::gui::MainWindow::syncTabsToProject() {
         if (!view) {
             continue;
         }
+        view->setProject(m_project);
         Mdn2d* srcNum = m_project->getMdn(i);
         if (!srcNum) {
             continue;
@@ -1535,11 +1560,11 @@ void mdn::gui::MainWindow::initFocusModel()
 
 
 void mdn::gui::MainWindow::focusActiveGrid() {
-    Log_Debug4_H("focusActiveGrid");
+    Log_Debug4_H("");
 
     QWidget* w = activeGridWidget();
-
-    if (w) {
+    if (w && m_project) {
+        Log_Debug4("Setting focus");
         w->setFocus(Qt::ShortcutFocusReason);
     }
     Log_Debug4_T("");

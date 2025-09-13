@@ -765,7 +765,7 @@ void mdn::gui::NumberDisplayWidget::resizeEvent(QResizeEvent* e) {
 
 
 void mdn::gui::NumberDisplayWidget::recalcGridGeometry() {
-    Log_Debug3("");
+    Log_Debug3_H("");
     QFontMetrics fm(m_theme.font);
     const int cw = fm.horizontalAdvance(QLatin1Char('0')) + 2;
     const int ch = fm.height() + 2;
@@ -777,6 +777,7 @@ void mdn::gui::NumberDisplayWidget::recalcGridGeometry() {
     const int pageCols = std::max(1, (m_cols - 1) / 3);
     const int pageRows = std::max(1, (m_rows - 1) / 3);
     m_project->setPageStep(pageCols, pageRows);
+    Log_Debug3_T("");
 }
 
 

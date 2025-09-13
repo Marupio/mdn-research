@@ -94,6 +94,17 @@ public:
         InFront = 4
     };
 
+    inline static std::string FrontBackToString(const FrontBack fb) {
+        switch (fb) {
+            case FrontBack::Behind: return "Behind";
+            case FrontBack::BackEdge: return "BackEdge";
+            case FrontBack::Inside: return "Inside";
+            case FrontBack::FrontEdge: return "FrontEdge";
+            case FrontBack::InFront: return "InFront";
+            default: return "NotApplicable";
+        }
+    }
+
     inline FrontBack HasCoordAt_X(const Coord& xy) const {
         if (isInvalid()) {
             return FrontBack::NotApplicable;
@@ -125,10 +136,10 @@ public:
         } else if (y == b) {
             return FrontBack::BackEdge;
         }
-        int r = right();
-        if (y < r) {
+        int t = top();
+        if (y < t) {
             return FrontBack::Inside;
-        } else if (y == r) {
+        } else if (y == t) {
             return FrontBack::FrontEdge;
         }
         return FrontBack::InFront;

@@ -144,13 +144,13 @@ mdn::Mdn2dBase::Mdn2dBase(std::string nameIn)
     m_modified(false),
     m_event(0)
 {
-    Log_Debug3_H("null ctor, nameIn=" << m_name);
+    Log_N_Debug3_H("null ctor, nameIn=" << m_name);
     if (m_name.empty()) {
-        Log_Debug4("nameIn empty, generating new name");
+        Log_N_Debug4("nameIn empty, generating new name");
         m_name = static_generateNextName();
-        Log_Debug3("changed name to " << m_name);
+        Log_N_Debug3("changed name to " << m_name);
     }
-    Log_Debug3_T("");
+    Log_N_Debug3_T("");
 }
 
 
@@ -162,13 +162,13 @@ mdn::Mdn2dBase::Mdn2dBase(Mdn2dConfig config, std::string nameIn)
     m_modified(false),
     m_event(0)
 {
-    Log_Debug3_H("compenent ctor, config=" << config << ", nameIn=" << m_name);
+    Log_N_Debug3_H("compenent ctor, config=" << config << ", nameIn=" << m_name);
     if (m_name.empty()) {
-        Log_Debug4("nameIn empty, generating new name");
+        Log_N_Debug4("nameIn empty, generating new name");
         m_name = static_generateNextName();
-        Log_Debug3("changed name to " << m_name);
+        Log_N_Debug3("changed name to " << m_name);
     }
-    Log_Debug3_T("");
+    Log_N_Debug3_T("");
 }
 
 
@@ -178,12 +178,12 @@ mdn::Mdn2dBase::Mdn2dBase(const Mdn2dBase& other, std::string nameIn):
     m_modified(false),
     m_event(0)
 {
-    Log_Debug3_H("copy ctor, copying " << other.m_name << ", newName=" << nameIn);
+    Log_N_Debug3_H("copy ctor, copying " << other.m_name << ", newName=" << nameIn);
     auto lock = other.lockReadOnly();
     if (m_name.empty()) {
-        Log_Debug4("nameIn empty, generating new name from " << other.m_name);
+        Log_N_Debug4("nameIn empty, generating new name from " << other.m_name);
         m_name = static_generateCopyName(other.m_name);
-        Log_Debug3("changed name to " << m_name);
+        Log_N_Debug3("changed name to " << m_name);
     }
     m_raw = other.m_raw;
     m_xIndex = other.m_xIndex;
@@ -191,18 +191,18 @@ mdn::Mdn2dBase::Mdn2dBase(const Mdn2dBase& other, std::string nameIn):
     m_index = other.m_index;
     m_index = other.m_index;
     m_bounds = other.m_bounds;
-    Log_Debug3_T("");
+    Log_N_Debug3_T("");
 }
 
 
 mdn::Mdn2dBase& mdn::Mdn2dBase::operator=(const Mdn2dBase& other) {
-    Log_Debug3_H("Setting " << m_name << " equal to " << other.m_name);
+    Log_N_Debug3_H("Setting " << m_name << " equal to " << other.m_name);
     if (this != &other) {
         Log_Info("Getting writeable lock for this...");
         auto lockThis = lockWriteable();
         Log_Info("Getting readable lock for other...");
         auto lockOther = other.lockReadOnly();
-        Log_Debug3("other is not me, operator= should work...");
+        Log_N_Debug3("other is not me, operator= should work...");
         if (m_config.base() != other.m_config.base()) {
             BaseMismatch err(m_config.base(), other.m_config.base());
             Log_Error(err.what());
@@ -218,15 +218,15 @@ mdn::Mdn2dBase& mdn::Mdn2dBase::operator=(const Mdn2dBase& other) {
     } else {
         Log_Warn("Attempting to set Mdn2d equal to itself");
     }
-    Log_Debug3_T("");
+    Log_N_Debug3_T("");
     return *this;
 }
 
 
 mdn::Mdn2dBase& mdn::Mdn2dBase::locked_operatorEquals(const Mdn2dBase& other) {
-    Log_Debug3_H("Setting " << m_name << " equal to " << other.m_name);
+    Log_N_Debug3_H("Setting " << m_name << " equal to " << other.m_name);
     if (this != &other) {
-        Log_Debug3("other is not me, operator= should work...");
+        Log_N_Debug3("other is not me, operator= should work...");
         if (m_config.base() != other.m_config.base()) {
             BaseMismatch err(m_config.base(), other.m_config.base());
             Log_Error(err.what());
@@ -242,7 +242,7 @@ mdn::Mdn2dBase& mdn::Mdn2dBase::locked_operatorEquals(const Mdn2dBase& other) {
     } else {
         Log_Warn("Attempting to set Mdn2d equal to itself");
     }
-    Log_Debug3_T("");
+    Log_N_Debug3_T("");
     return *this;
 }
 
@@ -253,7 +253,7 @@ mdn::Mdn2dBase::Mdn2dBase(Mdn2dBase&& other) noexcept :
     m_modified(false),
     m_event(0)
 {
-    Log_Debug3_H("move-copy ctor, copying " << other.m_name);
+    Log_N_Debug3_H("move-copy ctor, copying " << other.m_name);
     auto lock = other.lockReadOnly();
 
     m_raw = std::move(other.m_raw);
@@ -261,16 +261,16 @@ mdn::Mdn2dBase::Mdn2dBase(Mdn2dBase&& other) noexcept :
     m_yIndex = std::move(other.m_yIndex);
     m_index = std::move(other.m_index);
     m_bounds = other.m_bounds;
-    Log_Debug3_T("");
+    Log_N_Debug3_T("");
 }
 
 
 mdn::Mdn2dBase& mdn::Mdn2dBase::operator=(Mdn2dBase&& other) noexcept {
-    Log_Debug3_H("Setting " << m_name << " move-equal to " << other.m_name);
+    Log_N_Debug3_H("Setting " << m_name << " move-equal to " << other.m_name);
     if (this != &other) {
         auto lockThis = lockWriteable();
         auto lockOther = other.lockReadOnly();
-        Log_Debug3("other is not me, operator= should work...");
+        Log_N_Debug3("other is not me, operator= should work...");
         if (m_config.base() != other.m_config.base()) {
             BaseMismatch err(m_config.base(), other.m_config.base());
             Log_Error(err.what());
@@ -287,7 +287,7 @@ mdn::Mdn2dBase& mdn::Mdn2dBase::operator=(Mdn2dBase&& other) noexcept {
     } else {
         Log_Warn("Attempting to set Mdn2d equal to itself");
     }
-    Log_Debug3_T("");
+    Log_N_Debug3_T("");
     return *this;
 }
 
@@ -429,25 +429,29 @@ const std::string& mdn::Mdn2dBase::name() const {
 
 
 const std::string& mdn::Mdn2dBase::locked_name() const {
-    Log_Debug3("returning name=" << m_name);
+    Log_N_Debug3("returning name=" << m_name);
     return m_name;
 }
 
 
 std::string mdn::Mdn2dBase::setName(const std::string& nameIn) {
-    Log_N_Debug2("nameIn=" << nameIn);
+    Log_N_Debug2_H("nameIn=" << nameIn);
     auto lock = lockWriteable();
-    return locked_setName(nameIn);
+    std::string result = locked_setName(nameIn);
+    Log_N_Debug3_T("result = " << result);
+    return result;
 }
 
 
 std::string mdn::Mdn2dBase::locked_setName(const std::string& nameIn) {
+    Log_N_Debug3_H("nameIn=" << nameIn);
     std::string fwName = m_config.master().requestMdnNameChange(m_name, nameIn);
-    Log_Debug3(
+    Log_N_Debug3(
         "Attempting to change name from '" << m_name << "' to '" << nameIn << "', with framework"
-        << " final approval as '" << fwName << "'"
+        << " final approval is '" << fwName << "'"
     );
     m_name = fwName;
+    Log_N_Debug3_T("");
     return fwName;
 }
 
@@ -460,20 +464,20 @@ bool mdn::Mdn2dBase::nonZero(const Coord& xy) const {
     return result;
 }
 bool mdn::Mdn2dBase::locked_nonZero(const Coord& xy) const {
-    Log_Debug4("");
+    Log_N_Debug4("");
     return m_index.find(xy) != m_index.end();
 }
 
 
 const mdn::CoordSet& mdn::Mdn2dBase::nonZeroOnRow(const Coord& xy) const {
-    Log_Debug2_H("At " << xy);
+    Log_N_Debug2_H("At " << xy);
     auto lock = lockReadOnly();
     const CoordSet& result = locked_nonZeroOnRow(xy);
-    Log_Debug2_T("Returning " << result.size() << " non-zero values");
+    Log_N_Debug2_T("Returning " << result.size() << " non-zero values");
     return result;
 }
 const mdn::CoordSet& mdn::Mdn2dBase::locked_nonZeroOnRow(const Coord& xy) const {
-    Log_Debug3_H("At " << xy);
+    Log_N_Debug3_H("At " << xy);
     auto it = m_yIndex.find(xy.y());
     if (it != m_yIndex.end()) {
         const CoordSet& coords = it->second;
@@ -486,20 +490,20 @@ const mdn::CoordSet& mdn::Mdn2dBase::locked_nonZeroOnRow(const Coord& xy) const 
         );
         return coords;
     }
-    Log_Debug3_T("Returning empty set");
+    Log_N_Debug3_T("Returning empty set");
     return m_nullCoordSet;
 }
 
 
 const mdn::CoordSet& mdn::Mdn2dBase::nonZeroOnCol(const Coord& xy) const {
-    Log_Debug2_H("At " << xy);
+    Log_N_Debug2_H("At " << xy);
     auto lock = lockReadOnly();
     const CoordSet& result = locked_nonZeroOnCol(xy);
-    Log_Debug2_T("Returning " << result.size() << " non-zero values");
+    Log_N_Debug2_T("Returning " << result.size() << " non-zero values");
     return result;
 }
 const mdn::CoordSet& mdn::Mdn2dBase::locked_nonZeroOnCol(const Coord& xy) const {
-    Log_Debug3_H("At " << xy);
+    Log_N_Debug3_H("At " << xy);
     auto it = m_xIndex.find(xy.x());
     if (it != m_xIndex.end()) {
         const CoordSet& coords = it->second;
@@ -512,7 +516,7 @@ const mdn::CoordSet& mdn::Mdn2dBase::locked_nonZeroOnCol(const Coord& xy) const 
         );
         return coords;
     }
-    Log_Debug3_T("Returning empty set");
+    Log_N_Debug3_T("Returning empty set");
     return m_nullCoordSet;
 }
 
@@ -531,79 +535,104 @@ mdn::Coord mdn::Mdn2dBase::locked_jump(const Coord& xy, CardinalDirection cd) co
     Log_N_Debug3_H("xy=" << xy << ", cd=" << cdCoord);
     if (cdCoord ==  COORD_ORIGIN) {
         Log_N_Debug3_T("Not a valid cardinal direction");
+        return xy;
     }
     // When true, movement towards digit line is only allowed
     bool towardsDigitLineOnly = false;
+    bool withinBounds = true;
     Rect::FrontBack fbX;
     Rect::FrontBack fbY;
     if (m_bounds.isInvalid()) {
-        Log_N_Debug3("No digits, only allowed movement towards digit lines");
+        Log_N_Debug4("No digits, tdlo true");
         towardsDigitLineOnly = true;
     } else if (cdCoord.x() != 0) {
         fbX = m_bounds.HasCoordAt_X(xy);
         fbY = m_bounds.HasCoordAt_Y(xy);
+        Log_N_Debug4(
+            "Horizontal jump, "
+                << "fbX=" << Rect::FrontBackToString(fbX) << ", "
+                << "fbY=" << Rect::FrontBackToString(fbY)
+        );
 
         switch(fbY) {
             case Rect::FrontBack::Behind:
             case Rect::FrontBack::InFront:
-                // Above or below bounds, moving sideways
+                Log_N_Debug4("North or south of bounds, moving east/west, tdlo true");
                 towardsDigitLineOnly = true;
+                withinBounds = false;
                 break;
             default:
+                Log_N_Debug4("Vertically within bounds moving east/west");
                 break;
         }
         switch (fbX) {
             case Rect::FrontBack::Behind:
             case Rect::FrontBack::BackEdge: {
                 if (cdCoord.x() < 0) {
-                    Log_Debug3_T("Outside bounds moving away, no movement allowed");
-                    return Coord(xy);
+                    Coord ret = xy.translatedX(-1);
+                    Log_N_Debug3_T("West of bounds moving west, small step, returning " << ret);
+                    return ret;
                 }
-                // Heading towards bounds
+                Log_N_Debug4("West of bounds moving east");
+                withinBounds = false;
                 break;
             }
             case Rect::FrontBack::InFront:
             case Rect::FrontBack::FrontEdge: {
                 if (cdCoord.x() > 0) {
-                    Log_Debug3_T("Outside bounds moving away, no movement allowed");
-                    return Coord(xy);
+                    Coord ret = xy.translatedX(1);
+                    Log_N_Debug3_T("East of bounds moving east, small step, returning " << ret);
+                    return ret;
                 }
-                // Heading towards bounds
+                Log_N_Debug4("East of bounds moving west");
+                withinBounds = false;
                 break;
             }
             default:
+                Log_N_Debug4("Horizontally within bounds moving east/west");
                 break;
         }
     } else if (cdCoord.y() != 0) {
         fbX = m_bounds.HasCoordAt_X(xy);
         fbY = m_bounds.HasCoordAt_Y(xy);
+        Log_N_Debug4(
+            "Vertical jump, "
+                << "fbX=" << Rect::FrontBackToString(fbX) << ", "
+                << "fbY=" << Rect::FrontBackToString(fbY)
+        );
 
         switch(fbX) {
             case Rect::FrontBack::Behind:
             case Rect::FrontBack::InFront:
-                // To the left or right, moving vertically
+                Log_N_Debug4("West or east of bounds, moving north/south, tdlo true");
                 towardsDigitLineOnly = true;
+                withinBounds = false;
                 break;
             default:
+                Log_N_Debug4("Horizontally within bounds, moving north/south");
                 break;
         }
         switch (fbY) {
             case Rect::FrontBack::Behind:
             case Rect::FrontBack::BackEdge: {
                 if (cdCoord.y() < 0) {
-                    Log_Debug3_T("Outside bounds moving away, no movement allowed");
-                    return Coord(xy);
+                    Coord ret = xy.translatedY(-1);
+                    Log_N_Debug3_T("South of bounds, moving south, small step, returning " << ret);
+                    return ret;
                 }
-                // Heading towards bounds
+                Log_N_Debug4("South of bounds moving north");
+                withinBounds = false;
                 break;
             }
             case Rect::FrontBack::InFront:
             case Rect::FrontBack::FrontEdge: {
                 if (cdCoord.y() > 0) {
-                    Log_Debug3_T("Outside bounds moving away, no movement allowed");
-                    return Coord(xy);
+                    Coord ret = xy.translatedY(1);
+                    Log_N_Debug3_T("North of bounds, moving north, small step, returning " << ret);
+                    return ret;
                 }
-                // Heading towards bounds
+                Log_N_Debug4("North of bounds heading south");
+                withinBounds = false;
                 break;
             }
             default:
@@ -613,9 +642,10 @@ mdn::Coord mdn::Mdn2dBase::locked_jump(const Coord& xy, CardinalDirection cd) co
     if (towardsDigitLineOnly) {
         // Only allow towards digit line
         // Multiply components, then 'toward digit line' is a negative coord.
-        Log_N_Debug3("No digits, only allowed movement towards digit lines");
+        Log_N_Debug4("tdlo-towardDigitLineOnly");
 
-        Coord xy_cd = xy*cdCoord.x();
+        Coord xy_cd = xy*cdCoord;
+        Log_N_Debug4("xy*cd=" << xy << " x " << cdCoord << " = " << xy_cd);
         if (xy_cd.x() < 0) {
             Coord result(0, xy.y());
             Log_N_Debug3_T("Towards x digit line, returning " << result);
@@ -625,11 +655,10 @@ mdn::Coord mdn::Mdn2dBase::locked_jump(const Coord& xy, CardinalDirection cd) co
             Log_N_Debug3_T("Towards y digit line, returning " << result);
             return result;
         }
-        // Not moving towards a digitLine, no movement allowed
-        Log_N_Debug3_T(
-            "Only allowed digitLine-ward movement, not correct movement input, returning " << xy
-        );
-        return xy;
+        // Not moving towards a digitLine, only small steps allowed
+        Coord ret = xy.translated(cdCoord);
+        Log_N_Debug3_T("tdlo - moving away from digit line, returning " << ret);
+        return ret;
     }
 
     // Begin standard jump algorithm - move until non-zero status changes
@@ -639,22 +668,37 @@ mdn::Coord mdn::Mdn2dBase::locked_jump(const Coord& xy, CardinalDirection cd) co
     // Coord xyGo(xy.translated(cdCoord));
     Coord xyGo = xy;
     Coord prevXy = xy;
+    Log_N_Debug4("rnz=" << refNonZero << ", xy=" << xy);
 
     while (sanityCheck--> 0) {
         prevXy = xyGo;
         xyGo.translate(cdCoord);
-        if (locked_nonZero(xyGo) != refNonZero) {
+        bool lnz = locked_nonZero(xyGo);
+        Log_N_Debug4(
+            "prevXy=" << prevXy << ", xyGo=" << xyGo << ", ref=" << refNonZero << ", lnz=" << lnz
+        );
+        if (lnz != refNonZero) {
+            Log_N_Debug4("found it");
             if (refNonZero) {
                 // We want to return non-zero location, so, previous spot is okay
-                Log_N_Debug3_T("returning " << prevXy);
-                return prevXy;
+                if (prevXy != xy) {
+                    Log_N_Debug3_T("returning " << prevXy);
+                    return prevXy;
+                }
             } else {
                 // We want to return non-zero location, so, current spot is okay
                 Log_N_Debug3_T("returning " << xyGo);
                 return xyGo;
             }
         }
-        if (!m_bounds.contains(xyGo)) {
+        // Check if we've left the bounds behind
+        bool inBounds = m_bounds.contains(xyGo);
+        if (!withinBounds) {
+            // Allows us to start out-of-bounds and cross to in-bounds
+            withinBounds = inBounds;
+            continue;
+        } else if (!inBounds) {
+            // We already have been in-bounds, and we're out now
             break;
         }
     }
@@ -1541,7 +1585,7 @@ bool mdn::Mdn2dBase::locked_hasBounds() const {
 
 
 const mdn::Rect& mdn::Mdn2dBase::bounds() const {
-    Log_Debug2_H("");
+    Log_N_Debug2_H("");
     auto lock = lockReadOnly();
     const Rect& bounds = locked_bounds();
     If_Log_Showing_Debug2(

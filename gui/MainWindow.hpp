@@ -46,8 +46,9 @@ private slots:
     // File menu operations
     bool onSaveProject();
     bool onOpenProject();
-    bool onSaveMdn2d();
+    bool onSaveMdn2d(int idx = -1);
     bool onOpenMdn2d();
+    bool onCloseProject();
 
     void onSplitterMoved(int pos, int index);
     void onCommandSubmitted(const QString& text);
@@ -64,7 +65,7 @@ private slots:
     void chooseModeSubtract();
 
     void setGlobalFontSize(int pt);
-    void setGlobalConfig(Mdn2dConfig c);
+    void setGlobalConfig(Mdn2dConfig c, bool force=false);
 
     // Fraxis control
     void cycleFraxis();
