@@ -47,15 +47,23 @@ mdn::gui::MainWindow::~MainWindow()
 {
     // 1) Guard against app-wide signals firing during teardown.
     if (qApp) {
-        disconnect(qApp, &QApplication::focusChanged,
-                   this, &mdn::gui::MainWindow::onAppFocusChanged);
+        disconnect(
+            qApp,
+            &QApplication::focusChanged,
+            this,
+            &mdn::gui::MainWindow::onAppFocusChanged
+        );
     }
 
     // 2) Stop splitter -> MainWindow traffic, and remove event filter.
     if (m_splitter) {
         m_splitter->removeEventFilter(this);
-        disconnect(m_splitter, &QSplitter::splitterMoved,
-                   this, &mdn::gui::MainWindow::onSplitterMoved);
+        disconnect(
+            m_splitter,
+            &QSplitter::splitterMoved,
+            this,
+            &mdn::gui::MainWindow::onSplitterMoved
+        );
     }
 
     // 3) Project is a QObject child of MainWindow (Project(this)), disconnect here for clarity.

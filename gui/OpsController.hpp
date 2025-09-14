@@ -39,6 +39,7 @@ public:
         DestinationSimple dest;
         int overwriteIndex; // -1 means “not set”
         QString newName;
+
         friend std::ostream& operator<<(std::ostream& os, const Plan& p) {
             std::string destStr(
                 p.dest == DestinationSimple::InPlace
