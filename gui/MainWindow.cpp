@@ -182,7 +182,7 @@ void mdn::gui::MainWindow::onProjectTabsChanged(int currentIndex)
         }
     }
     if (count > 0) {
-        m_tabWidget->setCurrentIndex(idx);
+        setActiveTab(idx);
     }
 
     if (centralWidget()) {
@@ -201,6 +201,22 @@ void mdn::gui::MainWindow::onProjectTabsChanged(int currentIndex)
 
 void mdn::gui::MainWindow::onProjectProperties() {
     doProjectProperties();
+}
+
+
+bool mdn::gui::MainWindow::onNewProject() {
+    Log_Debug2_H("");
+    bool result = createNewProject();
+    Log_Debug2_T("");
+    return result;
+}
+
+
+bool mdn::gui::MainWindow::onNewMdn2d(QString name, int index) {
+    Log_Debug2_H("");
+    // To do - get user input for name
+    createNewMdn2d(name, index, true);
+    Log_Debug2_T("");
 }
 
 
@@ -274,28 +290,9 @@ bool mdn::gui::MainWindow::onOpenProject() {
         return false;
     }
 
-    if (m_project) {
-        QMessageBox::StandardButton reply = QMessageBox::question(
-            this,
-            "Save Project",
-            QString("If you proceed, any unsaved changes will be lost.\n\n") +
-                QString("Do you want to save the existing project?"),
-            QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel,
-            QMessageBox::Yes // Default button
-        );
-        if (reply == QMessageBox::Yes) {
-            bool success = onSaveProject();
-            if (!success) {
-                // User chose to save, but saving failed.  Do not proceed.
-                Log_Debug2_T("Failed to save on request");
-                return false;
-            }
-        } else if (reply == QMessageBox::Cancel) {
-            Log_Debug2("User cancelled when asked to save");
-            return false;
-        }
-        Log_Debug3("Deleting existing project");
-        onCloseProject();
+    if (!confirmedCloseProject()) {
+        Log_Debug2_T("Did not succeed in closing existing project");
+        return false;
     }
 
     std::unique_ptr<Project> ptr = Project::loadFromFile(this, path.toStdString());
@@ -321,11 +318,6 @@ bool mdn::gui::MainWindow::onOpenProject() {
     setWindowTitle(baseName);
 
     onProjectTabsChanged(m_project->activeIndex());
-    // syncTabsToProject();
-    // const int ai = m_project->activeIndex();
-    // if (ai >= 0 && ai < m_tabWidget->count()) {
-    //     m_tabWidget->setCurrentIndex(ai);
-    // }
     m_globalConfig.setMaster(*m_project);
     setGlobalConfig(m_globalConfig);
     statusBar()->showMessage(tr("Project loaded"), 2000);
@@ -474,7 +466,7 @@ bool mdn::gui::MainWindow::onOpenMdn2d() {
         return false;
     }
 
-    Mdn2d num = Mdn2d::NewInstance(m_project->config(), "");
+    Mdn2d num = Mdn2d::NewInstance(m_globalConfig, "");
     const QString ext = QFileInfo(path).suffix().toLower();
 
     try {
@@ -490,7 +482,7 @@ bool mdn::gui::MainWindow::onOpenMdn2d() {
         return false;
     }
 
-    num.setConfig(m_project->config());
+    num.setConfig(m_globalConfig);
     // appends to end by convention
     m_project->appendMdn(std::move(num));
     // rebuild tabs; preserves current selection logic
@@ -503,35 +495,8 @@ bool mdn::gui::MainWindow::onOpenMdn2d() {
 
 bool mdn::gui::MainWindow::onCloseProject() {
     Log_Debug2_H("");
-    if (!m_project) {
-        Log_Debug2_T("no project, returning false");
-        return false;
-    }
-    if (m_tabWidget) {
-        QSignalBlocker blockTabs(m_tabWidget);
-
-        const int n = m_tabWidget->count();
-        for (int i = n - 1; i >= 0; --i) {
-            QWidget* w = m_tabWidget->widget(i);
-            m_tabWidget->removeTab(i);
-            delete w;
-        }
-    }
-
-    disconnect(m_project, nullptr, this, nullptr);
-
-    delete m_project;
-    m_project = nullptr;
-
-    setWindowTitle(QStringLiteral("MDN Editor"));
-    if (statusBar()) {
-        statusBar()->clearMessage();
-    }
-
-    focusActiveGrid();
-
-    Log_Debug2_T("project deleted, returning true");
-    return true;
+    bool result = confirmedCloseProject();
+    Log_Debug2_T("result=" << result);
 }
 
 
@@ -570,35 +535,127 @@ void mdn::gui::MainWindow::onOpsPlan(const OpsController::Plan& p) {
     }
     Mdn2d& a = *aPtr;
     Mdn2d& b = *bPtr;
-    if (p.dest == DestinationSimple::InPlace) {
+    if (p.dest == DestinationSimple::InPlace && p.overwriteIndex >= 0) {
+        const int t = p.overwriteIndex;
+        if (t == p.indexA) {
+            switch (p.op) {
+                case Operation::Add: {
+                    Log_Debug4_H("Dispatch a += b");
+                    a += b;
+                    Log_Debug4_T("a += b return");
+                    break;
+                }
+                case Operation::Subtract: {
+                    Log_Debug4_H("Dispatch a -= b");
+                    a -= b;
+                    Log_Debug4_T("a -= b return");
+                    break;
+                }
+                case Operation::Multiply: {
+                    Log_Debug4_H("Dispatch a *= b");
+                    a *= b;
+                    Log_Debug4_T("a *= b return");
+                    break;
+                }
+                case Operation::Divide: {
+                    Log_Debug4_H("Dispatch a /= b");
+                    a /= b;
+                    Log_Debug4_T("a /= b return");
+                    break;
+                }
+            }
+            syncTabsToProject();
+            setActiveTab(p.indexA);
+            if (m_ops) {
+                m_ops->refreshTabNames();
+            }
+            Log_Debug_T("");
+            return;
+        } else {
+            Mdn2d* ansPtr = m_project->getMdn(t);
+            if (ansPtr->data_index().size()) {
+                std::ostringstream oss;
+                oss << "If you proceed, the answer will overwrite "
+                    << "tab '" << ansPtr->name() << "'.\n\n"
+                    << "Are you sure?";
+                QMessageBox::StandardButton reply = QMessageBox::question(
+                    this,
+                    "Overwrite Number?",
+                    QString(oss.str().c_str()),
+                    QMessageBox::Yes | QMessageBox::No,
+                    QMessageBox::No // Default button
+                );
+                if (reply != QMessageBox::Yes) {
+                    Log_Debug_T("User rejected overwrite");
+                    return;
+                }
+                // User said Yes
+            }
+            ansPtr->clear();
+            Mdn2d& ans = *ansPtr;
+            switch (p.op) {
+                case Operation::Add:{
+                    Log_Debug4_H("Dispatch a.plus(b, ans);");
+                    a.plus(b, ans);
+                    Log_Debug4_T("Return a.plus(b, ans);");
+                    break;
+                }
+                case Operation::Subtract:{
+                    Log_Debug4_H("Dispatch a.minus(b, ans);");
+                    a.minus(b, ans);
+                    Log_Debug4_T("Return a.minus(b, ans);");
+                    break;
+                }
+                case Operation::Multiply:{
+                    Log_Debug4_H("Dispatch a.multiply(b, ans);");
+                    a.multiply(b, ans);
+                    Log_Debug4_T("Return a.multiply(b, ans);");
+                    break;
+                }
+                case Operation::Divide:{
+                    Log_Debug4_H("Dispatch a.divide(b, ans);");
+                    a.divide(b, ans);
+                    Log_Debug4_T("Return a.divide(b, ans);");
+                    break;
+                }
+            }
+            syncTabsToProject();
+            setActiveTab(t);
+            if (m_ops) {
+                m_ops->refreshTabNames();
+            }
+            Log_Debug_T("");
+            return;
+        }
+    } else if (p.dest == DestinationSimple::InPlace) {
         switch (p.op) {
             case Operation::Add: {
-                Log_Debug4("Dispatch a += b");
+                Log_Debug4_H("Dispatch a += b");
                 a += b;
-                Log_Debug4("a += b return");
+                Log_Debug4_T("a += b return");
                 break;
             }
             case Operation::Subtract: {
-                Log_Debug4("Dispatch a -= b");
+                Log_Debug4_H("Dispatch a -= b");
                 a -= b;
-                Log_Debug4("a -= b return");
+                Log_Debug4_T("a -= b return");
                 break;
             }
             case Operation::Multiply: {
-                Log_Debug4("Dispatch a *= b");
+                Log_Debug4_H("Dispatch a *= b");
                 a *= b;
-                Log_Debug4("a *= b return");
+                Log_Debug4_T("a *= b return");
                 break;
             }
             case Operation::Divide: {
-                Log_Debug4("Dispatch a /= b");
+                Log_Debug4_H("Dispatch a /= b");
                 a /= b;
-                Log_Debug4("a /= b return");
+                Log_Debug4_T("a /= b return");
                 break;
             }
         }
         syncTabsToProject();
-        m_tabWidget->setCurrentIndex(p.indexA);
+        setActiveTab(p.indexA);
         if (m_ops) {
             m_ops->refreshTabNames();
         }
@@ -610,7 +667,7 @@ void mdn::gui::MainWindow::onOpsPlan(const OpsController::Plan& p) {
             requestedName = std::string("Result");
         }
         std::string suggestedName = m_project->suggestName(requestedName);
-        Mdn2d ans(m_project->config(), suggestedName);
+        Mdn2d ans(m_globalConfig, suggestedName);
         Log_Debug2("suggestedName=" << suggestedName);
         switch (p.op) {
             case Operation::Add: {
@@ -640,7 +697,7 @@ void mdn::gui::MainWindow::onOpsPlan(const OpsController::Plan& p) {
         }
         m_project->appendMdn(std::move(ans));
         syncTabsToProject();
-        m_tabWidget->setCurrentIndex(p.indexA);
+        setActiveTab(m_project->size()-1);
         if (m_ops) {
             m_ops->refreshTabNames();
         }
@@ -889,7 +946,6 @@ void mdn::gui::MainWindow::slotDebugShowAllTabs()
         oss << std::endl;
         oss << "\nconfig=" << c;
         Log_Info(oss.str());
-        // Log_Info("config=" <<
     }
     Log_Debug3_T("");
 }
@@ -979,8 +1035,8 @@ void mdn::gui::MainWindow::createSplitter() {
 void mdn::gui::MainWindow::createMenus() {
     Log_Debug3_H("");
     QMenu* fileMenu = menuBar()->addMenu("&File");
-    fileMenu->addAction("New Project", this, &mdn::gui::MainWindow::newProjectRequested);
-    fileMenu->addAction("New Mdn2d", this, &mdn::gui::MainWindow::newMdn2dRequested);
+    fileMenu->addAction("New Project", this, &mdn::gui::MainWindow::onNewProject);
+    fileMenu->addAction("New Mdn2d", this, &mdn::gui::MainWindow::onNewMdn2d);
     fileMenu->addSeparator();
     fileMenu->addAction("Open Project", this, &mdn::gui::MainWindow::onOpenProject);
     fileMenu->addAction("Open Mdn2d", this, &mdn::gui::MainWindow::onOpenMdn2d);
@@ -990,7 +1046,7 @@ void mdn::gui::MainWindow::createMenus() {
     fileMenu->addSeparator();
     fileMenu->addAction("Project Properties", this, &mdn::gui::MainWindow::onProjectProperties);
     fileMenu->addSeparator();
-    fileMenu->addAction("Close Project", this, &mdn::gui::MainWindow::closeProjectRequested);
+    fileMenu->addAction("Close Project", this, &mdn::gui::MainWindow::onCloseProject);
     fileMenu->addAction("Exit", this, &mdn::gui::MainWindow::close);
 
     QMenu* editMenu = menuBar()->addMenu("&Edit");
@@ -1055,6 +1111,9 @@ void mdn::gui::MainWindow::setupLayout() {
     Log_Debug3("Dispatch - createTabs");
     createTabs();
 
+    // Make first tab active
+    setActiveTab(0);
+
     // Bottom half - command history + input
     m_splitter->addWidget(m_tabWidget);
     m_splitter->addWidget(m_command);
@@ -1069,28 +1128,6 @@ void mdn::gui::MainWindow::setupLayout() {
     Log_Debug3("Dispatch - initFocusModel");
     initFocusModel();
 
-    Log_Debug3_T("");
-}
-
-
-void mdn::gui::MainWindow::createNewProject() {
-    Log_Debug3_H("");
-
-    if (m_project) {
-        // TODO "Save changes?"
-        delete m_project;
-        m_project = nullptr;
-    }
-
-    m_project = new Project(this);
-    m_globalConfig.setMaster(*m_project);
-    doProjectProperties();
-    if (m_project) {
-        connect(m_project, &mdn::gui::Project::tabsAboutToChange,
-                this, &mdn::gui::MainWindow::onProjectTabsAboutToChange);
-        connect(m_project, &mdn::gui::Project::tabsChanged,
-                this, &mdn::gui::MainWindow::onProjectTabsChanged);
-    }
     Log_Debug3_T("");
 }
 
@@ -1224,7 +1261,7 @@ void mdn::gui::MainWindow::createTabForIndex(int index) {
         &mdn::gui::MainWindow::slotDebugShowAllTabs
     );
 
-    m_tabWidget->setCurrentIndex(tab);
+    setActiveTab(tab);
     ndw->setFocus();
     Log_Debug3_T("");
 }
@@ -1310,6 +1347,128 @@ void mdn::gui::MainWindow::createStatusBar()
 }
 
 
+bool mdn::gui::MainWindow::createNewProject() {
+    Log_Debug3_H("");
+
+    if (!confirmedCloseProject()) {
+        Log_Debug3_T("Did not successfully close existing project");
+        return false;
+    }
+
+    if (m_project) {
+        // TODO "Save changes?"
+        delete m_project;
+        m_project = nullptr;
+    }
+
+    m_project = new Project(this);
+    m_globalConfig.setMaster(*m_project);
+    doProjectProperties();
+    if (m_project) {
+        connect(m_project, &mdn::gui::Project::tabsAboutToChange,
+                this, &mdn::gui::MainWindow::onProjectTabsAboutToChange);
+        connect(m_project, &mdn::gui::Project::tabsChanged,
+                this, &mdn::gui::MainWindow::onProjectTabsChanged);
+    }
+    Log_Debug3_T("");
+}
+
+
+bool mdn::gui::MainWindow::confirmedCloseProject() {
+    Log_Debug2_H("");
+    if (!m_project) {
+        Log_Debug2_T("Project already closed");
+        return true;
+    }
+    QMessageBox::StandardButton reply = QMessageBox::question(
+        this,
+        "Save Project",
+        QString("If you proceed, any unsaved changes will be lost.\n\n") +
+            QString("Do you want to save the existing project?"),
+        QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel,
+        QMessageBox::Yes // Default button
+    );
+    if (reply == QMessageBox::Yes) {
+        bool success = onSaveProject();
+        if (!success) {
+            // User chose to save, but saving failed.  Do not proceed.
+            Log_Debug2_T("Failed to save on request");
+            return false;
+        }
+    } else if (reply == QMessageBox::Cancel) {
+        Log_Debug2("User cancelled when asked to save");
+        return false;
+    }
+    Log_Debug3("Deleting existing project");
+    bool result = closeProject();
+    Log_Debug2_H("result = " << result);
+    return result;
+}
+
+
+bool mdn::gui::MainWindow::closeProject() {
+    Log_Debug2_H("");
+    if (!m_project) {
+        Log_Debug2_T("no project, returning false");
+        return false;
+    }
+    if (m_tabWidget) {
+        QSignalBlocker blockTabs(m_tabWidget);
+
+        const int n = m_tabWidget->count();
+        for (int i = n - 1; i >= 0; --i) {
+            QWidget* w = m_tabWidget->widget(i);
+            m_tabWidget->removeTab(i);
+            delete w;
+        }
+    }
+
+    disconnect(m_project, nullptr, this, nullptr);
+
+    delete m_project;
+    m_project = nullptr;
+
+    setWindowTitle(QStringLiteral("MDN Editor"));
+    if (statusBar()) {
+        statusBar()->clearMessage();
+    }
+
+    focusActiveGrid();
+
+    Log_Debug2_T("project deleted, returning true");
+    return true;
+}
+
+
+bool mdn::gui::MainWindow::createNewMdn2d(QString name, int index, bool makeActive) {
+    std::string nameStd = name.toStdString();
+    Log_Debug2_H(
+        "Attempt to create {'" << nameStd << "'," << index << "}, makeActive=" << makeActive
+    );
+    if (!m_project) {
+        Log_Debug2_T("No project, cannot create Mdn2d");
+        return false;
+    }
+    Mdn2d num = Mdn2d::NewInstance(m_globalConfig, name.toStdString());
+    std::string actualName = num.name();
+    Log_Debug3("Created Mdn2d '" << nameStd << "', actual assigned name='" << actualName << "'");
+    // Insertion will trigger a tabWidget update
+    m_project->insertMdn(std::move(num), index);
+    int actualIndex = m_project->indexOfMdn(actualName);
+    if (makeActive) {
+        setActiveTab(actualIndex);
+    }
+    if (index != actualIndex || nameStd != actualName) {
+        Log_Debug3(
+            "Attempted to create: {'" << nameStd << "'," << index << "}, "
+                << "actual result: {'" << actualName << "'," << actualIndex << "}"
+        );
+    }
+    Log_Debug2_T("");
+    return true;
+}
+
+
 void mdn::gui::MainWindow::doProjectProperties() {
     Log_Debug2_H("");
     if (!m_project) {
@@ -1322,7 +1481,7 @@ void mdn::gui::MainWindow::doProjectProperties() {
     dlg.setInitial(
         QString::fromStdString(m_project->name()),
         QString::fromStdString(m_project->path()),
-        m_project->config()
+        m_globalConfig
     );
     if (dlg.exec() != QDialog::Accepted) {
         Log_Debug2_T("User rejected change");
@@ -1516,6 +1675,12 @@ void mdn::gui::MainWindow::syncTabsToProject() {
         m_ops->refreshTabNames();
     }
     Log_Debug3_T("");
+}
+
+
+void mdn::gui::MainWindow::setActiveTab(int index) {
+    m_project->setActiveMdn(index);
+    m_tabWidget->setCurrentIndex(index);
 }
 
 

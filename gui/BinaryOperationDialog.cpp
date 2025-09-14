@@ -29,6 +29,7 @@ void mdn::gui::BinaryOperationDialog::setTabNames(const QStringList& names) {
     Log_Debug3_H("");
     m_names = names;
     rebuildBPicker();
+    rebuildDestPicker();
     updateSummary();
     Log_Debug3_T("");
 }
@@ -40,6 +41,12 @@ void mdn::gui::BinaryOperationDialog::setActiveIndex(int indexA) {
     if (m_labelA) {
         m_labelA->setText(m_names.value(m_indexA));
     }
+    // Default dest selection follows active A unless user changes it
+    if (m_indexDest < 0) {
+        m_indexDest = m_indexA;
+        selectDestInUi(m_indexDest);
+    }
+    rebuildDestPicker();
     updateSummary();
     Log_Debug3_T("");
 }
@@ -73,14 +80,14 @@ void mdn::gui::BinaryOperationDialog::setRememberedB(int indexB) {
 void mdn::gui::BinaryOperationDialog::setRememberedDestination(DestinationMode mode) {
     Log_Debug3_H("");
     m_dest = mode;
-    if (mode == DestinationMode::OverwriteA) {
-        m_destOverwriteA->setChecked(true);
+    if (mode == DestinationMode::CreateNew) {
+        m_destCreateNew->setChecked(true);
     } else {
-        if (mode == DestinationMode::OverwriteB) {
-            m_destOverwriteB->setChecked(true);
-        } else {
-            m_destCreateNew->setChecked(true);
-        }
+        m_destOverwrite->setChecked(true);
+    }
+    if (m_indexDest < 0) {
+        m_indexDest = m_indexA;
+        selectDestInUi(m_indexDest);
     }
     updateSummary();
     Log_Debug3_T("");
@@ -94,6 +101,7 @@ mdn::gui::BinaryOperationDialog::Plan mdn::gui::BinaryOperationDialog::plan() co
     p.indexA = m_indexA;
     p.indexB = m_indexB;
     p.dest = m_dest;
+    p.indexDest = (m_dest == DestinationMode::OverwriteIndex ? currentDestFromUi() : -1);
     p.newName = m_newNameEdit->text();
     p.rememberChoices = m_remember->isChecked();
     Log_Debug3_T("returning p=" << p);
@@ -125,29 +133,54 @@ void mdn::gui::BinaryOperationDialog::onBSelectionChanged() {
 
 void mdn::gui::BinaryOperationDialog::onDestChanged() {
     Log_Debug3_H("");
-    if (m_destOverwriteA->isChecked()) {
-        m_dest = DestinationMode::OverwriteA;
+    if (m_destOverwrite->isChecked()) {
+        m_dest = DestinationMode::OverwriteIndex;
     } else {
-        if (m_destOverwriteB->isChecked()) {
-            m_dest = DestinationMode::OverwriteB;
-        } else {
-            m_dest = DestinationMode::CreateNew;
-        }
+        m_dest = DestinationMode::CreateNew;
     }
-    bool needName = m_dest == DestinationMode::CreateNew;
+
+    const bool needPicker = m_dest == DestinationMode::OverwriteIndex;
+    const bool needName = m_dest == DestinationMode::CreateNew;
+
+    m_destPickerStack->setEnabled(needPicker);
+    m_destPickerStack->setVisible(needPicker);
     m_newNameEdit->setEnabled(needName);
+
     if (needName) {
         QString a = m_names.value(m_indexA);
         QString b = m_names.value(m_indexB);
         QString sym = opSymbol(m_op);
         m_newNameEdit->setText(a + " " + sym + " " + b);
     }
+    if (needPicker && m_indexDest < 0) {
+        m_indexDest = m_indexA;
+        selectDestInUi(m_indexDest);
+    }
     updateSummary();
     Log_Debug3_T("");
 }
 
 
-void mdn::gui::BinaryOperationDialog::onFilterTextChanged(const QString& text) {
+void mdn::gui::BinaryOperationDialog::onDestSelectionChanged() {
+    Log_Debug3_H("");
+    m_indexDest = currentDestFromUi();
+    updateSummary();
+    Log_Debug3_T("");
+}
+
+
+void mdn::gui::BinaryOperationDialog::onDestFilterTextChanged(const QString& text) {
+    Log_Debug3_H("");
+    for (int i = 0; i < m_destList->count(); ++i) {
+        QListWidgetItem* it = m_destList->item(i);
+        bool show = it->text().contains(text, Qt::CaseInsensitive);
+        it->setHidden(!show);
+    }
+    Log_Debug3_T("");
+}
+
+
+void mdn::gui::BinaryOperationDialog::onBFilterTextChanged(const QString& text) {
     Log_Debug3_H("");
     for (int i = 0; i < m_bList->count(); ++i) {
         QListWidgetItem* it = m_bList->item(i);
@@ -226,7 +259,6 @@ void mdn::gui::BinaryOperationDialog::buildUi() {
     QWidget* bPicker = new QWidget(this);
     bPicker->setLayout(bBox);
 
-
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     connect(m_opsButtons,      &QButtonGroup::idClicked,
             this,              &BinaryOperationDialog::onOpChanged);
@@ -241,57 +273,141 @@ void mdn::gui::BinaryOperationDialog::buildUi() {
 
     connect(m_bList, SIGNAL(currentRowChanged(int)), this, SLOT(onBSelectionChanged()));
     connect(m_bCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(onBSelectionChanged()));
-    connect(m_bFilter, SIGNAL(textChanged(QString)), this, SLOT(onFilterTextChanged(QString)));
+    connect(m_bFilter, SIGNAL(textChanged(QString)), this, SLOT(onBFilterTextChanged(QString)));
 
-    QGroupBox* destGroup = new QGroupBox(tr("Destination"), this);
-    QVBoxLayout* destLay = new QVBoxLayout(destGroup);
+    // Destination box
+    QVBoxLayout* destBox = new QVBoxLayout();
+    QLabel* destLabel = new QLabel(tr("Answer:"), this);
+    destBox->addWidget(destLabel);
 
-    m_destOverwriteA = new QRadioButton(tr("Overwrite A"), destGroup);
-    m_destOverwriteB = new QRadioButton(tr("Overwrite B"), destGroup);
-    m_destCreateNew  = new QRadioButton(tr("Create new"),  destGroup);
+    // Overwrite/Create radios
+    QWidget* destRadioRow = new QWidget(this);
+    QHBoxLayout* destRadioLay = new QHBoxLayout(destRadioRow);
 
-    m_newNameEdit = new QLineEdit(destGroup);
-    m_newNameEdit->setEnabled(false);
+    m_destOverwrite = new QRadioButton(tr("Overwrite"), this);
+    m_destCreateNew = new QRadioButton(tr("Create New"), this);
+    m_destOverwrite->setChecked(true);
 
-    destLay->addWidget(m_destOverwriteA);
-    destLay->addWidget(m_destOverwriteB);
+    destRadioLay->addWidget(m_destOverwrite);
+    destRadioLay->addWidget(m_destCreateNew);
+    destRadioRow->setLayout(destRadioLay);
+    destBox->addWidget(destRadioRow);
 
+    // Destination picker stack
+    m_destPickerStack = new QWidget(this);
+    QVBoxLayout* dStack = new QVBoxLayout(m_destPickerStack);
+
+    m_destRadioGroup = new QGroupBox(tr("Choose destination"), this);
+    m_destRadioButtons = new QButtonGroup(this);
+    QVBoxLayout* dRadioLay = new QVBoxLayout(m_destRadioGroup);
+    m_destRadioGroup->setLayout(dRadioLay);
+
+    m_destFilter = new QLineEdit(this);
+    m_destFilter->setPlaceholderText(tr("Filter…"));
+    m_destList = new QListWidget(this);
+    m_destCombo = new QComboBox(this);
+
+    dStack->addWidget(m_destRadioGroup);
+    dStack->addWidget(m_destFilter);
+    dStack->addWidget(m_destList);
+    dStack->addWidget(m_destCombo);
+    m_destPickerStack->setLayout(dStack);
+    destBox->addWidget(m_destPickerStack);
+
+    // New name row
     QHBoxLayout* nameRow = new QHBoxLayout();
-    nameRow->addWidget(m_destCreateNew);
-    nameRow->addWidget(new QLabel(tr("Name:"), destGroup));
+    QLabel* nameLabel = new QLabel(tr("New name:"), this);
+    m_newNameEdit = new QLineEdit(this);
+    nameRow->addWidget(nameLabel);
     nameRow->addWidget(m_newNameEdit, 1);
-    QWidget* nameRowW = new QWidget(destGroup);
+    QWidget* nameRowW = new QWidget(this);
     nameRowW->setLayout(nameRow);
-    destLay->addWidget(nameRowW);
 
-    auto* destButtons = new QButtonGroup(destGroup);
-    destButtons->setExclusive(true);
-    destButtons->addButton(m_destOverwriteA);
-    destButtons->addButton(m_destOverwriteB);
-    destButtons->addButton(m_destCreateNew);
-
-    connect(m_destOverwriteA, SIGNAL(toggled(bool)), this, SLOT(onDestChanged()));
-    connect(m_destOverwriteB, SIGNAL(toggled(bool)), this, SLOT(onDestChanged()));
-    connect(m_destCreateNew, SIGNAL(toggled(bool)), this, SLOT(onDestChanged()));
-
-    m_summary = new QLabel(tr(""), this);
-    m_remember = new QCheckBox(tr("Remember B and destination"), this);
-
-    m_buttons = new QDialogButtonBox(QDialogButtonBox::Cancel | QDialogButtonBox::Ok, this);
-    connect(m_buttons, SIGNAL(accepted()), this, SLOT(onAccept()));
-    connect(m_buttons, SIGNAL(rejected()), this, SLOT(reject()));
+    // Summary + buttons
+    m_summary = new QLabel(this);
+    QDialogButtonBox* btns = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
 
     root->addWidget(opsRowW);
     root->addWidget(aRowW);
-    root->addWidget(bPicker);
-    root->addWidget(destGroup);
-    root->addWidget(m_summary);
-    root->addWidget(m_remember);
-    root->addWidget(m_buttons);
+    root->addWidget(bLabel);
+    root->addWidget(m_bPickerStack);
+    root->addLayout(destBox);
+    root->addWidget(nameRowW);
+    root->addWidget(m_summary, 0);
+    root->addWidget(btns, 0);
+    setLayout(root);
 
+    connect(m_opsButtons, SIGNAL(buttonClicked(int)), this, SLOT(onOpChanged()));
+    connect(m_bRadioButtons, SIGNAL(buttonClicked(int)), this, SLOT(onBSelectionChanged()));
+    connect(m_bList, SIGNAL(currentRowChanged(int)), this, SLOT(onBSelectionChanged()));
+    connect(m_bCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(onBSelectionChanged()));
+    connect(m_destOverwrite, SIGNAL(toggled(bool)), this, SLOT(onDestChanged()));
+    connect(m_destCreateNew, SIGNAL(toggled(bool)), this, SLOT(onDestChanged()));
+    connect(m_destRadioButtons, SIGNAL(buttonClicked(int)), this, SLOT(onDestSelectionChanged()));
+    connect(m_destList, SIGNAL(currentRowChanged(int)), this, SLOT(onDestSelectionChanged()));
+    connect(m_destCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(onDestSelectionChanged()));
+    connect(m_destFilter, SIGNAL(textChanged(QString)), this, SLOT(onDestFilterTextChanged(QString)));
+    connect(btns, SIGNAL(accepted()), this, SLOT(onAccept()));
+    connect(btns, SIGNAL(rejected()), this, SLOT(reject()));
+
+    rebuildBPicker();
+    rebuildDestPicker();
+    onDestChanged();
     setWindowTitle(tr("Binary Operation"));
-    resize(560, 560);
+    // resize(560, 560);
+    updateSummary();
+
     Log_Debug3_T("");
+
+    // QGroupBox* destGroup = new QGroupBox(tr("Destination"), this);
+    // QVBoxLayout* destLay = new QVBoxLayout(destGroup);
+    //
+    // m_destOverwriteA = new QRadioButton(tr("Overwrite A"), destGroup);
+    // m_destOverwriteB = new QRadioButton(tr("Overwrite B"), destGroup);
+    // m_destCreateNew  = new QRadioButton(tr("Create new"),  destGroup);
+    //
+    // m_newNameEdit = new QLineEdit(destGroup);
+    // m_newNameEdit->setEnabled(false);
+    //
+    // destLay->addWidget(m_destOverwriteA);
+    // destLay->addWidget(m_destOverwriteB);
+    //
+    // QHBoxLayout* nameRow = new QHBoxLayout();
+    // nameRow->addWidget(m_destCreateNew);
+    // nameRow->addWidget(new QLabel(tr("Name:"), destGroup));
+    // nameRow->addWidget(m_newNameEdit, 1);
+    // QWidget* nameRowW = new QWidget(destGroup);
+    // nameRowW->setLayout(nameRow);
+    // destLay->addWidget(nameRowW);
+    //
+    // auto* destButtons = new QButtonGroup(destGroup);
+    // destButtons->setExclusive(true);
+    // destButtons->addButton(m_destOverwriteA);
+    // destButtons->addButton(m_destOverwriteB);
+    // destButtons->addButton(m_destCreateNew);
+    //
+    // connect(m_destOverwriteA, SIGNAL(toggled(bool)), this, SLOT(onDestChanged()));
+    // connect(m_destOverwriteB, SIGNAL(toggled(bool)), this, SLOT(onDestChanged()));
+    // connect(m_destCreateNew, SIGNAL(toggled(bool)), this, SLOT(onDestChanged()));
+    //
+    // m_summary = new QLabel(tr(""), this);
+    // m_remember = new QCheckBox(tr("Remember B and destination"), this);
+    //
+    // m_buttons = new QDialogButtonBox(QDialogButtonBox::Cancel | QDialogButtonBox::Ok, this);
+    // connect(m_buttons, SIGNAL(accepted()), this, SLOT(onAccept()));
+    // connect(m_buttons, SIGNAL(rejected()), this, SLOT(reject()));
+    //
+    // root->addWidget(opsRowW);
+    // root->addWidget(aRowW);
+    // root->addWidget(bPicker);
+    // root->addWidget(destGroup);
+    // root->addWidget(m_summary);
+    // root->addWidget(m_remember);
+    // root->addWidget(m_buttons);
+    //
+    // setWindowTitle(tr("Binary Operation"));
+    // resize(560, 560);
+    // Log_Debug3_T("");
 }
 
 
@@ -409,6 +525,124 @@ int mdn::gui::BinaryOperationDialog::currentBFromUi() const {
 }
 
 
+void mdn::gui::BinaryOperationDialog::rebuildDestPicker() {
+    Log_Debug3_H("");
+
+    // Build friendly label list with (A)/(B) markers
+    QStringList labeled = m_names;
+    if (m_indexA >= 0 && m_indexA < labeled.size()) {
+        labeled[m_indexA] = labeled[m_indexA] + "  (A)";
+    }
+    if (m_indexB >= 0 && m_indexB < labeled.size() && m_indexB != m_indexA) {
+        labeled[m_indexB] = labeled[m_indexB] + "  (B)";
+    }
+
+    const int n = labeled.size();
+    const bool small = n > 0 && n <= 10;
+    const bool medium = n > 10 && n <= 25;
+
+    if (small) {
+        m_destRadioGroup->setVisible(true);
+        m_destFilter->setVisible(false);
+        m_destList->setVisible(false);
+        m_destCombo->setVisible(false);
+
+        QLayoutItem* child;
+        while ((child = m_destRadioGroup->layout()->takeAt(0)) != nullptr) {
+            if (child->widget()) child->widget()->deleteLater();
+            delete child;
+        }
+        const int oldCount = m_destRadioButtons->buttons().size();
+        for (QAbstractButton* b : m_destRadioButtons->buttons()) b->deleteLater();
+        if (oldCount > 0) m_destRadioButtons->setExclusive(false);
+        m_destRadioButtons->setExclusive(true);
+
+        for (int i = 0; i < n; ++i) {
+            QRadioButton* r = new QRadioButton(labeled[i], m_destRadioGroup);
+            m_destRadioButtons->addButton(r, i);
+            m_destRadioGroup->layout()->addWidget(r);
+        }
+    } else {
+        m_destRadioGroup->setVisible(false);
+        if (medium) {
+            m_destFilter->setVisible(true);
+            m_destList->setVisible(true);
+            m_destCombo->setVisible(false);
+
+            m_destList->clear();
+            m_destList->addItems(labeled);
+            if (n > 0) {
+                m_destList->setCurrentRow(0);
+            }
+        } else {
+            m_destFilter->setVisible(false);
+            m_destList->setVisible(false);
+            m_destCombo->setVisible(true);
+
+            m_destCombo->clear();
+            m_destCombo->addItems(labeled);
+            if (n > 0) {
+                m_destCombo->setCurrentIndex(0);
+            }
+        }
+    }
+
+    selectDestInUi(m_indexDest);
+    Log_Debug3_T("");
+}
+
+
+void mdn::gui::BinaryOperationDialog::selectDestInUi(int index) {
+    Log_Debug3_H("");
+    const int n = m_names.size();
+    if (n <= 0) {
+        m_indexDest = 0;
+        Log_Debug3_T("");
+        return;
+    }
+    int idx = index;
+    if (idx < 0) {
+        idx = 0;
+    } else {
+        if (idx >= n) {
+            idx = n - 1;
+        }
+    }
+    if (m_destRadioGroup->isVisible()) {
+        QAbstractButton* b = m_destRadioButtons->button(idx);
+        if (b) {
+            b->setChecked(true);
+        }
+    } else {
+        if (m_destList->isVisible()) {
+            m_destList->setCurrentRow(idx);
+        } else {
+            m_destCombo->setCurrentIndex(idx);
+        }
+    }
+    m_indexDest = idx;
+    Log_Debug3_T("m_indexDest=" << m_indexDest);
+}
+
+
+int mdn::gui::BinaryOperationDialog::currentDestFromUi() const {
+    Log_Debug3_H("");
+    if (m_destRadioGroup->isVisible()) {
+        int id = m_destRadioButtons->checkedId();
+        Log_Debug3_T("");
+        return id;
+    } else {
+        if (m_destList->isVisible()) {
+            Log_Debug3_T("");
+            return m_destList->currentRow();
+        } else {
+            Log_Debug3_T("");
+            return m_destCombo->currentIndex();
+        }
+    }
+}
+
+
 void mdn::gui::BinaryOperationDialog::updateSummary() {
     Log_Debug3_H("");
     QString a = m_names.value(m_indexA);
@@ -416,14 +650,13 @@ void mdn::gui::BinaryOperationDialog::updateSummary() {
     QString sym = opSymbol(m_op);
 
     QString destStr;
-    if (m_dest == DestinationMode::OverwriteA) {
-        destStr = QStringLiteral("Overwrite %1").arg(a);
+    if (m_dest == DestinationMode::CreateNew) {
+        destStr = QStringLiteral("Create \"%1\"").arg(m_newNameEdit->text());
     } else {
-        if (m_dest == DestinationMode::OverwriteB) {
-            destStr = QStringLiteral("Overwrite %1").arg(b);
-        } else {
-            destStr = QStringLiteral("Create \"%1\"").arg(m_newNameEdit->text());
-        }
+        QString dn = m_names.value(m_indexDest);
+        if (m_indexDest == m_indexA) dn += "  (A)";
+        if (m_indexDest == m_indexB) dn += "  (B)";
+        destStr = QStringLiteral("Overwrite %1").arg(dn);
     }
 
     QString s = QStringLiteral("%1  %2  %3  →  %4").arg(a, sym, b, destStr);

@@ -33,9 +33,7 @@ public:
     ~MainWindow() override;
 
 signals:
-    void newProjectRequested();
     void newMdn2dRequested();
-    void closeProjectRequested();
 
 private slots:
     void onTabContextMenu(const QPoint& pos);
@@ -44,6 +42,8 @@ private slots:
     void onProjectProperties();
 
     // File menu operations
+    bool onNewProject();
+    bool onNewMdn2d(QString name="", int index=-1);
     bool onSaveProject();
     bool onOpenProject();
     bool onSaveMdn2d(int idx = -1);
@@ -86,11 +86,20 @@ private:
     void createSplitter();
     void createMenus();
     void setupLayout();
-    void createNewProject();
     void createTabs();
     void createTabForIndex(int index);
     void initOperationsUi();
     void createStatusBar();
+
+    // File menu operations (full implementations)
+    // Create a new project, confirms close of existing project
+    bool createNewProject();
+    // Returns true if m_project has been successfully closed
+    bool confirmedCloseProject();
+    // Does the dirty work of actually closing the project
+    bool closeProject();
+    // Creates a new Mdn2d, inserts into the project, adds a tab
+    bool createNewMdn2d(QString name, int index, bool makeActive);
 
     // ProjectProperties window
     void doProjectProperties();
@@ -107,6 +116,7 @@ private:
     void copyTab(int index);
     void pasteTab(int insertAt);
     void syncTabsToProject();
+    void setActiveTab(int index);
 
     // Status bar
     void updateStatusModeText(NumberDisplayWidget::EditMode m);

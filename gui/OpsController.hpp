@@ -37,15 +37,16 @@ public:
         int indexA;
         int indexB;
         DestinationSimple dest;
+        int overwriteIndex; // -1 means “not set”
         QString newName;
-
         friend std::ostream& operator<<(std::ostream& os, const Plan& p) {
             std::string destStr(
                 p.dest == DestinationSimple::InPlace
                     ? "InPlace"
                     : "ToNew(" + MdnQtInterface::fromQString(p.newName) + ")"
             );
-            os << "[" << p.indexA << OperationToOpStr(p.op) << p.indexB << "→" << destStr << "]";
+            os << "[" << p.indexA << OperationToOpStr(p.op) << p.indexB
+                << "→" << destStr << ",o:" << p.overwriteIndex << "]";
             return os;
         }
     };

@@ -32,6 +32,7 @@ public:
         int indexA;
         int indexB;
         DestinationMode dest;
+        int indexDest;
         QString newName;
         bool rememberChoices;
     };
@@ -63,14 +64,24 @@ private slots:
     void onOpChanged();
     void onBSelectionChanged();
     void onDestChanged();
-    void onFilterTextChanged(const QString& text);
+    void onDestSelectionChanged();
+    void onDestFilterTextChanged(const QString& text);
+    void onBFilterTextChanged(const QString& text);
     void onAccept();
 
 private:
     void buildUi();
+
+    // Helpers for B picker
     void rebuildBPicker();
     void selectBInUi(int indexB);
     int currentBFromUi() const;
+
+    // Helpers for dest picker
+    void rebuildDestPicker();
+    void selectDestInUi(int index);
+    int currentDestFromUi() const;
+
     void updateSummary();
     QString opSymbol(Operation op) const;
     QString opName(Operation op) const;
@@ -95,9 +106,25 @@ private:
     QLineEdit* m_bFilter{nullptr};
     QComboBox* m_bCombo{nullptr};
 
-    QRadioButton* m_destOverwriteA{nullptr};
-    QRadioButton* m_destOverwriteB{nullptr};
-    QRadioButton* m_destCreateNew{nullptr};
+
+    // QRadioButton* m_destOverwriteA{nullptr};
+    // QRadioButton* m_destOverwriteB{nullptr};
+    // QRadioButton* m_destCreateNew{nullptr};
+
+    // Destination picker
+    QWidget* m_destPickerStack{ nullptr };
+    QGroupBox* m_destRadioGroup{ nullptr };
+    QButtonGroup* m_destRadioButtons{ nullptr };
+    QListWidget* m_destList{ nullptr };
+    QLineEdit* m_destFilter{ nullptr };
+    QComboBox* m_destCombo{ nullptr };
+
+    // Destination radio roots
+    QRadioButton* m_destOverwrite{ nullptr };
+    QRadioButton* m_destCreateNew{ nullptr };
+
+    int m_indexDest{ -1 };
+
     QLineEdit* m_newNameEdit{nullptr};
 
     QLabel* m_summary{nullptr};

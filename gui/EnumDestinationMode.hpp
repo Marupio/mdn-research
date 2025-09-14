@@ -13,7 +13,8 @@ namespace gui{
 enum class DestinationMode {
     OverwriteA,
     OverwriteB,
-    CreateNew
+    CreateNew,
+    OverwriteIndex
 };
 static std::string DestinationModeToString(const DestinationMode& d) {
     switch (d) {
@@ -26,6 +27,9 @@ static std::string DestinationModeToString(const DestinationMode& d) {
         case DestinationMode::CreateNew: {
             return "CreateNew";
         }
+        case DestinationMode::OverwriteIndex: {
+            return "OverwriteIndex";
+        }
         default: {
             return "Unknown";
         }
@@ -36,9 +40,11 @@ static DestinationMode StringToDestinationMode(const std::string& s) {
         return DestinationMode::OverwriteA;
     } else if (s == "OverwriteB") {
         return DestinationMode::OverwriteB;
+    } else if (s == "CreateNew") {
+        return DestinationMode::CreateNew;
+    } else { // s == "OverwriteIndex"
+        return DestinationMode::OverwriteIndex;
     }
-    // s == "CreateNew"
-    return DestinationMode::CreateNew;
 }
 static QString DestinationModeToQString(const DestinationMode& d) {
     return MdnQtInterface::toQString(DestinationModeToString(d));
