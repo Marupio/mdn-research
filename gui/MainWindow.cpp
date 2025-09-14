@@ -212,11 +212,17 @@ bool mdn::gui::MainWindow::onNewProject() {
 }
 
 
-bool mdn::gui::MainWindow::onNewMdn2d(QString name, int index) {
+bool mdn::gui::MainWindow::onNewMdn2d() {
+    return onNewNamedMdn2d("", -1);
+}
+
+
+bool mdn::gui::MainWindow::onNewNamedMdn2d(QString name, int index) {
     Log_Debug2_H("");
     // To do - get user input for name
-    createNewMdn2d(name, index, true);
-    Log_Debug2_T("");
+    bool result = createNewMdn2d(name, index, true);
+    Log_Debug2_T("result = " << result);
+    return result;
 }
 
 
@@ -497,6 +503,7 @@ bool mdn::gui::MainWindow::onCloseProject() {
     Log_Debug2_H("");
     bool result = confirmedCloseProject();
     Log_Debug2_T("result=" << result);
+    return result;
 }
 
 
@@ -1355,12 +1362,6 @@ bool mdn::gui::MainWindow::createNewProject() {
         return false;
     }
 
-    if (m_project) {
-        // TODO "Save changes?"
-        delete m_project;
-        m_project = nullptr;
-    }
-
     m_project = new Project(this);
     m_globalConfig.setMaster(*m_project);
     doProjectProperties();
@@ -1371,6 +1372,7 @@ bool mdn::gui::MainWindow::createNewProject() {
                 this, &mdn::gui::MainWindow::onProjectTabsChanged);
     }
     Log_Debug3_T("");
+    return true;
 }
 
 

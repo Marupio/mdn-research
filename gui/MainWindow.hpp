@@ -43,7 +43,8 @@ private slots:
 
     // File menu operations
     bool onNewProject();
-    bool onNewMdn2d(QString name="", int index=-1);
+    bool onNewMdn2d();
+    bool onNewNamedMdn2d(QString name, int index);
     bool onSaveProject();
     bool onOpenProject();
     bool onSaveMdn2d(int idx = -1);
