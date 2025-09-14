@@ -251,7 +251,7 @@ std::string mdn::gui::Project::requestMdnNameChange(
 
 std::string mdn::gui::Project::suggestName(const std::string& likeThis) const {
     Log_Debug_H(likeThis);
-    std::string working = likeThis.empty() ? "Mdn" : likeThis;
+    std::string working = likeThis.empty() ? "Mdn0" : likeThis;
     if (!contains(working)) {
         Log_Debug_T("Returning " << working);
         return working;
@@ -294,13 +294,16 @@ mdn::Mdn2dConfigImpact mdn::gui::Project::assessConfigChange(Mdn2dConfig config)
 
 void mdn::gui::Project::setConfig(Mdn2dConfig config) {
     Log_Debug2_H("config=" << config);
+    // Ensure master is set correctly
+    config.setMaster(*this);
+    m_name = config.parentName();
+    m_path = config.parentPath();
     if (m_data.empty()) {
         m_config = config;
         Log_Debug("Changed config to " << config);
         Log_Debug2_T("No impact");
         return;
     }
-    m_config.setMaster(*this);
 
     // For now, assume config is the same across all Mdn2d's
     Mdn2d* first = firstMdn();
@@ -858,7 +861,7 @@ void mdn::gui::Project::insertMdn(Mdn2d&& mdn, int index) {
     const std::string& origName = mdn.name();
     std::string newName;
     if (mdnNameExists(origName)) {
-        newName = Mdn2d::static_generateCopyName(origName);
+        newName = suggestCopyName(origName);
         if (warnings > 0) {
             oss << std::endl;
         }
@@ -1367,7 +1370,7 @@ std::unique_ptr<mdn::gui::Project> mdn::gui::Project::loadBinary(
     // Create an empty project (0 start tabs so we fully control content)
     Log_Debug3("Creating new project");
     std::unique_ptr<Project> proj(new Project(parent, projName, 0));
-    // Build config instance and apply through your normal path (so UI/consumers stay coherent)
+    // Build config instance and apply through the normal path (so UI/consumers stay coherent)
     {
         Mdn2dConfig cfg(
             base,
@@ -1376,7 +1379,7 @@ std::unique_ptr<mdn::gui::Project> mdn::gui::Project::loadBinary(
             maxIters,
             static_cast<mdn::Fraxis>(fraxis)
         );
-        proj->setConfig(cfg); // pushes to numbers later too (your setConfig logic) :contentReference[oaicite:2]{index=2}
+        proj->setConfig(cfg);
     }
 
     // Count

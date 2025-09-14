@@ -4,25 +4,35 @@
 #include "MdnException.hpp"
 
 
-mdn::Mdn2dFramework* mdn::Mdn2dConfig::m_masterPtr = nullptr;
+// mdn::Mdn2dFramework* mdn::Mdn2dConfig::m_masterPtr = nullptr;
+
+
+mdn::Mdn2dFramework& mdn::Mdn2dConfig::master() {
+    if (!m_masterPtr) {
+        m_masterPtr = &(mdn::DummyFramework);
+    }
+    return *m_masterPtr;
+}
 
 
 void mdn::Mdn2dConfig::setMaster(Mdn2dFramework& framework) {
-    if (m_masterPtr != &DummyFramework) {
+    if (m_masterPtr && m_masterPtr->className() != "Mdn2dFramework") {
         Log_Warn(
             "Setting a new framework " << framework.name()
             << ", class " << framework.className()
-            << ", when existing framework " << framework.name()
-            << ", class " << framework.className()
+            << ", when existing framework " << m_masterPtr->name()
+            << ", class " << m_masterPtr->className()
             << " already is assigned. Using new framework."
         );
     }
     m_masterPtr = &framework;
+    updateIdentity();
 }
 
 
 void mdn::Mdn2dConfig::resetMaster(Mdn2dFramework& framework) {
     m_masterPtr = &framework;
+    updateIdentity();
 }
 
 
@@ -43,8 +53,20 @@ mdn::Mdn2dConfig::Mdn2dConfig(
     m_fraxis(fraxisIn)
 {
     Log_Debug3_H("");
+    updateIdentity();
     validateConfig();
     Log_Debug3_T("");
+}
+
+
+void mdn::Mdn2dConfig::updateIdentity() {
+    if (m_masterPtr) {
+        m_parentName = m_masterPtr->name();
+        m_parentPath = m_masterPtr->path();
+    } else {
+        m_parentName = "";
+        m_parentPath = "";
+    }
 }
 
 

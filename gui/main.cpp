@@ -32,6 +32,8 @@ int main(int argc, char* argv[]) {
         return EXIT_SUCCESS;
     }
 
+    // Decide how to start MainWindow
+    mdn::gui::MainWindow w;
 
 
     mdn::gui::MainWindow w;

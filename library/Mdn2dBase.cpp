@@ -18,100 +18,12 @@
 #include "Tools.hpp"
 
 
-std::shared_mutex mdn::Mdn2dBase::m_static_mutex;
-
-int mdn::Mdn2dBase::m_nextNameSeed = 0;
-
-
-std::string mdn::Mdn2dBase::static_generateNextName(const std::string& prefix) {
-    auto lock = std::unique_lock<std::shared_mutex>(m_static_mutex);
-    Log_Debug3_H("")
-    std::string newName = locked_generateNextName(prefix);
-    Log_Debug3_T("returning name=" << newName);
-    return newName;
-}
-
-
-std::string mdn::Mdn2dBase::locked_generateNextName(const std::string& prefix) {
-    Log_Debug4_H("prefix=[" << prefix << "]");
-    Mdn2dFramework& framework = Mdn2dConfig::master();
-    if (framework.className() != "Mdn2dFramework") {
-        std::string fs = framework.suggestName(prefix);
-        Log_Debug4_T("framework suggests [" << fs << "]");
-        return fs;
-    }
-
-    // No framework to go on
-    std::string working = prefix.empty() ? "Mdn" : prefix;
-
-    std::pair<std::string, int> prefixAndInt(Tools::strInt(working));
-    std::string pf = prefixAndInt.first;
-    int val = prefixAndInt.second;
-    if (val < 0) {
-        std::string newName = pf + std::to_string(++m_nextNameSeed);
-        Log_Debug4_T("returning [" << newName << "]");
-        return newName;
-    }
-    std::string newName = pf + std::to_string(val + 1);
-    Log_Debug4_T("returning [" << newName << "]");
-    return newName;
-}
-
-
-std::string mdn::Mdn2dBase::static_generateCopyName(const std::string& nameIn) {
-    auto lock = std::unique_lock<std::shared_mutex>(m_static_mutex);
-    Log_Debug3_H("")
-    std::string newName = locked_generateCopyName(nameIn);
-    Log_Debug3_T("Returning newName=" << newName);
-    return newName;
-}
-
-
-std::string mdn::Mdn2dBase::locked_generateCopyName(const std::string& nameIn) {
-    std::regex suffixRegex(R"(^(.*_Copy)(\d+)$)");
-    std::smatch match;
-
-    std::string candidate;
-    Log_Debug4_H("");
-    if (std::regex_match(nameIn, match, suffixRegex)) {
-        Log_Debug4("Has suffix '_Copy#'");
-        std::string base = match[1];
-        int nCopy = std::stoi(match[2]) + 1;
-        do {
-            Log_Debug4("checking " << nCopy);
-            candidate = base + std::to_string(nCopy++);
-        } while (Mdn2dConfig::master().mdnNameExists(candidate));
-        Log_Debug4_T("returning " << candidate);
-        return candidate;
-    }
-
-    candidate = nameIn + "_Copy_0";
-    Log_Debug4("No '_Copy_#' suffix, checking ..._Copy_0 availability");
-    while (Mdn2dConfig::master().mdnNameExists(candidate)) {
-        Log_Debug4("'__Copy_0' not available");
-        static std::regex baseRegex(R"((.*_Copy_))");
-        std::smatch baseMatch;
-        if (std::regex_match(candidate, baseMatch, baseRegex)) {
-            int n = 1;
-            do {
-                Log_Debug4("Checking " << n);
-                candidate = baseMatch[1].str() + std::to_string(n++);
-            } while (Mdn2dConfig::master().mdnNameExists(candidate));
-        } else {
-            break;
-        }
-    }
-    Log_Debug4_T("Returning " << candidate);
-    return candidate;
-}
-
-
 mdn::Mdn2d mdn::Mdn2dBase::NewInstance(Mdn2dConfig config, std::string nameIn) {
     Log_Debug_H("Preparing NewInstance with config=" << config << ", name=" << nameIn);
     std::string newName = nameIn;
     if (nameIn.empty()) {
         Log_Debug3("nameIn empty, generating new name");
-        newName = static_generateNextName();
+        newName = config.master().suggestName(nameIn);
     }
     Log_Debug_T("Mdn2d constructor dispatch, newName=" << newName);
     return Mdn2d(config, newName);
@@ -124,7 +36,7 @@ mdn::Mdn2d mdn::Mdn2dBase::Duplicate(const Mdn2d& other, std::string nameIn) {
     std::string newName = nameIn;
     if (nameIn.empty()) {
         Log_Debug3("nameIn empty, generating new name from " << other.m_name);
-        newName = static_generateCopyName(other.m_name);
+        newName = const_cast<Mdn2dConfig&>(other.config()).master().suggestCopyName(other.m_name);
     }
     If_Log_Showing_Debug2(
         Log_Debug2_T("Name of new Mdn2d will be " << newName);
@@ -147,8 +59,8 @@ mdn::Mdn2dBase::Mdn2dBase(std::string nameIn)
     Log_N_Debug3_H("null ctor, nameIn=" << m_name);
     if (m_name.empty()) {
         Log_N_Debug4("nameIn empty, generating new name");
-        m_name = static_generateNextName();
-        Log_N_Debug3("changed name to " << m_name);
+        m_name = m_config.master().suggestName(m_name);
+        Log_N_Debug4("changed name to " << m_name);
     }
     Log_N_Debug3_T("");
 }
@@ -165,7 +77,7 @@ mdn::Mdn2dBase::Mdn2dBase(Mdn2dConfig config, std::string nameIn)
     Log_N_Debug3_H("compenent ctor, config=" << config << ", nameIn=" << m_name);
     if (m_name.empty()) {
         Log_N_Debug4("nameIn empty, generating new name");
-        m_name = static_generateNextName();
+        m_name = config.master().suggestName(nameIn);
         Log_N_Debug3("changed name to " << m_name);
     }
     Log_N_Debug3_T("");
@@ -182,7 +94,7 @@ mdn::Mdn2dBase::Mdn2dBase(const Mdn2dBase& other, std::string nameIn):
     auto lock = other.lockReadOnly();
     if (m_name.empty()) {
         Log_N_Debug4("nameIn empty, generating new name from " << other.m_name);
-        m_name = static_generateCopyName(other.m_name);
+        m_name = m_config.master().suggestCopyName(other.m_name);
         Log_N_Debug3("changed name to " << m_name);
     }
     m_raw = other.m_raw;

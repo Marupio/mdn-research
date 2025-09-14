@@ -42,7 +42,7 @@ mdn::gui::MainWindow::MainWindow(QWidget *parent)
 }
 
 
-mdn::gui::MainWindow::MainWindow(QWidget *parent, Mdn2dConfig* cfg) :
+mdn::gui::MainWindow::MainWindow(QWidget *parent, ProjectPropertiesDialog* dlg) :
     QMainWindow(parent),
     m_project(nullptr)
 {
@@ -52,7 +52,7 @@ mdn::gui::MainWindow::MainWindow(QWidget *parent, Mdn2dConfig* cfg) :
     m_command = new CommandWidget(this);
     createStatusBar();
     setupLayout();
-    // absorbProjectProperties(dlg);
+    absorbProjectProperties(dlg);
     // setWindowTitle("MDN Editor");
     Log_Debug2_T("");
 }
@@ -852,6 +852,13 @@ void mdn::gui::MainWindow::setGlobalConfig(Mdn2dConfig c, bool force) {
     m_globalConfig = c;
     m_project->setConfig(m_globalConfig);
     updateStatusFraxisText(c.fraxis());
+
+    // Update all NDWs
+    for (int i = 0; i < m_tabWidget->count(); ++i) {
+        Log_Debug4("pushing change to tab " << i);
+        if (auto* ndw = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(i)))
+            ndw->model()->setConfig(c);
+    }
     Log_Debug2_T("");
 }
 
@@ -1101,7 +1108,7 @@ void mdn::gui::MainWindow::createMenus() {
 }
 
 
-void mdn::gui::MainWindow::setupLayout(Mdn2dConfig* cfg) {
+void mdn::gui::MainWindow::setupLayout() {
     Log_Debug3_H("")
 
     // Top half - Mdn2d tab widget
@@ -1129,12 +1136,11 @@ void mdn::gui::MainWindow::setupLayout(Mdn2dConfig* cfg) {
         &mdn::gui::MainWindow::renameTab
     );
 
-    if (!m_project && cfg) {
-        Log_Debug3("Dispatch - createNewProject");
-        createNewProject(cfg);
-    }
+    // For now, Project will be held by MainWindow
+    // Log_Debug3("Dispatch - createNewProject");
+    // createNewProject();
+    // Log_Debug3("Dispatch - createTabs");
     if (m_project) {
-        Log_Debug3("Dispatch - createTabs");
         createTabs();
         setActiveTab(0);
     }
@@ -1367,13 +1373,7 @@ void mdn::gui::MainWindow::createStatusBar()
 }
 
 
-bool mdn::gui::MainWindow::createNewProjectFromConfig(Mdn2dConfig* cfg) {
-    if (cfg) {
-        Log_Debug3("cfg=" << (*cfg));
-    }
-
-}
-bool mdn::gui::MainWindow::createNewProject(Mdn2dConfig* cfg) {
+bool mdn::gui::MainWindow::createNewProject() {
     Log_Debug3_H("");
 
     if (!confirmedCloseProject()) {
@@ -1530,10 +1530,9 @@ void mdn::gui::MainWindow::buildFraxisMenu() {
 }
 
 
-// void mdn::gui::MainWindow::absorbProjectProperties(ProjectPropertiesDialog* dlg) {
-//
-//     setWindowTitle();
-// }
+void mdn::gui::MainWindow::absorbProjectProperties(ProjectPropertiesDialog* dlg) {
+
+}
 
 
 void mdn::gui::MainWindow::updateStatusFraxisText(mdn::Fraxis f) {

@@ -26,28 +26,25 @@ class MDN_API Mdn2dConfig {
     }
 
     // Pointer to framework governing class - what object holds this Mdn2d?
-    static Mdn2dFramework* m_masterPtr;
+    // static Mdn2dFramework* m_masterPtr;
+    Mdn2dFramework* m_masterPtr;
 
 
 public:
-
-    static Mdn2dFramework& master() {
-        if (!m_masterPtr) {
-            m_masterPtr = &(mdn::DummyFramework);
-        }
-        return *m_masterPtr;
-    }
-
-    // Set master pointer to the given framework, posts warning if already set
-    static void setMaster(Mdn2dFramework& framework);
-
-    // Set master pointer to the given framework, overwrites previously existing setting silently
-    static void resetMaster(Mdn2dFramework& framework);
 
     // Return default carryOverIters
     static int defaultCarryOverIters() {
         return 20;
     }
+
+    // static Mdn2dFramework& master() {
+    Mdn2dFramework& master();
+
+    // Set master pointer to the given framework, posts warning if already set
+    void setMaster(Mdn2dFramework& framework);
+
+    // Set master pointer to the given framework, overwrites previously existing setting silently
+    void resetMaster(Mdn2dFramework& framework);
 
 
 private:
@@ -58,6 +55,15 @@ private:
     // string.  Purpose of this is to prevent throwing during move ctor, so normal operation can be
     // optimised. Edge cases that invalidate the number show up here.
     mutable std::string m_invalidReason;
+
+    // Name of the framework parent, if the parent is present
+    std::string m_parentName;
+
+    // Path to the framework parent's file
+    //  Only set if:
+    //      * framework parent exists
+    //      * framework parent was saved or loaded recently
+    std::string m_parentPath;
 
     // Numerical base, beyond which no digit's magnitude can go
     int m_base;
@@ -103,6 +109,21 @@ public:
         int maxCarryoverItersIn = 20,
         Fraxis fraxisIn=Fraxis::X
     );
+
+    // Sets m_parentName and m_parentPath based on current parent
+    void updateIdentity();
+
+    // Return parent name
+    inline const std::string& parentName() const { return m_parentName; }
+
+    // Set parent name
+    inline void setParentName(const std::string& nameIn) { m_parentName = nameIn; }
+
+    // Return parent path
+    inline const std::string& parentPath() const { return m_parentPath; }
+
+    // Set parent path
+    inline void setParentPath(const std::string& pathIn) { m_parentPath = pathIn; }
 
     // Returns true if the number became invalid during a noexcept function
     bool valid() { return m_invalidReason.empty(); }
