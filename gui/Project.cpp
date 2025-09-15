@@ -220,6 +220,7 @@ mdn::gui::Project::Project(MainWindow* parent, Mdn2dConfig& cfg, int nStartMdn):
         "Creating a new Project " << (parent ? "(with parent)" : "(no parent)")
             << " '" << m_name << "' with " << nStartMdn << " starting tabs"
     );
+    m_config.setParent(*this);
     if (nStartMdn < 1) {
         setNoActiveMdn();
     } else {

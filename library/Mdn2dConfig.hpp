@@ -114,7 +114,8 @@ public:
         int precisionIn=32,
         SignConvention signConventionIn=SignConvention::Positive,
         int maxCarryoverItersIn = 20,
-        Fraxis fraxisIn=Fraxis::X
+        Fraxis fraxisIn=Fraxis::X,
+        Mdn2dFramework* parent = nullptr
     );
 
     // Return parent name

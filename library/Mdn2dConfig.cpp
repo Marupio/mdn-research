@@ -37,6 +37,7 @@ void mdn::Mdn2dConfig::resetParent(Mdn2dFramework& framework) {
 
 
 void mdn::Mdn2dConfig::updateIdentity() {
+    Log_Debug3_H("");
     if (m_parentPtr) {
         m_parentName = m_parentPtr->name();
         m_parentPath = m_parentPtr->path();
@@ -44,6 +45,7 @@ void mdn::Mdn2dConfig::updateIdentity() {
         m_parentName = "";
         m_parentPath = "";
     }
+    Log_Debug3_T("name=[" << m_parentName << "],path=[" << m_parentPath << "]")
 }
 
 
@@ -52,8 +54,10 @@ mdn::Mdn2dConfig::Mdn2dConfig(
     int precisionIn,
     SignConvention signConventionIn,
     int maxCarryoverItersIn,
-    Fraxis fraxisIn
+    Fraxis fraxisIn,
+    Mdn2dFramework* parent
 ) :
+    m_parentPtr(parent),
     m_base(baseIn),
     m_baseDigit(static_cast<Digit>(baseIn)),
     m_baseDouble(static_cast<double>(baseIn)),

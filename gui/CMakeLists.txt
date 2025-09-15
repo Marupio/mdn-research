@@ -35,6 +35,7 @@ add_executable(mdn_gui
     Project.hpp Project.cpp
     ProjectPropertiesDialog.hpp ProjectPropertiesDialog.cpp
     QtLoggingBridge.hpp QtLoggingBridge.cpp
+    WelcomeDialog.hpp
 )
 
 target_link_libraries(mdn_gui PRIVATE ${QT_LIBS} mdn)

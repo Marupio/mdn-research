@@ -17,6 +17,15 @@ public:
         // OpenRecent,
         Exit
     };
+    static std::string ChoiceToString(Choice c) {
+        switch (c) {
+            case Choice::NewProject: return "NewProject";
+            case Choice::OpenProject: return "OpenProject";
+            // case Choice::OpenRecent: return "OpenRecent";
+            case Choice::Exit: return "Exit";
+            default: return "None";
+        }
+    }
 
     explicit WelcomeDialog(QWidget* parent=nullptr)
       : QDialog(parent)

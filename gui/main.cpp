@@ -1,5 +1,6 @@
 #include <QApplication>
 
+#include "../library/Logger.hpp"
 #include "../library/Mdn2dConfig.hpp"
 
 #include "QtLoggingBridge.hpp"
@@ -14,9 +15,11 @@ using namespace mdn::gui;
 // One iteration of WelcomeDialog --> RunApplication
 bool runLauncher(QApplication& app) {
     // Show launcher first
+    Log_Debug2_H("");
     WelcomeDialog launcher;
     const int rc = launcher.exec();
     const auto choice = launcher.choice();
+    Log_Debug2("choice = " << WelcomeDialog::ChoiceToString(choice));
 
     // If user cancelled/closed without choosing, treat as Exit.
     if (
@@ -24,17 +27,22 @@ bool runLauncher(QApplication& app) {
         && choice != WelcomeDialog::Choice::OpenProject
         // && choice != WelcomeDialog::Choice::OpenRecent
     ) {
+        Log_Debug2("");
         return false;
     }
+    Log_Debug2("");
 
     // Decide how to start MainWindow
-    mdn::gui::MainWindow w;
+    // mdn::gui::MainWindow w;
+    // Log_Debug2("");
 
     switch (choice) {
         case WelcomeDialog::Choice::NewProject: {
             // Blank project - open ProjectPropertiesDialog
+            Log_Debug2("");
             Mdn2dConfig cfg = Mdn2dConfig::static_defaultConfig();
-            ProjectPropertiesDialog dlg(nullptr, &w);
+            ProjectPropertiesDialog dlg(nullptr, nullptr);
+            Log_Debug2("");
             dlg.setInitial(
                 QString::fromStdString("untitled"),
                 QString::fromStdString(""),
@@ -46,17 +54,27 @@ bool runLauncher(QApplication& app) {
             }
 
             cfg = dlg.chosenConfig();
+            Log_Debug2("");
+            mdn::gui::MainWindow w(nullptr, &cfg);
+
             w.createNewProjectFromConfig(cfg);
+            Log_Debug2("");
             w.show();
-            return app.exec() == 0;
+            bool result = (app.exec() == 0);
+            Log_Debug2_T("result=" << result);
+            return result;
         }
 
         case WelcomeDialog::Choice::OpenProject: {
             // Launch and immediately open the project picker
+            mdn::gui::MainWindow w;
             w.show();
             w.openProject();
             // QTimer::singleShot(0, &w, [&w](){ w.onOpenProject(); });
-            return app.exec() == 0;
+            Log_Debug2("");
+            bool result = (app.exec() == 0);
+            Log_Debug2_T("result=" << result);
+            return result;
         }
 
         // case WelcomeDialog::Choice::OpenRecent: {
@@ -72,7 +90,8 @@ bool runLauncher(QApplication& app) {
 
         default: {
             // Safety net
-            return true;
+            Log_Debug2_T("returning false");
+            return false;
         }
     }
 }
@@ -95,7 +114,9 @@ int main(int argc, char* argv[]) {
     bool dontStop = true;
 
     while (dontStop) {
-        dontStop = !runLauncher(app);
+        Log_Debug("");
+        dontStop = runLauncher(app);
+        Log_Debug("dontStop=" << dontStop);
     }
 
     return EXIT_SUCCESS;

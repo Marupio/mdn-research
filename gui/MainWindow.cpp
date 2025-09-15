@@ -1091,6 +1091,7 @@ void mdn::gui::MainWindow::setupLayout(Mdn2dConfig* cfg) {
     // Top half - Mdn2d tab widget
     m_tabWidget = new QTabWidget(this);
     m_tabWidget->setTabPosition(QTabWidget::South);
+    Log_Debug4("");
     auto* bar = m_tabWidget->tabBar();
     bar->setMovable(true);
     connect(
@@ -1113,11 +1114,13 @@ void mdn::gui::MainWindow::setupLayout(Mdn2dConfig* cfg) {
         &mdn::gui::MainWindow::renameTab
     );
 
+    Log_Debug4("");
     if (!m_project && cfg) {
         Log_Debug3("Dispatch - createNewProject");
         createNewProjectFromConfig(*cfg);
     }
-    if (m_project->size()) {
+    Log_Debug4("");
+    if (m_project && m_project->size()) {
         Log_Debug3("Dispatch - createTabs");
         createTabs();
         setActiveTab(0);
@@ -1358,6 +1361,12 @@ bool mdn::gui::MainWindow::createNewProjectFromConfig(Mdn2dConfig& cfg, int nSta
         return false;
     }
     m_project = new Project(this, cfg.parentName(), nStartMdn);
+    connect(m_project, &mdn::gui::Project::tabsAboutToChange,
+            this, &mdn::gui::MainWindow::onProjectTabsAboutToChange);
+    connect(m_project, &mdn::gui::Project::tabsChanged,
+            this, &mdn::gui::MainWindow::onProjectTabsChanged);
+    onProjectTabsChanged(0);
+
     Log_Debug3_T("");
     return true;
 }
