@@ -4,35 +4,46 @@
 #include "MdnException.hpp"
 
 
-// mdn::Mdn2dFramework* mdn::Mdn2dConfig::m_masterPtr = nullptr;
+// mdn::Mdn2dFramework* mdn::Mdn2dConfig::m_parentPtr = nullptr;
 
 
-mdn::Mdn2dFramework& mdn::Mdn2dConfig::master() {
-    if (!m_masterPtr) {
-        m_masterPtr = &(mdn::DummyFramework);
+mdn::Mdn2dFramework& mdn::Mdn2dConfig::parent() {
+    if (!m_parentPtr) {
+        m_parentPtr = &(mdn::DummyFramework);
     }
-    return *m_masterPtr;
+    return *m_parentPtr;
 }
 
 
-void mdn::Mdn2dConfig::setMaster(Mdn2dFramework& framework) {
-    if (m_masterPtr && m_masterPtr->className() != "Mdn2dFramework") {
+void mdn::Mdn2dConfig::setParent(Mdn2dFramework& framework) {
+    if (m_parentPtr && m_parentPtr->className() != "Mdn2dFramework") {
         Log_Warn(
             "Setting a new framework " << framework.name()
             << ", class " << framework.className()
-            << ", when existing framework " << m_masterPtr->name()
-            << ", class " << m_masterPtr->className()
+            << ", when existing framework " << m_parentPtr->name()
+            << ", class " << m_parentPtr->className()
             << " already is assigned. Using new framework."
         );
     }
-    m_masterPtr = &framework;
+    m_parentPtr = &framework;
     updateIdentity();
 }
 
 
-void mdn::Mdn2dConfig::resetMaster(Mdn2dFramework& framework) {
-    m_masterPtr = &framework;
+void mdn::Mdn2dConfig::resetParent(Mdn2dFramework& framework) {
+    m_parentPtr = &framework;
     updateIdentity();
+}
+
+
+void mdn::Mdn2dConfig::updateIdentity() {
+    if (m_parentPtr) {
+        m_parentName = m_parentPtr->name();
+        m_parentPath = m_parentPtr->path();
+    } else {
+        m_parentName = "";
+        m_parentPath = "";
+    }
 }
 
 
@@ -56,17 +67,6 @@ mdn::Mdn2dConfig::Mdn2dConfig(
     updateIdentity();
     validateConfig();
     Log_Debug3_T("");
-}
-
-
-void mdn::Mdn2dConfig::updateIdentity() {
-    if (m_masterPtr) {
-        m_parentName = m_masterPtr->name();
-        m_parentPath = m_masterPtr->path();
-    } else {
-        m_parentName = "";
-        m_parentPath = "";
-    }
 }
 
 
@@ -139,6 +139,24 @@ void mdn::Mdn2dConfig::validateConfig() const {
         throw err;
     }
     Log_Debug3_T("");
+}
+
+
+void mdn::Mdn2dConfig::update(const Mdn2dConfig& cfg) {
+
+    // Leave unchanged:
+    //  * m_parentPtr;
+    //  * m_parentName;
+    //  * m_parentPath;
+
+    m_base = cfg.m_base;
+    m_baseDigit = cfg.m_baseDigit;
+    m_baseDouble = cfg.m_baseDouble;
+    m_precision = cfg.m_precision;
+    m_epsilon = cfg.m_epsilon;
+    m_signConvention = cfg.m_signConvention;
+    m_maxCarryoverIters = cfg.m_maxCarryoverIters;
+    m_fraxis = cfg.m_fraxis;
 }
 
 

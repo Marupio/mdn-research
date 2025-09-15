@@ -23,7 +23,7 @@ mdn::Mdn2d mdn::Mdn2dBase::NewInstance(Mdn2dConfig config, std::string nameIn) {
     std::string newName = nameIn;
     if (nameIn.empty()) {
         Log_Debug3("nameIn empty, generating new name");
-        newName = config.master().suggestName(nameIn);
+        newName = config.parent().suggestName(nameIn);
     }
     Log_Debug_T("Mdn2d constructor dispatch, newName=" << newName);
     return Mdn2d(config, newName);
@@ -36,7 +36,7 @@ mdn::Mdn2d mdn::Mdn2dBase::Duplicate(const Mdn2d& other, std::string nameIn) {
     std::string newName = nameIn;
     if (nameIn.empty()) {
         Log_Debug3("nameIn empty, generating new name from " << other.m_name);
-        newName = const_cast<Mdn2dConfig&>(other.config()).master().suggestCopyName(other.m_name);
+        newName = const_cast<Mdn2dConfig&>(other.config()).parent().suggestCopyName(other.m_name);
     }
     If_Log_Showing_Debug2(
         Log_Debug2_T("Name of new Mdn2d will be " << newName);
@@ -59,7 +59,7 @@ mdn::Mdn2dBase::Mdn2dBase(std::string nameIn)
     Log_N_Debug3_H("null ctor, nameIn=" << m_name);
     if (m_name.empty()) {
         Log_N_Debug4("nameIn empty, generating new name");
-        m_name = m_config.master().suggestName(m_name);
+        m_name = m_config.parent().suggestName(m_name);
         Log_N_Debug4("changed name to " << m_name);
     }
     Log_N_Debug3_T("");
@@ -77,7 +77,7 @@ mdn::Mdn2dBase::Mdn2dBase(Mdn2dConfig config, std::string nameIn)
     Log_N_Debug3_H("compenent ctor, config=" << config << ", nameIn=" << m_name);
     if (m_name.empty()) {
         Log_N_Debug4("nameIn empty, generating new name");
-        m_name = config.master().suggestName(nameIn);
+        m_name = config.parent().suggestName(nameIn);
         Log_N_Debug3("changed name to " << m_name);
     }
     Log_N_Debug3_T("");
@@ -94,7 +94,7 @@ mdn::Mdn2dBase::Mdn2dBase(const Mdn2dBase& other, std::string nameIn):
     auto lock = other.lockReadOnly();
     if (m_name.empty()) {
         Log_N_Debug4("nameIn empty, generating new name from " << other.m_name);
-        m_name = m_config.master().suggestCopyName(other.m_name);
+        m_name = m_config.parent().suggestCopyName(other.m_name);
         Log_N_Debug3("changed name to " << m_name);
     }
     m_raw = other.m_raw;
@@ -357,7 +357,7 @@ std::string mdn::Mdn2dBase::setName(const std::string& nameIn) {
 
 std::string mdn::Mdn2dBase::locked_setName(const std::string& nameIn) {
     Log_N_Debug3_H("nameIn=" << nameIn);
-    std::string fwName = m_config.master().requestMdnNameChange(m_name, nameIn);
+    std::string fwName = m_config.parent().requestMdnNameChange(m_name, nameIn);
     Log_N_Debug3(
         "Attempting to change name from '" << m_name << "' to '" << nameIn << "', with framework"
         << " final approval is '" << fwName << "'"

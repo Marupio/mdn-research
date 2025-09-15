@@ -305,54 +305,9 @@ bool mdn::gui::MainWindow::onSaveProject() {
 
 bool mdn::gui::MainWindow::onOpenProject() {
     Log_Debug2_H("");
-
-    QString docs = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
-
-    QString path = QFileDialog::getOpenFileName(
-        this,
-        tr("Open Project"),
-        docs,
-        tr("MDN Project (*.mdnproj);;All Files (*)")
-    );
-
-    if (path.isEmpty()) {
-        Log_Debug2_T("user cancelled")
-        return false;
-    }
-
-    if (!confirmedCloseProject()) {
-        Log_Debug2_T("Did not succeed in closing existing project");
-        return false;
-    }
-
-    std::unique_ptr<Project> ptr = Project::loadFromFile(this, path.toStdString());
-    if (!ptr.get()) {
-        // Load failed
-        Log_Debug2_T("Read failed");
-        return false;
-    }
-    m_project = ptr.release();
-
-    connect(m_project, &mdn::gui::Project::tabsAboutToChange,
-            this, &mdn::gui::MainWindow::onProjectTabsAboutToChange);
-    connect(m_project, &mdn::gui::Project::tabsChanged,
-            this, &mdn::gui::MainWindow::onProjectTabsChanged);
-
-
-    // Remember the folder path of the opened project
-    QFileInfo info(path);
-    QString folder = info.absolutePath();
-    QString baseName = info.baseName();
-    m_project->setPath(folder.toStdString());
-    m_project->setName(baseName.toStdString());
-    setWindowTitle(baseName);
-
-    onProjectTabsChanged(m_project->activeIndex());
-    m_globalConfig.setMaster(*m_project);
-    setGlobalConfig(m_globalConfig);
-    statusBar()->showMessage(tr("Project loaded"), 2000);
-    Log_Debug2_T("ok")
-    return true;
+    bool result = openProject();
+    Log_Debug2_T("result=" << result);
+    return result;
 }
 
 
@@ -845,6 +800,35 @@ void mdn::gui::MainWindow::setGlobalFontSize(int pt) {
 
 void mdn::gui::MainWindow::setGlobalConfig(Mdn2dConfig c, bool force) {
     Log_Debug2_H("newConfig=" << c << ", currentConfig=" << m_globalConfig);
+
+    If_Log_Showing_Debug3(
+        Log_Debug3("parentName,was:" << m_globalConfig.parentName() << ",is:" << c.parentName());
+        Log_Debug3("parentPath,was:" << m_globalConfig.parentPath() << ",is:" << c.parentPath());
+    );
+    bool idChanged = false;
+    if (
+        m_globalConfig.parentName() != c.parentName() ||
+        m_globalConfig.parentPath() != c.parentPath()
+    ) {
+        Log_Debug2("Identity has changed");
+        m_globalConfig.setParentName(c.parentName());
+        m_globalConfig.setParentPath(c.parentPath());
+        idChanged = true;
+    }
+
+    if (!force && !idChanged && m_globalConfig == c) {
+        Log_Debug2_T("no changes");
+        return;
+    }
+    m_globalConfig = c;
+    m_project->setConfig(m_globalConfig);
+    updateStatusFraxisText(c.fraxis());
+    Log_Debug2_T("");
+}
+
+
+void mdn::gui::MainWindow::updateGlobalConfig(Mdn2dConfig c, bool force) {
+    Log_Debug2_H("newConfig=" << c << ", currentConfig=" << m_globalConfig);
     if (!force && m_globalConfig == c) {
         Log_Debug2_T("no changes");
         return;
@@ -867,7 +851,7 @@ void mdn::gui::MainWindow::cycleFraxis() {
 
     // Route through Project::setConfig so impact prompts/updates propagate to all tabs
     // shows impact dialogs if needed
-    setGlobalConfig(cfg);
+    updateGlobalConfig(cfg);
 }
 
 
@@ -876,7 +860,7 @@ void mdn::gui::MainWindow::chooseFraxisX() {
     mdn::Mdn2dConfig cfg = m_project->config();
     if (cfg.fraxis() == mdn::Fraxis::X) return;
     cfg.setFraxis(mdn::Fraxis::X);
-    setGlobalConfig(cfg);
+    updateGlobalConfig(cfg);
 }
 
 
@@ -885,7 +869,7 @@ void mdn::gui::MainWindow::chooseFraxisY() {
     mdn::Mdn2dConfig cfg = m_project->config();
     if (cfg.fraxis() == mdn::Fraxis::Y) return;
     cfg.setFraxis(mdn::Fraxis::Y);
-    setGlobalConfig(cfg);
+    updateGlobalConfig(cfg);
 }
 
 
@@ -1388,7 +1372,7 @@ bool mdn::gui::MainWindow::createNewProject(Mdn2dConfig* cfg) {
     }
 
     m_project = new Project(this);
-    m_globalConfig.setMaster(*m_project);
+    m_globalConfig.setParent(*m_project);
     doProjectProperties();
     if (m_project) {
         connect(m_project, &mdn::gui::Project::tabsAboutToChange,
@@ -1397,6 +1381,59 @@ bool mdn::gui::MainWindow::createNewProject(Mdn2dConfig* cfg) {
                 this, &mdn::gui::MainWindow::onProjectTabsChanged);
     }
     Log_Debug3_T("");
+    return true;
+}
+
+
+bool mdn::gui::MainWindow::openProject() {
+    Log_Debug2_H("");
+
+    QString docs = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+
+    QString path = QFileDialog::getOpenFileName(
+        this,
+        tr("Open Project"),
+        docs,
+        tr("MDN Project (*.mdnproj);;All Files (*)")
+    );
+
+    if (path.isEmpty()) {
+        Log_Debug2_T("user cancelled")
+        return false;
+    }
+
+    if (!confirmedCloseProject()) {
+        Log_Debug2_T("Did not succeed in closing existing project");
+        return false;
+    }
+
+    std::unique_ptr<Project> ptr = Project::loadFromFile(this, path.toStdString());
+    if (!ptr.get()) {
+        // Load failed
+        Log_Debug2_T("Read failed");
+        return false;
+    }
+    m_project = ptr.release();
+
+    connect(m_project, &mdn::gui::Project::tabsAboutToChange,
+            this, &mdn::gui::MainWindow::onProjectTabsAboutToChange);
+    connect(m_project, &mdn::gui::Project::tabsChanged,
+            this, &mdn::gui::MainWindow::onProjectTabsChanged);
+
+
+    // Remember the folder path of the opened project
+    QFileInfo info(path);
+    QString folder = info.absolutePath();
+    QString baseName = info.baseName();
+    m_project->setPath(folder.toStdString());
+    m_project->setName(baseName.toStdString());
+    setWindowTitle(baseName);
+
+    onProjectTabsChanged(m_project->activeIndex());
+    m_globalConfig.setParent(*m_project);
+    setGlobalConfig(m_globalConfig);
+    statusBar()->showMessage(tr("Project loaded"), 2000);
+    Log_Debug2_T("ok")
     return true;
 }
 

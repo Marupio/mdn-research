@@ -26,8 +26,8 @@ class MDN_API Mdn2dConfig {
     }
 
     // Pointer to framework governing class - what object holds this Mdn2d?
-    // static Mdn2dFramework* m_masterPtr;
-    Mdn2dFramework* m_masterPtr;
+    // static Mdn2dFramework* m_parentPtr;
+    Mdn2dFramework* m_parentPtr;
 
 
 public:
@@ -37,14 +37,19 @@ public:
         return 20;
     }
 
-    // static Mdn2dFramework& master() {
-    Mdn2dFramework& master();
+    // Return framework parent, controls Mdn2d naming
+    Mdn2dFramework& parent();
 
-    // Set master pointer to the given framework, posts warning if already set
-    void setMaster(Mdn2dFramework& framework);
+    // Set parent pointer to the given framework, posts warning if already set
+    //  * Note - ensure parent has up-to-date 'name' and 'path' set first
+    void setParent(Mdn2dFramework& framework);
 
-    // Set master pointer to the given framework, overwrites previously existing setting silently
-    void resetMaster(Mdn2dFramework& framework);
+    // Set parent pointer to the given framework, overwrites previously existing setting silently
+    //  * Note - ensure parent has up-to-date 'name' and 'path' set first
+    void resetParent(Mdn2dFramework& framework);
+
+    // Sets m_parentName and m_parentPath based on current parent
+    void updateIdentity();
 
 
 private:
@@ -57,12 +62,14 @@ private:
     mutable std::string m_invalidReason;
 
     // Name of the framework parent, if the parent is present
+    //  Does not affect operator== or operator!=
     std::string m_parentName;
 
     // Path to the framework parent's file
     //  Only set if:
     //      * framework parent exists
     //      * framework parent was saved or loaded recently
+    //  Does not affect operator== or operator!=
     std::string m_parentPath;
 
     // Numerical base, beyond which no digit's magnitude can go
@@ -109,9 +116,6 @@ public:
         int maxCarryoverItersIn = 20,
         Fraxis fraxisIn=Fraxis::X
     );
-
-    // Sets m_parentName and m_parentPath based on current parent
-    void updateIdentity();
 
     // Return parent name
     inline const std::string& parentName() const { return m_parentName; }
@@ -189,9 +193,14 @@ public:
     // Throws if any setting is invalid
     void validateConfig() const;
 
+    // Brings in any settings changes from cfg, keeps parent and identity unchanged
+    void update(const Mdn2dConfig& cfg);
+
+    // Convert to string
     std::string toString() const;
 
     // string format: (b:10, p:16, s:Positive, c:20, f:X)
+    // Does not output parent name / parent path
     friend std::ostream& operator<<(std::ostream& os, const Mdn2dConfig& c) {
         return os
             << "("
@@ -205,29 +214,39 @@ public:
     }
 
     friend std::istream& operator>>(std::istream& is, Mdn2dConfig& c) {
-        // TODO - problem, epsilon is derived from precision, should not be independent
+        // string format: (b:10, p:16, s:Positive, c:20, f:X)
         char lparen, letter, colon, comma, rparen;
         std::string fname;
         std::string sname;
-        // (b:10, p:16, e:0.0000024, s:Positive, c:20, f:X)
+
         // Reading [(b:10]
         is >> lparen >> letter >> colon >> c.m_base;
+
         // Reading [, p:16]
         is >> comma >> letter >> colon >> c.m_precision;
+
         // Reading [, s:Positive,]
-        while (letter != ',') {
-            is >> letter;
+        is >> comma >> letter >> colon;
+        is >> letter;
+        do {
             sname += letter;
-        }
+            is >> letter;
+        } while (letter != ',');
         c.m_signConvention = NameToSignConvention(sname);
+
         //Reading [ c:20]
         is >> letter >> colon >> c.m_maxCarryoverIters;
+
         //Reading [, f:X])
-        while (letter != ')') {
-            is >> letter;
+        is >> comma >> letter >> colon;
+        is >> letter;
+        do {
             fname += letter;
-        }
+            is >> letter;
+        } while (letter != ')');
         c.m_fraxis = NameToFraxis(fname);
+
+        // Done reading
         c.m_epsilon = static_calculateEpsilon(c.m_precision, c.m_base);
         return is;
     }
@@ -236,8 +255,8 @@ public:
     // int m_maxCarryoverIters;
     // Fraxis m_fraxis;
 
-        // From the perspective of an Mdn2d, look for compatibility.  The data that matters are:
-        //  base, precision, sign convention
+        // From the perspective of an Mdn2d, look for compatibility
+        //  Does not compare parent, name or path
         bool operator==(const Mdn2dConfig& rhs) const;
         bool operator!=(const Mdn2dConfig& rhs) const;
 };

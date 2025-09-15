@@ -14,7 +14,7 @@ public:
         None,
         NewProject,
         OpenProject,
-        OpenRecent,
+        // OpenRecent,
         Exit
     };
 
@@ -35,14 +35,14 @@ public:
         layout->addWidget(title);
 
         auto* newBtn    = new QPushButton(tr("New Project"), this);
-        auto* recentBtn = new QPushButton(tr("Open Recent"), this);
+        // auto* recentBtn = new QPushButton(tr("Open Recent"), this);
         auto* openBtn   = new QPushButton(tr("Open Project"), this);
         auto* aboutBtn  = new QPushButton(tr("About"), this);
         auto* donateBtn = new QPushButton(tr("Donate"), this);
         auto* exitBtn   = new QPushButton(tr("Exit"), this);
 
         layout->addWidget(newBtn);
-        layout->addWidget(recentBtn);
+        // layout->addWidget(recentBtn);
         layout->addWidget(openBtn);
         layout->addWidget(aboutBtn);
         layout->addWidget(donateBtn);
@@ -57,10 +57,10 @@ public:
             m_choice = Choice::OpenProject;
             accept();
         });
-        connect(recentBtn, &QPushButton::clicked, this, [this]{
-            m_choice = Choice::OpenRecent;
-            accept();
-        });
+        // connect(recentBtn, &QPushButton::clicked, this, [this]{
+        //     m_choice = Choice::OpenRecent;
+        //     accept();
+        // });
         connect(exitBtn, &QPushButton::clicked, this, [this]{
             m_choice = Choice::Exit;
             reject(); // we’ll treat reject as a clean exit choice

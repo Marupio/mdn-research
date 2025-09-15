@@ -30,13 +30,25 @@ class MainWindow : public QMainWindow {
 
 public:
     // Create null, no project loaded
-    MainWindow(QWidget *parent);
+    MainWindow(QWidget *parent=nullptr);
 
     // Create with a project, given an *accepted* dialogue
     MainWindow(QWidget *parent, Mdn2dConfig* cfg);
 
     // Destructor - utter destruction
     ~MainWindow() override;
+
+
+    // *** Accessors
+
+    // Access the project
+    inline const Project* project() const { return m_project; }
+    inline Project* project() { return m_project; }
+
+    // Access the global config
+    inline const Mdn2dConfig& config() const { return m_globalConfig; }
+    inline Mdn2dConfig& config() { return m_globalConfig; }
+
 
 signals:
     void newMdn2dRequested();
@@ -72,7 +84,14 @@ private slots:
     void chooseModeSubtract();
 
     void setGlobalFontSize(int pt);
+
+    // *** Global config changes
+
+    // Completely swaps out the globalConfig for the supplied version
     void setGlobalConfig(Mdn2dConfig c, bool force=false);
+
+    // 'Update' modifies the settings but leaves parent, name and path
+    void updateGlobalConfig(Mdn2dConfig c, bool force=false);
 
     // Fraxis control
     void cycleFraxis();
@@ -98,12 +117,17 @@ private:
     void initOperationsUi();
     void createStatusBar();
 
+public:
     // Sets m_project to a new project based on the given config
     bool createNewProjectFromConfig(Mdn2dConfig& cfg, int nStartMdn=3);
 
     // File menu operations (full implementations)
     // Create a new project, confirms close of existing project
     bool createNewProject(Mdn2dConfig* cfg=nullptr);
+
+    // Open an existing project
+    bool openProject();
+
     // Returns true if m_project has been successfully closed
     bool confirmedCloseProject();
     // Does the dirty work of actually closing the project
@@ -111,9 +135,10 @@ private:
     // Creates a new Mdn2d, inserts into the project, adds a tab
     bool createNewMdn2d(QString name, int index, bool makeActive);
 
+private:
     // ProjectProperties window
     void doProjectProperties();
-    void absorbProjectProperties(ProjectPropertiesDialog* dlg);
+    // void absorbProjectProperties(ProjectPropertiesDialog* dlg);
 
     // Fraxis helpers
     void updateStatusFraxisText(mdn::Fraxis f);

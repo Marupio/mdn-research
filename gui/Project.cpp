@@ -321,8 +321,8 @@ mdn::Mdn2dConfigImpact mdn::gui::Project::assessConfigChange(Mdn2dConfig config)
 
 void mdn::gui::Project::setConfig(Mdn2dConfig config) {
     Log_Debug2_H("config=" << config);
-    // Ensure master is set correctly
-    config.setMaster(*this);
+    // Ensure parent is set correctly
+    config.setParent(*this);
     m_name = config.parentName();
     m_path = config.parentPath();
     if (m_data.empty()) {
@@ -351,6 +351,9 @@ void mdn::gui::Project::setConfig(Mdn2dConfig config) {
     );
     switch (impact) {
         case Mdn2dConfigImpact::NoImpact: {
+            for (auto& [index, tgt] : m_data) {
+                tgt.setConfig(config);
+            }
             m_config = config;
             Log_Debug("Changed config to " << config);
             Log_Debug2_T("");

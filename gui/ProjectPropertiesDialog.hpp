@@ -16,7 +16,7 @@ class Project; // forward
 class ProjectPropertiesDialog : public QDialog {
     Q_OBJECT
 public:
-    explicit ProjectPropertiesDialog(Project* project, QWidget* parent = nullptr);
+    explicit ProjectPropertiesDialog(Project* project=nullptr, QWidget* parent=nullptr);
 
     void setInitial(
         const QString& projectName,
