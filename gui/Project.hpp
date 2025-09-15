@@ -78,8 +78,11 @@ public:
 
     // *** Constructors
 
-    // Construct a null project' given its name and the number of empty Mdns to start with
+    // Construct a project given its name and the number of empty Mdns to start with
     Project(MainWindow* parent=nullptr, std::string name="", int nStartMdn=3);
+
+    // Construct a project given config
+    Project(MainWindow* parent, Mdn2dConfig& cfg, int nStartMdn);
 
 signals:
     void tabsAboutToChange();

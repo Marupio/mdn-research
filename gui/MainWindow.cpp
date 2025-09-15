@@ -51,7 +51,7 @@ mdn::gui::MainWindow::MainWindow(QWidget *parent, Mdn2dConfig* cfg) :
     createMenus();
     m_command = new CommandWidget(this);
     createStatusBar();
-    setupLayout();
+    setupLayout(cfg);
     // absorbProjectProperties(dlg);
     // setWindowTitle("MDN Editor");
     Log_Debug2_T("");
@@ -1131,9 +1131,9 @@ void mdn::gui::MainWindow::setupLayout(Mdn2dConfig* cfg) {
 
     if (!m_project && cfg) {
         Log_Debug3("Dispatch - createNewProject");
-        createNewProject(cfg);
+        createNewProjectFromConfig(*cfg);
     }
-    if (m_project) {
+    if (m_project->size()) {
         Log_Debug3("Dispatch - createTabs");
         createTabs();
         setActiveTab(0);
@@ -1367,12 +1367,18 @@ void mdn::gui::MainWindow::createStatusBar()
 }
 
 
-bool mdn::gui::MainWindow::createNewProjectFromConfig(Mdn2dConfig* cfg) {
-    if (cfg) {
-        Log_Debug3("cfg=" << (*cfg));
+bool mdn::gui::MainWindow::createNewProjectFromConfig(Mdn2dConfig& cfg, int nStartMdn) {
+    Log_Debug3_H("cfg=" << cfg);
+    if (m_project && !confirmedCloseProject()) {
+        Log_Debug3_T("Failed to close existing project, cannot continue");
+        return false;
     }
-
+    m_project = new Project(this, cfg.parentName(), nStartMdn);
+    Log_Debug3_T("");
+    return true;
 }
+
+
 bool mdn::gui::MainWindow::createNewProject(Mdn2dConfig* cfg) {
     Log_Debug3_H("");
 
@@ -1814,7 +1820,7 @@ QWidget* mdn::gui::MainWindow::activeGridWidget() const
 {
     QWidget* w{nullptr};
 
-    if (m_tabWidget && m_project && m_project.size()) {
+    if (m_tabWidget && m_project && m_project->size()) {
         w = m_tabWidget->currentWidget();
     }
 

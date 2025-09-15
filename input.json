@@ -1,6 +1,7 @@
 {
     "Logger": {
         "Level": "Debug4",
+        "CheckIndents": true,
         "WindowsOutput": "C:/Users/daveg/OneDrive/Documents/Projects/MDN/mdn-research/output",
         "Output": "C:/Users/daveg/OneDrive/Documents/Projects/MDN/mdn-research/output",
         "Output_": "/home/dave/GADEN/MDN/mdn-research/output",

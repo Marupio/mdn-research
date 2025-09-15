@@ -180,8 +180,7 @@ bool mdn::gui::Project::checkName(const std::string& name) const {
 mdn::gui::Project::Project(MainWindow* parent, std::string name, int nStartMdn):
     QObject(parent),
     m_parent(parent),
-    m_name(name),
-    m_activeIndex(0)
+    m_name(name)
 {
     if (m_name.empty()) {
         m_name = "untitled-" + std::to_string(m_untitledNumber++);
@@ -193,12 +192,40 @@ mdn::gui::Project::Project(MainWindow* parent, std::string name, int nStartMdn):
     if (nStartMdn < 1) {
         setNoActiveMdn();
     } else {
-        if (name.empty()) {
-            name = "Mdn0";
-        }
         for (int i = 0; i < nStartMdn; ++i) {
             Log_Debug3("Project constructor, Mdn index " << i);
-            std::string nextName = Project::suggestName(name);
+            std::string nextName = Project::suggestName("Mdn0");
+            Log_Debug3("Got name=[" << nextName << "], constructor dispatch");
+            Mdn2d newMdn = Mdn2d::NewInstance(m_config, nextName);
+            Log_Debug2("Creating Mdn {'" << nextName << "', " << i << "}");
+            appendMdn(std::move(newMdn));
+        }
+        setActiveMdn(0);
+    }
+    Log_Debug_T("");
+}
+
+
+mdn::gui::Project::Project(MainWindow* parent, Mdn2dConfig& cfg, int nStartMdn):
+    QObject(parent),
+    m_parent(parent),
+    m_name(cfg.parentName()),
+    m_path(cfg.parentPath()),
+    m_config(cfg)
+{
+    if (m_name.empty()) {
+        m_name = "untitled-" + std::to_string(m_untitledNumber++);
+    }
+    Log_Debug_H(
+        "Creating a new Project " << (parent ? "(with parent)" : "(no parent)")
+            << " '" << m_name << "' with " << nStartMdn << " starting tabs"
+    );
+    if (nStartMdn < 1) {
+        setNoActiveMdn();
+    } else {
+        for (int i = 0; i < nStartMdn; ++i) {
+            Log_Debug3("Project constructor, Mdn index " << i);
+            std::string nextName = Project::suggestName("Mdn0");
             Log_Debug3("Got name=[" << nextName << "], constructor dispatch");
             Mdn2d newMdn = Mdn2d::NewInstance(m_config, nextName);
             Log_Debug2("Creating Mdn {'" << nextName << "', " << i << "}");

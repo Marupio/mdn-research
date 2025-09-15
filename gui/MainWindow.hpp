@@ -92,14 +92,14 @@ protected:
 private:
     void createSplitter();
     void createMenus();
-    void setupLayout(Mdn2dConfig* cfg);
+    void setupLayout(Mdn2dConfig* cfg=nullptr);
     void createTabs();
     void createTabForIndex(int index);
     void initOperationsUi();
     void createStatusBar();
 
     // Sets m_project to a new project based on the given config
-    bool createNewProjectFromConfig(Mdn2dConfig* cfg);
+    bool createNewProjectFromConfig(Mdn2dConfig& cfg, int nStartMdn=3);
 
     // File menu operations (full implementations)
     // Create a new project, confirms close of existing project
@@ -113,7 +113,7 @@ private:
 
     // ProjectProperties window
     void doProjectProperties();
-    // void absorbProjectProperties(ProjectPropertiesDialog* dlg);
+    void absorbProjectProperties(ProjectPropertiesDialog* dlg);
 
     // Fraxis helpers
     void updateStatusFraxisText(mdn::Fraxis f);
