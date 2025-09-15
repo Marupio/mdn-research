@@ -1,7 +1,7 @@
 #include <QApplication>
 #include "QtLoggingBridge.hpp"
-#include "LoggerConfigurator.hpp"   // <-- new
-
+#include "LoggerConfigurator.hpp"
+#include "WelcomeDialog.hpp"
 #include "MainWindow.hpp"
 
 int main(int argc, char* argv[]) {
@@ -14,18 +14,27 @@ int main(int argc, char* argv[]) {
     // Build the common CLI+JSON logger setup
     mdn::cli::LoggerConfigurator logCfg("MDN GUI");
     logCfg.addStandardOptions();
-
-    // If you have app-specific options, you can add them here:
-    // QCommandLineOption myOpt({"x","example"}, "Example flag");
-    // logCfg.addCustomOption(myOpt);
-
     if (!logCfg.process(app)) {
         return EXIT_FAILURE;
     }
 
-    // If you need to read app-specific options after process():
-    // auto& parser = logCfg.parser();
-    // if (parser.isSet(myOpt)) { ... }
+    // Show launcher first
+    WelcomeDialog launcher;
+    const int rc = launcher.exec();
+    const auto choice = launcher.choice();
+
+    // If user cancelled/closed without choosing, treat as Exit.
+    if (
+        rc == QDialog::Rejected && choice != WelcomeDialog::Choice::NewProject
+        && choice != WelcomeDialog::Choice::OpenProject
+        && choice != WelcomeDialog::Choice::OpenRecent
+    ) {
+        return EXIT_SUCCESS;
+    }
+
+    // Decide how to start MainWindow
+    mdn::gui::MainWindow w;
+
 
     mdn::gui::MainWindow w;
     w.show();

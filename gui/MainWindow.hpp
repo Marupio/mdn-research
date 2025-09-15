@@ -29,7 +29,13 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    // Create null, no project loaded
+    MainWindow(QWidget *parent);
+
+    // Create with a project, given an *accepted* dialogue
+    MainWindow(QWidget *parent, Mdn2dConfig* cfg);
+
+    // Destructor - utter destruction
     ~MainWindow() override;
 
 signals:
@@ -86,15 +92,18 @@ protected:
 private:
     void createSplitter();
     void createMenus();
-    void setupLayout();
+    void setupLayout(Mdn2dConfig* cfg=nullptr);
     void createTabs();
     void createTabForIndex(int index);
     void initOperationsUi();
     void createStatusBar();
 
+    // Sets m_project to a new project based on the given config
+    bool createNewProjectFromConfig(Mdn2dConfig& cfg, int nStartMdn=3);
+
     // File menu operations (full implementations)
     // Create a new project, confirms close of existing project
-    bool createNewProject();
+    bool createNewProject(Mdn2dConfig* cfg=nullptr);
     // Returns true if m_project has been successfully closed
     bool confirmedCloseProject();
     // Does the dirty work of actually closing the project
@@ -104,6 +113,7 @@ private:
 
     // ProjectProperties window
     void doProjectProperties();
+    void absorbProjectProperties(ProjectPropertiesDialog* dlg);
 
     // Fraxis helpers
     void updateStatusFraxisText(mdn::Fraxis f);

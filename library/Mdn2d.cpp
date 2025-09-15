@@ -107,7 +107,7 @@ void mdn::Mdn2d::plus(const Mdn2d& rhs, Mdn2d& ans) const {
 mdn::CoordSet mdn::Mdn2d::locked_plus(const Mdn2d& rhs, Mdn2d& ans) const {
     Log_N_Debug3_H("ans(" << ans.m_name << ") = *this(" << m_name << ") + rhs(" << rhs.m_name << ")");
     CoordSet changed;
-    ans = *this;
+    ans.locked_operatorEquals(*this);
     for (const auto& [xy, digit] : rhs.m_raw) {
         changed.merge(ans.locked_add(xy, digit));
     }
@@ -130,7 +130,7 @@ void mdn::Mdn2d::minus(const Mdn2d& rhs, Mdn2d& ans) const {
 mdn::CoordSet mdn::Mdn2d::locked_minus(const Mdn2d& rhs, Mdn2d& ans) const {
     Log_N_Debug3_H("ans(" << ans.m_name << ") = *this(" << m_name << ") - rhs(" << rhs.m_name << ")");
     CoordSet changed;
-    ans = *this;
+    ans.locked_operatorEquals(*this);
     for (const auto& [xy, digit] : rhs.m_raw) {
         changed.merge(ans.locked_add(xy, -digit));
     }

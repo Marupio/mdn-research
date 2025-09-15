@@ -312,31 +312,44 @@ int mdn::gui::OpsController::activeIndex() const {
 
 void mdn::gui::OpsController::runDialog(Operation preset) {
     Log_Debug3_H("" << preset);
+Log_Debug4("");
     QStringList names = collectTabNames();
+Log_Debug4("");
     if (names.size() < 2) {
         Log_Debug3_T("names.size() = " << names.size());
         return;
     }
+Log_Debug4("");
     BinaryOperationDialog dlg(m_mainWindow);
 
+Log_Debug4("");
     dlg.setTabNames(names);
+Log_Debug4("");
     dlg.setActiveIndex(activeIndex());
+Log_Debug4("");
 
     dlg.setInitialOperation(preset);
+Log_Debug4("");
 
     int b = m_rememberedB;
+Log_Debug4("");
     if (b < 0 || b >= names.size()) {
         b = 0;
     }
+Log_Debug4("");
     dlg.setRememberedB(b);
+Log_Debug4("");
 
     DestinationMode d = DestinationMode::OverwriteA;
+Log_Debug4("");
     if (m_rememberedDest == DestinationSimple::InPlace) {
         d = DestinationMode::OverwriteA;
     } else {
         d = DestinationMode::CreateNew;
     }
+Log_Debug4("");
     dlg.setRememberedDestination(d);
+Log_Debug4("");
 
     int res = dlg.exec();
     if (res != QDialog::Accepted) {
@@ -344,32 +357,49 @@ void mdn::gui::OpsController::runDialog(Operation preset) {
         return;
     }
 
+Log_Debug4("");
     BinaryOperationDialog::Plan pp = dlg.plan();
+Log_Debug4("");
     Log_Debug4("pp=" << pp);
 
     OpsController::Plan p;
+Log_Debug4("");
     p.op = preset;
+Log_Debug4("");
     p.indexA = pp.indexA;
+Log_Debug4("");
     p.indexB = pp.indexB;
+Log_Debug4("");
     p.overwriteIndex = -1;
+Log_Debug4("");
     if (pp.dest == DestinationMode::CreateNew) {
         p.dest = DestinationSimple::ToNew;
+Log_Debug4("");
         p.newName = pp.newName;
+Log_Debug4("");
     } else {
         p.dest = DestinationSimple::InPlace;
+Log_Debug4("");
         p.overwriteIndex = pp.indexDest;
+Log_Debug4("");
         if (p.overwriteIndex == pp.indexB && pp.indexB != pp.indexA) {
             p.indexA = pp.indexB;
+Log_Debug4("");
             p.indexB = pp.indexA;
+Log_Debug4("");
         }
     }
 
+Log_Debug4("");
     if (pp.rememberChoices) {
         m_rememberedB = pp.indexB;
+Log_Debug4("");
         if (p.dest == DestinationSimple::InPlace) {
             m_rememberedDest = DestinationSimple::InPlace;
+Log_Debug4("");
         } else {
             m_rememberedDest = DestinationSimple::ToNew;
+Log_Debug4("");
         }
     }
 

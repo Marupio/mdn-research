@@ -128,7 +128,6 @@ private:
     QLineEdit* m_newNameEdit{nullptr};
 
     QLabel* m_summary{nullptr};
-    QDialogButtonBox* m_buttons{nullptr};
     QCheckBox* m_remember{nullptr};
 };
 

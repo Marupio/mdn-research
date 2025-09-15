@@ -78,8 +78,11 @@ public:
 
     // *** Constructors
 
-    // Construct a null project' given its name and the number of empty Mdns to start with
+    // Construct a project given its name and the number of empty Mdns to start with
     Project(MainWindow* parent=nullptr, std::string name="", int nStartMdn=3);
+
+    // Construct a project given config
+    Project(MainWindow* parent, Mdn2dConfig& cfg, int nStartMdn);
 
 signals:
     void tabsAboutToChange();
@@ -94,28 +97,30 @@ public:
             return "Project";
         }
 
-        // Returns the framework's 'name', used in error messaging
+        // Returns the framework's instance 'name'
         inline std::string name() const override {
             return m_name;
         }
 
-        // Set the project name
+        // Changes the instance name
         inline void setName(const std::string& nameIn) override {
+            // Do nothing
+            Log_Debug("[" << nameIn << "]");
             m_name = nameIn;
         }
 
-        // Returns the framework's 'path'
-        inline std::string path() const {
+        // Returns the framework's instance path
+        inline std::string path() const override {
             return m_path;
         }
 
-        // Set the project path
-        inline void setPath(const std::string& pathIn) {
+        // Sets the framework's instance path, should be only if a path is valid
+        inline void setPath(const std::string& pathIn) override {
+            // Do nothing
+            Log_Debug("[" << pathIn << "]");
             m_path = pathIn;
         }
 
-
-        int activeIndex() const { return m_activeIndex; }
 
         // Returns true if an Mdn2d exists with the given name, false otherwise
         inline bool mdnNameExists(const std::string& nameIn) const override {
@@ -168,6 +173,8 @@ public:
 
 
         // *** MDN Accessors
+
+        inline int activeIndex() const { return m_activeIndex; }
 
         // Checks if the Mdn2d exists in the main m_data array, returns:
         //  true  - number exists

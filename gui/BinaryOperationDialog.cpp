@@ -296,11 +296,13 @@ void mdn::gui::BinaryOperationDialog::buildUi() {
     // Destination picker stack
     m_destPickerStack = new QWidget(this);
     QVBoxLayout* dStack = new QVBoxLayout(m_destPickerStack);
-
     m_destRadioGroup = new QGroupBox(tr("Choose destination"), this);
     m_destRadioButtons = new QButtonGroup(this);
     QVBoxLayout* dRadioLay = new QVBoxLayout(m_destRadioGroup);
     m_destRadioGroup->setLayout(dRadioLay);
+    QMargins m = dRadioLay->contentsMargins();
+    dRadioLay->setContentsMargins(m.left(), m.top() + 1, m.right(), m.bottom());
+    dRadioLay->setSpacing(6);
 
     m_destFilter = new QLineEdit(this);
     m_destFilter->setPlaceholderText(tr("Filter…"));
@@ -326,6 +328,7 @@ void mdn::gui::BinaryOperationDialog::buildUi() {
     // Summary + buttons
     m_summary = new QLabel(this);
     QDialogButtonBox* btns = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
+    m_remember = new QCheckBox(tr("Remember B and destination"), this);
 
     root->addWidget(opsRowW);
     root->addWidget(aRowW);
@@ -334,21 +337,100 @@ void mdn::gui::BinaryOperationDialog::buildUi() {
     root->addLayout(destBox);
     root->addWidget(nameRowW);
     root->addWidget(m_summary, 0);
+    root->addWidget(m_remember);
     root->addWidget(btns, 0);
     setLayout(root);
 
-    connect(m_opsButtons, SIGNAL(buttonClicked(int)), this, SLOT(onOpChanged()));
-    connect(m_bRadioButtons, SIGNAL(buttonClicked(int)), this, SLOT(onBSelectionChanged()));
-    connect(m_bList, SIGNAL(currentRowChanged(int)), this, SLOT(onBSelectionChanged()));
-    connect(m_bCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(onBSelectionChanged()));
-    connect(m_destOverwrite, SIGNAL(toggled(bool)), this, SLOT(onDestChanged()));
-    connect(m_destCreateNew, SIGNAL(toggled(bool)), this, SLOT(onDestChanged()));
-    connect(m_destRadioButtons, SIGNAL(buttonClicked(int)), this, SLOT(onDestSelectionChanged()));
-    connect(m_destList, SIGNAL(currentRowChanged(int)), this, SLOT(onDestSelectionChanged()));
-    connect(m_destCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(onDestSelectionChanged()));
-    connect(m_destFilter, SIGNAL(textChanged(QString)), this, SLOT(onDestFilterTextChanged(QString)));
-    connect(btns, SIGNAL(accepted()), this, SLOT(onAccept()));
-    connect(btns, SIGNAL(rejected()), this, SLOT(reject()));
+
+    #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+        // connect(
+        //     m_opsButtons,
+        //     &QButtonGroup::idClicked,
+        //     this,
+        //     [this](int) {
+        //         onOpChanged();
+        //     }
+        // );
+        // connect(
+        //     m_bRadioButtons,
+        //     &QButtonGroup::idClicked,
+        //     this,
+        //     [this](int) {
+        //         onBSelectionChanged();
+        //     }
+        // );
+        connect(
+            m_bList,
+            SIGNAL(currentRowChanged(int)),
+            this,
+            SLOT(onBSelectionChanged())
+        );
+        connect(
+            m_bCombo,
+            SIGNAL(currentIndexChanged(int)),
+            this,
+            SLOT(onBSelectionChanged())
+        );
+        connect(
+            m_destOverwrite,
+            SIGNAL(toggled(bool)),
+            this,
+            SLOT(onDestChanged()));
+        connect(
+            m_destCreateNew,
+            SIGNAL(toggled(bool)),
+            this,
+            SLOT(onDestChanged()));
+        connect(
+            m_destRadioButtons,
+            &QButtonGroup::idClicked,
+            this,
+            [this](int) {
+            onDestSelectionChanged();
+        });
+        connect(
+            m_destList,
+            SIGNAL(currentRowChanged(int)),
+            this,
+            SLOT(onDestSelectionChanged())
+        );
+        connect(
+            m_destCombo,
+            SIGNAL(currentIndexChanged(int)),
+            this,
+            SLOT(onDestSelectionChanged())
+        );
+        connect(
+            m_destFilter,
+            SIGNAL(textChanged(QString)),
+            this,
+            SLOT(onDestFilterTextChanged(QString))
+        );
+        connect(
+            btns,
+            SIGNAL(accepted()),
+            this,
+            SLOT(onAccept()));
+            connect(btns,
+            SIGNAL(rejected()),
+            this,
+            SLOT(reject())
+        );
+    #else
+        connect(m_opsButtons, SIGNAL(buttonClicked(int)), this, SLOT(onOpChanged()));
+        connect(m_bRadioButtons, SIGNAL(buttonClicked(int)), this, SLOT(onBSelectionChanged()));
+        connect(m_bList, SIGNAL(currentRowChanged(int)), this, SLOT(onBSelectionChanged()));
+        connect(m_bCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(onBSelectionChanged()));
+        connect(m_destOverwrite, SIGNAL(toggled(bool)), this, SLOT(onDestChanged()));
+        connect(m_destCreateNew, SIGNAL(toggled(bool)), this, SLOT(onDestChanged()));
+        connect(m_destRadioButtons, SIGNAL(buttonClicked(int)), this, SLOT(onDestSelectionChanged()));
+        connect(m_destList, SIGNAL(currentRowChanged(int)), this, SLOT(onDestSelectionChanged()));
+        connect(m_destCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(onDestSelectionChanged()));
+        connect(m_destFilter, SIGNAL(textChanged(QString)), this, SLOT(onDestFilterTextChanged(QString)));
+        connect(btns, SIGNAL(accepted()), this, SLOT(onAccept()));
+        connect(btns, SIGNAL(rejected()), this, SLOT(reject()));
+    #endif
+
 
     rebuildBPicker();
     rebuildDestPicker();
@@ -549,13 +631,22 @@ void mdn::gui::BinaryOperationDialog::rebuildDestPicker() {
 
         QLayoutItem* child;
         while ((child = m_destRadioGroup->layout()->takeAt(0)) != nullptr) {
-            if (child->widget()) child->widget()->deleteLater();
+            if (QWidget* w = child->widget()) {
+                if (auto* ab = qobject_cast<QAbstractButton*>(w)) {
+                    m_destRadioButtons->removeButton(ab);
+                }
+                delete w;  // immediate delete (not deleteLater)
+            }
             delete child;
         }
-        const int oldCount = m_destRadioButtons->buttons().size();
-        for (QAbstractButton* b : m_destRadioButtons->buttons()) b->deleteLater();
-        if (oldCount > 0) m_destRadioButtons->setExclusive(false);
+        const auto oldButtons = m_destRadioButtons->buttons();
+        for (QAbstractButton* b : oldButtons) {
+            m_destRadioButtons->removeButton(b);
+            delete b;  // immediate
+        }
+        m_destRadioButtons->setExclusive(false);
         m_destRadioButtons->setExclusive(true);
+
 
         for (int i = 0; i < n; ++i) {
             QRadioButton* r = new QRadioButton(labeled[i], m_destRadioGroup);

@@ -36,15 +36,6 @@ class MDN_API Mdn2dBase {
 
 protected:
 
-    // Static name generation
-
-    // Thread safety at static layer
-    static std::shared_mutex m_static_mutex;
-
-    // Used to generate the next defaulted name
-    static int m_nextNameSeed;
-
-
     // *** Local variables
 
     // Configuration settings for this Mdn2dBase
@@ -101,15 +92,6 @@ public:
 
 
     // *** Static functions
-
-    // Creates a new Mdn2d name, acquires static lock first
-    static std::string static_generateNextName(const std::string& prefix="");
-    protected: static std::string locked_generateNextName(const std::string& prefix=""); public:
-
-    // Create a 'copy' name from given nameIn (e.g. nameIn_copy0), acquires static lock first
-    static std::string static_generateCopyName(const std::string& nameIn);
-    protected: static std::string locked_generateCopyName(const std::string& nameIn); public:
-
 
     // Create a fully-realised Mdn2d instance, accessible from downstream layers
     static Mdn2d NewInstance(

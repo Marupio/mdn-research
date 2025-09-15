@@ -215,6 +215,14 @@ bool LoggerConfigurator::applyLoggerSettingsFromJson(const QJsonObject& root) {
         Log_Info("Logger.Level set to " << levelStr.toStdString());
     }
 
+    if (logger.contains("CheckIndents")) {
+        bool checkIndents = logger.value("CheckIndents").toBool(false);
+        if (checkIndents) {
+            sirTalksAlot.enableIndentChecking();
+            Log_Info("Indent-checking enabled");
+        }
+    }
+
     if (logger.contains("Output")) {
         const QString outPath = logger.value("Output").toString();
         if (!outPath.isEmpty()) {
