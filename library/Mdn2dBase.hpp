@@ -435,16 +435,16 @@ public:
 
         // *** Direct access to underlying data
 
-        inline const std::unordered_map<Coord, Digit>&  data_raw();
-        inline const std::unordered_map<Coord, Digit>&  locked_data_raw();
-        inline const std::map<int, CoordSet>&  data_xIndex();
-        inline const std::map<int, CoordSet>&  locked_data_xIndex();
-        inline const std::map<int, CoordSet>&  data_yIndex();
-        inline const std::map<int, CoordSet>&  locked_data_yIndex();
-        inline const CoordSet&  data_index();
-        inline const CoordSet&  locked_data_index();
-        inline const std::unordered_map<int, MdnObserver*>&  data_observers();
-        inline const std::unordered_map<int, MdnObserver*>&  locked_data_observers();
+        const std::unordered_map<Coord, Digit>&  data_raw();
+        const std::unordered_map<Coord, Digit>&  locked_data_raw();
+        const std::map<int, CoordSet>&  data_xIndex();
+        const std::map<int, CoordSet>&  locked_data_xIndex();
+        const std::map<int, CoordSet>&  data_yIndex();
+        const std::map<int, CoordSet>&  locked_data_yIndex();
+        const CoordSet&  data_index();
+        const CoordSet&  locked_data_index();
+        const std::unordered_map<int, MdnObserver*>&  data_observers();
+        const std::unordered_map<int, MdnObserver*>&  locked_data_observers();
 
 
         // *** Other functionality

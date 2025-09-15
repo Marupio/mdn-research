@@ -17,12 +17,12 @@ class QSplitter;
 class QTabWidget;
 class QWidget;
 
-// Forward declarations
-namespace mdn {
-namespace gui {
-class BinaryOperationDialog;
-} // end namespace gui
-} // end namespace mdn
+// // Forward declarations
+// namespace mdn {
+// namespace gui {
+// class BinaryOperationDialog;
+// } // end namespace gui
+// } // end namespace mdn
 
 namespace mdn {
 namespace gui {
