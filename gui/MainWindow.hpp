@@ -29,6 +29,10 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
+
+    // Default number of Mdn tabs on start
+    static int nStartMdnDefault;
+
     // Create null, no project loaded
     MainWindow(QWidget *parent=nullptr);
 
@@ -119,21 +123,26 @@ private:
 
 public:
     // Sets m_project to a new project based on the given config
-    bool createNewProjectFromConfig(Mdn2dConfig& cfg, int nStartMdn=3);
+    //  requireConfirm - ask user if they want to save any existing project before deleting
+    bool createNewProjectFromConfig(Mdn2dConfig& cfg, bool requireConfirm);
 
     // File menu operations (full implementations)
     // Create a new project, confirms close of existing project
-    bool createNewProject(Mdn2dConfig* cfg=nullptr);
+    bool createNewProject(Mdn2dConfig* cfg=nullptr, bool requireConfirm=true);
 
     // Open an existing project
-    bool openProject();
+    //  requireConfirm - ask user if they want to save any existing project before deleting
+    bool openProject(bool requireConfirm);
 
-    // Returns true if m_project has been successfully closed
-    bool confirmedCloseProject();
+    // Returns true if m_project has been successfully closed and user wishe to proceed
+    bool confirmedCloseProject(bool requireConfirm);
     // Does the dirty work of actually closing the project
     bool closeProject();
     // Creates a new Mdn2d, inserts into the project, adds a tab
     bool createNewMdn2d(QString name, int index, bool makeActive);
+
+    // Centres the view for the given tab
+    void centreView(int index);
 
 private:
     // ProjectProperties window

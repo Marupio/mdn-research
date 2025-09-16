@@ -33,7 +33,7 @@ bool runLauncher(QApplication& app) {
     Log_Debug2("");
 
     // Decide how to start MainWindow
-    // mdn::gui::MainWindow w;
+    // mdn::gui::MainWindow mainApp;
     // Log_Debug2("");
 
     switch (choice) {
@@ -55,11 +55,13 @@ bool runLauncher(QApplication& app) {
 
             cfg = dlg.chosenConfig();
             Log_Debug2("");
-            mdn::gui::MainWindow w(nullptr, &cfg);
+            mdn::gui::MainWindow mainApp(nullptr, &cfg);
 
-            w.createNewProjectFromConfig(cfg);
+            // false= do not ask for confirmation to close existing (dummy, empty) project
+            mainApp.createNewProjectFromConfig(cfg, false);
             Log_Debug2("");
-            w.show();
+            mainApp.show();
+            mainApp.centreView(0);
             bool result = (app.exec() == 0);
             Log_Debug2_T("result=" << result);
             return result;
@@ -67,11 +69,12 @@ bool runLauncher(QApplication& app) {
 
         case WelcomeDialog::Choice::OpenProject: {
             // Launch and immediately open the project picker
-            mdn::gui::MainWindow w;
-            w.show();
-            w.openProject();
-            // QTimer::singleShot(0, &w, [&w](){ w.onOpenProject(); });
-            Log_Debug2("");
+            mdn::gui::MainWindow mainApp;
+            mainApp.show();
+            // false= do not ask for confirmation to close existing (dummy, empty) project
+            mainApp.openProject(false);
+            // QTimer::singleShot(0, &mainApp, [&mainApp](){ mainApp.onOpenProject(); });
+            mainApp.centreView(0);
             bool result = (app.exec() == 0);
             Log_Debug2_T("result=" << result);
             return result;
@@ -80,10 +83,10 @@ bool runLauncher(QApplication& app) {
         // case WelcomeDialog::Choice::OpenRecent: {
         //     // If you have an "open recent" entry point, trigger it here.
         //     // Placeholder pattern (adjust the slot/method name to your code):
-        //     w.show();
-        //     QTimer::singleShot(0, &w, [&w](){
-        //         // w.onOpenRecent(); // TODO: call your actual recent-item flow
-        //         w.onOpenProject();  // temporary fallback
+        //     mainApp.show();
+        //     QTimer::singleShot(0, &mainApp, [&mainApp](){
+        //         // mainApp.onOpenRecent(); // TODO: call your actual recent-item flow
+        //         mainApp.onOpenProject();  // temporary fallback
         //     });
         //     break;
         // }

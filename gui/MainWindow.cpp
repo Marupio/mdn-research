@@ -27,6 +27,9 @@
 #include "ProjectPropertiesDialog.hpp"
 #include "../library/Logger.hpp"
 
+int mdn::gui::MainWindow::nStartMdnDefault = 3;
+
+
 mdn::gui::MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
     m_project(nullptr)
@@ -262,6 +265,8 @@ bool mdn::gui::MainWindow::onSaveProject() {
     if (suggestedPath.size() == 0) {
         QString docs = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
         suggestedPath = docs + "/";
+    } else {
+        suggestedPath += "/";
     }
     QString suggested = suggestedPath + QString::fromStdString(m_project->name()) + ".mdnproj";
 
@@ -305,7 +310,7 @@ bool mdn::gui::MainWindow::onSaveProject() {
 
 bool mdn::gui::MainWindow::onOpenProject() {
     Log_Debug2_H("");
-    bool result = openProject();
+    bool result = openProject(true);
     Log_Debug2_T("result=" << result);
     return result;
 }
@@ -480,7 +485,7 @@ bool mdn::gui::MainWindow::onOpenMdn2d() {
 
 bool mdn::gui::MainWindow::onCloseProject() {
     Log_Debug2_H("");
-    bool result = confirmedCloseProject();
+    bool result = confirmedCloseProject(true);
     Log_Debug2_T("result=" << result);
     return result;
 }
@@ -1117,7 +1122,7 @@ void mdn::gui::MainWindow::setupLayout(Mdn2dConfig* cfg) {
     Log_Debug4("");
     if (!m_project && cfg) {
         Log_Debug3("Dispatch - createNewProject");
-        createNewProjectFromConfig(*cfg);
+        createNewProjectFromConfig(*cfg, false);
     }
     Log_Debug4("");
     if (m_project && m_project->size()) {
@@ -1354,13 +1359,14 @@ void mdn::gui::MainWindow::createStatusBar()
 }
 
 
-bool mdn::gui::MainWindow::createNewProjectFromConfig(Mdn2dConfig& cfg, int nStartMdn) {
+bool mdn::gui::MainWindow::createNewProjectFromConfig(Mdn2dConfig& cfg, bool requireConfirm) {
     Log_Debug3_H("cfg=" << cfg);
-    if (m_project && !confirmedCloseProject()) {
+    if (!confirmedCloseProject(requireConfirm)) {
         Log_Debug3_T("Failed to close existing project, cannot continue");
         return false;
     }
-    m_project = new Project(this, cfg.parentName(), nStartMdn);
+
+    m_project = new Project(this, cfg.parentName(), nStartMdnDefault);
     connect(m_project, &mdn::gui::Project::tabsAboutToChange,
             this, &mdn::gui::MainWindow::onProjectTabsAboutToChange);
     connect(m_project, &mdn::gui::Project::tabsChanged,
@@ -1372,10 +1378,10 @@ bool mdn::gui::MainWindow::createNewProjectFromConfig(Mdn2dConfig& cfg, int nSta
 }
 
 
-bool mdn::gui::MainWindow::createNewProject(Mdn2dConfig* cfg) {
+bool mdn::gui::MainWindow::createNewProject(Mdn2dConfig* cfg, bool requireConfirm) {
     Log_Debug3_H("");
 
-    if (!confirmedCloseProject()) {
+    if (!confirmedCloseProject(requireConfirm)) {
         Log_Debug3_T("Did not successfully close existing project");
         return false;
     }
@@ -1394,7 +1400,7 @@ bool mdn::gui::MainWindow::createNewProject(Mdn2dConfig* cfg) {
 }
 
 
-bool mdn::gui::MainWindow::openProject() {
+bool mdn::gui::MainWindow::openProject(bool requireConfirm) {
     Log_Debug2_H("");
 
     QString docs = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
@@ -1411,7 +1417,7 @@ bool mdn::gui::MainWindow::openProject() {
         return false;
     }
 
-    if (!confirmedCloseProject()) {
+    if (!confirmedCloseProject(requireConfirm)) {
         Log_Debug2_T("Did not succeed in closing existing project");
         return false;
     }
@@ -1447,21 +1453,31 @@ bool mdn::gui::MainWindow::openProject() {
 }
 
 
-bool mdn::gui::MainWindow::confirmedCloseProject() {
+bool mdn::gui::MainWindow::confirmedCloseProject(bool requireConfirm) {
     Log_Debug2_H("");
     if (!m_project) {
         Log_Debug2_T("Project already closed");
         return true;
     }
+    if (!requireConfirm) {
+        bool result = closeProject();
+        Log_Debug2_T("Closed project, result=" << result);
+        return true;
+    }
+
+    // Now seek confirmation from user
+    std::ostringstream oss;
+    oss << "Unsaved changes may be lost.\n\n";
+    oss << "Do you want to save changes to project '" << m_project->name();
+    oss << "' before proceeding?";
     QMessageBox::StandardButton reply = QMessageBox::question(
         this,
         "Save Project",
-        QString("If you proceed, any unsaved changes will be lost.\n\n") +
-            QString("Do you want to save the existing project?"),
-        QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel,
-        QMessageBox::Yes // Default button
+        oss.str().c_str(),
+        QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel,
+        QMessageBox::Save // Default button
     );
-    if (reply == QMessageBox::Yes) {
+    if (reply == QMessageBox::Save) {
         bool success = onSaveProject();
         if (!success) {
             // User chose to save, but saving failed.  Do not proceed.
@@ -1472,9 +1488,10 @@ bool mdn::gui::MainWindow::confirmedCloseProject() {
         Log_Debug2("User cancelled when asked to save");
         return false;
     }
+    // User probably chose Discard
     Log_Debug3("Deleting existing project");
     bool result = closeProject();
-    Log_Debug2_H("result = " << result);
+    Log_Debug2_T("result = " << result);
     return result;
 }
 
@@ -1539,6 +1556,12 @@ bool mdn::gui::MainWindow::createNewMdn2d(QString name, int index, bool makeActi
     }
     Log_Debug2_T("");
     return true;
+}
+
+
+void mdn::gui::MainWindow::centreView(int index) {
+    auto* ndw = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(index));
+    ndw->armCentreViewOnOrigin();
 }
 
 

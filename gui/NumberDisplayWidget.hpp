@@ -161,8 +161,11 @@ private:
     void drawAxes(QPainter& p, const QRect& widgetRect);
     void adjustFontBy(int deltaPts);
     void pixelToModel(int px, int py, int& mx, int& my) const;
+public:
     void centreViewOn(int mx, int my);
     void centreViewOnOrigin();
+    void armCentreViewOnOrigin();
+private:
     void captureCursorFractions();
     void restoreCursorFractions();
     void setBothCursors(int mx, int my);
@@ -222,6 +225,7 @@ private:
     static constexpr double kEdgeGuardFrac = 0.10;
     double m_lastCursorFracX{0.5};
     double m_lastCursorFracY{0.5};
+    bool m_armCentreViewOnOrigin{false};
 
     bool m_dragging{false};
     int m_dragAnchorX{0};

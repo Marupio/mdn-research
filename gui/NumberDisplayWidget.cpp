@@ -767,6 +767,10 @@ void mdn::gui::NumberDisplayWidget::resizeEvent(QResizeEvent* e) {
     if (m_editing) {
         positionCellEditor();
     }
+    if (m_armCentreViewOnOrigin) {
+        centreViewOnOrigin();
+        m_armCentreViewOnOrigin = false;
+    }
     update();
     Log_Debug3_T("");
 }
@@ -888,18 +892,31 @@ void mdn::gui::NumberDisplayWidget::pixelToModel(int px, int py, int& mx, int& m
 
 
 void mdn::gui::NumberDisplayWidget::centreViewOn(int mx, int my) {
+    Log_Debug2_H("");
     const int halfCols = m_cols / 2;
     const int halfRows = m_rows / 2;
 
     m_viewOriginX = mx - halfCols;
     m_viewOriginY = my - halfRows;
 
+    Log_Debug3(
+        "viewOrigin=(" << m_viewOriginX << "," << m_viewOriginY << "), "
+            << "viewSize=(" << m_cols << "," << m_rows << ")"
+    );
     update();
+    Log_Debug2_T("");
 }
 
 
 void mdn::gui::NumberDisplayWidget::centreViewOnOrigin() {
+    Log_Debug2_H("");
     centreViewOn(0, 0);
+    Log_Debug2_T("");
+}
+
+
+void mdn::gui::NumberDisplayWidget::armCentreViewOnOrigin() {
+    m_armCentreViewOnOrigin = true;
 }
 
 

@@ -16,15 +16,6 @@ mdn::Mdn2dFramework& mdn::Mdn2dConfig::parent() {
 
 
 void mdn::Mdn2dConfig::setParent(Mdn2dFramework& framework) {
-    if (m_parentPtr && m_parentPtr->className() != "Mdn2dFramework") {
-        Log_Warn(
-            "Setting a new framework " << framework.name()
-            << ", class " << framework.className()
-            << ", when existing framework " << m_parentPtr->name()
-            << ", class " << m_parentPtr->className()
-            << " already is assigned. Using new framework."
-        );
-    }
     m_parentPtr = &framework;
     updateIdentity();
 }
