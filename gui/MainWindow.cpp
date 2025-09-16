@@ -348,16 +348,17 @@ bool mdn::gui::MainWindow::onSaveMdn2d(int idx) {
     }
 
     const QString filters =
-        tr("Binary (*.mdn2d);;"
-           "Pretty text (*.mdn2p);;"
-           "Utility text (*.mdn2t);;"
+        tr("Binary (*.mdnbin);;"
+           "Pretty text (*.mdntxt);;"
+           "Utility csv text (*.mdncsv);;"
+           "Utility tsv text (*.mdntsv);;"
            "All Files (*)");
 
     QString selectedFilter;
     QString path = QFileDialog::getSaveFileName(
         this,
         tr("Save Number"),
-        suggestedDir + "/" + baseName + ".mdn2d",
+        suggestedDir + "/" + baseName + ".mdnbin",
         filters,
         &selectedFilter
     );
@@ -369,12 +370,14 @@ bool mdn::gui::MainWindow::onSaveMdn2d(int idx) {
 
     QFileInfo info(path);
     QString ext = info.suffix().toLower();
-    if (selectedFilter.contains("Binary") && ext != "mdn2d") {
-        path += ".mdn2d";
-    } else if (selectedFilter.contains("Pretty") && ext != "mdn2p") {
-        path += ".mdn2p";
-    } else if (selectedFilter.contains("Utility") && ext != "mdn2t") {
-        path += ".mdn2t";
+    if (selectedFilter.contains("Binary") && ext != "mdnbin") {
+        path += ".mdnbin";
+    } else if (selectedFilter.contains("Pretty") && ext != "mdntxt") {
+        path += ".mdntxt";
+    } else if (selectedFilter.contains("Utility csv") && ext != "mdncsv") {
+        path += ".mdncsv";
+    } else if (selectedFilter.contains("Utility tsv") && ext != "mdntsv") {
+        path += ".mdntsv";
     }
 
     std::ofstream ofs(path.toStdString(), std::ios::binary);
@@ -388,17 +391,19 @@ bool mdn::gui::MainWindow::onSaveMdn2d(int idx) {
         src->saveBinary(ofs);
     } else if (selectedFilter.contains("Pretty")) {
         src->saveTextPretty(ofs, true, true);
-    } else if (selectedFilter.contains("Utility")) {
-        using CTS = mdn::CommaTabSpace;
-        src->saveTextUtility(ofs, CTS::Comma);
+    } else if (selectedFilter.contains("Utility csv")) {
+        src->saveTextUtility(ofs, CommaTabSpace::Comma);
+    } else if (selectedFilter.contains("Utility tsv")) {
+        src->saveTextUtility(ofs, CommaTabSpace::Tab);
     } else {
-        if (ext == "mdn2d") {
+        if (ext == "mdnbin") {
             src->saveBinary(ofs);
-        } else if (ext == "mdn2p") {
+        } else if (ext == "mdntxt") {
             src->saveTextPretty(ofs, true, true);
-        } else if (ext == "mdn2t") {
-            using CTS = mdn::CommaTabSpace;
-            src->saveTextUtility(ofs, CTS::Comma);
+        } else if (ext == "mdncsv") {
+            src->saveTextUtility(ofs, CommaTabSpace::Comma);
+        } else if (ext == "mdntsv") {
+            src->saveTextUtility(ofs, CommaTabSpace::Tab);
         } else {
             src->saveBinary(ofs);
         }
@@ -432,9 +437,10 @@ bool mdn::gui::MainWindow::onOpenMdn2d() {
     }
 
     const QString filters =
-        tr("Binary (*.mdn2d);;"
-           "Pretty text (*.mdn2p);;"
-           "Utility text (*.mdn2t);;"
+        tr("Binary (*.mdnbin);;"
+           "Pretty text (*.mdntxt);;"
+           "Utility csv text (*.mdncsv);;"
+           "Utility tsv text (*.mdntsv);;"
            "All Files (*)");
 
     QString path = QFileDialog::getOpenFileName(
@@ -459,22 +465,42 @@ bool mdn::gui::MainWindow::onOpenMdn2d() {
     Mdn2d num = Mdn2d::NewInstance(m_globalConfig, "");
     const QString ext = QFileInfo(path).suffix().toLower();
 
+    Log_Debug3("Checking extension: [" << ext.toStdString() << "]");
     try {
-        if (ext == "mdn2d") {
+        if (ext == "mdnbin") {
+            Log_Debug4_H("loadBinary dispatch");
             num.loadBinary(ifs);
+            Log_Debug4_T("loadBinary return");
         } else {
+            Log_Debug4_H("loadText dispatch");
             num.loadText(ifs);
+            Log_Debug4_T("loadText return");
         }
     } catch (const std::exception& e) {
+        Log_Debug4_T("caught an error");
         QMessageBox::warning(this, tr("Open Number"), tr("Failed to load number."));
         Log_Error(e.what());
         Log_Debug2_T("load fail");
         return false;
     }
 
-    num.setConfig(m_globalConfig);
+    // num.setConfig(m_globalConfig);
     // appends to end by convention
-    m_project->importMdn(std::move(num), -1);
+    Log_Debug4("importing number");
+    if (!m_project->importMdn(std::move(num), -1)) {
+        // Incompatible number
+        Log_WarnQ(""
+            << "Incompatible import\n"
+            << "Attempting to load a Mdn2d with config:\n"
+            << num.config() << "\n"
+            << "when the project config is:\n"
+            << m_globalConfig << "\n"
+            << "Dissimilar bases means this number is incompatible. Change your project's base "
+            << "to " << num.config().base() << " and try again."
+        );
+        Log_Debug2_T("number incompatible");
+        return false;
+    }
     // rebuild tabs; preserves current selection logic
     syncTabsToProject();
     statusBar()->showMessage(tr("Number loaded"), 2000);

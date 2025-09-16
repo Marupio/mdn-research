@@ -246,6 +246,16 @@ bool mdn::Mdn2dIO::internal_parseConfigLine(
 }
 
 
+char mdn::Mdn2dIO::internal_identifyDelim(const std::string& ascii) {
+    for (const char& c : ascii) {
+        if (c == '\t' || c == ' ' || c == ',') {
+            return c;
+        }
+    }
+    return '\0';
+}
+
+
 std::vector<std::string> mdn::Mdn2dIO::toStringRows(
     const Mdn2dBase& src,
     const TextWriteOptions& opt
@@ -634,7 +644,6 @@ mdn::TextReadSummary mdn::Mdn2dIO::locked_loadText(
     Mdn2dBase& dst
 ) {
     Log_Debug3_H("");
-    Log_Info("locked_loadText");
     std::string nameLine, boundsLine, configLine;
 
     // Handle optional BOM on the very first getline
@@ -650,27 +659,34 @@ mdn::TextReadSummary mdn::Mdn2dIO::locked_loadText(
     ) {
         nameLine.erase(0, 3);
     }
+    Log_Debug4("ready to read stream");
 
     if (!std::getline(is, boundsLine)) {
         Log_Debug3_T("Stream ended early");
         return {};
     }
+    Log_Debug4("Got raw bounds line: [" << boundsLine << "]");
     if (!std::getline(is, configLine)) {
         Log_Debug3_T("Stream ended early");
         return {};
     }
+    Log_Debug4("Got raw config line: [" << configLine << "]");
 
     std::string mdnName;
     if (!internal_parseNameLine(nameLine, mdnName)) {
         Log_Debug3_T("Stream ended early");
         return {};
     }
+    Log_Debug4("Got raw mdnName: [" << mdnName << "]");
 
     int x0=0,y0=0,x1=-1,y1=-1; bool empty=false;
     if (!internal_parseBoundsLine(boundsLine, x0, y0, x1, y1, empty)) {
         Log_Debug3_T("Stream ended early");
         return {};
     }
+    Log_Debug4(
+        "Parsed bounds line as: [(" << x0 << "," << y0 << ")->(" << x1 << "," << y1 << ")]"
+    );
 
     int base=10;
     int prec=16;
@@ -679,19 +695,26 @@ mdn::TextReadSummary mdn::Mdn2dIO::locked_loadText(
         Log_Debug3_T("Stream ended early");
         return {};
     }
+    Log_Debug4(""
+        << "Parsed config line as: base=" << base
+        << ", precision=" << prec
+        << ", signConvention=" << SignConventionToName(sign)
+    );
 
     // Apply name & config
-    dst.m_name = mdnName; // allowed because we're in locked_*; matches how you write it out. :contentReference[oaicite:10]{index=10}
+    dst.m_name = mdnName;
     const Mdn2dConfig& dstCfg = dst.locked_config();
     Mdn2dConfig cfg(
         base, prec, static_cast<SignConvention>(sign),
         dstCfg.maxCarryoverIters(),
         dstCfg.fraxis()
     );
+    Log_Debug4("Assembled config=" << cfg << ", applying to number");
     dst.locked_setConfig(cfg);
     // Clear and set bounds anchor
     dst.locked_clear();
     mdn::Rect writeRect = empty ? mdn::Rect::GetInvalid() : mdn::Rect(x0, y0, x1, y1, true);
+    Log_Debug4("Assembled bounds=" << writeRect);
 
     // Now read the remainder of the stream as data lines (your existing logic below)
     std::vector<std::string> lines;
@@ -703,9 +726,12 @@ mdn::TextReadSummary mdn::Mdn2dIO::locked_loadText(
     std::vector<std::vector<int>> grid;
     grid.reserve(lines.size());
 
+    char delim = '\0';
     for (const std::string& ln : lines) {
+        Log_Debug4("Working on line [" << ln << "]");
         std::u32string u = toU32(ln);
         if (likelyAxisLine(u)) {
+            Log_Debug4("Likely axis line");
             continue;
         }
         for (char32_t& c : u) {
@@ -717,11 +743,19 @@ mdn::TextReadSummary mdn::Mdn2dIO::locked_loadText(
             }
         }
         std::string ascii = fromU32(u);
+        Log_Debug4("ascii=" << ascii);
 
+        if (delim == '\0') {
+            delim = internal_identifyDelim(ascii);
+            if (delim == '\0') {
+                Log_Debug4("Could not identify delimiter");
+                continue;
+            }
+        }
         std::istringstream iss(ascii);
         std::string cell;
         std::vector<int> row;
-        while (std::getline(iss, cell, ' ')) {
+        while (std::getline(iss, cell, delim)) {
             if (cell.empty()) {
                 continue;
             }
@@ -746,6 +780,9 @@ mdn::TextReadSummary mdn::Mdn2dIO::locked_loadText(
         }
         if (!row.empty()) {
             grid.push_back(std::move(row));
+            If_Log_Showing_Debug4(
+                Log_Debug4("row=[" << Tools::vectorToString(row, ",", false) << "]");
+            );
         }
     }
 

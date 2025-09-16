@@ -24,21 +24,20 @@ Make Selection thread safe
 * Change Mdn2dIO into a layer on the Mdn2d class structure * ON HOLD *
 * Consider adding namespace extensions: mdn::algo (algorithm), mdn::io
 * Get rid of invalidReason in Mdn2dConfig
+* Make Selection thread safe?
+
 
 GUI library
 
 * Change font size needs to propogate to all Mdns
 * Be able to change config - config button
-* Starts cursor top left - put in middle
-* Starts last Mdn, should be first
 
 ---------------------------------
 
 Bugs
-* Font size resets on performing an operation output to new Mdn
 * Drag tab drops after one position
-* Save 'Utility' format, digits are all x10 Features
 
+Features
 * Copy,Cut,Paste clipboard operations not wired in
 * Save only opens file dialog if path not set
 * SaveAs always opens file dialog

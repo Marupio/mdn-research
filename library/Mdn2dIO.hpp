@@ -32,6 +32,8 @@ class MDN_API Mdn2dIO {
         const std::string& line, int& base, int& prec, SignConvention& sign
     );
 
+    static char internal_identifyDelim(const std::string& ascii);
+
 
 public:
     // -------- Text -> strings --------

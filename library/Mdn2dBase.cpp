@@ -1377,11 +1377,15 @@ void mdn::Mdn2dBase::locked_saveTextPretty(
     bool wideNegatives,
     bool alphanumeric
 ) const {
-    std::vector<std::string> txt = locked_saveTextPrettyRows(m_bounds, wideNegatives, alphanumeric);
-    os << m_bounds << '\n';
-    for (auto riter = txt.rbegin(); riter != txt.rend(); ++riter) {
-        os << *riter << std::endl;
-    }
+    Log_Debug2_H("");
+    TextWriteOptions opt = TextWriteOptions::DefaultPretty();
+    opt.alphanumeric = alphanumeric;
+    opt.wideNegatives = wideNegatives;
+    Log_Debug2("write options:" << opt);
+    Log_Debug2_H("Mdn2dIO dispatch");
+    Mdn2dIO::locked_saveTextPretty(*this, os, opt);
+    Log_Debug2_T("Mdn2dIO return");
+    Log_Debug2_T("");
 }
 
 
@@ -1393,11 +1397,13 @@ void mdn::Mdn2dBase::saveTextUtility(std::ostream& os, CommaTabSpace delim) cons
 
 
 void mdn::Mdn2dBase::locked_saveTextUtility(std::ostream& os, CommaTabSpace delim) const {
-    std::vector<std::string> txt = locked_saveTextUtilityRows(m_bounds, delim);
-    os << m_bounds << '\n';
-    for (auto riter = txt.rbegin(); riter != txt.rend(); ++riter) {
-        os << *riter << std::endl;
-    }
+    Log_Debug2_H("");
+    TextWriteOptions opt = TextWriteOptions::DefaultUtility(delim);
+    Log_Debug2("write options:" << opt);
+    Log_Debug2_H("Mdn2dIO dispatch");
+    Mdn2dIO::locked_saveTextUtility(*this, os, opt);
+    Log_Debug2_T("Mdn2dIO return");
+    Log_Debug2_T("");
 }
 
 

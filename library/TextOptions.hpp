@@ -10,6 +10,13 @@ namespace mdn {
 
 // Text axes rendering style
 enum class AxesOutput { None, BoxArt, Simple };
+inline std::string toString(AxesOutput ao) {
+    switch (ao) {
+        case AxesOutput::BoxArt: return "BoxArt";
+        case AxesOutput::Simple: return "Simple";
+        default: return "None";
+    }
+}
 
 // Delimiter choice for utility text
 enum class CommaTabSpace { Comma, Tab, Space };
@@ -52,6 +59,12 @@ struct MDN_API TextWriteOptions {
     static TextWriteOptions DefaultPretty();
     static TextWriteOptions DefaultUtility(CommaTabSpace d = CommaTabSpace::Space);
 
+    inline friend std::ostream& operator<<(std::ostream& os, const TextWriteOptions& opt) {
+        os << "{axes=" << toString(opt.axes) << ",alphanumeric=" << opt.alphanumeric
+            << ",wideNegatives=" << opt.wideNegatives << ",delim=" << toString(opt.delim)
+            << ",window=" << opt.window << "}";
+        return os;
+    }
 };
 
 // Result of reading text (pretty/utility) back into an MDN
