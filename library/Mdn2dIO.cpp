@@ -269,7 +269,8 @@ std::vector<std::string> mdn::Mdn2dIO::locked_toStringRows(
     const Mdn2dBase& src,
     const TextWriteOptions& opt
 ) {
-    Log_Debug3_H(src.name());
+    Log_Debug3_H(src.name() << ": opt=" << opt);
+    Log_Debug4("opt.rowOrder=" << toString(opt.rowOrder));
     Rect b = src.locked_hasBounds() ? src.locked_bounds() : Rect::GetInvalid();
     Rect w = opt.window.isValid() ? opt.window : b;
     std::vector<std::string> lines;
@@ -286,15 +287,19 @@ std::vector<std::string> mdn::Mdn2dIO::locked_toStringRows(
     const int xCount = w.width();
     const int yCount = w.height();
 
-    const bool topToBottom = (opt.rowOrder == RowOrder::TopToBottom);
-    const int yStart = topToBottom ? y1 : y0;
-    const int yEnd   = topToBottom ? y0 : y1;
-    const int yStep  = topToBottom ? -1 : 1;
+    int yStart = y0;
+    int yEnd   = y1;
+    int yStep  = 1;
+    if (opt.rowOrder == RowOrder::TopToBottom) {
+        yStart = y1;
+        yEnd   = y0;
+        yStep  = -1;
+    }
 
     Log_Debug3(
         "w=" << w
         << ", x:(" << x0 << "," << x1 << ")=" << xCount
-        << ", y::(" << y0 << "," << y1 << ")=" << yCount
+        << ", y:(" << y0 << "," << y1 << ")=" << yCount
     );
 
     std::string H = "";
@@ -337,7 +342,7 @@ std::vector<std::string> mdn::Mdn2dIO::locked_toStringRows(
 
     // DigLine - digit line appears before what index in 'row' array below
     int xDigLine = -x0;
-    int yDigLine = 0;
+    int yDigLine = -1;
 
     std::string negativeStr = opt.wideNegatives? Tools::BoxArtStr_h : "-";
 
@@ -346,7 +351,8 @@ std::vector<std::string> mdn::Mdn2dIO::locked_toStringRows(
     row.reserve(static_cast<std::size_t>(xCount));
 
     // for (int y = y0; y <= y1; ++y) {
-    for (int y = yStart; y <= yEnd; y += yStep) {
+    Log_Debug4("y=" << yStart << " to " << yEnd);
+    for (int y = yStart; ; y += yStep) {
         // First, if axes are on, are we at the yDigit line?
         if (hasAxes && (y == yDigLine)) {
             std::string hAssemble;
@@ -413,6 +419,9 @@ std::vector<std::string> mdn::Mdn2dIO::locked_toStringRows(
             line << digStr << delimStr;
         }
         lines.push_back(line.str());
+        if (y == yEnd) {
+            break;
+        }
     } // end y loop
     Log_Debug3_T("returning " << lines.size() << " lines of text");
     return lines;
@@ -816,10 +825,10 @@ mdn::TextReadSummary mdn::Mdn2dIO::locked_loadText(
             row[static_cast<std::size_t>(c)] =
                 static_cast<Digit>(grid[static_cast<std::size_t>(r)][static_cast<std::size_t>(c)]);
         }
-        Coord xy(ax, ay + r);
+        Coord xy(ax, ay + (H - 1 - r));
         dst.locked_setRow(xy, row);
         // dst.locked_setRow(ay + (H - 1 - r), ax, row);
-        Log_Info("row index is " << (ay+r) << ", and other one would be " << ay + (H - 1 - r));
+        Log_Info("row index is " << ay + (H - 1 - r) << ", and other one would be " << (ay + r));
     }
 
     // Report what we parsed/wrote

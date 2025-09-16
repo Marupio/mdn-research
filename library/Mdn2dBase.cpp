@@ -1323,7 +1323,9 @@ std::vector<std::string> mdn::Mdn2dBase::locked_saveTextPrettyRows(
     opt.wideNegatives = wideNegatives;
     opt.alphanumeric = alphanumeric;
     opt.window = window;
-    opt.rowOrder = RowOrder::TopToBottom;
+    // opt.rowOrder = RowOrder::TopToBottom;
+    // opt.rowOrder = RowOrder::BottomToTop;
+    Log_Debug4("opt.rowOrder=" << toString(opt.rowOrder));
     std::vector<std::string> result(Mdn2dIO::locked_toStringRows(*this, opt));
     Log_N_Debug3_T("");
     return result;
@@ -1359,7 +1361,7 @@ std::vector<std::string> mdn::Mdn2dBase::locked_saveTextUtilityRows(
     TextWriteOptions opt(TextWriteOptions::DefaultUtility());
     opt.delim = delim;
     opt.window = window;
-    opt.rowOrder = RowOrder::TopToBottom;
+    // opt.rowOrder = RowOrder::TopToBottom;
     std::vector<std::string> result(Mdn2dIO::locked_toStringRows(*this, opt));
     Log_N_Debug3_T("");
     return result;
@@ -1385,6 +1387,7 @@ void mdn::Mdn2dBase::locked_saveTextPretty(
     TextWriteOptions opt = TextWriteOptions::DefaultPretty();
     opt.alphanumeric = alphanumeric;
     opt.wideNegatives = wideNegatives;
+    // opt.rowOrder = RowOrder::TopToBottom;
     Log_Debug2("write options:" << opt);
     Log_Debug2_H("Mdn2dIO dispatch");
     Mdn2dIO::locked_saveTextPretty(*this, os, opt);
@@ -1403,6 +1406,7 @@ void mdn::Mdn2dBase::saveTextUtility(std::ostream& os, CommaTabSpace delim) cons
 void mdn::Mdn2dBase::locked_saveTextUtility(std::ostream& os, CommaTabSpace delim) const {
     Log_Debug2_H("");
     TextWriteOptions opt = TextWriteOptions::DefaultUtility(delim);
+    // opt.rowOrder = RowOrder::TopToBottom;
     Log_Debug2("write options:" << opt);
     Log_Debug2_H("Mdn2dIO dispatch");
     Mdn2dIO::locked_saveTextUtility(*this, os, opt);

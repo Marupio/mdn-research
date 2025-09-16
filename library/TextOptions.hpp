@@ -67,7 +67,7 @@ struct MDN_API TextWriteOptions {
     // Optional clamp window; if invalid → use bounds()
     Rect window = Rect::GetInvalid();
 
-    RowOrder rowOrder = RowOrder::BottomToTop;
+    RowOrder rowOrder = RowOrder::TopToBottom;
 
     // Ready-made presets
     static TextWriteOptions DefaultPretty();
@@ -76,7 +76,7 @@ struct MDN_API TextWriteOptions {
     inline friend std::ostream& operator<<(std::ostream& os, const TextWriteOptions& opt) {
         os << "{axes=" << toString(opt.axes) << ",alphanumeric=" << opt.alphanumeric
             << ",wideNegatives=" << opt.wideNegatives << ",delim=" << toString(opt.delim)
-            << ",window=" << opt.window << "}";
+            << ",window=" << opt.window << ",order=" << toString(opt.rowOrder) << "}";
         return os;
     }
 };
