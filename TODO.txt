@@ -32,6 +32,46 @@ GUI library
 * Starts cursor top left - put in middle
 * Starts last Mdn, should be first
 
+---------------------------------
+
+Bugs
+* Font size resets on performing an operation output to new Mdn
+* Drag tab drops after one position
+* Save 'Utility' format, digits are all x10 Features
+
+* Copy,Cut,Paste clipboard operations not wired in
+* Save only opens file dialog if path not set
+* SaveAs always opens file dialog
+* Hover peaks tab always
+* Click Operation button, hover peaks tab
+* After clicking operation button, click B tab, then dest tab, including + tab (i.e new)
+* Add a '+ tab' which creates a new tab
+* Shortcut keys:
+    For these, Ctrl+letter->applies to Mdn2d, Ctrl+Shift+Letter->applies to Project
+        N = New, S = Save, W=Close
+    Standard clipboard operations
+        Ctrl+C or Ctrl+Insert = Clipboard copy
+        Ctrl+X or Shift+Del = Clipboard cut
+        Ctrl+V or Shift+Insert = Clipboard paste
+
+* Change operation buttons from text to symbols
+* Add a gear button for ProjectProjectiesDialog
+* Add a 'Clear All' button & edit menu item
+* Update operation toolbar to make Destination more selectable
+* Get rid of Operation->[opName] (in place) and (to new) menu items
+* Carryover button
+* Transpose button
+* Negative button
+* Invert button
+* Scalar multiply button
+* SignConvention button / apply to whole number
+* Hover help text on EditMode, (Fraxis has it), Cursor location, Selection text
+* Status area response output
+* Wire up Help menu
+* Wire up Edit menu
+* Create and wire up Tools menu
+* CommandWidget
+
 FUNCTIONALITY
 
 Start menu - New, Open, Recent

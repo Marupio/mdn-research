@@ -927,6 +927,20 @@ void mdn::gui::Project::insertMdn(Mdn2d&& mdn, int index) {
 }
 
 
+bool mdn::gui::Project::importMdn(Mdn2d&& mdn, int index) {
+    Mdn2dConfigImpact impact = mdn.assessConfigChange(m_config);
+    if (impact == Mdn2dConfigImpact::AllDigitsCleared) {
+        // Incompatible number
+        return false;
+    }
+    std::string newName = suggestName(mdn.name());
+    mdn.setName(newName);
+    mdn.setConfig(m_config);
+    insertMdn(std::move(mdn), index);
+    return true;
+}
+
+
 std::pair<int, std::string> mdn::gui::Project::duplicateMdn(int index) {
     Log_Debug2_H("index=" << index);
     if (!checkIndex(index)) {

@@ -254,6 +254,9 @@ public:
         //          Recover: rename the new mdn, by convention
         void insertMdn(Mdn2d&& mdn, int index);
 
+        // Same as insert, except the Mdn2d is checked for fit with its name and config
+        bool importMdn(Mdn2d&& mdn, int index);
+
         // Duplicate the Mdn2d at the given index or given name, returns the name of the new mdn.
         //  An empty string return indicates the operation failed
         //  Messaging

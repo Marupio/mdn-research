@@ -53,8 +53,8 @@ std::string mdn::Tools::digitToAlpha(
             // May have to break value into pieces, maximum two digits
             int intVal = static_cast<int>(value);
             static const int ten = 10;
-            int tens = intVal%ten;
-            int ones = intVal/ten;
+            int tens = intVal/ten;
+            int ones = intVal%ten;
             if (tens == 0) {
                 if (padSpacesToWidth) {
                     ret = " " + prefix + std::to_string(ones);

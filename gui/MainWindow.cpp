@@ -474,7 +474,7 @@ bool mdn::gui::MainWindow::onOpenMdn2d() {
 
     num.setConfig(m_globalConfig);
     // appends to end by convention
-    m_project->appendMdn(std::move(num));
+    m_project->importMdn(std::move(num), -1);
     // rebuild tabs; preserves current selection logic
     syncTabsToProject();
     statusBar()->showMessage(tr("Number loaded"), 2000);
@@ -1185,6 +1185,7 @@ void mdn::gui::MainWindow::createTabForIndex(int index) {
     ndw->setProject(m_project);
     ndw->setFocusPolicy(Qt::StrongFocus);
     ndw->setModel(src, &sel);
+    ndw->setFontPointSize(m_globalFontSize);
 
     connect(ndw, &NumberDisplayWidget::statusCursorChanged, this,
         [this](int x, int y){
