@@ -36,6 +36,18 @@ inline std::string toString(CommaTabSpace delim) {
     }
 }
 
+enum class RowOrder {
+    BottomToTop,   // legacy/engine-centric: y0..y1
+    TopToBottom    // human/top-first: y1..y0
+};
+inline std::string toString(RowOrder ro) {
+    switch (ro) {
+        case RowOrder::BottomToTop: return "BottomToTop";
+        case RowOrder::TopToBottom: return "TopToBottom";
+        default: return "BottomToTop";
+    }
+}
+
 
 // Options for writing text
 struct MDN_API TextWriteOptions {
@@ -54,6 +66,8 @@ struct MDN_API TextWriteOptions {
 
     // Optional clamp window; if invalid → use bounds()
     Rect window = Rect::GetInvalid();
+
+    RowOrder rowOrder = RowOrder::BottomToTop;
 
     // Ready-made presets
     static TextWriteOptions DefaultPretty();

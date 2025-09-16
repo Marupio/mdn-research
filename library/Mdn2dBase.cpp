@@ -1322,6 +1322,8 @@ std::vector<std::string> mdn::Mdn2dBase::locked_saveTextPrettyRows(
     TextWriteOptions opt(TextWriteOptions::DefaultPretty());
     opt.wideNegatives = wideNegatives;
     opt.alphanumeric = alphanumeric;
+    opt.window = window;
+    opt.rowOrder = RowOrder::TopToBottom;
     std::vector<std::string> result(Mdn2dIO::locked_toStringRows(*this, opt));
     Log_N_Debug3_T("");
     return result;
@@ -1356,6 +1358,8 @@ std::vector<std::string> mdn::Mdn2dBase::locked_saveTextUtilityRows(
     Log_N_Debug3_H("");
     TextWriteOptions opt(TextWriteOptions::DefaultUtility());
     opt.delim = delim;
+    opt.window = window;
+    opt.rowOrder = RowOrder::TopToBottom;
     std::vector<std::string> result(Mdn2dIO::locked_toStringRows(*this, opt));
     Log_N_Debug3_T("");
     return result;
@@ -1417,7 +1421,9 @@ void mdn::Mdn2dBase::loadText(std::istream& is) {
 
 void mdn::Mdn2dBase::locked_loadText(std::istream& is) {
     Log_N_Debug2_H("")
+    Log_Debug2_H("Mdn2dIO dispatch");
     Mdn2dIO::locked_loadText(is, *this);
+    Log_Debug2_T("Mdn2dIO return");
     locked_rebuildMetadata();
     Log_N_Debug2_T("")
 }
@@ -1447,7 +1453,9 @@ void mdn::Mdn2dBase::loadBinary(std::istream& is) {
 
 void mdn::Mdn2dBase::locked_loadBinary(std::istream& is) {
     Log_N_Debug2_H("")
+    Log_Debug2_H("Mdn2dIO dispatch");
     Mdn2dIO::locked_loadBinary(is, *this);
+    Log_Debug2_T("Mdn2dIO return");
     locked_rebuildMetadata();
     Log_N_Debug2_T("")
 }

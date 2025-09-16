@@ -286,6 +286,11 @@ std::vector<std::string> mdn::Mdn2dIO::locked_toStringRows(
     const int xCount = w.width();
     const int yCount = w.height();
 
+    const bool topToBottom = (opt.rowOrder == RowOrder::TopToBottom);
+    const int yStart = topToBottom ? y1 : y0;
+    const int yEnd   = topToBottom ? y0 : y1;
+    const int yStep  = topToBottom ? -1 : 1;
+
     Log_Debug3(
         "w=" << w
         << ", x:(" << x0 << "," << x1 << ")=" << xCount
@@ -340,7 +345,8 @@ std::vector<std::string> mdn::Mdn2dIO::locked_toStringRows(
     Log_Debug3("Reserving " << xCount);
     row.reserve(static_cast<std::size_t>(xCount));
 
-    for (int y = y0; y <= y1; ++y) {
+    // for (int y = y0; y <= y1; ++y) {
+    for (int y = yStart; y <= yEnd; y += yStep) {
         // First, if axes are on, are we at the yDigit line?
         if (hasAxes && (y == yDigLine)) {
             std::string hAssemble;
