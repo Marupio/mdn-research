@@ -37,8 +37,6 @@ GUI library
 Bugs
 * Drag tab drops after one position
 * Cursor goes out-of-view on submit
-* Close project, new project (file menu), ndw blank
-* Save Mdn2d saves index 0 tab from file menu
 
 Features
 * Scroll wheel scrolls view when no other modifiers, sideways allowed also

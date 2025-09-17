@@ -69,9 +69,13 @@ private slots:
     bool onNewNamedMdn2d(QString name, int index);
     bool onSaveProject();
     bool onOpenProject();
-    bool onSaveMdn2d(int idx = -1);
+    bool onSaveMdn2d();
+    bool saveMdn2d(int idx = -1);
     bool onOpenMdn2d();
     bool onCloseProject();
+
+    // Edit menu operations
+    void onSelectAll();
 
     void onSplitterMoved(int pos, int index);
     void onCommandSubmitted(const QString& text);
@@ -155,7 +159,8 @@ private:
 
     // Tab operations
     void onTabMoved(int from, int to);
-    void onTabCloseRequested(int index);
+    void onTabCloseRequested();
+    void closeTab(int index);
     void renameTab(int index);
     void duplicateTab(int index);
     void copyTab(int index);

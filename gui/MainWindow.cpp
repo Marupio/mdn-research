@@ -142,9 +142,9 @@ void mdn::gui::MainWindow::onTabContextMenu(const QPoint& pos)
         // insert after current tab
         pasteTab(index + 1);
     } else if (picked == actSaveAs) {
-        onSaveMdn2d(index);
+        saveMdn2d(index);
     } else if (picked == actDelete) {
-        onTabCloseRequested(index);
+        closeTab(index);
     }
     Log_Debug3_T("");
 }
@@ -316,7 +316,15 @@ bool mdn::gui::MainWindow::onOpenProject() {
 }
 
 
-bool mdn::gui::MainWindow::onSaveMdn2d(int idx) {
+bool mdn::gui::MainWindow::onSaveMdn2d() {
+    Log_Debug2_H("");
+    bool result = saveMdn2d(-1);
+    Log_Debug2_T("result=" << result);
+    return result;
+}
+
+
+bool mdn::gui::MainWindow::saveMdn2d(int idx) {
     Log_Debug2_H("");
 
     if (!m_project) {
@@ -514,6 +522,17 @@ bool mdn::gui::MainWindow::onCloseProject() {
     bool result = confirmedCloseProject(true);
     Log_Debug2_T("result=" << result);
     return result;
+}
+
+
+void mdn::gui::MainWindow::onSelectAll() {
+    if (!m_tabWidget) {
+        return;
+    }
+    int index = m_tabWidget->currentIndex();
+    if (auto* ndw = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(index))) {
+        ndw->selectAllBounds();
+    }
 }
 
 
@@ -1075,30 +1094,30 @@ void mdn::gui::MainWindow::createMenus() {
     Log_Debug3_H("");
     QMenu* fileMenu = menuBar()->addMenu("&File");
     fileMenu->addAction("New Project", this, &mdn::gui::MainWindow::onNewProject);
-    fileMenu->addAction("New Mdn2d", this, &mdn::gui::MainWindow::onNewMdn2d);
-    fileMenu->addSeparator();
     fileMenu->addAction("Open Project", this, &mdn::gui::MainWindow::onOpenProject);
-    fileMenu->addAction("Open Mdn2d", this, &mdn::gui::MainWindow::onOpenMdn2d);
-    fileMenu->addSeparator();
     fileMenu->addAction("Save Project", this, &mdn::gui::MainWindow::onSaveProject);
+    fileMenu->addAction("Close Project", this, &mdn::gui::MainWindow::onCloseProject);
+    fileMenu->addSeparator();
+    fileMenu->addAction("New Mdn2d", this, &mdn::gui::MainWindow::onNewMdn2d);
+    fileMenu->addAction("Open Mdn2d", this, &mdn::gui::MainWindow::onOpenMdn2d);
     fileMenu->addAction("Save Mdn2d", this, &mdn::gui::MainWindow::onSaveMdn2d);
+    fileMenu->addAction("Close Mdn2d", this, &mdn::gui::MainWindow::onTabCloseRequested);
     fileMenu->addSeparator();
     fileMenu->addAction("Project Properties", this, &mdn::gui::MainWindow::onProjectProperties);
     fileMenu->addSeparator();
-    fileMenu->addAction("Close Project", this, &mdn::gui::MainWindow::onCloseProject);
     fileMenu->addAction("Exit", this, &mdn::gui::MainWindow::close);
 
     QMenu* editMenu = menuBar()->addMenu("&Edit");
-    editMenu->addAction("Undo");
-    editMenu->addAction("Redo");
-    editMenu->addSeparator();
-    editMenu->addAction("Select All");
-    editMenu->addAction("Select Row");
-    editMenu->addAction("Select Column");
-    editMenu->addAction("Select Box");
-    editMenu->addSeparator();
-    editMenu->addAction("Properties");
-    editMenu->addSeparator();
+    // editMenu->addAction("Undo");
+    // editMenu->addAction("Redo");
+    // editMenu->addSeparator();
+    editMenu->addAction("Select All", this, &mdn::gui::MainWindow::onSelectAll);
+    // editMenu->addAction("Select Row");
+    // editMenu->addAction("Select Column");
+    // editMenu->addAction("Select Box");
+    // editMenu->addSeparator();
+    // editMenu->addAction("Properties");
+    // editMenu->addSeparator();
     editMenu->addAction("Copy");
     editMenu->addAction("Cut");
     editMenu->addAction("Paste");
@@ -1421,6 +1440,7 @@ bool mdn::gui::MainWindow::createNewProject(Mdn2dConfig* cfg, bool requireConfir
                 this, &mdn::gui::MainWindow::onProjectTabsAboutToChange);
         connect(m_project, &mdn::gui::Project::tabsChanged,
                 this, &mdn::gui::MainWindow::onProjectTabsChanged);
+        onProjectTabsChanged(0);
     }
     Log_Debug3_T("");
     return true;
@@ -1677,11 +1697,21 @@ void mdn::gui::MainWindow::onTabMoved(int from, int to) {
 }
 
 
-void mdn::gui::MainWindow::onTabCloseRequested(int index) {
+void mdn::gui::MainWindow::onTabCloseRequested() {
+    Log_Debug3_H("");
+    closeTab(-1);
+    Log_Debug3_T("");
+}
+
+
+void mdn::gui::MainWindow::closeTab(int index) {
     Log_Debug3_H("");
     if (!m_project) {
         Log_Debug3_T("No project");
         return;
+    }
+    if (index < 0) {
+        index = m_tabWidget ? m_tabWidget->currentIndex() : m_project->activeIndex();
     }
     m_project->deleteMdn(index);
     if (m_ops) {

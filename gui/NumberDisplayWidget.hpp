@@ -165,12 +165,12 @@ public:
     void centreViewOn(int mx, int my);
     void centreViewOnOrigin();
     void armCentreViewOnOrigin();
+    void selectAllBounds();
 private:
     void captureCursorFractions();
     void restoreCursorFractions();
     void setBothCursors(int mx, int my);
     void setCursor1(int mx, int my);
-    void selectAllBounds();
     void clearSelection();
     QString modeShortText() const;
     QString selectionSummaryText() const;
