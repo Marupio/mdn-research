@@ -62,6 +62,9 @@ private slots:
     void onProjectTabsAboutToChange();
     void onProjectTabsChanged(int currentIndex);
     void onProjectProperties();
+    void onTabPeek(int idx);
+    void onTabPeekEnd();
+    void onTabCommit(int idx);
 
     // File menu operations
     bool onNewProject();
@@ -186,6 +189,12 @@ private:
 
     // MDN Digit Browser (upper pane)
     QTabWidget* m_tabWidget = nullptr;
+
+    bool   m_peekActive = false;
+    // last user-committed index
+    int    m_explicitIndex = -1;
+    // optional debounce to avoid flicker
+    QTimer m_peekRestore;
 
     // Command History (lower pane)
     CommandWidget* m_command = nullptr;

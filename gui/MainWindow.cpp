@@ -21,9 +21,11 @@
 #include <QTimer>
 #include <QToolButton>
 
-#include "OpsController.hpp"
+#include "GuiTools.hpp"
+#include "HoverPeekTabBar.hpp"
 #include "MdnQtInterface.hpp"
 #include "NumberDisplayWidget.hpp"
+#include "OpsController.hpp"
 #include "ProjectPropertiesDialog.hpp"
 #include "../library/Logger.hpp"
 
@@ -228,6 +230,72 @@ void mdn::gui::MainWindow::onProjectTabsChanged(int currentIndex)
 
 void mdn::gui::MainWindow::onProjectProperties() {
     doProjectProperties();
+}
+
+
+void mdn::gui::MainWindow::onTabPeek(int idx)
+{
+    if (!m_tabWidget) return;
+
+    // If you have a “+” last tab, ignore peeking it:
+    const int last = m_tabWidget->count() - 1;
+    const bool isPlusTab = /* your condition */ (idx == last /* and tab text == "+" if you use that */);
+    if (isPlusTab) return;
+
+    if (!m_peekActive) {
+        // First time entering peek: remember explicit selection
+        m_explicitIndex = m_tabWidget->currentIndex();
+        m_peekActive = true;
+        if (m_explicitIndex >= 0)
+            GuiTools::setTabPeekHighlight(m_tabWidget, m_explicitIndex, false);
+    }
+
+    // Switch to hovered tab
+    if (idx != m_tabWidget->currentIndex()) {
+        // Clear old peek highlight (if any)
+        const int prev = m_tabWidget->currentIndex();
+        GuiTools::setTabPeekHighlight(m_tabWidget, prev, false);
+
+        m_tabWidget->setCurrentIndex(idx);
+
+        // Apply peek highlight to the hovered/selected tab
+        GuiTools::setTabPeekHighlight(m_tabWidget, idx, true);
+    }
+
+    // Cancel any pending restore; we’re still peeking
+    if (m_peekRestore.isActive()) m_peekRestore.stop();
+}
+
+
+void mdn::gui::MainWindow::onTabPeekEnd()
+{
+    if (!m_tabWidget) return;
+    if (!m_peekActive) return;
+
+    // If user didn’t commit, restore the explicit tab
+    const int curr = m_tabWidget->currentIndex();
+    GuiTools::setTabPeekHighlight(m_tabWidget, curr, false);
+
+    if (m_explicitIndex >= 0 && m_explicitIndex != curr) {
+        m_tabWidget->setCurrentIndex(m_explicitIndex);
+    }
+    m_peekActive = false;
+}
+
+
+void mdn::gui::MainWindow::onTabCommit(int idx)
+{
+    if (!m_tabWidget) return;
+
+    // Clicking a tab “locks” it in; this also ends any peek
+    m_explicitIndex = idx;
+    // Clear peek highlight from any tab
+    const int n = m_tabWidget->tabBar()->count();
+    for (int i = 0; i < n; ++i) {
+        GuiTools::setTabPeekHighlight(m_tabWidget, i, false);
+    }
+
+    m_peekActive = false;
 }
 
 
@@ -1140,10 +1208,29 @@ void mdn::gui::MainWindow::setupLayout(Mdn2dConfig* cfg) {
 
     // Top half - Mdn2d tab widget
     m_tabWidget = new QTabWidget(this);
+
+    // After you create m_tabWidget:
+    auto* bar = new HoverPeekTabBar(m_tabWidget);
+    m_tabWidget->setTabBar(bar);
+
+    connect(bar, &HoverPeekTabBar::peekIndex,  this, &MainWindow::onTabPeek);
+    connect(bar, &HoverPeekTabBar::peekEnd,    this, &MainWindow::onTabPeekEnd);
+    connect(bar, &HoverPeekTabBar::commitIndex,this, &MainWindow::onTabCommit);
+
+    // Optional: small debounce so tiny mouse jiggles don’t thrash views
+    m_peekRestore.setSingleShot(true);
+    m_peekRestore.setInterval(120);
+    connect(&m_peekRestore, &QTimer::timeout, this, &MainWindow::onTabPeekEnd);
+
+
     m_tabWidget->setTabPosition(QTabWidget::South);
     Log_Debug4("");
     auto* bar = m_tabWidget->tabBar();
     bar->setMovable(true);
+    // bar->setTabsClosable(true);
+    // bar->setMouseTracking(true);
+    // connect(bar, &QTabBar::tabBarEntered, this, &MainWindow::onTabHover);
+
     connect(
         bar,                        // sender
         &QTabBar::tabMoved,         // signal

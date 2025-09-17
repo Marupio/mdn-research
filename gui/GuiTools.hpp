@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QChar>
+#include <QTabBar>
 
 namespace mdn {
 namespace gui {
@@ -38,6 +39,19 @@ public:
         in.read(s.data(), n);
         return s;
     }
+
+    static void setTabPeekHighlight(QTabWidget* tabs, int idx, bool on) {
+        if (!tabs) return;
+        auto* b = tabs->tabBar();
+        if (!b || idx < 0 || idx >= b->count()) return;
+        if (on) {
+            b->setTabTextColor(idx, QColor(Qt::blue));
+        } else {
+            // default colour
+            b->setTabTextColor(idx, QColor());
+        }
+    }
+
 };
 
 } // end namespace gui
