@@ -27,6 +27,7 @@ namespace mdn {
 namespace gui {
 
 class HoverPeekTabWidget;
+class OperationStrip;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -72,7 +73,8 @@ private slots:
     // File menu operations
     bool onNewProject();
     bool onNewMdn2d();
-    bool onNewNamedMdn2d(QString name, int index);
+    bool onNewNamedMdn2d(QString name);
+    bool onNewNamedMdn2dAtIndex(QString name, int index);
     bool onSaveProject();
     bool onOpenProject();
     bool onSaveMdn2d();
@@ -128,9 +130,6 @@ private:
     void setupLayout(Mdn2dConfig* cfg=nullptr);
     void createTabs();
     void createTabForIndex(int index);
-    void createPlusTab();
-    bool hasPlusTab() const;
-    void removePlusTab();
     void initOperationsUi();
     void createStatusBar();
 
@@ -195,7 +194,6 @@ private:
 
     // MDN Digit Browser (upper pane)
     HoverPeekTabWidget* m_tabWidget = nullptr;
-    bool m_plusTab = false;
     // true when hover-induced peeking is underway
     bool m_peekActive = false;
     // last user-committed index
@@ -211,12 +209,13 @@ private:
     QToolButton* m_statusModeBtn = nullptr;
     QMenu* m_modeMenu = nullptr;
     QToolButton* m_statusFraxisBtn{nullptr};
-    QMenu*       m_fraxisMenu{nullptr};
+    QMenu* m_fraxisMenu{nullptr};
 
     int m_globalFontSize = 11;
     Mdn2dConfig m_globalConfig;
 
-    OpsController* m_ops{nullptr};
+    OperationStrip* m_opStrip = nullptr;
+    OpsController*  m_ops = nullptr;
     Project* m_project = nullptr;
 
 };

@@ -54,11 +54,12 @@ private slots:
     }
 
     void onHoverEnd() {
-        // Mouse left the bar — restore after a tiny delay (helps with minor jiggles)
+        // Pointer left the bar or isn't on any tab anymore: cancel pending
+        m_restoreTimer.stop();
+        m_pendingHoverIndex = -1;
+
+        // If we were previewing, restore immediately for a snappy feel
         if (m_previewActive) {
-            m_pendingHoverIndex = -1;
-            // restore immediately (no delay) to feel snappy
-            m_restoreTimer.stop();
             restoreIfPreviewing();
         }
     }

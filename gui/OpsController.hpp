@@ -1,113 +1,59 @@
 #pragma once
-
-#include <ostream>
-
 #include <QObject>
-#include <QStringList>
+#include <QString>
 
-#include "EnumDestinationMode.hpp"
 #include "EnumOperation.hpp"
-#include "MdnQtInterface.hpp"
-#include "OperationStrip.hpp"
-
-class QMainWindow;
-class QMenu;
-class QMenuBar;
-class QSplitter;
-class QTabWidget;
-class QWidget;
-
-// // Forward declarations
-// namespace mdn {
-// namespace gui {
-// class BinaryOperationDialog;
-// } // end namespace gui
-// } // end namespace mdn
+#include "EnumOperationPhase.hpp"
+#include "EnumDestinationMode.hpp"
 
 namespace mdn {
 namespace gui {
 
+// Forward declarations
+class Project;
+class HoverPeekTabWidget;
+
+
 class OpsController : public QObject {
     Q_OBJECT
-
 public:
+    explicit OpsController(Project* proj, HoverPeekTabWidget* tabs, QObject* parent=nullptr);
 
-    struct Plan {
-        Operation op;
-        int indexA;
-        int indexB;
-        DestinationSimple dest;
-        int overwriteIndex; // -1 means “not set”
-        QString newName;
-
-        friend std::ostream& operator<<(std::ostream& os, const Plan& p) {
-            std::string destStr(
-                p.dest == DestinationSimple::InPlace
-                    ? "InPlace"
-                    : "ToNew(" + MdnQtInterface::fromQString(p.newName) + ")"
-            );
-            os << "[" << p.indexA << OperationToOpStr(p.op) << p.indexB
-                << "→" << destStr << ",o:" << p.overwriteIndex << "]";
-            return os;
-        }
-    };
-
-public:
-    OpsController(QMainWindow* mw, QTabWidget* tabs, QWidget* history, QObject* parent = nullptr);
-
-    QWidget* bottomContainer() const;
 
 signals:
-    void planReady(const OpsController::Plan& plan);
+    // show text like "Mdn1 × *Choose*"
+    void requestStatus(const QString& msg);
+    // enable/disable Cancel button
+    void requestCancelEnabled(bool on);
+    // MainWindow can create a tab and select it
+    void requestNewTab(const QString& name);
 
 public slots:
-    void refreshTabNames();
+    // Buttons
+    void startAdd(); void startSub(); void startMul(); void startDiv();
+    void cancel();
 
-private slots:
-    void onMenuAdd();
-    void onMenuSub();
-    void onMenuMul();
-    void onMenuDiv();
+    // From tabs
+    void onTabCommitted(int idx);
 
-    void onMenuAddInPlace();
-    void onMenuAddToNew();
-    void onMenuSubInPlace();
-    void onMenuSubToNew();
-    void onMenuMulInPlace();
-    void onMenuMulToNew();
-    void onMenuDivInPlace();
-    void onMenuDivToNew();
-
-    void onStripRequest(
-        Operation op,
-        int indexA,
-        int indexB,
-        DestinationSimple dest
-    );
-    void onStripChangeB();
+    // From [NewTab]
+    void onNewTab();
 
 private:
-    void buildMenus();
-    void rebuildBottomContainer();
-    QStringList collectTabNames() const;
-    int activeIndex() const;
-    void runDialog(Operation preset);
-    void runQuick(Operation op, DestinationSimple dest);
-    DestinationSimple stripDestToController(DestinationSimple d) const;
-    Operation stripOpToController(Operation o) const;
+    // enter PickB
+    void begin(Operation op);
+    // perform the op
+    void finishTo(int destIndex, bool isNew);
+
+    // helper for status text
+    QString tabName(int idx) const;
 
 private:
-    QMainWindow* m_mainWindow{nullptr};
-    QTabWidget* m_tabs{nullptr};
-    QWidget* m_history{nullptr};
-
-    QWidget* m_bottomContainer{nullptr};
-    OperationStrip* m_strip{nullptr};
-
-    QMenu* m_menuOps{nullptr};
-
-    int m_rememberedB{0};
-    DestinationSimple m_rememberedDest{DestinationSimple::InPlace};
+    Project* m_project{};
+    HoverPeekTabWidget* m_tabs{};
+    Phase m_phase{Phase::Idle};
+    Operation m_op{Operation::Add};
+    int m_a{-1}, m_b{-1};
 };
 
 } // end namespace gui

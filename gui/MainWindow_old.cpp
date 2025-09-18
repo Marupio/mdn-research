@@ -25,7 +25,6 @@
 #include "MdnQtInterface.hpp"
 #include "NumberDisplayWidget.hpp"
 #include "OpsController.hpp"
-#include "OperationStrip.hpp"
 #include "ProjectPropertiesDialog.hpp"
 #include "../library/Logger.hpp"
 
@@ -167,6 +166,7 @@ void mdn::gui::MainWindow::onProjectTabsAboutToChange()
         centralWidget()->setUpdatesEnabled(false);
     }
 
+    // No need to account for 'plusTab' as cast will fail
     const int n = m_tabWidget->count();
     for (int i = 0; i < n; ++i) {
         auto* view = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(i));
@@ -189,6 +189,8 @@ void mdn::gui::MainWindow::onProjectTabsChanged(int currentIndex)
         return;
     }
 
+    Log_Debug3("Removing plusTab");
+    removePlusTab();
     QSignalBlocker blockTabs(m_tabWidget);
 
     const int n = m_tabWidget->count();
@@ -199,6 +201,7 @@ void mdn::gui::MainWindow::onProjectTabsChanged(int currentIndex)
         delete w;
     }
 
+    // This will create the plusTab as well
     createTabs();
 
     int idx = currentIndex;
@@ -210,12 +213,17 @@ void mdn::gui::MainWindow::onProjectTabsChanged(int currentIndex)
             idx = count - 1;
         }
     }
-    if (count > 0) {
+    // Accounting for 'plusTab'
+    if (count > 1) {
         setActiveTab(idx);
     }
 
     if (centralWidget()) {
         centralWidget()->setUpdatesEnabled(true);
+    }
+
+    if (m_ops) {
+        m_ops->refreshTabNames();
     }
 
     focusActiveGrid();
@@ -235,6 +243,10 @@ void mdn::gui::MainWindow::onTabPeek(int idx)
     if (!m_tabWidget) {
         Log_Debug3_T("No tabWidget");
         return;
+    }
+
+    if (hasPlusTab() && idx == m_tabWidget->count() - 1) {
+        Log_Debug3_T("Cannot peek plusTab");
     }
 
     if (!m_peekActive) {
@@ -321,19 +333,11 @@ bool mdn::gui::MainWindow::onNewProject() {
 
 
 bool mdn::gui::MainWindow::onNewMdn2d() {
-    return onNewNamedMdn2dAtIndex("", -1);
+    return onNewNamedMdn2d("", -1);
 }
 
 
-bool mdn::gui::MainWindow::onNewNamedMdn2d(QString name) {
-    Log_Debug2_H("");
-    bool result = createNewMdn2d(name, -1, true);
-    Log_Debug2_T("result = " << result);
-    return result;
-}
-
-
-bool mdn::gui::MainWindow::onNewNamedMdn2dAtIndex(QString name, int index) {
+bool mdn::gui::MainWindow::onNewNamedMdn2d(QString name, int index) {
     Log_Debug2_H("");
     // To do - get user input for name
     bool result = createNewMdn2d(name, index, true);
@@ -1054,8 +1058,8 @@ void mdn::gui::MainWindow::slotMoveTabRight()
     }
     const int idx = m_tabWidget->currentIndex();
     const int count = m_tabWidget->count();
-    // When moving tab to the right, the rightmost tab to grab is second from the end
-    const int maxIndex = count - 2;
+    // Cannot move last tab rightward over plusTab, maxTab is count-1-plusTab - 1
+    const int maxIndex = hasPlusTab() ? count - 3 : count - 2;
     if (idx >= 0 && idx < maxIndex) {
         QTabBar* bar = m_tabWidget->tabBar();
         bar->moveTab(idx, idx + 1);
@@ -1315,6 +1319,9 @@ void mdn::gui::MainWindow::createTabs() {
         createTabForIndex(idx);
     }
 
+    Log_Debug3("Creating plusTab");
+    createPlusTab();
+
     updateStatusModeText(m_globalMode);
     Log_Debug2_T("");
 }
@@ -1428,33 +1435,95 @@ void mdn::gui::MainWindow::createTabForIndex(int index) {
 }
 
 
+void mdn::gui::MainWindow::createPlusTab() {
+    Log_Debug3_H("");
+    const int plusIdx = m_tabWidget->count();
+
+    // Ensure plus tab does not exist
+    if (hasPlusTab()) {
+        Log_Debug3_T("Already has a plusTab");
+        return;
+    }
+
+    QWidget* dummy = new QWidget;
+    m_tabWidget->addTab(dummy, MdnQtInterface::toQString("+"));
+    m_tabWidget->setPlusTabIndex(plusIdx);
+    m_plusTab = true;
+}
+
+
+bool mdn::gui::MainWindow::hasPlusTab() const {
+    #ifdef MDN_DEBUG
+        Log_Debug4_H("");
+        if (!m_tabWidget) {
+            if (m_plusTab) {
+                Log_WarnQ("Meta data out-of-sync: no plusTab exists but flag is true");
+            }
+            Log_Debug4_T("No tab widget, returning false");
+            return false;
+        }
+        const int plusIdx = m_tabWidget->count();
+        // QString qPlus(MdnQtInterface::toQString(Tools::BoxArtStr_x));
+        QString qPlus(MdnQtInterface::toQString("+"));
+        if (plusIdx <= 0) {
+            if (m_plusTab) {
+                Log_WarnQ("Meta data out-of-sync: no plusTab exists but flag is true");
+            }
+            Log_Debug4_T("No tabs, returning false");
+            return false;
+        }
+        const int lastIdx = plusIdx - 1;
+        if (m_tabWidget->tabText(lastIdx) != qPlus) {
+            if (m_plusTab) {
+                Log_WarnQ("Meta data out-of-sync: no plusTab exists but flag is true");
+            }
+            Log_Debug4_T("Last tab not named [" << qPlus.toStdString() << "]");
+            return false;
+        }
+        auto* ndw = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(lastIdx));
+        if (ndw) {
+            if (m_plusTab) {
+                Log_WarnQ("Meta data out-of-sync: no plusTab exists but flag is true");
+            }
+            Log_Debug4_T("Last tab has a NumberDisplayWidget");
+            return false;
+        }
+        // Now, we have the last tab with the correct name, which doesn't contain an ndw -> plus tab
+        if (!m_plusTab) {
+            Log_WarnQ("Meta data out-of-sync: plusTab exists but flag is false");
+        }
+        Log_Debug4_T("Probably has a plusTab");
+        return true;
+    #endif
+    return m_plusTab;
+}
+
+
+void mdn::gui::MainWindow::removePlusTab() {
+    const int plusIdx = m_tabWidget->count()-1;
+
+    QWidget* w = m_tabWidget->widget(plusIdx);
+    m_tabWidget->removeTab(plusIdx);
+    delete w;
+    w = nullptr;
+    m_plusTab = false;
+}
+
+
 void mdn::gui::MainWindow::initOperationsUi() {
     int idx = m_splitter->indexOf(m_command);
+    m_ops = new OpsController(this, m_tabWidget, m_command, this);
+    QWidget* container = m_ops->bottomContainer();
+    if (idx >= 0) {
+        m_splitter->replaceWidget(idx, container);
+    } else {
+        m_splitter->addWidget(container);
+    }
 
-    m_opStrip = new OperationStrip(this);
-    m_ops = new OpsController(m_project, m_tabWidget, this);
+    connect(m_ops, &OpsController::planReady, this, &MainWindow::onOpsPlan);
+    connect(m_tabWidget, &QTabWidget::currentChanged, m_ops, &OpsController::refreshTabNames);
 
-    connect(m_opStrip->btnAdd,    &QToolButton::clicked, m_ops, &OpsController::startAdd);
-    connect(m_opStrip->btnSub,    &QToolButton::clicked, m_ops, &OpsController::startSub);
-    connect(m_opStrip->btnMul,    &QToolButton::clicked, m_ops, &OpsController::startMul);
-    connect(m_opStrip->btnDiv,    &QToolButton::clicked, m_ops, &OpsController::startDiv);
-    connect(m_opStrip->btnCancel, &QToolButton::clicked, m_ops, &OpsController::cancel);
-    connect(m_opStrip->btnNewTab, &QToolButton::clicked, m_ops, &OpsController::onNewTab);
-
-    connect(
-        m_ops, &OpsController::requestCancelEnabled, m_opStrip->btnCancel, &QToolButton::setEnabled
-    );
-    connect(
-        m_ops, &OpsController::requestStatus, this,
-        [this](const QString& s){
-            if (statusBar()) statusBar()->showMessage(s);
-        }
-    );
-    connect(m_ops, &OpsController::requestNewTab, this, &mdn::gui::MainWindow::onNewNamedMdn2d);
-
-    auto v = qobject_cast<QVBoxLayout*>(centralWidget()->layout());
-    if (v) v->insertWidget(1, m_opStrip);
-
+    m_ops->refreshTabNames();
     connect(m_command, &CommandWidget::submitCommand, this, &MainWindow::onCommandSubmitted);
 }
 
@@ -1534,8 +1603,7 @@ bool mdn::gui::MainWindow::createNewProjectFromConfig(Mdn2dConfig& cfg, bool req
     connect(m_project, &mdn::gui::Project::tabsChanged,
             this, &mdn::gui::MainWindow::onProjectTabsChanged);
     onProjectTabsChanged(0);
-    m_globalConfig.setParent(*m_project);
-    setGlobalConfig(m_globalConfig, true);
+
     Log_Debug3_T("");
     return true;
 }
@@ -1669,12 +1737,14 @@ bool mdn::gui::MainWindow::closeProject() {
     if (m_tabWidget) {
         QSignalBlocker blockTabs(m_tabWidget);
 
+        // Delete all tabs, including 'plusTab'
         const int n = m_tabWidget->count();
         for (int i = n - 1; i >= 0; --i) {
             QWidget* w = m_tabWidget->widget(i);
             m_tabWidget->removeTab(i);
             delete w;
         }
+        m_plusTab = false;
     }
 
     disconnect(m_project, nullptr, this, nullptr);
@@ -1707,6 +1777,7 @@ bool mdn::gui::MainWindow::createNewMdn2d(QString name, int index, bool makeActi
     std::string actualName = num.name();
     Log_Debug3("Created Mdn2d '" << nameStd << "', actual assigned name='" << actualName << "'");
     // Insertion will trigger a tabWidget update
+    removePlusTab();
     m_project->insertMdn(std::move(num), index);
     int actualIndex = m_project->indexOfMdn(actualName);
     if (makeActive) {
@@ -1718,6 +1789,7 @@ bool mdn::gui::MainWindow::createNewMdn2d(QString name, int index, bool makeActi
                 << "actual result: {'" << actualName << "'," << actualIndex << "}"
         );
     }
+    createPlusTab();
     Log_Debug2_T("");
     return true;
 }
@@ -1808,9 +1880,24 @@ void mdn::gui::MainWindow::updateStatusFraxisText(mdn::Fraxis f) {
 
 void mdn::gui::MainWindow::onTabMoved(int from, int to) {
     Log_Debug3_H("from " << from << " to " << to);
+    bool hasPlus = hasPlusTab();
+    Log_InfoQ("from " << from << " to " << to << ", with hasPlusTab=" << hasPlus);
     if (!m_tabWidget) {
         Log_Debug3_T("No tabWidget");
         return;
+    }
+    if (hasPlus) {
+        int plusTab = m_tabWidget->count() - 1;
+        if (from >= plusTab || to >= plusTab) {
+
+            Log_WarnQ("Illegal move across '+': reverting drag");
+            QTabBar* bar = m_tabWidget->tabBar();
+            QSignalBlocker block(bar);
+            // revert: the bar already moved the visual tab to 'to', move it back:
+            bar->moveTab(to, from);
+            Log_Debug3_T("plusTab involved, cannot continue");
+            return;
+        }
     }
     m_project->moveMdn(from, to);
     syncTabsToProject();
@@ -1833,6 +1920,10 @@ void mdn::gui::MainWindow::closeTab(int index) {
     }
     if (index < 0) {
         index = m_tabWidget ? m_tabWidget->currentIndex() : m_project->activeIndex();
+    } else if (index == m_tabWidget->count() - 1 && hasPlusTab()) {
+        Log_WarnQ("Attempting to 'closeTab' the 'plusTab', skipping step");
+        Log_Debug3_T("cannot 'closeTab' 'plusTab'");
+        return;
     }
     m_project->deleteMdn(index);
     if (m_ops) {
@@ -1934,6 +2025,7 @@ void mdn::gui::MainWindow::syncTabsToProject() {
         Log_Debug3_T("No project");
         return;
     }
+    // No need to account for 'plusTab' as cast will fail
     const int n = m_tabWidget->count();
     for (int i = 0; i < n; ++i) {
         auto* view = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(i));

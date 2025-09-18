@@ -19,14 +19,20 @@ signals:
     void commitIndex(int index);  // user clicked a tab (explicit selection)
 
 protected:
+
     bool event(QEvent* e) override {
         if (e->type() == QEvent::HoverMove) {
             auto* he = static_cast<QHoverEvent*>(e);
             const int idx = tabAt(he->pos());
-            if (idx >= 0) emit hoverIndex(idx);
+            if (idx >= 0) {
+                emit hoverIndex(idx);
+            } else {
+                emit hoverEnd();  // <- cancel preview immediately when not over a tab
+            }
         }
         return QTabBar::event(e);
     }
+
 
     void leaveEvent(QEvent* e) override {
         emit hoverEnd();
