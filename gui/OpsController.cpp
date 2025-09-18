@@ -291,7 +291,8 @@ QStringList mdn::gui::OpsController::collectTabNames() const {
     if (!m_tabs) {
         return out;
     }
-    for (int i = 0; i < m_tabs->count(); ++i) {
+    int skipPlusTab = m_tabs->count()-1;
+    for (int i = 0; i < skipPlusTab; ++i) {
         out << m_tabs->tabText(i);
     }
     return out;

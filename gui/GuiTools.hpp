@@ -1,7 +1,9 @@
 #pragma once
 
 #include <QChar>
+#include <QColor>
 #include <QTabBar>
+#include <QTabWidget>
 
 namespace mdn {
 namespace gui {

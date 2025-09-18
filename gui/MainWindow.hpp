@@ -10,6 +10,7 @@
 #include <QSplitter>
 #include <QTabWidget>
 #include <QTextEdit>
+#include <QTimer>
 #include <QToolButton>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -24,6 +25,8 @@
 
 namespace mdn {
 namespace gui {
+
+class HoverPeekTabWidget;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -125,6 +128,9 @@ private:
     void setupLayout(Mdn2dConfig* cfg=nullptr);
     void createTabs();
     void createTabForIndex(int index);
+    void createPlusTab();
+    bool hasPlusTab() const;
+    void removePlusTab();
     void initOperationsUi();
     void createStatusBar();
 
@@ -188,12 +194,13 @@ private:
     NumberDisplayWidget::EditMode m_globalMode = NumberDisplayWidget::EditMode::Overwrite;
 
     // MDN Digit Browser (upper pane)
-    QTabWidget* m_tabWidget = nullptr;
-
-    bool   m_peekActive = false;
+    HoverPeekTabWidget* m_tabWidget = nullptr;
+    bool m_plusTab = false;
+    // true when hover-induced peeking is underway
+    bool m_peekActive = false;
     // last user-committed index
-    int    m_explicitIndex = -1;
-    // optional debounce to avoid flicker
+    int m_explicitIndex = -1;
+    // debounce to avoid flicker
     QTimer m_peekRestore;
 
     // Command History (lower pane)

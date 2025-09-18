@@ -1,6 +1,7 @@
 #pragma once
 #include <QTabBar>
 #include <QHoverEvent>
+#include <QMouseEvent>
 
 class HoverPeekTabBar : public QTabBar {
     Q_OBJECT
@@ -13,22 +14,22 @@ public:
     }
 
 signals:
-    void peekIndex(int index);     // mouse is hovering over this tab
-    void peekEnd();                // mouse left the tabbar (stop peeking)
-    void commitIndex(int index);   // user clicked a tab (make it explicit)
+    void hoverIndex(int index);   // mouse hovering a tab
+    void hoverEnd();              // mouse left the tabbar
+    void commitIndex(int index);  // user clicked a tab (explicit selection)
 
 protected:
     bool event(QEvent* e) override {
         if (e->type() == QEvent::HoverMove) {
             auto* he = static_cast<QHoverEvent*>(e);
             const int idx = tabAt(he->pos());
-            if (idx >= 0) emit peekIndex(idx);
+            if (idx >= 0) emit hoverIndex(idx);
         }
         return QTabBar::event(e);
     }
 
     void leaveEvent(QEvent* e) override {
-        emit peekEnd();
+        emit hoverEnd();
         QTabBar::leaveEvent(e);
     }
 
