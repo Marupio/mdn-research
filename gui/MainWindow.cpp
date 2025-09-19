@@ -99,6 +99,19 @@ mdn::gui::MainWindow::~MainWindow()
 }
 
 
+bool mdn::gui::MainWindow::showStatus(QString message, int timeOut) {
+    Log_Debug_H("message=[" << message.toStdString() << "]");
+    QStatusBar* status = statusBar();
+    if (!status) {
+        Log_Debug_T("No status");
+        return false;
+    }
+    status->showMessage(message, timeOut);
+    Log_Debug_T("");
+    return true;
+}
+
+
 void mdn::gui::MainWindow::onTabContextMenu(const QPoint& pos)
 {
     Log_Debug3_H("");
@@ -660,8 +673,8 @@ void mdn::gui::MainWindow::onOpsPlan(const OpsController::Plan& p) {
     }
     Mdn2d& a = *aPtr;
     Mdn2d& b = *bPtr;
-    if (p.dest == DestinationSimple::InPlace && p.overwriteIndex >= 0) {
-        const int t = p.overwriteIndex;
+    if (p.indexDest >= 0) {
+        const int t = p.indexDest;
         if (t == p.indexA) {
             switch (p.op) {
                 case Operation::Add: {
@@ -691,14 +704,12 @@ void mdn::gui::MainWindow::onOpsPlan(const OpsController::Plan& p) {
             }
             syncTabsToProject();
             setActiveTab(p.indexA);
-            if (m_ops) {
-                m_ops->refreshTabNames();
-            }
             Log_Debug_T("");
             return;
         } else {
             Mdn2d* ansPtr = m_project->getMdn(t);
             if (ansPtr->data_index().size()) {
+                // TODO use peek feature to show the number in question
                 std::ostringstream oss;
                 oss << "If you proceed, the answer will overwrite "
                     << "tab '" << ansPtr->name() << "'.\n\n"
@@ -746,47 +757,11 @@ void mdn::gui::MainWindow::onOpsPlan(const OpsController::Plan& p) {
             }
             syncTabsToProject();
             setActiveTab(t);
-            if (m_ops) {
-                m_ops->refreshTabNames();
-            }
             Log_Debug_T("");
             return;
         }
-    } else if (p.dest == DestinationSimple::InPlace) {
-        switch (p.op) {
-            case Operation::Add: {
-                Log_Debug4_H("Dispatch a += b");
-                a += b;
-                Log_Debug4_T("a += b return");
-                break;
-            }
-            case Operation::Subtract: {
-                Log_Debug4_H("Dispatch a -= b");
-                a -= b;
-                Log_Debug4_T("a -= b return");
-                break;
-            }
-            case Operation::Multiply: {
-                Log_Debug4_H("Dispatch a *= b");
-                a *= b;
-                Log_Debug4_T("a *= b return");
-                break;
-            }
-            case Operation::Divide: {
-                Log_Debug4_H("Dispatch a /= b");
-                a /= b;
-                Log_Debug4_T("a /= b return");
-                break;
-            }
-        }
-        syncTabsToProject();
-        setActiveTab(p.indexA);
-        if (m_ops) {
-            m_ops->refreshTabNames();
-        }
-        Log_Debug_T("");
-        return;
-    } else if (p.dest == DestinationSimple::ToNew) {
+    } else {
+        // p.indexDest < 0 we are writing answer to a new tab
         std::string requestedName = MdnQtInterface::fromQString(p.newName);
         if (requestedName.empty()) {
             requestedName = std::string("Result");
@@ -823,9 +798,6 @@ void mdn::gui::MainWindow::onOpsPlan(const OpsController::Plan& p) {
         m_project->appendMdn(std::move(ans));
         syncTabsToProject();
         setActiveTab(m_project->size()-1);
-        if (m_ops) {
-            m_ops->refreshTabNames();
-        }
         Log_Debug_T("");
         return;
     }
@@ -1134,6 +1106,24 @@ bool mdn::gui::MainWindow::eventFilter(QObject* watched, QEvent* event) {
         }
     }
 
+    if (event->type() == QEvent::KeyPress) {
+        QKeyEvent* ke = static_cast<QKeyEvent*>(event);
+
+        // const bool ctrl = (ke->modifiers() & Qt::ControlModifier) != 0;
+        // const bool meta = (ke->modifiers() & Qt::MetaModifier) != 0;
+        // const bool shift = (ke->modifiers() & Qt::ShiftModifier) != 0;
+
+        switch (ke->key()) {
+            case Qt::Key_Escape: {
+                if (m_ops && m_ops->isActive()) {
+                    m_ops->onStripCancel();
+                }
+                ke->accept();
+                return true;
+            }
+        }
+    }
+
     return QMainWindow::eventFilter(watched, event);
 }
 
@@ -1431,31 +1421,42 @@ void mdn::gui::MainWindow::createTabForIndex(int index) {
 void mdn::gui::MainWindow::initOperationsUi() {
     int idx = m_splitter->indexOf(m_command);
 
-    m_opStrip = new OperationStrip(this);
-    m_ops = new OpsController(m_project, m_tabWidget, this);
+    m_ops = new OpsController(this, m_project, m_tabWidget, m_command, this);
 
-    connect(m_opStrip->btnAdd,    &QToolButton::clicked, m_ops, &OpsController::startAdd);
-    connect(m_opStrip->btnSub,    &QToolButton::clicked, m_ops, &OpsController::startSub);
-    connect(m_opStrip->btnMul,    &QToolButton::clicked, m_ops, &OpsController::startMul);
-    connect(m_opStrip->btnDiv,    &QToolButton::clicked, m_ops, &OpsController::startDiv);
-    connect(m_opStrip->btnCancel, &QToolButton::clicked, m_ops, &OpsController::cancel);
-    connect(m_opStrip->btnNewTab, &QToolButton::clicked, m_ops, &OpsController::onNewTab);
+    QWidget* container = m_ops->bottomContainer();
+    if (idx >= 0) {
+        m_splitter->replaceWidget(idx, container);
+    } else {
+        m_splitter->addWidget(container);
+    }
 
+    // connect(m_opStrip->btnAdd,    &QToolButton::clicked, m_ops, &OpsController::startAdd);
+    // connect(m_opStrip->btnSub,    &QToolButton::clicked, m_ops, &OpsController::startSub);
+    // connect(m_opStrip->btnMul,    &QToolButton::clicked, m_ops, &OpsController::startMul);
+    // connect(m_opStrip->btnDiv,    &QToolButton::clicked, m_ops, &OpsController::startDiv);
+    // connect(m_opStrip->btnCancel, &QToolButton::clicked, m_ops, &OpsController::cancel);
+    // connect(m_opStrip->btnNewTab, &QToolButton::clicked, m_ops, &OpsController::onNewTab);
+    // connect(
+    //     m_ops, &OpsController::requestCancelEnabled, m_opStrip->btnCancel, &QToolButton::setEnabled
+    // );
+    // connect(
+    //     m_ops, &OpsController::requestStatus, this,
+    //     [this](const QString& s){
+    //         if (statusBar()) statusBar()->showMessage(s);
+    //     }
+    // );
+    // connect(m_ops, &OpsController::requestNewTab, this, &mdn::gui::MainWindow::onNewNamedMdn2d);
+    // auto v = qobject_cast<QVBoxLayout*>(centralWidget()->layout());
+    // if (v) v->insertWidget(1, m_opStrip);
+    // connect(m_command, &CommandWidget::submitCommand, this, &MainWindow::onCommandSubmitted);
+
+    // Status line updates
     connect(
-        m_ops, &OpsController::requestCancelEnabled, m_opStrip->btnCancel, &QToolButton::setEnabled
+        m_ops,
+        &OpsController::requestStatus,
+        this,
+        &mdn::gui::MainWindow::showStatus
     );
-    connect(
-        m_ops, &OpsController::requestStatus, this,
-        [this](const QString& s){
-            if (statusBar()) statusBar()->showMessage(s);
-        }
-    );
-    connect(m_ops, &OpsController::requestNewTab, this, &mdn::gui::MainWindow::onNewNamedMdn2d);
-
-    auto v = qobject_cast<QVBoxLayout*>(centralWidget()->layout());
-    if (v) v->insertWidget(1, m_opStrip);
-
-    connect(m_command, &CommandWidget::submitCommand, this, &MainWindow::onCommandSubmitted);
 }
 
 
@@ -1557,6 +1558,13 @@ bool mdn::gui::MainWindow::createNewProject(Mdn2dConfig* cfg, bool requireConfir
                 this, &mdn::gui::MainWindow::onProjectTabsAboutToChange);
         connect(m_project, &mdn::gui::Project::tabsChanged,
                 this, &mdn::gui::MainWindow::onProjectTabsChanged);
+        m_ops->resetModel(m_project);
+        connect(
+            m_ops,
+            &OpsController::requestStatus,
+            this,
+            &mdn::gui::MainWindow::showStatus
+        );
         onProjectTabsChanged(0);
     }
     Log_Debug3_T("");
@@ -1680,7 +1688,9 @@ bool mdn::gui::MainWindow::closeProject() {
     disconnect(m_project, nullptr, this, nullptr);
 
     delete m_project;
+
     m_project = nullptr;
+    m_ops->clearModel();
 
     setWindowTitle(QStringLiteral("MDN Editor"));
     if (statusBar()) {
@@ -1835,9 +1845,6 @@ void mdn::gui::MainWindow::closeTab(int index) {
         index = m_tabWidget ? m_tabWidget->currentIndex() : m_project->activeIndex();
     }
     m_project->deleteMdn(index);
-    if (m_ops) {
-        m_ops->refreshTabNames();
-    }
     Log_Debug3_T("");
 }
 
@@ -1875,11 +1882,6 @@ void mdn::gui::MainWindow::renameTab(int index) {
     }
     QString approvedNameQ = MdnQtInterface::toQString(approvedName);
     m_tabWidget->setTabText(index, approvedNameQ);
-
-    // Name changed, update
-    if (m_ops) {
-        m_ops->refreshTabNames();
-    }
 
     if (approvedName == newName) {
         Log_Debug3_T("User got what they expect, say no more");
@@ -1951,9 +1953,6 @@ void mdn::gui::MainWindow::syncTabsToProject() {
         view->setModel(srcNum, &srcSel);
         // add mdnName(int)
         m_tabWidget->setTabText(i, QString::fromStdString(srcNum->name()));
-    }
-    if (m_ops) {
-        m_ops->refreshTabNames();
     }
     Log_Debug3_T("");
 }

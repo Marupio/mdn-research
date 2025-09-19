@@ -810,7 +810,6 @@ void mdn::gui::NumberDisplayWidget::recalcGridGeometry() {
 
 
 void mdn::gui::NumberDisplayWidget::ensureCursorVisible() {
-    Log_Debug3_H("");
     const int guardX = std::max(0, int(std::floor(double(m_cols) * kEdgeGuardFrac)));
     const int guardY = std::max(0, int(std::floor(double(m_rows) * kEdgeGuardFrac)));
 
@@ -834,7 +833,6 @@ void mdn::gui::NumberDisplayWidget::ensureCursorVisible() {
             m_viewOriginY = m_cursorY - ((m_rows - 1) - guardY);
         }
     }
-    Log_Debug3_T("");
 }
 
 
@@ -922,28 +920,6 @@ void mdn::gui::NumberDisplayWidget::armCentreViewOnOrigin() {
 }
 
 
-void mdn::gui::NumberDisplayWidget::selectAllBounds()
-{
-    Log_Debug3_H("");
-
-    if (!m_model || !m_selection) {
-        Log_Debug3_T("");
-        return;
-    }
-
-    const Rect b = m_model->bounds();
-    if (b.isInvalid()) {
-        Log_Debug3_T("Bounds empty");
-        return;
-    }
-
-    m_selection->setRect(b);
-    postNavRefresh();
-
-    Log_Debug3_T("");
-}
-
-
 void mdn::gui::NumberDisplayWidget::captureCursorFractions() {
     if (m_cols <= 1) {
         m_lastCursorFracX = 0.5;
@@ -1007,6 +983,28 @@ void mdn::gui::NumberDisplayWidget::setCursor1(int mx, int my) {
     emit statusCursorChanged(m_cursorX, m_cursorY);
     emit statusSelectionChanged(*m_selection);
     update();
+}
+
+
+void mdn::gui::NumberDisplayWidget::selectAllBounds()
+{
+    Log_Debug3_H("");
+
+    if (!m_model || !m_selection) {
+        Log_Debug3_T("");
+        return;
+    }
+
+    const Rect b = m_model->bounds();
+    if (b.isInvalid()) {
+        Log_Debug3_T("Bounds empty");
+        return;
+    }
+
+    m_selection->setRect(b);
+    postNavRefresh();
+
+    Log_Debug3_T("");
 }
 
 
@@ -1328,43 +1326,36 @@ void mdn::gui::NumberDisplayWidget::moveCursorAfterSubmit(SubmitMove how, bool s
     if (stayInside) {
         switch (how) {
             case SubmitMove::Enter:
-                Log_Debug4("");
                 m_selection->cursorIterateReverseY();
                 break;
             case SubmitMove::ShiftEnter:
-                Log_Debug4("");
                 m_selection->cursorIterateY();
                 break;
             case SubmitMove::Tab:
-                Log_Debug4("");
                 m_selection->cursorIterateX();
                 break;
             case SubmitMove::ShiftTab:
-                Log_Debug4("");
                 m_selection->cursorIterateReverseX();
                 break;
         }
     } else {
         switch (how) {
             case SubmitMove::Enter:
-                Log_Debug4("");
                 m_selection->cursorPrevY(false);
                 break;
             case SubmitMove::ShiftEnter:
-                Log_Debug4("");
                 m_selection->cursorNextY(false);
                 break;
             case SubmitMove::Tab:
-                Log_Debug4("");
                 m_selection->cursorNextX(false);
                 break;
             case SubmitMove::ShiftTab:
-                Log_Debug4("");
                 m_selection->cursorPrevX(false);
                 break;
         }
     }
-    postNavRefresh();
+    ensureCursorVisible();
+    update();
     Log_Debug3_T("");
     return;
 }

@@ -4,127 +4,77 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
+#include <QToolButton>
 
 mdn::gui::OperationStrip::OperationStrip(QWidget* parent)
 :
     QWidget(parent)
 {
-    QHBoxLayout* lay = new QHBoxLayout(this);
-    lay->setContentsMargins(6, 6, 6, 6);
-    lay->setSpacing(8);
+    auto* row = new QHBoxLayout(this);
+    row->setContentsMargins(0,0,0,0);
+    row->setSpacing(6);
 
-    m_add = new QPushButton(tr("Add"), this);
-    m_sub = new QPushButton(tr("Subtract"), this);
-    m_mul = new QPushButton(tr("Multiply"), this);
-    m_div = new QPushButton(tr("Divide"), this);
+    m_btnCancel = makeButton(tr("Cancel"));
+    m_btnCancel->setEnabled(false);
+    row->addWidget(m_btnCancel);
+    row->addSpacing(8);
 
-    connect(m_add, SIGNAL(clicked()), this, SLOT(onClickAdd()));
-    connect(m_sub, SIGNAL(clicked()), this, SLOT(onClickSub()));
-    connect(m_mul, SIGNAL(clicked()), this, SLOT(onClickMul()));
-    connect(m_div, SIGNAL(clicked()), this, SLOT(onClickDiv()));
+    addOpButton(row, Operation::Add);
+    addOpButton(row, Operation::Subtract);
+    addOpButton(row, Operation::Multiply);
+    addOpButton(row, Operation::Divide);
 
-    QLabel* bLabel = new QLabel(tr("B:"), this);
-    m_bPicker = new QComboBox(this);
-    m_bPicker->setMinimumContentsLength(10);
+    row->addSpacing(8);
+    m_btnNewTab = makeButton(tr("NewTab"));
+    row->addWidget(m_btnNewTab);
 
-    QPushButton* changeB = new QPushButton(tr("Change…"), this);
-    connect(changeB, SIGNAL(clicked()), this, SLOT(onChangeB()));
-
-    QLabel* aLabel = new QLabel(tr("A:"), this);
-    m_labelA = new QLabel(tr(""), this);
-
-    m_destPicker = new QComboBox(this);
-    m_destPicker->addItem(tr("In place"), static_cast<int>(DestinationSimple::InPlace));
-    m_destPicker->addItem(tr("To new"), static_cast<int>(DestinationSimple::ToNew));
-    connect(m_destPicker, SIGNAL(currentIndexChanged(int)), this, SLOT(onDestChanged(int)));
-
-    lay->addWidget(m_add);
-    lay->addWidget(m_sub);
-    lay->addWidget(m_mul);
-    lay->addWidget(m_div);
-    lay->addSpacing(12);
-    lay->addWidget(bLabel);
-    lay->addWidget(m_bPicker);
-    lay->addWidget(changeB);
-    lay->addSpacing(12);
-    lay->addWidget(aLabel);
-    lay->addWidget(m_labelA);
-    lay->addSpacing(12);
-    lay->addWidget(m_destPicker);
-    lay->addStretch(1);
+    connect(m_btnCancel, &QToolButton::clicked, this, [this]{ emit requestCancel(); });
+    connect(m_btnNewTab, &QToolButton::clicked, this, [this]{ emit requestNewTab(); });
+    setLayout(row);
 }
 
 
-void mdn::gui::OperationStrip::setTabNames(const QStringList& names) {
-    m_names = names;
-    m_bPicker->clear();
-    m_bPicker->addItems(m_names);
-    if (m_indexB >= 0 && m_indexB < m_names.size()) {
-        m_bPicker->setCurrentIndex(m_indexB);
-    }
+// void mdn::gui::OperationStrip::onClickAdd() {
+//     emitOp(Operation::Add);
+// }
+
+
+// void mdn::gui::OperationStrip::onClickSub() {
+//     emitOp(Operation::Subtract);
+// }
+
+
+// void mdn::gui::OperationStrip::onClickMul() {
+//     emitOp(Operation::Multiply);
+// }
+
+
+// void mdn::gui::OperationStrip::onClickDiv() {
+//     emitOp(Operation::Divide);
+// }
+
+
+// void mdn::gui::OperationStrip::emitOp(Operation op) {
+//     int idxB = m_bPicker->currentIndex();
+//     DestinationSimple dest = DestinationSimple::InPlace;
+//     int stored = m_destPicker->currentIndex();
+//     if (stored == 1) {
+//         dest = DestinationSimple::ToNew;
+//     }
+//     emit requestOperation(op, m_indexA, idxB, dest);
+// }
+
+QToolButton* mdn::gui::OperationStrip::makeButton(const QString& text) {
+    auto* b = new QToolButton;
+    b->setText(text);
+    b->setAutoRaise(true);
+    return b;
 }
 
 
-void mdn::gui::OperationStrip::setActiveIndex(int indexA) {
-    m_indexA = indexA;
-    m_labelA->setText(m_names.value(m_indexA));
-}
-
-
-void mdn::gui::OperationStrip::setRememberedB(int indexB) {
-    m_indexB = indexB;
-    if (m_indexB >= 0 && m_indexB < m_names.size()) {
-        m_bPicker->setCurrentIndex(m_indexB);
-    }
-}
-
-
-void mdn::gui::OperationStrip::setDestinationMode(DestinationSimple mode) {
-    int idx = 0;
-    if (mode == DestinationSimple::InPlace) {
-        idx = 0;
-    } else {
-        idx = 1;
-    }
-    m_destPicker->setCurrentIndex(idx);
-}
-
-
-void mdn::gui::OperationStrip::onClickAdd() {
-    emitOp(Operation::Add);
-}
-
-
-void mdn::gui::OperationStrip::onClickSub() {
-    emitOp(Operation::Subtract);
-}
-
-
-void mdn::gui::OperationStrip::onClickMul() {
-    emitOp(Operation::Multiply);
-}
-
-
-void mdn::gui::OperationStrip::onClickDiv() {
-    emitOp(Operation::Divide);
-}
-
-
-void mdn::gui::OperationStrip::onChangeB() {
-    emit requestChangeB();
-}
-
-
-void mdn::gui::OperationStrip::onDestChanged(int) {
-}
-
-
-void mdn::gui::OperationStrip::emitOp(Operation op) {
-    int idxB = m_bPicker->currentIndex();
-    DestinationSimple dest = DestinationSimple::InPlace;
-    int stored = m_destPicker->currentIndex();
-    if (stored == 1) {
-        dest = DestinationSimple::ToNew;
-    }
-    emit requestOperation(op, m_indexA, idxB, dest);
+void mdn::gui::OperationStrip::addOpButton(QHBoxLayout* row, Operation op) {
+    auto* b = makeButton(QString::fromStdString(OperationToOpStr(op)));
+    b->setToolTip(QString::fromStdString(OperationToString(op)));
+    connect(b, &QToolButton::clicked, this, [this, op]{ emit requestOperation(op); });
+    row->addWidget(b);
 }

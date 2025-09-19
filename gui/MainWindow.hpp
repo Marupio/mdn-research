@@ -61,6 +61,9 @@ public:
 signals:
     void newMdn2dRequested();
 
+public slots:
+    bool showStatus(QString message, int timeOut);
+
 private slots:
     void onTabContextMenu(const QPoint& pos);
     void onProjectTabsAboutToChange();
