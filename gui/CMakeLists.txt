@@ -23,11 +23,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_executable(mdn_gui
     CellLineEdit.cpp CellLineEdit.hpp
     Clipboard.cpp Clipboard.hpp
-    HoverPeekTabBar.hpp
-    HoverPeekTabWidget.hpp
+    HoverPeekTabBar.hpp HoverPeekTabBar.cpp
+    HoverPeekTabWidget.hpp HoverPeekTabWidget.cpp
     LoggerConfigurator.hpp LoggerConfigurator.cpp
     main.cpp
     MainWindow.cpp MainWindow.hpp
+    MarkerWidget.hpp
     NumberDisplayWidget.cpp NumberDisplayWidget.hpp
     BinaryOperationDialog.hpp BinaryOperationDialog.cpp
     CommandWidget.hpp CommandWidget.cpp

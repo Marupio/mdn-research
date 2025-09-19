@@ -22,6 +22,7 @@
 
 #include "GuiTools.hpp"
 #include "HoverPeekTabWidget.hpp"
+#include "MarkerWidget.hpp"
 #include "MdnQtInterface.hpp"
 #include "NumberDisplayWidget.hpp"
 #include "OpsController.hpp"
@@ -1098,6 +1099,10 @@ void mdn::gui::MainWindow::slotDebugShowAllTabs()
         const Mdn2dConfig& c = m_project->config();
         oss << std::endl;
         oss << "\nconfig=" << c;
+        if (m_tabWidget) {
+            oss << "\nNumber of tabs: " << m_tabWidget->count();
+            oss << "\nCurrent tab: " << m_tabWidget->currentIndex();
+        }
         Log_Info(oss.str());
     }
     Log_Debug3_T("");
@@ -1277,11 +1282,11 @@ void mdn::gui::MainWindow::setupLayout(Mdn2dConfig* cfg) {
         createNewProjectFromConfig(*cfg, false);
     }
     Log_Debug4("");
-    if (m_project && m_project->size()) {
-        Log_Debug3("Dispatch - createTabs");
-        createTabs();
-        setActiveTab(0);
-    }
+    // if (m_project && m_project->size()) {
+    //     Log_Debug3("Dispatch - createTabs");
+    //     createTabs();
+    //     setActiveTab(0);
+    // }
 
     // Bottom half - command history + input
     m_splitter->addWidget(m_tabWidget);
@@ -1445,56 +1450,69 @@ void mdn::gui::MainWindow::createPlusTab() {
         return;
     }
 
-    QWidget* dummy = new QWidget;
-    m_tabWidget->addTab(dummy, MdnQtInterface::toQString("+"));
-    m_tabWidget->setPlusTabIndex(plusIdx);
+    auto* marker = new MarkerWidget;
+    m_tabWidget->addTab(marker, MdnQtInterface::toQString("+"));
+    // QWidget* dummy = new QWidget;
+    // m_tabWidget->addTab(dummy, MdnQtInterface::toQString("+"));
+
+    m_tabWidget->setPlusTab(plusIdx, marker);
     m_plusTab = true;
+    Log_Debug4("m_plusTab=" << m_plusTab << ", set to true");
 }
 
 
-bool mdn::gui::MainWindow::hasPlusTab() const {
-    #ifdef MDN_DEBUG
-        Log_Debug4_H("");
-        if (!m_tabWidget) {
-            if (m_plusTab) {
-                Log_WarnQ("Meta data out-of-sync: no plusTab exists but flag is true");
-            }
-            Log_Debug4_T("No tab widget, returning false");
-            return false;
-        }
-        const int plusIdx = m_tabWidget->count();
-        // QString qPlus(MdnQtInterface::toQString(Tools::BoxArtStr_x));
-        QString qPlus(MdnQtInterface::toQString("+"));
-        if (plusIdx <= 0) {
-            if (m_plusTab) {
-                Log_WarnQ("Meta data out-of-sync: no plusTab exists but flag is true");
-            }
-            Log_Debug4_T("No tabs, returning false");
-            return false;
-        }
-        const int lastIdx = plusIdx - 1;
-        if (m_tabWidget->tabText(lastIdx) != qPlus) {
-            if (m_plusTab) {
-                Log_WarnQ("Meta data out-of-sync: no plusTab exists but flag is true");
-            }
-            Log_Debug4_T("Last tab not named [" << qPlus.toStdString() << "]");
-            return false;
-        }
-        auto* ndw = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(lastIdx));
-        if (ndw) {
-            if (m_plusTab) {
-                Log_WarnQ("Meta data out-of-sync: no plusTab exists but flag is true");
-            }
-            Log_Debug4_T("Last tab has a NumberDisplayWidget");
-            return false;
-        }
-        // Now, we have the last tab with the correct name, which doesn't contain an ndw -> plus tab
-        if (!m_plusTab) {
-            Log_WarnQ("Meta data out-of-sync: plusTab exists but flag is false");
-        }
-        Log_Debug4_T("Probably has a plusTab");
-        return true;
-    #endif
+bool mdn::gui::MainWindow::hasPlusTab() {
+    // #ifdef MDN_DEBUG
+    //     Log_Debug4_H("");
+    //     if (!m_tabWidget) {
+    //         if (m_plusTab) {
+    //             Log_WarnQ("Meta data out-of-sync: no plusTab exists but flag is true");
+    //         }
+    //         m_plusTab = false;
+    //         Log_Debug4_T("No tab widget, returning false, setting m_plusTab = false");
+    //         return false;
+    //     }
+
+    //     const int plusIdx = m_tabWidget->count() - 1;
+    //     if (plusIdx < 0) {
+    //         // No tabs, including the plusTab, i.e. no plusTab
+    //         if (m_plusTab) {
+    //             Log_WarnQ("Meta data out-of-sync: plusTab missing but flag is true");
+    //             m_plusTab = false;
+    //             Log_Debug4("m_plusTab=" << m_plusTab << ", set to false");
+    //         }
+    //         Log_Debug4_T("No tabs, returning false");
+    //         return false;
+    //     }
+    //     auto* mark = qobject_cast<MarkerWidget*>(m_tabWidget->widget(plusIdx));
+    //     if (mark) {
+    //         // Cast succeeded, plusTab is here
+    //         if (!m_plusTab) {
+    //             Log_WarnQ(
+    //                 "Meta data out-of-sync: plusTab exists but flag is false"
+    //                     << ", last tab is [" << m_tabWidget->tabText(plusIdx).toStdString()
+    //                     << "]"
+    //             );
+    //             Log_Debug4("Setting m_plusTab = true");
+    //             m_plusTab = true;
+    //         }
+    //         Log_Debug4_T("Last tab has a MarkerWidget");
+    //         return true;
+    //     }
+    //     auto* ndw = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(plusIdx));
+    //     if (ndw) {
+    //         Log_WarnQ(
+    //             "It's an NDW, named [" << m_tabWidget->tabText(plusIdx).toStdString() << "]"
+    //         );
+    //     }
+    //     if (m_plusTab) {
+    //         Log_WarnQ("Meta data out-of-sync: plusTab missing but flag is true");
+    //         Log_Debug4("Setting m_plusTab = false");
+    //         m_plusTab = false;
+    //     }
+    //     Log_Debug4_T("No plusTab");
+    //     return false;
+    // #endif
     return m_plusTab;
 }
 
@@ -1506,7 +1524,9 @@ void mdn::gui::MainWindow::removePlusTab() {
     m_tabWidget->removeTab(plusIdx);
     delete w;
     w = nullptr;
+    m_tabWidget->setPlusTab(-1, nullptr);
     m_plusTab = false;
+    Log_Debug4("m_plusTab=" << m_plusTab << ", set to false");
 }
 
 
@@ -1745,6 +1765,7 @@ bool mdn::gui::MainWindow::closeProject() {
             delete w;
         }
         m_plusTab = false;
+        Log_Debug4("All deleted, m_plusTab=" << m_plusTab << ", set to false");
     }
 
     disconnect(m_project, nullptr, this, nullptr);
@@ -1881,21 +1902,16 @@ void mdn::gui::MainWindow::updateStatusFraxisText(mdn::Fraxis f) {
 void mdn::gui::MainWindow::onTabMoved(int from, int to) {
     Log_Debug3_H("from " << from << " to " << to);
     bool hasPlus = hasPlusTab();
-    Log_InfoQ("from " << from << " to " << to << ", with hasPlusTab=" << hasPlus);
+    // Log_InfoQ("from " << from << " to " << to << ", with hasPlusTab=" << hasPlus);
     if (!m_tabWidget) {
         Log_Debug3_T("No tabWidget");
         return;
     }
     if (hasPlus) {
-        int plusTab = m_tabWidget->count() - 1;
+        const int plusTab = m_tabWidget->count() - 1;
         if (from >= plusTab || to >= plusTab) {
-
-            Log_WarnQ("Illegal move across '+': reverting drag");
-            QTabBar* bar = m_tabWidget->tabBar();
-            QSignalBlocker block(bar);
-            // revert: the bar already moved the visual tab to 'to', move it back:
-            bar->moveTab(to, from);
-            Log_Debug3_T("plusTab involved, cannot continue");
+            Log_WarnQ("Illegal move across '+': refreshing from model");
+            syncTabsToProject();
             return;
         }
     }

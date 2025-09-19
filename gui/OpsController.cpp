@@ -80,62 +80,6 @@ void mdn::gui::OpsController::onMenuDiv() {
 }
 
 
-void mdn::gui::OpsController::onMenuAddInPlace() {
-    Log_Debug3_H("");
-    runQuick(Operation::Add, DestinationSimple::InPlace);
-    Log_Debug3_T("");
-}
-
-
-void mdn::gui::OpsController::onMenuAddToNew() {
-    Log_Debug3_H("");
-    runQuick(Operation::Add, DestinationSimple::ToNew);
-    Log_Debug3_T("");
-}
-
-
-void mdn::gui::OpsController::onMenuSubInPlace() {
-    Log_Debug3_H("");
-    runQuick(Operation::Subtract, DestinationSimple::InPlace);
-    Log_Debug3_T("");
-}
-
-
-void mdn::gui::OpsController::onMenuSubToNew() {
-    Log_Debug3_H("");
-    runQuick(Operation::Subtract, DestinationSimple::ToNew);
-    Log_Debug3_T("");
-}
-
-
-void mdn::gui::OpsController::onMenuMulInPlace() {
-    Log_Debug3_H("");
-    runQuick(Operation::Multiply, DestinationSimple::InPlace);
-    Log_Debug3_T("");
-}
-
-
-void mdn::gui::OpsController::onMenuMulToNew() {
-    Log_Debug3_H("");
-    runQuick(Operation::Multiply, DestinationSimple::ToNew);
-    Log_Debug3_T("");
-}
-
-
-void mdn::gui::OpsController::onMenuDivInPlace() {
-    Log_Debug3_H("");
-    runQuick(Operation::Divide, DestinationSimple::InPlace);
-    Log_Debug3_T("");
-}
-
-
-void mdn::gui::OpsController::onMenuDivToNew() {
-    Log_Debug3_H("");
-    runQuick(Operation::Divide, DestinationSimple::ToNew);
-    Log_Debug3_T("");
-}
-
-
 void mdn::gui::OpsController::onStripRequest(
     Operation op,
     int indexA,
@@ -211,37 +155,10 @@ void mdn::gui::OpsController::buildMenus() {
     QAction* sep = new QAction(m_menuOps);
     sep->setSeparator(true);
 
-    QAction* actAddIn = new QAction(tr("Add (in place)"), m_menuOps);
-    QAction* actAddNew = new QAction(tr("Add (to new)"), m_menuOps);
-    QAction* actSubIn = new QAction(tr("Subtract (in place)"), m_menuOps);
-    QAction* actSubNew = new QAction(tr("Subtract (to new)"), m_menuOps);
-    QAction* actMulIn = new QAction(tr("Multiply (in place)"), m_menuOps);
-    QAction* actMulNew = new QAction(tr("Multiply (to new)"), m_menuOps);
-    QAction* actDivIn = new QAction(tr("Divide (in place)"), m_menuOps);
-    QAction* actDivNew = new QAction(tr("Divide (to new)"), m_menuOps);
-
-    connect(actAddIn, SIGNAL(triggered()), this, SLOT(onMenuAddInPlace()));
-    connect(actAddNew, SIGNAL(triggered()), this, SLOT(onMenuAddToNew()));
-    connect(actSubIn, SIGNAL(triggered()), this, SLOT(onMenuSubInPlace()));
-    connect(actSubNew, SIGNAL(triggered()), this, SLOT(onMenuSubToNew()));
-    connect(actMulIn, SIGNAL(triggered()), this, SLOT(onMenuMulInPlace()));
-    connect(actMulNew, SIGNAL(triggered()), this, SLOT(onMenuMulToNew()));
-    connect(actDivIn, SIGNAL(triggered()), this, SLOT(onMenuDivInPlace()));
-    connect(actDivNew, SIGNAL(triggered()), this, SLOT(onMenuDivToNew()));
-
     m_menuOps->addAction(actAdd);
     m_menuOps->addAction(actSub);
     m_menuOps->addAction(actMul);
     m_menuOps->addAction(actDiv);
-    m_menuOps->addAction(sep);
-    m_menuOps->addAction(actAddIn);
-    m_menuOps->addAction(actAddNew);
-    m_menuOps->addAction(actSubIn);
-    m_menuOps->addAction(actSubNew);
-    m_menuOps->addAction(actMulIn);
-    m_menuOps->addAction(actMulNew);
-    m_menuOps->addAction(actDivIn);
-    m_menuOps->addAction(actDivNew);
 }
 
 

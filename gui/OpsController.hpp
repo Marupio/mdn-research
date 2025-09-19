@@ -69,15 +69,6 @@ private slots:
     void onMenuMul();
     void onMenuDiv();
 
-    void onMenuAddInPlace();
-    void onMenuAddToNew();
-    void onMenuSubInPlace();
-    void onMenuSubToNew();
-    void onMenuMulInPlace();
-    void onMenuMulToNew();
-    void onMenuDivInPlace();
-    void onMenuDivToNew();
-
     void onStripRequest(
         Operation op,
         int indexA,

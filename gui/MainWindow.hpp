@@ -129,7 +129,7 @@ private:
     void createTabs();
     void createTabForIndex(int index);
     void createPlusTab();
-    bool hasPlusTab() const;
+    bool hasPlusTab();
     void removePlusTab();
     void initOperationsUi();
     void createStatusBar();

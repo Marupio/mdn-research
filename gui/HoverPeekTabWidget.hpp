@@ -12,28 +12,20 @@
 namespace mdn {
 namespace gui {
 
+// Forward declarations
+class MarkerWidget;
+
 class HoverPeekTabWidget : public QTabWidget {
     Q_OBJECT
 public:
-    explicit HoverPeekTabWidget(QWidget* parent = nullptr)
-        : QTabWidget(parent)
-    {
-        // IMPORTANT: setTabBar is protected; we can call it here because we're a subclass.
-        auto* bar = new HoverPeekTabBar(this);
-        QTabWidget::setTabBar(bar);
+    explicit HoverPeekTabWidget(QWidget* parent = nullptr);
 
-        connect(bar, &HoverPeekTabBar::hoverIndex, this, &HoverPeekTabWidget::onHoverIndex);
-        connect(bar, &HoverPeekTabBar::hoverEnd, this, &HoverPeekTabWidget::onHoverEnd);
-        connect(bar, &HoverPeekTabBar::commitIndex, this, &HoverPeekTabWidget::onCommitIndex);
-
-        m_restoreTimer.setSingleShot(true);
-        m_restoreTimer.setInterval(120); // we call start() with the chosen delay
-        connect(&m_restoreTimer, &QTimer::timeout, this, &HoverPeekTabWidget::restoreIfPreviewing);
-    }
+    void setPlusTab(int idx, MarkerWidget* page);
+    bool hasPlus() const { return m_plusMarker && indexOf(m_plusMarkerBase) >= 0; }
+    int plusIndex() const { return m_plusMarker ? indexOf(m_plusMarkerBase) : -1; }
 
     // Optional settings
     void setHoverDelayMs(int ms) { m_hoverDelayMs = std::max(0, ms); }
-    void setPlusTabIndex(int idx) { m_plusTabIndex = idx; } // -1 means none
     void setPreviewTextColor(const QColor& c) { m_previewTextColor = c; }
     void clearPreviewTextColor() { m_previewTextColor = QColor(); }
 
@@ -41,85 +33,23 @@ signals:
     void beganPreview(int hoveredIndex);
     void endedPreview(int restoredIndex);
     void committedIndex(int index);
+    void plusClicked();
 
 private slots:
-    void onHoverIndex(int idx) {
-        if (idx < 0 || idx >= count()) return;
-        if (idx == m_plusTabIndex) return; // don't preview the "+" tab
-
-        // Debounce/flicker control: delay switching until the mouse settles a bit
-        m_pendingHoverIndex = idx;
-        m_restoreTimer.stop();
-        m_restoreTimer.start(m_hoverDelayMs);
-    }
-
-    void onHoverEnd() {
-        // Mouse left the bar — restore after a tiny delay (helps with minor jiggles)
-        if (m_previewActive) {
-            m_pendingHoverIndex = -1;
-            // restore immediately (no delay) to feel snappy
-            m_restoreTimer.stop();
-            restoreIfPreviewing();
-        }
-    }
-
-    void onCommitIndex(int idx) {
-        if (idx < 0 || idx >= count()) return;
-        if (idx == m_plusTabIndex) return; // "+" tab commit is likely handled by app-level code
-
-        // Make this the permanent selection and end preview if any
-        endPreviewHighlight(currentIndex());
-        m_lastPermanentIndex = idx;
-        if (m_previewActive) {
-            m_previewActive = false;
-            emit endedPreview(m_lastPermanentIndex);
-        }
-        setCurrentIndex(idx);
-        emit committedIndex(idx);
-    }
+    void onTabMoved(int from, int to);
+    void onTabBarClicked(int index);
+    void onCurrentChangedGuard(int index);
+    void onHoverIndex(int idx);
+    void onHoverEnd();
+    void onCommitIndex(int idx);
 
 private:
-    void restoreIfPreviewing() {
-        // If there is a pending hover target, switch to it now (this is the delayed "preview")
-        if (m_pendingHoverIndex >= 0 && m_pendingHoverIndex < count()) {
-            if (!m_previewActive) {
-                m_lastPermanentIndex = currentIndex();
-                m_previewActive = true;
-                emit beganPreview(m_pendingHoverIndex);
-            }
-            // Change preview highlight
-            endPreviewHighlight(currentIndex());
-            setCurrentIndex(m_pendingHoverIndex);
-            beginPreviewHighlight(m_pendingHoverIndex);
-            m_pendingHoverIndex = -1;
-            return;
-        }
-
-        // Otherwise, restore original tab if we are in preview mode
-        if (m_previewActive) {
-            const int curr = currentIndex();
-            endPreviewHighlight(curr);
-            if (m_lastPermanentIndex >= 0 && m_lastPermanentIndex < count()
-                && m_lastPermanentIndex != curr) {
-                setCurrentIndex(m_lastPermanentIndex);
-            }
-            m_previewActive = false;
-            emit endedPreview(currentIndex());
-        }
-    }
-
-    void beginPreviewHighlight(int idx) {
-        if (auto* b = tabBar()) {
-            if (m_previewTextColor.isValid())
-                b->setTabTextColor(idx, m_previewTextColor);
-        }
-    }
-
-    void endPreviewHighlight(int idx) {
-        if (auto* b = tabBar()) {
-            b->setTabTextColor(idx, QColor()); // default palette
-        }
-    }
+    void enforcePlusAtEnd();
+    // page-safe move
+    void moveIndex(int from, int to);
+    void restoreIfPreviewing();
+    void beginPreviewHighlight(int idx);
+    void endPreviewHighlight(int idx);
 
 private:
     QTimer m_restoreTimer;
@@ -129,6 +59,10 @@ private:
     int    m_pendingHoverIndex { -1 };
     bool   m_previewActive { false };
     QColor m_previewTextColor { Qt::blue }; // subtle cue; change or clear per taste
+
+    MarkerWidget* m_plusMarker = nullptr;
+    QWidget* m_plusMarkerBase = nullptr;
+    int m_lastRealIndex = -1;
 };
 
 } // end namespace gui
