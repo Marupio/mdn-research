@@ -99,6 +99,19 @@ mdn::gui::MainWindow::~MainWindow()
 }
 
 
+bool mdn::gui::MainWindow::showStatus(QString message, int timeOut) {
+    Log_Debug_H("message=[" << message.toStdString() << "]");
+    QStatusBar* status = statusBar();
+    if (!status) {
+        Log_Debug_T("No status");
+        return false;
+    }
+    status->showMessage(message, timeOut);
+    Log_Debug_T("");
+    return true;
+}
+
+
 void mdn::gui::MainWindow::onTabContextMenu(const QPoint& pos)
 {
     Log_Debug3_H("");
@@ -221,10 +234,6 @@ void mdn::gui::MainWindow::onProjectTabsChanged(int currentIndex)
 
     if (centralWidget()) {
         centralWidget()->setUpdatesEnabled(true);
-    }
-
-    if (m_ops) {
-        m_ops->refreshTabNames();
     }
 
     focusActiveGrid();
@@ -647,7 +656,7 @@ void mdn::gui::MainWindow::onCommandSubmitted(const QString& text) {
 }
 
 
-void mdn::gui::MainWindow::onOpsPlan(const OpsController::Plan& p) {
+void mdn::gui::MainWindow::onOpsPlan(const OperationPlan& p) {
     Log_Debug_H("" << p);
     if (!m_project) {
         Log_Debug_T("");
@@ -665,8 +674,8 @@ void mdn::gui::MainWindow::onOpsPlan(const OpsController::Plan& p) {
     }
     Mdn2d& a = *aPtr;
     Mdn2d& b = *bPtr;
-    if (p.dest == DestinationSimple::InPlace && p.overwriteIndex >= 0) {
-        const int t = p.overwriteIndex;
+    if (p.indexDest >= 0) {
+        const int t = p.indexDest;
         if (t == p.indexA) {
             switch (p.op) {
                 case Operation::Add: {
@@ -696,14 +705,12 @@ void mdn::gui::MainWindow::onOpsPlan(const OpsController::Plan& p) {
             }
             syncTabsToProject();
             setActiveTab(p.indexA);
-            if (m_ops) {
-                m_ops->refreshTabNames();
-            }
             Log_Debug_T("");
             return;
         } else {
             Mdn2d* ansPtr = m_project->getMdn(t);
             if (ansPtr->data_index().size()) {
+                // TODO use peek feature to show the number in question
                 std::ostringstream oss;
                 oss << "If you proceed, the answer will overwrite "
                     << "tab '" << ansPtr->name() << "'.\n\n"
@@ -751,47 +758,11 @@ void mdn::gui::MainWindow::onOpsPlan(const OpsController::Plan& p) {
             }
             syncTabsToProject();
             setActiveTab(t);
-            if (m_ops) {
-                m_ops->refreshTabNames();
-            }
             Log_Debug_T("");
             return;
         }
-    } else if (p.dest == DestinationSimple::InPlace) {
-        switch (p.op) {
-            case Operation::Add: {
-                Log_Debug4_H("Dispatch a += b");
-                a += b;
-                Log_Debug4_T("a += b return");
-                break;
-            }
-            case Operation::Subtract: {
-                Log_Debug4_H("Dispatch a -= b");
-                a -= b;
-                Log_Debug4_T("a -= b return");
-                break;
-            }
-            case Operation::Multiply: {
-                Log_Debug4_H("Dispatch a *= b");
-                a *= b;
-                Log_Debug4_T("a *= b return");
-                break;
-            }
-            case Operation::Divide: {
-                Log_Debug4_H("Dispatch a /= b");
-                a /= b;
-                Log_Debug4_T("a /= b return");
-                break;
-            }
-        }
-        syncTabsToProject();
-        setActiveTab(p.indexA);
-        if (m_ops) {
-            m_ops->refreshTabNames();
-        }
-        Log_Debug_T("");
-        return;
-    } else if (p.dest == DestinationSimple::ToNew) {
+    } else {
+        // p.indexDest < 0 we are writing answer to a new tab
         std::string requestedName = MdnQtInterface::fromQString(p.newName);
         if (requestedName.empty()) {
             requestedName = std::string("Result");
@@ -828,9 +799,6 @@ void mdn::gui::MainWindow::onOpsPlan(const OpsController::Plan& p) {
         m_project->appendMdn(std::move(ans));
         syncTabsToProject();
         setActiveTab(m_project->size()-1);
-        if (m_ops) {
-            m_ops->refreshTabNames();
-        }
         Log_Debug_T("");
         return;
     }
@@ -1270,10 +1238,17 @@ void mdn::gui::MainWindow::setupLayout(Mdn2dConfig* cfg) {
     );
 
     connect(
-        m_tabWidget,
-        &HoverPeekTabWidget::committedIndex,
+        m_ops,
+        &OpsController::tabClicked,
         this,
         &mdn::gui::MainWindow::onTabCommit
+    );
+
+    connect(
+        m_ops,
+        &OpsController::plusClicked,
+        this,
+        &mdn::gui::MainWindow::onNewMdn2d
     );
 
     Log_Debug4("");
@@ -1282,11 +1257,7 @@ void mdn::gui::MainWindow::setupLayout(Mdn2dConfig* cfg) {
         createNewProjectFromConfig(*cfg, false);
     }
     Log_Debug4("");
-    // if (m_project && m_project->size()) {
-    //     Log_Debug3("Dispatch - createTabs");
-    //     createTabs();
-    //     setActiveTab(0);
-    // }
+    // No need to createTabs here, already done via signals
 
     // Bottom half - command history + input
     m_splitter->addWidget(m_tabWidget);
@@ -1532,7 +1503,7 @@ void mdn::gui::MainWindow::removePlusTab() {
 
 void mdn::gui::MainWindow::initOperationsUi() {
     int idx = m_splitter->indexOf(m_command);
-    m_ops = new OpsController(this, m_tabWidget, m_command, this);
+    m_ops = new OpsController(this, m_project, m_tabWidget, m_command, this);
     QWidget* container = m_ops->bottomContainer();
     if (idx >= 0) {
         m_splitter->replaceWidget(idx, container);
@@ -1541,9 +1512,6 @@ void mdn::gui::MainWindow::initOperationsUi() {
     }
 
     connect(m_ops, &OpsController::planReady, this, &MainWindow::onOpsPlan);
-    connect(m_tabWidget, &QTabWidget::currentChanged, m_ops, &OpsController::refreshTabNames);
-
-    m_ops->refreshTabNames();
     connect(m_command, &CommandWidget::submitCommand, this, &MainWindow::onCommandSubmitted);
 }
 
@@ -1618,11 +1586,19 @@ bool mdn::gui::MainWindow::createNewProjectFromConfig(Mdn2dConfig& cfg, bool req
     }
 
     m_project = new Project(this, cfg.parentName(), nStartMdnDefault);
-    connect(m_project, &mdn::gui::Project::tabsAboutToChange,
-            this, &mdn::gui::MainWindow::onProjectTabsAboutToChange);
-    connect(m_project, &mdn::gui::Project::tabsChanged,
-            this, &mdn::gui::MainWindow::onProjectTabsChanged);
-    onProjectTabsChanged(0);
+    if (m_project) {
+        connect(m_project, &mdn::gui::Project::tabsAboutToChange,
+                this, &mdn::gui::MainWindow::onProjectTabsAboutToChange);
+        connect(m_project, &mdn::gui::Project::tabsChanged,
+                this, &mdn::gui::MainWindow::onProjectTabsChanged);
+        if (m_ops) {
+            m_ops->resetModel(m_project);
+            connect(m_ops, &OpsController::requestStatus,
+                this, &mdn::gui::MainWindow::showStatus
+            );
+        }
+        onProjectTabsChanged(0);
+    }
     m_globalConfig.setParent(*m_project);
     setGlobalConfig(m_globalConfig, true);
 
@@ -1647,6 +1623,12 @@ bool mdn::gui::MainWindow::createNewProject(Mdn2dConfig* cfg, bool requireConfir
                 this, &mdn::gui::MainWindow::onProjectTabsAboutToChange);
         connect(m_project, &mdn::gui::Project::tabsChanged,
                 this, &mdn::gui::MainWindow::onProjectTabsChanged);
+        if (m_ops) {
+            m_ops->resetModel(m_project);
+            connect(m_ops, &OpsController::requestStatus,
+                this, &mdn::gui::MainWindow::showStatus
+            );
+        }
         onProjectTabsChanged(0);
     }
     Log_Debug3_T("");
@@ -1944,9 +1926,6 @@ void mdn::gui::MainWindow::closeTab(int index) {
         return;
     }
     m_project->deleteMdn(index);
-    if (m_ops) {
-        m_ops->refreshTabNames();
-    }
     Log_Debug3_T("");
 }
 
@@ -1986,9 +1965,6 @@ void mdn::gui::MainWindow::renameTab(int index) {
     m_tabWidget->setTabText(index, approvedNameQ);
 
     // Name changed, update
-    if (m_ops) {
-        m_ops->refreshTabNames();
-    }
 
     if (approvedName == newName) {
         Log_Debug3_T("User got what they expect, say no more");
@@ -2061,9 +2037,6 @@ void mdn::gui::MainWindow::syncTabsToProject() {
         view->setModel(srcNum, &srcSel);
         // add mdnName(int)
         m_tabWidget->setTabText(i, QString::fromStdString(srcNum->name()));
-    }
-    if (m_ops) {
-        m_ops->refreshTabNames();
     }
     Log_Debug3_T("");
 }

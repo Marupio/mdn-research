@@ -66,7 +66,9 @@ void mdn::gui::HoverPeekTabWidget::onTabBarClicked(int index) {
         emit plusClicked();
         // Keep selection on last real tab (before +) if any
         const int lastReal = count() - (hasPlus() ? 2 : 1);
-        if (lastReal >= 0) setCurrentIndex(lastReal);
+        if (lastReal >= 0) {
+            setCurrentIndex(lastReal);
+        }
     } else {
         m_lastRealIndex = index;
     }
@@ -111,8 +113,13 @@ void mdn::gui::HoverPeekTabWidget::onHoverEnd() {
 
 
 void mdn::gui::HoverPeekTabWidget::onCommitIndex(int idx) {
-    if (idx < 0 || idx >= count()) return;
-    if (idx == m_plusTabIndex) return; // "+" tab commit is likely handled by app-level code
+    if (idx < 0 || idx >= count()) {
+        return;
+    }
+    if (idx == m_plusTabIndex) {
+        emit plusClicked();
+        return;
+    }
 
     // Make this the permanent selection and end preview if any
     endPreviewHighlight(currentIndex());

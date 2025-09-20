@@ -30,6 +30,7 @@ add_executable(mdn_gui
     MainWindow.cpp MainWindow.hpp
     MarkerWidget.hpp
     NumberDisplayWidget.cpp NumberDisplayWidget.hpp
+    OperationPlan.hpp
     BinaryOperationDialog.hpp BinaryOperationDialog.cpp
     CommandWidget.hpp CommandWidget.cpp
     OperationStrip.hpp OperationStrip.cpp

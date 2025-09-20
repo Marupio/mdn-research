@@ -24,7 +24,7 @@ public:
     explicit OperationStrip(QWidget* parent = nullptr);
 
     // Called by OpsController when an operation session starts.
-    void activate(Operation op);
+    void battlestations(Operation op);
 
     // Called by OpsController when the session ends/cancels.
     void reset();
@@ -37,10 +37,12 @@ signals:
 
 private:
     QPushButton* m_btnCancel = nullptr;
+
     QPushButton* m_btnAdd    = nullptr;
     QPushButton* m_btnSub    = nullptr;
     QPushButton* m_btnMul    = nullptr;
     QPushButton* m_btnDiv    = nullptr;
+    std::array<QPushButton*, 4> m_allOpButtons;
 
     // exclusive group for op buttons
     QButtonGroup* m_group    = nullptr;

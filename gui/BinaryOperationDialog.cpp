@@ -94,16 +94,14 @@ void mdn::gui::BinaryOperationDialog::setRememberedDestination(DestinationMode m
 }
 
 
-mdn::gui::BinaryOperationDialog::Plan mdn::gui::BinaryOperationDialog::plan() const {
+mdn::gui::OperationPlan mdn::gui::BinaryOperationDialog::plan() const {
     Log_Debug3_H("");
-    BinaryOperationDialog::Plan p;
+    OperationPlan p;
     p.op = m_op;
     p.indexA = m_indexA;
     p.indexB = m_indexB;
-    p.dest = m_dest;
     p.indexDest = (m_dest == DestinationMode::OverwriteIndex ? currentDestFromUi() : -1);
     p.newName = m_newNameEdit->text();
-    p.rememberChoices = m_remember->isChecked();
     Log_Debug3_T("returning p=" << p);
     return p;
 }
@@ -259,17 +257,17 @@ void mdn::gui::BinaryOperationDialog::buildUi() {
     QWidget* bPicker = new QWidget(this);
     bPicker->setLayout(bBox);
 
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+// #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     connect(m_opsButtons,      &QButtonGroup::idClicked,
             this,              &BinaryOperationDialog::onOpChanged);
     connect(m_bRadioButtons,   &QButtonGroup::idClicked,
             this,              &BinaryOperationDialog::onBSelectionChanged);
-#else
-    connect(m_opsButtons,    QOverload<int>::of(&QButtonGroup::buttonClicked),
-            this,            &BinaryOperationDialog::onOpChanged);
-    connect(m_bRadioButtons, QOverload<int>::of(&QButtonGroup::buttonClicked),
-            this,            &BinaryOperationDialog::onBSelectionChanged);
-#endif
+// #else
+//     connect(m_opsButtons,    QOverload<int>::of(&QButtonGroup::buttonClicked),
+//             this,            &BinaryOperationDialog::onOpChanged);
+//     connect(m_bRadioButtons, QOverload<int>::of(&QButtonGroup::buttonClicked),
+//             this,            &BinaryOperationDialog::onBSelectionChanged);
+// #endif
 
     connect(m_bList, SIGNAL(currentRowChanged(int)), this, SLOT(onBSelectionChanged()));
     connect(m_bCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(onBSelectionChanged()));

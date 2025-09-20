@@ -5,6 +5,7 @@
 
 #include "EnumDestinationMode.hpp"
 #include "EnumOperation.hpp"
+#include "OperationPlan.hpp"
 #include "../library/Logger.hpp"
 
 class QAbstractButton;
@@ -27,29 +28,6 @@ class BinaryOperationDialog : public QDialog {
     Q_OBJECT
 
 public:
-    struct Plan {
-        Operation op;
-        int indexA;
-        int indexB;
-        DestinationMode dest;
-        int indexDest;
-        QString newName;
-        bool rememberChoices;
-    };
-    friend std::ostream& operator<<(std::ostream& os, const Plan& p) {
-        std::string destStr;
-        if (p.dest == DestinationMode::CreateNew) {
-            destStr = "CreateNew(" + MdnQtInterface::fromQString(p.newName) + ")";
-        } else if (p.dest == DestinationMode::OverwriteA) {
-            destStr = "OverwriteA";
-        } else {
-            destStr = "OverwriteB";
-        }
-        os << "[" << p.indexA << OperationToOpStr(p.op) << p.indexB << "→" << destStr << "]";
-        return os;
-    }
-
-public:
     explicit BinaryOperationDialog(QWidget* parent = nullptr);
 
     void setTabNames(const QStringList& names);
@@ -58,7 +36,7 @@ public:
     void setRememberedB(int indexB);
     void setRememberedDestination(DestinationMode mode);
 
-    Plan plan() const;
+    OperationPlan plan() const;
 
 private slots:
     void onOpChanged();

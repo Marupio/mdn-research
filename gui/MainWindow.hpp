@@ -17,6 +17,7 @@
 
 #include "CommandWidget.hpp"
 #include "NumberDisplayWidget.hpp"
+#include "OperationPlan.hpp"
 #include "OpsController.hpp"
 #include "Project.hpp"
 
@@ -60,6 +61,9 @@ public:
 signals:
     void newMdn2dRequested();
 
+public slots:
+    bool showStatus(QString message, int timeOut);
+
 private slots:
     void onTabContextMenu(const QPoint& pos);
     void onProjectTabsAboutToChange();
@@ -85,7 +89,7 @@ private slots:
 
     void onSplitterMoved(int pos, int index);
     void onCommandSubmitted(const QString& text);
-    void onOpsPlan(const OpsController::Plan& p);
+    void onOpsPlan(const OperationPlan& p);
 
     void cycleEditMode();
     void setGlobalEditMode(NumberDisplayWidget::EditMode m);

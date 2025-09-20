@@ -7,7 +7,9 @@
 
 #include "EnumDestinationMode.hpp"
 #include "EnumOperation.hpp"
+#include "EnumOperationPhase.hpp"
 #include "MdnQtInterface.hpp"
+#include "OperationPlan.hpp"
 #include "OperationStrip.hpp"
 
 class QMainWindow;
@@ -17,12 +19,14 @@ class QSplitter;
 class QTabWidget;
 class QWidget;
 
-// // Forward declarations
-// namespace mdn {
-// namespace gui {
-// class BinaryOperationDialog;
-// } // end namespace gui
-// } // end namespace mdn
+// Forward declarations
+namespace mdn {
+namespace gui {
+class CommandWidget;
+class Project;
+class HoverPeekTabWidget;
+} // end namespace gui
+} // end namespace mdn
 
 namespace mdn {
 namespace gui {
@@ -32,70 +36,68 @@ class OpsController : public QObject {
 
 public:
 
-    struct Plan {
-        Operation op;
-        int indexA;
-        int indexB;
-        DestinationSimple dest;
-        int overwriteIndex; // -1 means “not set”
-        QString newName;
-
-        friend std::ostream& operator<<(std::ostream& os, const Plan& p) {
-            std::string destStr(
-                p.dest == DestinationSimple::InPlace
-                    ? "InPlace"
-                    : "ToNew(" + MdnQtInterface::fromQString(p.newName) + ")"
-            );
-            os << "[" << p.indexA << OperationToOpStr(p.op) << p.indexB
-                << "→" << destStr << ",o:" << p.overwriteIndex << "]";
-            return os;
-        }
-    };
-
 public:
-    OpsController(QMainWindow* mw, QTabWidget* tabs, QWidget* history, QObject* parent = nullptr);
+    OpsController(
+        QMainWindow* mw,
+        Project* project,
+        HoverPeekTabWidget* tabs,
+        CommandWidget* command,
+        QObject* parent = nullptr
+    );
 
     QWidget* bottomContainer() const;
 
+    // Returns true if user is midway through specifying an operation on the bottom strip
+    bool inBattle() const;
+    void resetModel(Project* project);
+    void clearModel();
+
 signals:
-    void planReady(const OpsController::Plan& plan);
+    // to status bar
+    void requestStatus(const QString& s, int timeOut);
+    void planReady(const OperationPlan& plan);
+    void tabClicked(int idx);
+    // relayed from tabwidget, I have to check first if it's "new destination", not just "newMdn2d"
+    void plusClicked();
+
 
 public slots:
-    void battleStations(Operation op);
-    void refreshTabNames();
+    // User has just clicked an operation button in the bottom strip, we are in battle
+    void battlestations(Operation op);
+    void onCancel();
 
 private slots:
-    void battleStations();
     void onMenuAdd();
     void onMenuSub();
     void onMenuMul();
     void onMenuDiv();
 
-    void onStripRequest(
-        Operation op,
-        int indexA,
-        int indexB,
-        DestinationSimple dest
-    );
-    void onStripChangeB();
+    // I intercept tab signals first to check if we're in battle
+    void onTabCommitted(int idx);
+    void onPlusClicked();
 
 private:
     void buildMenus();
     void rebuildBottomContainer();
     QStringList collectTabNames() const;
+    QString nameFor(int idx) const;
     int activeIndex() const;
     void runDialog(Operation preset);
-    void runQuick(Operation op, DestinationSimple dest);
-    DestinationSimple stripDestToController(DestinationSimple d) const;
-    Operation stripOpToController(Operation o) const;
+    void endBattle(int destIndex, bool isNew);
+    void cancel();
 
 private:
+
     QMainWindow* m_mainWindow{nullptr};
-    QTabWidget* m_tabs{nullptr};
-    QWidget* m_history{nullptr};
+    Project* m_project = nullptr;
+    HoverPeekTabWidget* m_tabs = nullptr;
+    CommandWidget* m_command = nullptr;
 
     QWidget* m_bottomContainer{nullptr};
     OperationStrip* m_strip{nullptr};
+    OperationPhase m_phase { OperationPhase::Idle };
+    Operation m_op { Operation::Add };
+    int m_a { -1 }, m_b { -1 };
 
     QMenu* m_menuOps{nullptr};
 

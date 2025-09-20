@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include "MdnQtInterface.hpp"
+
 namespace mdn{
 namespace gui{
 
