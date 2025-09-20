@@ -28,6 +28,9 @@ class Project;
 namespace mdn {
 namespace gui {
 
+enum class HighlightRole { None, Peek };
+
+
 class NumberDisplayWidget : public QWidget {
     Q_OBJECT
 
@@ -121,6 +124,9 @@ public slots:
     void onSelectionChanged(const mdn::Rect& r);
     void onModelModified();
     void setEditMode(EditMode m);
+    void setHighlightRole(HighlightRole r);
+    HighlightRole highlightRole() const { return m_highlightRole; }
+
 
 protected:
     void paintEvent(QPaintEvent*) override;
@@ -239,6 +245,7 @@ private:
 
     // Editing state
     bool m_editing{false};
+    HighlightRole m_highlightRole = HighlightRole::None;
 
 };
 

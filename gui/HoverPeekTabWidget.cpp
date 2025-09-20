@@ -2,8 +2,11 @@
 #include <QTabBar>
 #include <QSignalBlocker>
 
+#include "../library/Logger.hpp"
+
 #include "HoverPeekTabBar.hpp"
 #include "MarkerWidget.hpp"
+#include "NumberDisplayWidget.hpp"
 
 mdn::gui::HoverPeekTabWidget::HoverPeekTabWidget(QWidget* parent) :
     QTabWidget(parent)
@@ -57,8 +60,7 @@ void mdn::gui::HoverPeekTabWidget::onTabMoved(int from, int to) {
 }
 
 
-void mdn::gui::HoverPeekTabWidget::onTabBarClicked(int index)
-{
+void mdn::gui::HoverPeekTabWidget::onTabBarClicked(int index) {
     // If [+] was clicked, emit a signal to create a new tab and keep focus on a real tab.
     if (index >= 0 && index == plusIndex()) {
         emit plusClicked();
@@ -71,8 +73,7 @@ void mdn::gui::HoverPeekTabWidget::onTabBarClicked(int index)
 }
 
 
-void mdn::gui::HoverPeekTabWidget::onCurrentChangedGuard(int index)
-{
+void mdn::gui::HoverPeekTabWidget::onCurrentChangedGuard(int index) {
     // If something programmatically set current to the plus page, bounce off it.
     if (index == plusIndex()) {
         emit plusClicked();
@@ -125,8 +126,7 @@ void mdn::gui::HoverPeekTabWidget::onCommitIndex(int idx) {
 }
 
 
-void mdn::gui::HoverPeekTabWidget::enforcePlusAtEnd()
-{
+void mdn::gui::HoverPeekTabWidget::enforcePlusAtEnd() {
     if (!m_plusMarker) {
         return;
     }
@@ -207,6 +207,11 @@ void mdn::gui::HoverPeekTabWidget::beginPreviewHighlight(int idx) {
         if (m_previewTextColor.isValid())
             b->setTabTextColor(idx, m_previewTextColor);
     }
+    if (idx != m_lastRealIndex) {
+        if (auto *w = ndwAt(idx)) {
+            w->setHighlightRole(HighlightRole::Peek);
+        }
+    }
 }
 
 
@@ -214,4 +219,12 @@ void mdn::gui::HoverPeekTabWidget::endPreviewHighlight(int idx) {
     if (auto* b = tabBar()) {
         b->setTabTextColor(idx, QColor()); // default palette
     }
+    if (auto *w = ndwAt(idx)) {
+        w->setHighlightRole(HighlightRole::None);
+    }
+}
+
+
+mdn::gui::NumberDisplayWidget* mdn::gui::HoverPeekTabWidget::ndwAt(int idx) const {
+    return qobject_cast<NumberDisplayWidget*>(widget(idx));
 }

@@ -39,16 +39,17 @@ void mdn::gui::OpsController::refreshTabNames() {
     QStringList names = collectTabNames();
     int a = activeIndex();
     if (m_strip) {
-        m_strip->setTabNames(names);
-        m_strip->setActiveIndex(a);
-        m_strip->setRememberedB(m_rememberedB);
-        m_strip->setDestinationMode(
-            m_rememberedDest == DestinationSimple::InPlace
-            ? DestinationSimple::InPlace
-            : DestinationSimple::ToNew
-        );
+        connect(m_strip, &OperationStrip::operationClicked, this, [this](Operation op){
+            battleStations(op);
+        });
     }
     Log_Debug3_T("");
+}
+
+
+void mdn::gui::OpsController::battleStations(Operation op) {
+    m_strip->activate(op);
+    // TODO WIRE IN OUR FANCY NEW INTERFACE
 }
 
 

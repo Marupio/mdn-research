@@ -61,9 +61,11 @@ signals:
     void planReady(const OpsController::Plan& plan);
 
 public slots:
+    void battleStations(Operation op);
     void refreshTabNames();
 
 private slots:
+    void battleStations();
     void onMenuAdd();
     void onMenuSub();
     void onMenuMul();

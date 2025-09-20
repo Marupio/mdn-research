@@ -133,11 +133,41 @@ void mdn::gui::NumberDisplayWidget::setEditMode(EditMode m) {
 }
 
 
+void mdn::gui::NumberDisplayWidget::setHighlightRole(HighlightRole r)
+{
+    if (m_highlightRole != r)
+    {
+        m_highlightRole = r;
+        update();
+    }
+}
+
+
 void mdn::gui::NumberDisplayWidget::paintEvent(QPaintEvent* event) {
+    if (m_highlightRole != HighlightRole::None)
+    {
+        QColor c;
+        switch (m_highlightRole)
+        {
+            case HighlightRole::Peek:
+                c = QColor(255, 235, 59, 40); // soft amber @ ~16% opacity
+                break;
+            default:
+                c = QColor(0, 0, 0, 0);
+                break;
+        }
+
+        if (c.alpha() > 0)
+        {
+            QPainter p(this);
+            p.setPen(Qt::NoPen);
+            p.setBrush(c);
+            p.drawRect(rect());
+        }
+    }
     QPainter painter(this);
     painter.setRenderHint(QPainter::TextAntialiasing, true);
     painter.setRenderHint(QPainter::Antialiasing, false);
-
     const QRect widgetRect = rect();
 
     painter.setFont(m_theme.font);
@@ -1328,38 +1358,30 @@ void mdn::gui::NumberDisplayWidget::moveCursorAfterSubmit(SubmitMove how, bool s
     if (stayInside) {
         switch (how) {
             case SubmitMove::Enter:
-                Log_Debug4("");
                 m_selection->cursorIterateReverseY();
                 break;
             case SubmitMove::ShiftEnter:
-                Log_Debug4("");
                 m_selection->cursorIterateY();
                 break;
             case SubmitMove::Tab:
-                Log_Debug4("");
                 m_selection->cursorIterateX();
                 break;
             case SubmitMove::ShiftTab:
-                Log_Debug4("");
                 m_selection->cursorIterateReverseX();
                 break;
         }
     } else {
         switch (how) {
             case SubmitMove::Enter:
-                Log_Debug4("");
                 m_selection->cursorPrevY(false);
                 break;
             case SubmitMove::ShiftEnter:
-                Log_Debug4("");
                 m_selection->cursorNextY(false);
                 break;
             case SubmitMove::Tab:
-                Log_Debug4("");
                 m_selection->cursorNextX(false);
                 break;
             case SubmitMove::ShiftTab:
-                Log_Debug4("");
                 m_selection->cursorPrevX(false);
                 break;
         }

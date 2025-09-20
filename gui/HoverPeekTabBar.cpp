@@ -1,5 +1,7 @@
 #include "HoverPeekTabBar.hpp"
 
+#include "../library/Logger.hpp"
+
 // cross-version point helpers
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
   #define EV_POINT(e) ((e)->position().toPoint())

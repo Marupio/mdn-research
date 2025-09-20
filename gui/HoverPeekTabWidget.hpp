@@ -14,6 +14,7 @@ namespace gui {
 
 // Forward declarations
 class MarkerWidget;
+class NumberDisplayWidget;
 
 class HoverPeekTabWidget : public QTabWidget {
     Q_OBJECT
@@ -50,6 +51,7 @@ private:
     void restoreIfPreviewing();
     void beginPreviewHighlight(int idx);
     void endPreviewHighlight(int idx);
+    NumberDisplayWidget* ndwAt(int idx) const;
 
 private:
     QTimer m_restoreTimer;

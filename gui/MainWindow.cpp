@@ -1623,6 +1623,8 @@ bool mdn::gui::MainWindow::createNewProjectFromConfig(Mdn2dConfig& cfg, bool req
     connect(m_project, &mdn::gui::Project::tabsChanged,
             this, &mdn::gui::MainWindow::onProjectTabsChanged);
     onProjectTabsChanged(0);
+    m_globalConfig.setParent(*m_project);
+    setGlobalConfig(m_globalConfig, true);
 
     Log_Debug3_T("");
     return true;
