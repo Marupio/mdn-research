@@ -52,11 +52,26 @@ private:
     void setOthersDisabledExcept(Operation op);
 
 private slots:
-    void onAdd() { emit operationClicked(Operation::Add); }
-    void onSub() { emit operationClicked(Operation::Subtract); }
-    void onMul() { emit operationClicked(Operation::Multiply); }
-    void onDiv() { emit operationClicked(Operation::Divide); }
-    void onCancel() { emit cancelClicked(); }
+    void onAdd() {
+        Log_Debug3("emit operationClicked(Add)");
+        emit operationClicked(Operation::Add);
+    }
+    void onSub() {
+        Log_Debug3("emit operationClicked(Subtract)");
+        emit operationClicked(Operation::Subtract);
+    }
+    void onMul() {
+        Log_Debug3("emit operationClicked(Multiply)");
+        emit operationClicked(Operation::Multiply);
+    }
+    void onDiv() {
+        Log_Debug3("emit operationClicked(Divide)");
+        emit operationClicked(Operation::Divide);
+    }
+    void onCancel() {
+        Log_Debug3("emit cancelClicked()");
+        emit cancelClicked();
+    }
 };
 
 } // end namespace gui

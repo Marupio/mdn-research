@@ -29,9 +29,11 @@ bool mdn::gui::HoverPeekTabBar::event(QEvent* e) {
         auto* he = static_cast<QHoverEvent*>(e);
         const int idx = tabAt(he->pos());
         if (idx >= 0) {
+            Log_Debug3("emit hoverIndex(idx=" << idx << ")");
             emit hoverIndex(idx);
         } else {
             // <- cancel preview immediately when not over a tab
+            Log_Debug3("emit hoverEnd()");
             emit hoverEnd();
         }
     }
@@ -78,7 +80,10 @@ void mdn::gui::HoverPeekTabBar::dropEvent(QDropEvent* e) {
 void mdn::gui::HoverPeekTabBar::mousePressEvent(QMouseEvent* e) {
     Log_Debug2_H("");
     const int idx = tabAt(MS_POINT(e));
-    if (idx >= 0) emit commitIndex(idx);
+    if (idx >= 0) {
+        Log_Debug3("emit commitIndex(idx=" << idx << ")");
+        emit commitIndex(idx);
+    }
     QTabBar::mousePressEvent(e);
     Log_Debug2_T("");
 }
@@ -106,6 +111,7 @@ void mdn::gui::HoverPeekTabBar::mouseReleaseEvent(QMouseEvent* e) {
 
 void mdn::gui::HoverPeekTabBar::leaveEvent(QEvent* e) {
     Log_Debug2_H("");
+    Log_Debug3("emit hoverEnd()");
     emit hoverEnd();
     QTabBar::leaveEvent(e);
     Log_Debug2_T("");

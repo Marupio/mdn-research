@@ -1561,7 +1561,7 @@ void mdn::gui::MainWindow::createStatusBar()
         &MainWindow::cycleFraxis
     );
 
-    statusBar()->addPermanentWidget(m_statusFraxisBtn);
+    sb->addPermanentWidget(m_statusFraxisBtn);
 
     // ~~~ Cursor and selection text
     m_statusCursor = new QLabel(this);

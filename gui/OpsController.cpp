@@ -73,6 +73,8 @@ void mdn::gui::OpsController::clearModel() {
 
 void mdn::gui::OpsController::battlestations(Operation op) {
     Log_Debug2_H("op=" << op);
+    m_op = op;
+    m_a = m_tabs->currentSelectedIndex();
     m_strip->battlestations(op);
     m_phase = OperationPhase::PickB;
     Log_Debug2_T("");
@@ -113,10 +115,11 @@ void mdn::gui::OpsController::onMenuDiv() {
 
 
 void mdn::gui::OpsController::onTabCommitted(int idx) {
-    Log_Debug2_H("idx=" << idx);
+    Log_Debug2_H("idx=" << idx << ",phase=" << OperationPhaseToString(m_phase) << ")");
     switch (m_phase) {
         case OperationPhase::Idle: {
             // Relay signal onwards
+            Log_Debug3("emit tabClicked(idx=" << idx << ")");
             emit tabClicked(idx);
             Log_Debug2_T("");
             return;
@@ -125,11 +128,14 @@ void mdn::gui::OpsController::onTabCommitted(int idx) {
             AssertQ(m_project && m_tabs, "Missing project or tabs, internal error");
             m_b = idx;
             m_phase = OperationPhase::PickDest;
-            emit requestStatus(QString("%1 %2 %3  =  *Choose*")
+            QString rqs(
+                QString("%1 %2 %3  =  *Choose*")
                 .arg(nameFor(m_a))
                 .arg(QString::fromStdString(OperationToOpStr(m_op)))
-                .arg(nameFor(m_b)), 0
+                .arg(nameFor(m_b))
             );
+            Log_Debug3("emit requestStatus(rqs=[" << rqs.toStdString() << "], 0)");
+            emit requestStatus(rqs, 0);
             Log_Debug2_T("");
             return;
         }
@@ -148,6 +154,7 @@ void mdn::gui::OpsController::onPlusClicked() {
     switch (m_phase) {
         case OperationPhase::Idle: {
             // Relay signal onwards
+            Log_Debug3("emit plusClicked");
             emit plusClicked();
             Log_Debug2_T("");
             return;
@@ -331,7 +338,7 @@ void mdn::gui::OpsController::runDialog(Operation preset) {
     //     }
     // }
 
-    Log_Debug3_T("Emitting " << p);
+    Log_Debug3_T("emit planReady(plan=" << p << ")");
     emit planReady(p);
 }
 
@@ -344,13 +351,15 @@ void mdn::gui::OpsController::endBattle(int destIndex, bool isNew) {
         return;
     }
 
-    emit requestStatus(QString("%1 %2 %3  →  %4")
+    QString rqs(
+        QString("%1 %2 %3  →  %4")
         .arg(nameFor(m_a))
         .arg(QString::fromStdString(OperationToOpStr(m_op)))
         .arg(nameFor(m_b))
-        .arg(nameFor(destIndex)), 0);
-
-
+        .arg(nameFor(destIndex))
+    );
+    Log_Debug3("emit requestStatus(rqs=[" << rqs.toStdString() << "], 0)");
+    emit requestStatus(rqs, 0);
     QString defaultName = "";
     if (destIndex < 0) {
         defaultName = QString(
@@ -369,6 +378,7 @@ void mdn::gui::OpsController::endBattle(int destIndex, bool isNew) {
     p.indexDest = destIndex;
     p.newName = defaultName;
 
+    Log_Debug3("emit planReady(plan=" << p << ")");
     emit planReady(p);
 
     m_phase = OperationPhase::Idle; m_a = m_b = -1;
@@ -385,6 +395,7 @@ void mdn::gui::OpsController::cancel() {
     if (m_strip) {
         m_strip->reset();
     }
+    Log_Debug3("emit requestStatus([], 0)");
     emit requestStatus(QString(), 0);
     Log_Debug2_T("");
 }

@@ -25,6 +25,9 @@ public:
     bool hasPlus() const { return m_plusMarker && indexOf(m_plusMarkerBase) >= 0; }
     int plusIndex() const { return m_plusMarker ? indexOf(m_plusMarkerBase) : -1; }
 
+    // Returns the currentIndex that is actually selected, not hover-peeked
+    int currentSelectedIndex() const { return m_lastPermanentIndex; }
+
     // Optional settings
     void setHoverDelayMs(int ms) { m_hoverDelayMs = std::max(0, ms); }
     void setPreviewTextColor(const QColor& c) { m_previewTextColor = c; }

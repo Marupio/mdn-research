@@ -70,6 +70,7 @@ void mdn::gui::HoverPeekTabWidget::onTabBarClicked(int index) {
     // If [+] was clicked, emit a signal to create a new tab and keep focus on a real tab.
     Log_Debug2_H("index=" << index);
     if (index >= 0 && index == plusIndex()) {
+        Log_Debug3("emit plusClicked()");
         emit plusClicked();
         // Keep selection on last real tab (before +) if any
         const int lastReal = count() - (hasPlus() ? 2 : 1);
@@ -87,6 +88,7 @@ void mdn::gui::HoverPeekTabWidget::onCurrentChangedGuard(int index) {
     // If something programmatically set current to the plus page, bounce off it.
     Log_Debug2_H("index=" << index);
     if (index == plusIndex()) {
+        Log_Debug3("emit plusClicked()");
         emit plusClicked();
         if (m_lastRealIndex >= 0 && m_lastRealIndex < count() && m_lastRealIndex != index)
             setCurrentIndex(m_lastRealIndex);
@@ -139,6 +141,7 @@ void mdn::gui::HoverPeekTabWidget::onCommitIndex(int idx) {
         return;
     }
     if (idx == m_plusTabIndex) {
+        Log_Debug3("emit plusClicked()");
         emit plusClicked();
         Log_Debug2_T("plus tab");
         return;
@@ -149,9 +152,11 @@ void mdn::gui::HoverPeekTabWidget::onCommitIndex(int idx) {
     m_lastPermanentIndex = idx;
     if (m_previewActive) {
         m_previewActive = false;
+        Log_Debug3("emit endedPreview(m_lastPermanentIndex=" << m_lastPermanentIndex << ")");
         emit endedPreview(m_lastPermanentIndex);
     }
     setCurrentIndex(idx);
+    Log_Debug3("emit committedIndex(idx=" << idx << ")");
     emit committedIndex(idx);
     Log_Debug2_T("");
 }
@@ -219,6 +224,7 @@ void mdn::gui::HoverPeekTabWidget::restoreIfPreviewing() {
         if (!m_previewActive) {
             m_lastPermanentIndex = currentIndex();
             m_previewActive = true;
+            Log_Debug3("emit beganPreview(m_pendingHoverIndex=" << m_pendingHoverIndex << ")");
             emit beganPreview(m_pendingHoverIndex);
         }
         // Change preview highlight
@@ -239,7 +245,9 @@ void mdn::gui::HoverPeekTabWidget::restoreIfPreviewing() {
             setCurrentIndex(m_lastPermanentIndex);
         }
         m_previewActive = false;
-        emit endedPreview(currentIndex());
+        int currentIdx = currentIndex();
+        Log_Debug3("emit endedPreview(currentIndex=" << currentIdx << ")");
+        emit endedPreview(currentIdx);
     }
     Log_Debug2_T("");
 }
