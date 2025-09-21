@@ -15,13 +15,16 @@
 mdn::gui::HoverPeekTabBar::HoverPeekTabBar(QWidget* parent) :
     QTabBar(parent)
 {
+    Log_Debug2_H("");
     setAcceptDrops(true);
     setMouseTracking(true);
     setAttribute(Qt::WA_Hover, true);
+    Log_Debug2_T("");
 }
 
 
 bool mdn::gui::HoverPeekTabBar::event(QEvent* e) {
+    Log_Debug2_H("");
     if (e->type() == QEvent::HoverMove) {
         auto* he = static_cast<QHoverEvent*>(e);
         const int idx = tabAt(he->pos());
@@ -32,57 +35,78 @@ bool mdn::gui::HoverPeekTabBar::event(QEvent* e) {
             emit hoverEnd();
         }
     }
+    Log_Debug2_T("");
     return QTabBar::event(e);
 }
 
 
 void mdn::gui::HoverPeekTabBar::dragEnterEvent(QDragEnterEvent* e) {
+    Log_Debug2_H("");
     const int i = tabAt(EV_POINT(e));
     if (i < 0 || isPlusIndex(i)) { e->ignore(); return; }
     e->acceptProposedAction();
+    Log_Debug2_T("");
 }
 
 
 void mdn::gui::HoverPeekTabBar::dragMoveEvent(QDragMoveEvent* e) {
+    Log_Debug2_H("");
     const int i = tabAt(EV_POINT(e));
-    if (i < 0 || isPlusIndex(i)) { e->ignore(); return; }
+    if (i < 0 || isPlusIndex(i)) {
+        e->ignore();
+        Log_Debug2_T("");
+        return;
+    }
     QTabBar::dragMoveEvent(e);
+    Log_Debug2_T("");
 }
 
 
 void mdn::gui::HoverPeekTabBar::dropEvent(QDropEvent* e) {
+    Log_Debug2_H("");
     const int i = tabAt(EV_POINT(e));
     if (i < 0 || isPlusIndex(i)) {
         e->ignore();
+        Log_Debug2_T("");
         return;
     }
     QTabBar::dropEvent(e);
+    Log_Debug2_T("");
 }
 
 
 void mdn::gui::HoverPeekTabBar::mousePressEvent(QMouseEvent* e) {
+    Log_Debug2_H("");
     const int idx = tabAt(MS_POINT(e));
     if (idx >= 0) emit commitIndex(idx);
     QTabBar::mousePressEvent(e);
+    Log_Debug2_T("");
 }
 
 
 void mdn::gui::HoverPeekTabBar::mouseMoveEvent(QMouseEvent* e) {
+    Log_Debug2_H("");
     if (m_pressedIndex == count() - 1) {
         // Block drag initiation when [+] is the pressed tab.
+        Log_Debug2_T("");
         return;
     }
     QTabBar::mouseMoveEvent(e);
+    Log_Debug2_T("");
 }
 
 
 void mdn::gui::HoverPeekTabBar::mouseReleaseEvent(QMouseEvent* e) {
+    Log_Debug2_H("");
     m_pressedIndex = -1;
     QTabBar::mouseReleaseEvent(e);
+    Log_Debug2_T("");
 }
 
 
 void mdn::gui::HoverPeekTabBar::leaveEvent(QEvent* e) {
+    Log_Debug2_H("");
     emit hoverEnd();
     QTabBar::leaveEvent(e);
+    Log_Debug2_T("");
 }

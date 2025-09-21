@@ -11,6 +11,7 @@
 mdn::gui::HoverPeekTabWidget::HoverPeekTabWidget(QWidget* parent) :
     QTabWidget(parent)
 {
+    Log_Debug2_H("");
     auto* bar = new HoverPeekTabBar(this);
     QTabWidget::setTabBar(bar);
     setMovable(true);
@@ -26,10 +27,12 @@ mdn::gui::HoverPeekTabWidget::HoverPeekTabWidget(QWidget* parent) :
     connect(tabBar(), &QTabBar::tabMoved, this, &mdn::gui::HoverPeekTabWidget::onTabMoved);
     connect(tabBar(), &QTabBar::tabBarClicked, this, &HoverPeekTabWidget::onTabBarClicked);
     connect(this, &QTabWidget::currentChanged, this, &HoverPeekTabWidget::onCurrentChangedGuard);
+    Log_Debug2_T("");
 }
 
 
 void mdn::gui::HoverPeekTabWidget::setPlusTab(int idx, MarkerWidget* page) {
+    Log_Debug2_H("id=" << idx);
     m_plusTabIndex = idx;
     if (page) {
         m_plusMarker = page;
@@ -39,12 +42,14 @@ void mdn::gui::HoverPeekTabWidget::setPlusTab(int idx, MarkerWidget* page) {
         m_plusMarkerBase = nullptr;
     }
     enforcePlusAtEnd();
+    Log_Debug2_T("");
 }
 
 
 void mdn::gui::HoverPeekTabWidget::onTabMoved(int from, int to) {
     // If a real tab was dragged “past” the end, it’ll land at 'last'.
     // We want [+] to remain last, so nudge that tab back before plus.
+    Log_Debug2_H("from=" << from << ", to=" << to);
     const int last = count() - 1;
     if (to == last && m_plusMarker && widget(last) == m_plusMarker) {
         // Nothing to do: plus is still last.
@@ -57,11 +62,13 @@ void mdn::gui::HoverPeekTabWidget::onTabMoved(int from, int to) {
 
     // Final guard: always ensure [+] is last.
     enforcePlusAtEnd();
+    Log_Debug2_T("");
 }
 
 
 void mdn::gui::HoverPeekTabWidget::onTabBarClicked(int index) {
     // If [+] was clicked, emit a signal to create a new tab and keep focus on a real tab.
+    Log_Debug2_H("index=" << index);
     if (index >= 0 && index == plusIndex()) {
         emit plusClicked();
         // Keep selection on last real tab (before +) if any
@@ -72,11 +79,13 @@ void mdn::gui::HoverPeekTabWidget::onTabBarClicked(int index) {
     } else {
         m_lastRealIndex = index;
     }
+    Log_Debug2_T("");
 }
 
 
 void mdn::gui::HoverPeekTabWidget::onCurrentChangedGuard(int index) {
     // If something programmatically set current to the plus page, bounce off it.
+    Log_Debug2_H("index=" << index);
     if (index == plusIndex()) {
         emit plusClicked();
         if (m_lastRealIndex >= 0 && m_lastRealIndex < count() && m_lastRealIndex != index)
@@ -86,22 +95,32 @@ void mdn::gui::HoverPeekTabWidget::onCurrentChangedGuard(int index) {
     } else {
         m_lastRealIndex = index;
     }
+    Log_Debug2_T("");
 }
 
 
 void mdn::gui::HoverPeekTabWidget::onHoverIndex(int idx) {
-    if (idx < 0 || idx >= count()) return;
-    if (idx == m_plusTabIndex) return; // don't preview the "+" tab
+    Log_Debug2_H("idx=" << idx);
+    if (idx < 0 || idx >= count()) {
+        Log_Debug2_T("idx out of range");
+        return;
+    }
+    if (idx == m_plusTabIndex) {
+        Log_Debug2_T("idx is plus tab");
+        return; // don't preview the "+" tab
+    }
 
     // Debounce/flicker control: delay switching until the mouse settles a bit
     m_pendingHoverIndex = idx;
     m_restoreTimer.stop();
     m_restoreTimer.start(m_hoverDelayMs);
+    Log_Debug2_T("");
 }
 
 
 void mdn::gui::HoverPeekTabWidget::onHoverEnd() {
     // Pointer left the bar or isn't on any tab anymore: cancel pending
+    Log_Debug2_H("");
     m_restoreTimer.stop();
     m_pendingHoverIndex = -1;
 
@@ -109,15 +128,19 @@ void mdn::gui::HoverPeekTabWidget::onHoverEnd() {
     if (m_previewActive) {
         restoreIfPreviewing();
     }
+    Log_Debug2_T("");
 }
 
 
 void mdn::gui::HoverPeekTabWidget::onCommitIndex(int idx) {
+    Log_Debug2_H("idx=" << idx);
     if (idx < 0 || idx >= count()) {
+        Log_Debug2_T("idx out-of-range");
         return;
     }
     if (idx == m_plusTabIndex) {
         emit plusClicked();
+        Log_Debug2_T("plus tab");
         return;
     }
 
@@ -130,17 +153,21 @@ void mdn::gui::HoverPeekTabWidget::onCommitIndex(int idx) {
     }
     setCurrentIndex(idx);
     emit committedIndex(idx);
+    Log_Debug2_T("");
 }
 
 
 void mdn::gui::HoverPeekTabWidget::enforcePlusAtEnd() {
+    Log_Debug2_H("");
     if (!m_plusMarker) {
+        Log_Debug2_T("");
         return;
     }
 
     const int last = count() - 1;
     const int plus = indexOf(m_plusMarker);
     if (plus < 0) {
+        Log_Debug2_T("");
         return;
     }
 
@@ -150,12 +177,17 @@ void mdn::gui::HoverPeekTabWidget::enforcePlusAtEnd() {
         if (currentWidget() == m_plusMarker && last >= 0)
             setCurrentIndex(last); // focus previous last (now last-1)
     }
+    Log_Debug2_T("");
 }
 
 
 void mdn::gui::HoverPeekTabWidget::moveIndex(int from, int to) {
     // if (from == to || from < 0 || to < 0 || from >= count()) return;
-    if (from == to || from < 0 || from >= count()) return;
+    Log_Debug2_T("from=" << from << ",to=" << to);
+    if (from == to || from < 0 || from >= count()) {
+        Log_Debug2_T("from==to or from out-of-range");
+        return;
+    }
     if (to < 0) to = 0;
     if (to > count()) to = count();
 
@@ -176,11 +208,13 @@ void mdn::gui::HoverPeekTabWidget::moveIndex(int from, int to) {
     setTabToolTip(newIdx, tip);
     setTabWhatsThis(newIdx, wt);
     tabBar()->setTabData(newIdx, data);
+    Log_Debug2_T("");
 }
 
 
 void mdn::gui::HoverPeekTabWidget::restoreIfPreviewing() {
     // If there is a pending hover target, switch to it now (this is the delayed "preview")
+    Log_Debug2_H("");
     if (m_pendingHoverIndex >= 0 && m_pendingHoverIndex < count()) {
         if (!m_previewActive) {
             m_lastPermanentIndex = currentIndex();
@@ -192,6 +226,7 @@ void mdn::gui::HoverPeekTabWidget::restoreIfPreviewing() {
         setCurrentIndex(m_pendingHoverIndex);
         beginPreviewHighlight(m_pendingHoverIndex);
         m_pendingHoverIndex = -1;
+        Log_Debug2_T("");
         return;
     }
 
@@ -206,32 +241,43 @@ void mdn::gui::HoverPeekTabWidget::restoreIfPreviewing() {
         m_previewActive = false;
         emit endedPreview(currentIndex());
     }
+    Log_Debug2_T("");
 }
 
 
 void mdn::gui::HoverPeekTabWidget::beginPreviewHighlight(int idx) {
+    Log_Debug2_H("idx=" << idx);
     if (auto* b = tabBar()) {
+        Log_Debug4("got tabBar");
         if (m_previewTextColor.isValid())
+            Log_Debug4("colour valid");
             b->setTabTextColor(idx, m_previewTextColor);
     }
-    if (idx != m_lastRealIndex) {
+    Log_Debug4("idx=" << idx << ", m_lastPermanentIndex=" << m_lastPermanentIndex);
+    if (idx != m_lastPermanentIndex) {
+        Log_Debug4("trying to get ndw");
         if (auto *w = ndwAt(idx)) {
+            Log_Debug4("got it");
             w->setHighlightRole(HighlightRole::Peek);
         }
     }
+    Log_Debug2_T("");
 }
 
 
 void mdn::gui::HoverPeekTabWidget::endPreviewHighlight(int idx) {
+    Log_Debug2_H("idx=" << idx);
     if (auto* b = tabBar()) {
         b->setTabTextColor(idx, QColor()); // default palette
     }
     if (auto *w = ndwAt(idx)) {
         w->setHighlightRole(HighlightRole::None);
     }
+    Log_Debug2_T("");
 }
 
 
 mdn::gui::NumberDisplayWidget* mdn::gui::HoverPeekTabWidget::ndwAt(int idx) const {
+    Log_Debug4("idx=" << idx);
     return qobject_cast<NumberDisplayWidget*>(widget(idx));
 }

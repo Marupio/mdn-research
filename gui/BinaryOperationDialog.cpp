@@ -257,17 +257,10 @@ void mdn::gui::BinaryOperationDialog::buildUi() {
     QWidget* bPicker = new QWidget(this);
     bPicker->setLayout(bBox);
 
-// #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     connect(m_opsButtons,      &QButtonGroup::idClicked,
             this,              &BinaryOperationDialog::onOpChanged);
     connect(m_bRadioButtons,   &QButtonGroup::idClicked,
             this,              &BinaryOperationDialog::onBSelectionChanged);
-// #else
-//     connect(m_opsButtons,    QOverload<int>::of(&QButtonGroup::buttonClicked),
-//             this,            &BinaryOperationDialog::onOpChanged);
-//     connect(m_bRadioButtons, QOverload<int>::of(&QButtonGroup::buttonClicked),
-//             this,            &BinaryOperationDialog::onBSelectionChanged);
-// #endif
 
     connect(m_bList, SIGNAL(currentRowChanged(int)), this, SLOT(onBSelectionChanged()));
     connect(m_bCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(onBSelectionChanged()));

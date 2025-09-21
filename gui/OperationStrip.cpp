@@ -68,6 +68,7 @@ mdn::gui::OperationStrip::OperationStrip(QWidget* parent)
 
 void mdn::gui::OperationStrip::battlestations(Operation op)
 {
+    Log_Debug2_H("op=" << op);
     // Enable Cancel; lock the chosen op “in”
     m_btnCancel->setEnabled(true);
 
@@ -80,6 +81,7 @@ void mdn::gui::OperationStrip::battlestations(Operation op)
         // Optional: visual emphasis even when disabled peers are grey —
         // you can tweak stylesheet if you want stronger “pressed” look.
     }
+    Log_Debug2_T("");
 }
 
 

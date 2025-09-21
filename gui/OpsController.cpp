@@ -32,13 +32,6 @@ mdn::gui::OpsController::OpsController(
     Log_Debug3_H("");
     buildMenus();
     rebuildBottomContainer();
-    m_strip = new OperationStrip(m_bottomContainer);
-    if (m_strip) {
-        connect(m_strip, &OperationStrip::operationClicked, this, [this](Operation op){
-            battlestations(op);
-        });
-        connect(m_strip, &OperationStrip::cancelClicked, this, &OpsController::onCancel);
-    }
     // choose B / destination via tab clicks
     if (m_tabs) {
         connect(
@@ -79,8 +72,10 @@ void mdn::gui::OpsController::clearModel() {
 
 
 void mdn::gui::OpsController::battlestations(Operation op) {
+    Log_Debug2_H("op=" << op);
     m_strip->battlestations(op);
-    // TODO WIRE IN OUR FANCY NEW INTERFACE
+    m_phase = OperationPhase::PickB;
+    Log_Debug2_T("");
 }
 
 
@@ -118,10 +113,12 @@ void mdn::gui::OpsController::onMenuDiv() {
 
 
 void mdn::gui::OpsController::onTabCommitted(int idx) {
+    Log_Debug2_H("idx=" << idx);
     switch (m_phase) {
         case OperationPhase::Idle: {
             // Relay signal onwards
             emit tabClicked(idx);
+            Log_Debug2_T("");
             return;
         }
         case OperationPhase::PickB: {
@@ -133,36 +130,45 @@ void mdn::gui::OpsController::onTabCommitted(int idx) {
                 .arg(QString::fromStdString(OperationToOpStr(m_op)))
                 .arg(nameFor(m_b)), 0
             );
+            Log_Debug2_T("");
             return;
         }
         case OperationPhase::PickDest: {
             endBattle(idx, false);
+            Log_Debug2_T("");
             return;
         }
     }
+    Log_Debug2_T("");
 }
 
 
 void mdn::gui::OpsController::onPlusClicked() {
+    Log_Debug2_H("");
     switch (m_phase) {
         case OperationPhase::Idle: {
             // Relay signal onwards
             emit plusClicked();
+            Log_Debug2_T("");
             return;
         }
         case OperationPhase::PickB: {
             // Clicking plusTab during 'pickB' phase - do nothing
+            Log_Debug2_T("");
             return;
         }
         case OperationPhase::PickDest: {
             endBattle(-1, true);
+            Log_Debug2_T("");
             return;
         }
     }
+    Log_Debug2_T("");
 }
 
 
 void mdn::gui::OpsController::buildMenus() {
+    Log_Debug2_H("");
     QMenuBar* mb = m_mainWindow->menuBar();
     QList<QAction*> menus = mb->actions();
 
@@ -209,10 +215,12 @@ void mdn::gui::OpsController::buildMenus() {
     m_menuOps->addAction(actSub);
     m_menuOps->addAction(actMul);
     m_menuOps->addAction(actDiv);
+    Log_Debug2_T("");
 }
 
 
 void mdn::gui::OpsController::rebuildBottomContainer() {
+    Log_Debug2_H("");
     QWidget* parent = m_command->parentWidget();
     m_bottomContainer = new QWidget(parent);
 
@@ -221,42 +229,58 @@ void mdn::gui::OpsController::rebuildBottomContainer() {
     lay->setSpacing(0);
 
     m_strip = new OperationStrip(m_bottomContainer);
+    if (m_strip) {
+        connect(m_strip, &OperationStrip::operationClicked, this, [this](Operation op){
+            battlestations(op);
+        });
+        connect(m_strip, &OperationStrip::cancelClicked, this, &OpsController::onCancel);
+    }
     lay->addWidget(m_strip);
 
     m_command->setParent(m_bottomContainer);
     lay->addWidget(m_command, 1);
+    Log_Debug2_T("");
 }
 
 
 QStringList mdn::gui::OpsController::collectTabNames() const {
+    Log_Debug2_H("");
     QStringList out;
     if (!m_tabs) {
+        Log_Debug2_T("");
         return out;
     }
     int skipPlusTab = m_tabs->count()-1;
     for (int i = 0; i < skipPlusTab; ++i) {
         out << m_tabs->tabText(i);
     }
+    Log_Debug2_T("");
     return out;
 }
 
 
 QString mdn::gui::OpsController::nameFor(int tabIndex) const {
+    Log_Debug2_H("tabIndex=" << tabIndex);
     if (!m_project) {
+        Log_Debug2_T("");
         return {};
     }
+    Log_Debug2_T("");
     return QString::fromStdString(m_project->nameOfMdn(tabIndex));
 }
 
 
 int mdn::gui::OpsController::activeIndex() const {
+    Log_Debug2_H("");
     if (!m_tabs) {
+        Log_Debug2_T("");
         return 0;
     }
     int idx = m_tabs->currentIndex();
     if (idx < 0) {
         idx = 0;
     }
+    Log_Debug2_T("");
     return idx;
 }
 
@@ -313,8 +337,10 @@ void mdn::gui::OpsController::runDialog(Operation preset) {
 
 
 void mdn::gui::OpsController::endBattle(int destIndex, bool isNew) {
+    Log_Debug2_H("");
     if (m_a < 0 || m_b < 0) {
         cancel();
+        Log_Debug2_T("");
         return;
     }
 
@@ -349,13 +375,16 @@ void mdn::gui::OpsController::endBattle(int destIndex, bool isNew) {
     if (m_strip) {
         m_strip->reset();
     }
+    Log_Debug2_T("");
 }
 
 
 void mdn::gui::OpsController::cancel() {
+    Log_Debug2_H("");
     m_phase = OperationPhase::Idle; m_a = m_b = -1;
     if (m_strip) {
         m_strip->reset();
     }
     emit requestStatus(QString(), 0);
+    Log_Debug2_T("");
 }
