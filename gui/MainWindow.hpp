@@ -27,6 +27,7 @@
 namespace mdn {
 namespace gui {
 
+class StatusDisplayWidget;
 class HoverPeekTabWidget;
 
 class MainWindow : public QMainWindow {
@@ -63,6 +64,7 @@ signals:
 
 public slots:
     bool showStatus(QString message, int timeOut);
+    bool clearStatus();
 
 private slots:
     void onTabContextMenu(const QPoint& pos);
@@ -193,12 +195,12 @@ private:
     void onAppFocusChanged(QWidget* old, QWidget* now);
     void applySplitRatio();
 
-    QSplitter* m_splitter = nullptr;
+    QSplitter* m_splitter{nullptr};
     double m_splitRatio{0.5};
     NumberDisplayWidget::EditMode m_globalMode = NumberDisplayWidget::EditMode::Overwrite;
 
     // MDN Digit Browser (upper pane)
-    HoverPeekTabWidget* m_tabWidget = nullptr;
+    HoverPeekTabWidget* m_tabWidget{nullptr};
     bool m_plusTab = false;
     // true when hover-induced peeking is underway
     bool m_peekActive = false;
@@ -208,12 +210,12 @@ private:
     QTimer m_peekRestore;
 
     // Command History (lower pane)
-    CommandWidget* m_command = nullptr;
+    CommandWidget* m_command{nullptr};
 
-    QLabel* m_statusCursor = nullptr;
-    QLabel* m_statusSel = nullptr;
-    QToolButton* m_statusModeBtn = nullptr;
-    QMenu* m_modeMenu = nullptr;
+    QLabel* m_statusCursor{nullptr};
+    QLabel* m_statusSel{nullptr};
+    QToolButton* m_statusModeBtn{nullptr};
+    QMenu* m_modeMenu{nullptr};
     QToolButton* m_statusFraxisBtn{nullptr};
     QMenu*       m_fraxisMenu{nullptr};
 
@@ -221,7 +223,9 @@ private:
     Mdn2dConfig m_globalConfig;
 
     OpsController* m_ops{nullptr};
-    Project* m_project = nullptr;
+    OperationStrip* m_strip{nullptr};
+    StatusDisplayWidget* m_status{nullptr};
+    Project* m_project{nullptr};
 
 };
 

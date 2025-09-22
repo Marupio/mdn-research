@@ -27,7 +27,7 @@ bool mdn::gui::HoverPeekTabBar::event(QEvent* e) {
     Log_Debug2_H("");
     if (e->type() == QEvent::HoverMove) {
         auto* he = static_cast<QHoverEvent*>(e);
-        const int idx = tabAt(he->pos());
+        const int idx = tabAt(he->position().toPoint());
         if (idx >= 0) {
             Log_Debug3("emit hoverIndex(idx=" << idx << ")");
             emit hoverIndex(idx);

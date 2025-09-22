@@ -9,7 +9,6 @@ mdn::gui::OperationStrip::OperationStrip(QWidget* parent)
     auto* lay = new QHBoxLayout(this);
     lay->setContentsMargins(0,0,0,0);
     lay->setSpacing(6);
-
     m_btnCancel = new QPushButton(tr("Cancel"), this);
     m_btnAdd    = new QPushButton(
         MdnQtInterface::toQString(OperationToOpStr(Operation::Add)),
@@ -37,14 +36,6 @@ mdn::gui::OperationStrip::OperationStrip(QWidget* parent)
         b->setFocusPolicy(Qt::NoFocus);
         b->setMinimumWidth(28);
     }
-
-    // Group is exclusive so the checked one cannot be unchecked by clicking again
-    m_group = new QButtonGroup(this);
-    m_group->setExclusive(true);
-    m_group->addButton(m_btnAdd, static_cast<int>(Operation::Add));
-    m_group->addButton(m_btnSub, static_cast<int>(Operation::Subtract));
-    m_group->addButton(m_btnMul, static_cast<int>(Operation::Multiply));
-    m_group->addButton(m_btnDiv, static_cast<int>(Operation::Divide));
 
     // Wire user intent -> OpsController (OpsController will call activate/reset)
     connect(m_btnAdd, &QPushButton::clicked, this, &OperationStrip::onAdd);

@@ -25,6 +25,7 @@ namespace gui {
 class CommandWidget;
 class Project;
 class HoverPeekTabWidget;
+class StatusDisplayWidget;
 } // end namespace gui
 } // end namespace mdn
 
@@ -36,7 +37,6 @@ class OpsController : public QObject {
 
 public:
 
-public:
     OpsController(
         QMainWindow* mw,
         Project* project,
@@ -46,6 +46,8 @@ public:
     );
 
     QWidget* bottomContainer() const;
+    OperationStrip* strip() { return m_strip; }
+    StatusDisplayWidget* status() { return m_status; }
 
     // Returns true if user is midway through specifying an operation on the bottom strip
     bool inBattle() const;
@@ -54,7 +56,9 @@ public:
 
 signals:
     // to status bar
+    void requestClearStatus();
     void requestStatus(const QString& s, int timeOut);
+
     void planReady(const OperationPlan& plan);
     void tabClicked(int idx);
     // relayed from tabwidget, I have to check first if it's "new destination", not just "newMdn2d"
@@ -94,6 +98,7 @@ private:
     CommandWidget* m_command = nullptr;
 
     QWidget* m_bottomContainer{nullptr};
+    StatusDisplayWidget* m_status{nullptr};
     OperationStrip* m_strip{nullptr};
     OperationPhase m_phase { OperationPhase::Idle };
     Operation m_op { Operation::Add };

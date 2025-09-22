@@ -44,9 +44,6 @@ private:
     QPushButton* m_btnDiv    = nullptr;
     std::array<QPushButton*, 4> m_allOpButtons;
 
-    // exclusive group for op buttons
-    QButtonGroup* m_group    = nullptr;
-
     QPushButton* buttonFor(Operation op) const;
     void setOpsEnabled(bool enabled);
     void setOthersDisabledExcept(Operation op);

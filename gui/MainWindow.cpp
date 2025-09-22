@@ -20,6 +20,8 @@
 #include <QTabWidget>
 #include <QToolButton>
 
+#include "../library/Logger.hpp"
+
 #include "GuiTools.hpp"
 #include "HoverPeekTabWidget.hpp"
 #include "MarkerWidget.hpp"
@@ -27,7 +29,7 @@
 #include "NumberDisplayWidget.hpp"
 #include "OpsController.hpp"
 #include "ProjectPropertiesDialog.hpp"
-#include "../library/Logger.hpp"
+#include "StatusDisplayWidget.hpp"
 
 int mdn::gui::MainWindow::nStartMdnDefault = 3;
 
@@ -99,8 +101,26 @@ mdn::gui::MainWindow::~MainWindow()
 }
 
 
+bool mdn::gui::MainWindow::clearStatus() {
+    Log_Debug_H("");
+    if (m_status) {
+        m_status->clearMessage();
+        Log_Debug_T("true");
+        return true;
+    }
+    Log_Debug_T("false");
+    return false;
+}
+
+
 bool mdn::gui::MainWindow::showStatus(QString message, int timeOut) {
     Log_Debug_H("message=[" << message.toStdString() << "]");
+    if (m_status) {
+        m_status->showMessage(message, timeOut);
+        Log_Debug_T("");
+        return true;
+    }
+
     QStatusBar* status = statusBar();
     if (!status) {
         Log_Debug_T("No status");
@@ -343,12 +363,15 @@ bool mdn::gui::MainWindow::onNewProject() {
 
 
 bool mdn::gui::MainWindow::onNewMdn2d() {
-    return onNewNamedMdn2d("", -1);
+    Log_Debug3_H("");
+    bool result = onNewNamedMdn2d("", -1);
+    Log_Debug3_T("result=" << result);
+    return result;
 }
 
 
 bool mdn::gui::MainWindow::onNewNamedMdn2d(QString name, int index) {
-    Log_Debug2_H("");
+    Log_Debug2_H("name=" << name.toStdString() << ",index=" << index);
     // To do - get user input for name
     bool result = createNewMdn2d(name, index, true);
     Log_Debug2_T("result = " << result);
@@ -405,7 +428,7 @@ bool mdn::gui::MainWindow::onSaveProject() {
     m_project->setPath(folder.toStdString());
     m_project->setName(baseName.toStdString());
     setWindowTitle(baseName);
-    statusBar()->showMessage(tr("Project saved"), 2000);
+    showStatus(tr("Project saved"), 2000);
     Log_Debug2_T("ok")
     return true;
 }
@@ -527,7 +550,7 @@ bool mdn::gui::MainWindow::saveMdn2d(int idx) {
         return false;
     }
 
-    statusBar()->showMessage(tr("Number saved"), 2000);
+    showStatus(tr("Number saved"), 2000);
     Log_Debug2_T("ok");
     return true;
 }
@@ -614,7 +637,7 @@ bool mdn::gui::MainWindow::onOpenMdn2d() {
     }
     // rebuild tabs; preserves current selection logic
     syncTabsToProject();
-    statusBar()->showMessage(tr("Number loaded"), 2000);
+    showStatus(tr("Number loaded"), 2000);
     Log_Debug2_T("ok");
     return true;
 }
@@ -906,6 +929,9 @@ void mdn::gui::MainWindow::setGlobalFontSize(int pt) {
     for (int i = 0; i < m_tabWidget->count(); ++i) {
         if (auto* ndw = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(i)))
             ndw->setFontPointSize(m_globalFontSize);
+    }
+    if (m_status) {
+        m_status->setFontSize(m_globalFontSize);
     }
 }
 
@@ -1237,20 +1263,6 @@ void mdn::gui::MainWindow::setupLayout(Mdn2dConfig* cfg) {
         &mdn::gui::MainWindow::renameTab
     );
 
-    connect(
-        m_ops,
-        &OpsController::tabClicked,
-        this,
-        &mdn::gui::MainWindow::onTabCommit
-    );
-
-    connect(
-        m_ops,
-        &OpsController::plusClicked,
-        this,
-        &mdn::gui::MainWindow::onNewMdn2d
-    );
-
     Log_Debug4("");
     if (!m_project && cfg) {
         Log_Debug3("Dispatch - createNewProject");
@@ -1511,7 +1523,25 @@ void mdn::gui::MainWindow::initOperationsUi() {
         m_splitter->addWidget(container);
     }
 
-    connect(m_ops, &OpsController::planReady, this, &MainWindow::onOpsPlan);
+    if (m_ops) {
+        m_strip = m_ops->strip();
+        m_status = m_ops->status();
+        connect(m_ops, &OpsController::planReady, this, &MainWindow::onOpsPlan);
+        connect(
+            m_ops,
+            &OpsController::tabClicked,
+            this,
+            &mdn::gui::MainWindow::onTabCommit
+        );
+
+        connect(
+            m_ops,
+            &OpsController::plusClicked,
+            this,
+            &mdn::gui::MainWindow::onNewMdn2d
+        );
+    }
+
     connect(m_command, &CommandWidget::submitCommand, this, &MainWindow::onCommandSubmitted);
 }
 
@@ -1596,6 +1626,10 @@ bool mdn::gui::MainWindow::createNewProjectFromConfig(Mdn2dConfig& cfg, bool req
             connect(m_ops, &OpsController::requestStatus,
                 this, &mdn::gui::MainWindow::showStatus
             );
+            m_ops->resetModel(m_project);
+            connect(m_ops, &OpsController::requestClearStatus,
+                this, &mdn::gui::MainWindow::clearStatus
+            );
         }
         onProjectTabsChanged(0);
     }
@@ -1627,6 +1661,10 @@ bool mdn::gui::MainWindow::createNewProject(Mdn2dConfig* cfg, bool requireConfir
             m_ops->resetModel(m_project);
             connect(m_ops, &OpsController::requestStatus,
                 this, &mdn::gui::MainWindow::showStatus
+            );
+            m_ops->resetModel(m_project);
+            connect(m_ops, &OpsController::requestClearStatus,
+                this, &mdn::gui::MainWindow::clearStatus
             );
         }
         onProjectTabsChanged(0);
@@ -1683,7 +1721,7 @@ bool mdn::gui::MainWindow::openProject(bool requireConfirm) {
     onProjectTabsChanged(m_project->activeIndex());
     m_globalConfig.setParent(*m_project);
     setGlobalConfig(m_globalConfig);
-    statusBar()->showMessage(tr("Project loaded"), 2000);
+    showStatus(tr("Project loaded"), 2000);
     Log_Debug2_T("ok")
     return true;
 }
@@ -1758,6 +1796,9 @@ bool mdn::gui::MainWindow::closeProject() {
     m_project = nullptr;
 
     setWindowTitle(QStringLiteral("MDN Editor"));
+    if (m_status) {
+        m_status->clearMessage();
+    }
     if (statusBar()) {
         statusBar()->clearMessage();
     }

@@ -47,6 +47,13 @@ private slots:
     void onHoverEnd();
     void onCommitIndex(int idx);
 
+protected:
+    void tabInserted(int index) override {
+        if (m_lastPermanentIndex < 0) {
+            m_lastPermanentIndex = 0;
+        }
+    }
+
 private:
     void enforcePlusAtEnd();
     // page-safe move

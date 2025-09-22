@@ -21,8 +21,10 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(mdn_gui
+    BinaryOperationDialog.hpp BinaryOperationDialog.cpp
     CellLineEdit.cpp CellLineEdit.hpp
     Clipboard.cpp Clipboard.hpp
+    CommandWidget.hpp CommandWidget.cpp
     HoverPeekTabBar.hpp HoverPeekTabBar.cpp
     HoverPeekTabWidget.hpp HoverPeekTabWidget.cpp
     LoggerConfigurator.hpp LoggerConfigurator.cpp
@@ -30,15 +32,14 @@ add_executable(mdn_gui
     MainWindow.cpp MainWindow.hpp
     MarkerWidget.hpp
     NumberDisplayWidget.cpp NumberDisplayWidget.hpp
+    OperationHistory.ui
     OperationPlan.hpp
-    BinaryOperationDialog.hpp BinaryOperationDialog.cpp
-    CommandWidget.hpp CommandWidget.cpp
     OperationStrip.hpp OperationStrip.cpp
     OpsController.hpp OpsController.cpp
-    OperationHistory.ui
     Project.hpp Project.cpp
     ProjectPropertiesDialog.hpp ProjectPropertiesDialog.cpp
     QtLoggingBridge.hpp QtLoggingBridge.cpp
+    StatusDisplayWidget.hpp StatusDisplayWidget.cpp
     WelcomeDialog.hpp
 )
 

@@ -15,6 +15,7 @@
 #include "Project.hpp"
 #include "HoverPeekTabWidget.hpp"
 #include "CommandWidget.hpp"
+#include "StatusDisplayWidget.hpp"
 
 mdn::gui::OpsController::OpsController(
     QMainWindow* mw,
@@ -75,6 +76,16 @@ void mdn::gui::OpsController::battlestations(Operation op) {
     Log_Debug2_H("op=" << op);
     m_op = op;
     m_a = m_tabs->currentSelectedIndex();
+
+    QString rqs(
+        QString("%1 %2 *Choose* << << Operand B")
+        .arg(nameFor(m_a))
+        .arg(QString::fromStdString(OperationToOpStr(m_op)))
+        .arg(nameFor(m_b))
+    );
+    Log_Debug3("emit requestStatus(rqs=[" << rqs.toStdString() << "], 0)");
+    emit requestStatus(rqs, 0);
+
     m_strip->battlestations(op);
     m_phase = OperationPhase::PickB;
     Log_Debug2_T("");
@@ -129,7 +140,7 @@ void mdn::gui::OpsController::onTabCommitted(int idx) {
             m_b = idx;
             m_phase = OperationPhase::PickDest;
             QString rqs(
-                QString("%1 %2 %3  =  *Choose*")
+                QString("%1 %2 %3  →  *Choose* << << Destination")
                 .arg(nameFor(m_a))
                 .arg(QString::fromStdString(OperationToOpStr(m_op)))
                 .arg(nameFor(m_b))
@@ -229,11 +240,17 @@ void mdn::gui::OpsController::buildMenus() {
 void mdn::gui::OpsController::rebuildBottomContainer() {
     Log_Debug2_H("");
     QWidget* parent = m_command->parentWidget();
+    // m_bottomContainer = new QWidget(m_mainWindow);
     m_bottomContainer = new QWidget(parent);
 
     QVBoxLayout* lay = new QVBoxLayout(m_bottomContainer);
     lay->setContentsMargins(0, 0, 0, 0);
     lay->setSpacing(0);
+
+    m_status = new StatusDisplayWidget(m_bottomContainer);
+    m_status->setFontSize(11);
+    m_status->showPermanentMessage("Ready.");
+    lay->addWidget(m_status, 1);
 
     m_strip = new OperationStrip(m_bottomContainer);
     if (m_strip) {
@@ -359,7 +376,8 @@ void mdn::gui::OpsController::endBattle(int destIndex, bool isNew) {
         .arg(nameFor(destIndex))
     );
     Log_Debug3("emit requestStatus(rqs=[" << rqs.toStdString() << "], 0)");
-    emit requestStatus(rqs, 0);
+    emit requestClearStatus();
+    emit requestStatus(rqs, 5000);
     QString defaultName = "";
     if (destIndex < 0) {
         defaultName = QString(
