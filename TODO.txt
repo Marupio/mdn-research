@@ -28,9 +28,17 @@ Make Selection thread safe
 
 
 GUI library
-
-* Change font size needs to propogate to all Mdns
+* OVER doesn't work on diagonals - don't get pascal numbers
 * Be able to change config - config button
+* New Project window lost [Enter] button
+* Opens with slider all the way at the top
+* SegFaults with math
+* Operation Dialog always chooses to createNew
+* Scroll wheel doesn't scroll window
+* Ctrl+PgUp / PgDn triggers new blank mdn2d
+* ProjectProperties->Back to default framework and blank Mdn2d numbers
+
+
 
 ---------------------------------
 
