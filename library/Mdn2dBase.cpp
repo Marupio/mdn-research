@@ -1670,6 +1670,7 @@ void mdn::Mdn2dBase::internal_operationComplete() {
         Log_N_Debug4("Operation complete, incrementing m_event from " << m_event);
         ++m_event;
         m_modified = false;
+        m_affected.clear();
     } else {
         Log_N_Debug4("Operation complete, no modifications");
     }

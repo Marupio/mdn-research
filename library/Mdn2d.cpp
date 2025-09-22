@@ -309,7 +309,7 @@ void mdn::Mdn2d::add(const Coord& xy, int value, bool overwrite, Fraxis unused) 
 
 
 mdn::CoordSet mdn::Mdn2d::locked_add(const Coord& xy, int value, bool overwrite) {
-    int val = overwrite ? 0 : static_cast<int>(locked_getValue(xy));
+    int val(internal_checkOverwrite<int>(xy, overwrite));
     int sum = val + value;
     int carry = sum / m_config.base();
     int rem = sum % m_config.base();
@@ -342,7 +342,7 @@ void mdn::Mdn2d::add(const Coord& xy, long value, bool overwrite, Fraxis unused)
 
 
 mdn::CoordSet mdn::Mdn2d::locked_add(const Coord& xy, long value, bool overwrite) {
-    long val = overwrite ? 0 : static_cast<long>(locked_getValue(xy));
+    long val(internal_checkOverwrite<long>(xy, overwrite));
     long sum = val + value;
     long carry = sum / m_config.base();
     long rem = sum % m_config.base();
@@ -373,7 +373,7 @@ void mdn::Mdn2d::add(const Coord& xy, long long value, bool overwrite, Fraxis un
 
 
 mdn::CoordSet mdn::Mdn2d::locked_add(const Coord& xy, long long value, bool overwrite) {
-    long long val = overwrite ? 0 : static_cast<long long>(locked_getValue(xy));
+    long long val(internal_checkOverwrite<long long>(xy, overwrite));
     long long sum = val + value;
     long long carry = sum / m_config.base();
     long long rem = sum % m_config.base();
@@ -910,6 +910,3 @@ mdn::Mdn2d mdn::Mdn2d::internal_copyMultiplyAndShift(int value, const Coord& shi
     Log_N_Debug4_T("");
     return temp;
 }
-
-
-// mdn::Mdn2d mdn::DummyMdn2d("__mdn_Mdn2d_dummy");

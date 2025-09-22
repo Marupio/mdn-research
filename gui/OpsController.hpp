@@ -49,6 +49,8 @@ public:
     OperationStrip* strip() { return m_strip; }
     StatusDisplayWidget* status() { return m_status; }
 
+    void setCommandVisible(bool on);
+
     // Returns true if user is midway through specifying an operation on the bottom strip
     bool inBattle() const;
     void resetModel(Project* project);
@@ -58,6 +60,7 @@ signals:
     // to status bar
     void requestClearStatus();
     void requestStatus(const QString& s, int timeOut);
+    void requestFitBottomToContents();
 
     void planReady(const OperationPlan& plan);
     void tabClicked(int idx);
@@ -93,9 +96,9 @@ private:
 private:
 
     QMainWindow* m_mainWindow{nullptr};
-    Project* m_project = nullptr;
-    HoverPeekTabWidget* m_tabs = nullptr;
-    CommandWidget* m_command = nullptr;
+    Project* m_project{nullptr};
+    HoverPeekTabWidget* m_tabs{nullptr};
+    CommandWidget* m_command{nullptr};
 
     QWidget* m_bottomContainer{nullptr};
     StatusDisplayWidget* m_status{nullptr};

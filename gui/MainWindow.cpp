@@ -32,6 +32,7 @@
 #include "StatusDisplayWidget.hpp"
 
 int mdn::gui::MainWindow::nStartMdnDefault = 3;
+bool mdn::gui::MainWindow::enableCommandWidget = false;
 
 
 mdn::gui::MainWindow::MainWindow(QWidget *parent)
@@ -41,7 +42,7 @@ mdn::gui::MainWindow::MainWindow(QWidget *parent)
     Log_Debug2_H("")
     createSplitter();
     createMenus();
-    m_command = new CommandWidget(this);
+    createCommandWidget();
     createStatusBar();
     setupLayout();
     setWindowTitle("MDN Editor");
@@ -56,7 +57,7 @@ mdn::gui::MainWindow::MainWindow(QWidget *parent, Mdn2dConfig* cfg) :
     Log_Debug2_H("")
     createSplitter();
     createMenus();
-    m_command = new CommandWidget(this);
+    createCommandWidget();
     createStatusBar();
     setupLayout(cfg);
     // absorbProjectProperties(dlg);
@@ -65,7 +66,6 @@ mdn::gui::MainWindow::MainWindow(QWidget *parent, Mdn2dConfig* cfg) :
 }
 
 
-// MainWindow.cpp
 mdn::gui::MainWindow::~MainWindow()
 {
     // 1) Guard against app-wide signals firing during teardown.
@@ -662,6 +662,11 @@ void mdn::gui::MainWindow::onSelectAll() {
 }
 
 
+void mdn::gui::MainWindow::onRequestFitBottomToContents() {
+    fitBottomToContents();
+}
+
+
 void mdn::gui::MainWindow::onSplitterMoved(int pos, int index) {
     QList<int> sizes = m_splitter->sizes();
     int total = 0;
@@ -1020,7 +1025,8 @@ void mdn::gui::MainWindow::slotSelectNextTab()
     }
     const int idx = m_tabWidget->currentIndex();
     const int count = m_tabWidget->count();
-    if (idx + 1 < count) {
+    int maxIndex = count - 1 - (m_plusTab ? 1 : 0);
+    if (idx < maxIndex) {
         m_tabWidget->setCurrentIndex(idx + 1);
         focusActiveGrid();
     }
@@ -1184,6 +1190,21 @@ void mdn::gui::MainWindow::createSplitter() {
 }
 
 
+void mdn::gui::MainWindow::createCommandWidget() {
+    if (enableCommandWidget) {
+        m_command = new CommandWidget(this);
+        if (m_command) {
+            connect(
+                m_command,
+                &CommandWidget::submitCommand,
+                this,
+                &MainWindow::onCommandSubmitted
+            );
+        }
+    }
+}
+
+
 void mdn::gui::MainWindow::createMenus() {
     Log_Debug3_H("");
     QMenu* fileMenu = menuBar()->addMenu("&File");
@@ -1273,7 +1294,14 @@ void mdn::gui::MainWindow::setupLayout(Mdn2dConfig* cfg) {
 
     // Bottom half - command history + input
     m_splitter->addWidget(m_tabWidget);
-    m_splitter->addWidget(m_command);
+
+    // int idx = m_splitter->indexOf(m_command);
+    m_ops = new OpsController(this, m_project, m_tabWidget, m_command, this);
+    QWidget* container = m_ops->bottomContainer();
+    m_splitter->addWidget(container);
+
+
+    // m_splitter->addWidget(m_command);
     m_splitter->setStretchFactor(0, 3);
     m_splitter->setStretchFactor(1, 1);
 
@@ -1514,14 +1542,14 @@ void mdn::gui::MainWindow::removePlusTab() {
 
 
 void mdn::gui::MainWindow::initOperationsUi() {
-    int idx = m_splitter->indexOf(m_command);
-    m_ops = new OpsController(this, m_project, m_tabWidget, m_command, this);
-    QWidget* container = m_ops->bottomContainer();
-    if (idx >= 0) {
-        m_splitter->replaceWidget(idx, container);
-    } else {
-        m_splitter->addWidget(container);
-    }
+    // int idx = m_splitter->indexOf(m_command);
+    // m_ops = new OpsController(this, m_project, m_tabWidget, m_command, this);
+    // QWidget* container = m_ops->bottomContainer();
+    // if (idx >= 0) {
+    //     m_splitter->replaceWidget(idx, container);
+    // } else {
+    //     m_splitter->addWidget(container);
+    // }
 
     if (m_ops) {
         m_strip = m_ops->strip();
@@ -1541,8 +1569,6 @@ void mdn::gui::MainWindow::initOperationsUi() {
             &mdn::gui::MainWindow::onNewMdn2d
         );
     }
-
-    connect(m_command, &CommandWidget::submitCommand, this, &MainWindow::onCommandSubmitted);
 }
 
 
@@ -1626,9 +1652,11 @@ bool mdn::gui::MainWindow::createNewProjectFromConfig(Mdn2dConfig& cfg, bool req
             connect(m_ops, &OpsController::requestStatus,
                 this, &mdn::gui::MainWindow::showStatus
             );
-            m_ops->resetModel(m_project);
             connect(m_ops, &OpsController::requestClearStatus,
                 this, &mdn::gui::MainWindow::clearStatus
+            );
+            connect(m_ops, &OpsController::requestFitBottomToContents,
+                this, &mdn::gui::MainWindow::onRequestFitBottomToContents
             );
         }
         onProjectTabsChanged(0);
@@ -1662,9 +1690,11 @@ bool mdn::gui::MainWindow::createNewProject(Mdn2dConfig* cfg, bool requireConfir
             connect(m_ops, &OpsController::requestStatus,
                 this, &mdn::gui::MainWindow::showStatus
             );
-            m_ops->resetModel(m_project);
             connect(m_ops, &OpsController::requestClearStatus,
                 this, &mdn::gui::MainWindow::clearStatus
+            );
+            connect(m_ops, &OpsController::requestFitBottomToContents,
+                this, &mdn::gui::MainWindow::onRequestFitBottomToContents
             );
         }
         onProjectTabsChanged(0);
@@ -2089,6 +2119,37 @@ void mdn::gui::MainWindow::setActiveTab(int index) {
     }
     m_project->setActiveMdn(index);
     m_tabWidget->setCurrentIndex(index);
+}
+
+
+void mdn::gui::MainWindow::fitBottomToContents() {
+    Log_Debug3_H("");
+    if (!m_splitter || !m_ops || !m_ops->bottomContainer()) {
+        Log_Debug3_T(""
+            << "Missing component "
+            << "(splitter:" << (m_splitter?"Okay":"MISSING")
+            << ", ops:" << (m_ops?"Okay":"MISSING")
+            << ", bottomContainer:" << (m_ops->bottomContainer()?"Okay":"MISSING")
+            << ")"
+        );
+        return;
+    }
+
+    // Ask the bottom container how tall it wants to be now
+    const int want = m_ops->bottomContainer()->sizeHint().height();
+
+    // Use current total to preserve the top's remaining height
+    QList<int> sizes = m_splitter->sizes();
+    int total = 0; for (int s : sizes) total += s;
+    if (total <= 0) {
+        total = height();
+    }
+
+    sizes.resize(2);
+    sizes[1] = want;                 // bottom
+    sizes[0] = std::max(0, total - want); // top gets the rest
+    m_splitter->setSizes(sizes);
+    Log_Debug3_T("");
 }
 
 

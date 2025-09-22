@@ -57,6 +57,23 @@ QWidget* mdn::gui::OpsController::bottomContainer() const {
 }
 
 
+void mdn::gui::OpsController::setCommandVisible(bool on) {
+    Log_Debug2_H("arg=" << on);
+    if (!m_command) {
+        Log_Debug2_T("no command");
+        return;
+    }
+    m_command->setVisible(on);
+    // collapse to zero height when off
+    m_command->setMaximumHeight(on ? QWIDGETSIZE_MAX : 0);
+    m_bottomContainer->updateGeometry();
+
+    Log_Debug3("emit requestFitBottomToContents");
+    emit requestFitBottomToContents();
+    Log_Debug2_T("");
+}
+
+
 bool mdn::gui::OpsController::inBattle() const {
     return m_phase != OperationPhase::Idle;
 }
@@ -239,9 +256,9 @@ void mdn::gui::OpsController::buildMenus() {
 
 void mdn::gui::OpsController::rebuildBottomContainer() {
     Log_Debug2_H("");
-    QWidget* parent = m_command->parentWidget();
-    // m_bottomContainer = new QWidget(m_mainWindow);
-    m_bottomContainer = new QWidget(parent);
+    // QWidget* parent = m_command->parentWidget();
+    // m_bottomContainer = new QWidget(parent);
+    m_bottomContainer = new QWidget(m_mainWindow);
 
     QVBoxLayout* lay = new QVBoxLayout(m_bottomContainer);
     lay->setContentsMargins(0, 0, 0, 0);
@@ -250,7 +267,7 @@ void mdn::gui::OpsController::rebuildBottomContainer() {
     m_status = new StatusDisplayWidget(m_bottomContainer);
     m_status->setFontSize(11);
     m_status->showPermanentMessage("Ready.");
-    lay->addWidget(m_status, 1);
+    lay->addWidget(m_status, 0);
 
     m_strip = new OperationStrip(m_bottomContainer);
     if (m_strip) {
@@ -259,10 +276,12 @@ void mdn::gui::OpsController::rebuildBottomContainer() {
         });
         connect(m_strip, &OperationStrip::cancelClicked, this, &OpsController::onCancel);
     }
-    lay->addWidget(m_strip);
+    lay->addWidget(m_strip, 0);
 
-    m_command->setParent(m_bottomContainer);
-    lay->addWidget(m_command, 1);
+    if (m_command) {
+        m_command->setParent(m_bottomContainer);
+        lay->addWidget(m_command, 1);
+    }
     Log_Debug2_T("");
 }
 

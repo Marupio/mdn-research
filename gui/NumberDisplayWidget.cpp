@@ -321,9 +321,9 @@ bool mdn::gui::NumberDisplayWidget::eventFilter(QObject* watched, QEvent* event)
                         break;
                     }
                     if (shift) {
-                        Q_EMIT requestMoveTabRight();
+                        Q_EMIT requestMoveTabLeft();
                     } else {
-                        Q_EMIT requestSelectNextTab();
+                        Q_EMIT requestSelectPrevTab();
                     }
                     ke->accept();
                     return true;
@@ -333,9 +333,9 @@ bool mdn::gui::NumberDisplayWidget::eventFilter(QObject* watched, QEvent* event)
                         break;
                     }
                     if (shift) {
-                        Q_EMIT requestMoveTabLeft();
+                        Q_EMIT requestMoveTabRight();
                     } else {
-                        Q_EMIT requestSelectPrevTab();
+                        Q_EMIT requestSelectNextTab();
                     }
                     ke->accept();
                     return true;

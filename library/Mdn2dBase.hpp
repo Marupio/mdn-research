@@ -82,6 +82,10 @@ protected:
         // Event number for tracking derived, demand-driven data
         long long m_event;
 
+        // Coordinates that have changed during the current operation (only applicable in overwrite
+        //  mode)
+        mutable CoordSet m_affected;
+
 
 public:
 

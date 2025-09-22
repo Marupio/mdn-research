@@ -12,6 +12,9 @@ mdn::gui::StatusDisplayWidget::StatusDisplayWidget(QWidget* parent)
     : QWidget(parent),
       m_label(new QLabel(this))
 {
+    setObjectName("statusDisplay");
+    setAttribute(Qt::WA_StyledBackground, true);
+
     auto* lay = new QHBoxLayout(this);
     lay->setContentsMargins(8, 4, 8, 4);
     lay->addWidget(m_label);
@@ -22,11 +25,31 @@ mdn::gui::StatusDisplayWidget::StatusDisplayWidget(QWidget* parent)
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 
     // Subtle rounded outline, no fill (blends with window)
-    const auto mid = palette().color(QPalette::Mid).name();
+    // const auto mid = palette().color(QPalette::Mid).name();
+    // // setStyleSheet(QString(
+    // //     "StatusDisplayWidget { background: transparent; border: 1px solid %1; border-radius: 8px; } "
+    // //     "StatusDisplayWidget QLabel { background: transparent; }"
+    // // ).arg(mid));
+
+    // // Border using palette so it shows in both light/dark themes
+    // setStyleSheet(QString(
+    //     "#statusDisplay {"
+    //     "  background: transparent;"
+    //     "  border: 1px solid palette(%1);"
+    //     "  border-radius: 8px;"
+    //     "}"
+    //     "#statusDisplay QLabel { background: transparent; }"
+    // ).arg(mid));
+
     setStyleSheet(QString(
-        "StatusDisplayWidget { background: transparent; border: 1px solid %1; border-radius: 8px; } "
-        "StatusDisplayWidget QLabel { background: transparent; }"
-    ).arg(mid));
+        "#statusDisplay {"
+        "  background: transparent;"
+        "  border: 1px solid palette(Mid);"
+        "  border-radius: 8px;"
+        "}"
+        "#statusDisplay QLabel { background: transparent; }"
+    ));
+
 
     connect(&m_timer, &QTimer::timeout, this, [this]() {
         m_timer.stop();

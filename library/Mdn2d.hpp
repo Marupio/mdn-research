@@ -308,6 +308,23 @@ protected:
             //  return = (*this x value).shift(xy)
             Mdn2d internal_copyMultiplyAndShift(int value, const Coord& shiftXY) const;
 
+
+            int internal_checkOverwrite(const Coord& xy, bool overwrite) const;
+            template <class Type>
+            Type internal_checkOverwrite(const Coord& xy, bool overwrite) const {
+                if (overwrite) {
+                    const auto iter = m_affected.find(xy);
+                    if (iter == m_affected.cend()) {
+                        // We haven't visited this coord yet - we are overwriting it
+                        m_affected.insert(xy);
+                        return Type(0);
+                    } else {
+                        return static_cast<Type>(locked_getValue(xy));
+                    }
+                }
+                return static_cast<Type>(locked_getValue(xy));
+            }
+
 };
 
 // Arithmetic binary operators

@@ -38,6 +38,8 @@ public:
     // Default number of Mdn tabs on start
     static int nStartMdnDefault;
 
+    static bool enableCommandWidget;
+
     // Create null, no project loaded
     MainWindow(QWidget *parent=nullptr);
 
@@ -89,6 +91,7 @@ private slots:
     // Edit menu operations
     void onSelectAll();
 
+    void onRequestFitBottomToContents();
     void onSplitterMoved(int pos, int index);
     void onCommandSubmitted(const QString& text);
     void onOpsPlan(const OperationPlan& p);
@@ -130,6 +133,7 @@ protected:
 
 private:
     void createSplitter();
+    void createCommandWidget();
     void createMenus();
     void setupLayout(Mdn2dConfig* cfg=nullptr);
     void createTabs();
@@ -182,6 +186,9 @@ private:
     void pasteTab(int insertAt);
     void syncTabsToProject();
     void setActiveTab(int index);
+
+    // Slider
+    void fitBottomToContents();
 
     // Status bar
     void updateStatusModeText(NumberDisplayWidget::EditMode m);
