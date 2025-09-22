@@ -101,6 +101,32 @@ mdn::gui::MainWindow::~MainWindow()
 }
 
 
+bool mdn::gui::MainWindow::setCommandVisibility(bool visible) {
+    if (!m_command) {
+        return false;
+    }
+    if (visible == m_command->isVisible()) {
+        return true;
+    }
+    m_command->setVisible(visible);
+    enableSnugBottom(!visible);
+    if (visible && m_splitter) {
+        QList<int> sizes = m_splitter->sizes();
+        sizes[1] = std::max(200, sizes[1]);
+        m_splitter->setSizes(sizes);
+    }
+    return true;
+}
+
+
+bool mdn::gui::MainWindow::commandVisibility() const {
+    if (!m_command) {
+        return false;
+    }
+    return m_command->isVisible();
+}
+
+
 bool mdn::gui::MainWindow::clearStatus() {
     Log_Debug_H("");
     if (m_status) {
@@ -700,6 +726,7 @@ void mdn::gui::MainWindow::onOpsPlan(const OperationPlan& p) {
         );
         return;
     }
+    showStatus(QString("Calculating . . ."), 0);
     Mdn2d& a = *aPtr;
     Mdn2d& b = *bPtr;
     if (p.indexDest >= 0) {
@@ -1110,6 +1137,21 @@ void mdn::gui::MainWindow::slotDebugShowAllTabs()
 
 
 bool mdn::gui::MainWindow::eventFilter(QObject* watched, QEvent* event) {
+    // Block handle drags when snug
+    if (m_snugBottom) {
+        for (int i = 0; i < m_splitter->count() - 1; ++i) {
+            if (watched == m_splitter->handle(i + 1)) {
+                switch (event->type()) {
+                    case QEvent::MouseButtonPress:
+                    case QEvent::MouseMove:
+                    case QEvent::MouseButtonRelease:
+                        return true; // swallow drag
+                    default: break;
+                }
+            }
+        }
+    }
+
     if (watched == m_splitter) {
         if (event->type() == QEvent::Resize) {
             applySplitRatio();
@@ -1306,6 +1348,12 @@ void mdn::gui::MainWindow::setupLayout(Mdn2dConfig* cfg) {
     m_splitter->setStretchFactor(1, 1);
 
     setCentralWidget(m_splitter);
+
+    if (!enableCommandWidget) {
+        // m_command->setVisible(false);
+        enableSnugBottom(true);
+    }
+
 
     Log_Debug3("Dispatch - initOperationsUi");
     initOperationsUi();
@@ -2134,22 +2182,66 @@ void mdn::gui::MainWindow::fitBottomToContents() {
         );
         return;
     }
+    QWidget* bottom = m_ops->bottomContainer();
 
-    // Ask the bottom container how tall it wants to be now
-    const int want = m_ops->bottomContainer()->sizeHint().height();
+    // 1) Fix the bottom height to its sizeHint (prevents stretching/collapse)
+    const int want = bottom->sizeHint().height();
+    bottom->setMinimumHeight(want);
+    bottom->setMaximumHeight(want);
 
-    // Use current total to preserve the top's remaining height
+    // 2) Give the bottom exactly what it wants, top gets the rest
     QList<int> sizes = m_splitter->sizes();
     int total = 0; for (int s : sizes) total += s;
-    if (total <= 0) {
-        total = height();
-    }
+    if (total <= 0) total = height();
 
     sizes.resize(2);
-    sizes[1] = want;                 // bottom
-    sizes[0] = std::max(0, total - want); // top gets the rest
+    sizes[1] = want;
+    sizes[0] = std::max(0, total - want);
     m_splitter->setSizes(sizes);
+}
+
+
+void mdn::gui::MainWindow::releaseBottomClamp()
+{
+    Log_Debug3_H("");
+    if (!m_ops || !m_ops->bottomContainer()) {
+        Log_Debug3_T("Missing components");
+        return;
+    }
+    QWidget* bottom = m_ops->bottomContainer();
+    bottom->setMinimumHeight(0);
+    bottom->setMaximumHeight(QWIDGETSIZE_MAX);
     Log_Debug3_T("");
+}
+
+
+void mdn::gui::MainWindow::enableSnugBottom(bool on)
+{
+    Log_Debug3_H("on=" << on);
+    m_snugBottom = on;
+    if (!m_splitter) {
+        Log_Debug3_T("Missing components");
+        return;
+    }
+
+    // Install/remove filters on all handles (vertical splitter => 1 handle)
+    for (int i = 0; i < m_splitter->count() - 1; ++i) {
+        auto* h = m_splitter->handle(i + 1);
+        if (!h) {
+            continue;
+        }
+        if (on) {
+            h->installEventFilter(this);
+        } else {
+            h->removeEventFilter(this);
+        }
+    }
+
+    if (on) {
+        QTimer::singleShot(0, this, [this]{ fitBottomToContents(); });
+    } else {
+        releaseBottomClamp();
+    }
 }
 
 

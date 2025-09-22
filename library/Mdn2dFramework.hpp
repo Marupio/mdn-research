@@ -74,6 +74,7 @@ public:
     }
 
     virtual std::string suggestCopyName(const std::string& suggestedName) {
+        Log_Debug4_H("suggestedName=[" << suggestedName << "]");
         std::regex suffixRegex(R"(^(.*_Copy)(\d+)$)");
         std::smatch match;
 

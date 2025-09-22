@@ -60,13 +60,17 @@ public:
     inline const Mdn2dConfig& config() const { return m_globalConfig; }
     inline Mdn2dConfig& config() { return m_globalConfig; }
 
+    // Other functionality
+    // Returns false if command not available
+    bool setCommandVisibility(bool visible);
+    bool commandVisibility() const;
 
 signals:
     void newMdn2dRequested();
 
 public slots:
-    bool showStatus(QString message, int timeOut);
     bool clearStatus();
+    bool showStatus(QString message, int timeOut);
 
 private slots:
     void onTabContextMenu(const QPoint& pos);
@@ -189,6 +193,8 @@ private:
 
     // Slider
     void fitBottomToContents();
+    void releaseBottomClamp();
+    void enableSnugBottom(bool on);
 
     // Status bar
     void updateStatusModeText(NumberDisplayWidget::EditMode m);
@@ -202,6 +208,8 @@ private:
     void onAppFocusChanged(QWidget* old, QWidget* now);
     void applySplitRatio();
 
+    // When true, no splitter movement allowed
+    bool m_snugBottom = false;
     QSplitter* m_splitter{nullptr};
     double m_splitRatio{0.5};
     NumberDisplayWidget::EditMode m_globalMode = NumberDisplayWidget::EditMode::Overwrite;

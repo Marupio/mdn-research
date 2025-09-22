@@ -178,7 +178,7 @@ public:
     // Reduce the indent by two spaces
     void decreaseIndent(std::string fref = "") {
         #ifdef MDN_DEBUG
-            if (m_indentChecking) {
+            if (m_indentChecking && m_breadCrumbs.size()) {
                 m_breadCrumbs.pop_back();
                 std::string ref = cleanRef(fref);
                 auto it = m_indentenators.find(ref);

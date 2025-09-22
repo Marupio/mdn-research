@@ -178,9 +178,14 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryover(const Coord& xy, int carry) {
     Digit y = locked_getValue(xy_y);
     Carryover co = static_checkCarryover(p, x, y, m_config.baseDigit());
     if (co == Carryover::Invalid) {
-        IllegalOperation err("Invalid carryover requested at " + xy.to_string());
-        Log_N_Error(err.what());
-        throw err;
+        std::ostringstream oss;
+        Log_N_Warn("Invalid carryover requested at " << xy << ": [" << static_cast<int>(p)
+            << ",(" << static_cast<int>(x) << "," << static_cast<int>(y) << ")]"
+        );
+        // IllegalOperation err(oss.str());
+        // Log_N_Error(err.what());
+        // throw err;
+        return CoordSet({});
     }
     int ip = static_cast<int>(p);
     int ix = static_cast<int>(x);

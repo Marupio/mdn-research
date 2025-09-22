@@ -103,6 +103,19 @@ public:
                 bool overwrite=false,
                 Fraxis fraxis=Fraxis::Default
             ); public:
+            void add(
+                const Coord& xy,
+                std::string realNum,
+                bool overwrite=false,
+                Fraxis fraxis=Fraxis::Default
+            );
+            protected: CoordSet locked_add(
+                const Coord& xy,
+                std::string realNum,
+                bool overwrite=false,
+                Fraxis fraxis=Fraxis::Default
+            ); public:
+
 
             // Subtract the given number at xy, breaking into integer and fraxis operations
             void subtract(

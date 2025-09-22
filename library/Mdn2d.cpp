@@ -244,6 +244,36 @@ mdn::CoordSet mdn::Mdn2d::locked_add(
 }
 
 
+void mdn::Mdn2d::add(const Coord& xy, std::string realNum, bool overwrite, Fraxis fraxis) {
+    Log_N_Debug2_H("");
+    auto lock = lockWriteable();
+    internal_checkFraxis(fraxis);
+    If_Log_Showing_Debug2(
+        Log_N_Debug2("add " << realNum << ", fraxis: " << FraxisToName(fraxis));
+    );
+    locked_carryoverCleanup(locked_add(xy, realNum, overwrite, fraxis));
+    internal_operationComplete();
+    Log_N_Debug2_T("");
+}
+
+
+mdn::CoordSet mdn::Mdn2d::locked_add(
+    const Coord& xy, std::string realNum, bool overwrite, Fraxis fraxis
+) {
+    Log_N_Debug3_H("");
+    If_Log_Showing_Debug3(
+        Log_N_Debug3("add " << realNum << ", fraxis: " << FraxisToName(fraxis));
+    );
+    double fracPart, intPart;
+    // fracPart = modf(realNum, &intPart);
+    CoordSet changed = locked_add(xy, static_cast<long>(intPart), overwrite);
+    // changed.merge(locked_addFraxis(xy, fracPart, nDigits, overwrite, fraxis));
+    internal_operationComplete();
+    Log_N_Debug3_T("changed " << changed.size() << " digits");
+    return changed;
+}
+
+
 void mdn::Mdn2d::subtract(
     const Coord& xy, float realNum, int nDigits, bool overwrite, Fraxis fraxis
 ) {

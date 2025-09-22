@@ -95,10 +95,9 @@ void mdn::gui::OpsController::battlestations(Operation op) {
     m_a = m_tabs->currentSelectedIndex();
 
     QString rqs(
-        QString("%1 %2 *Choose* << << Operand B")
+        QString("%1 %2 *Operand B* >> Choose tab <<  Hover to peek")
         .arg(nameFor(m_a))
         .arg(QString::fromStdString(OperationToOpStr(m_op)))
-        .arg(nameFor(m_b))
     );
     Log_Debug3("emit requestStatus(rqs=[" << rqs.toStdString() << "], 0)");
     emit requestStatus(rqs, 0);
@@ -157,7 +156,7 @@ void mdn::gui::OpsController::onTabCommitted(int idx) {
             m_b = idx;
             m_phase = OperationPhase::PickDest;
             QString rqs(
-                QString("%1 %2 %3  →  *Choose* << << Destination")
+                QString("%1 %2 %3  →  *Destination* >> Choose tab <<  Hover to peek")
                 .arg(nameFor(m_a))
                 .arg(QString::fromStdString(OperationToOpStr(m_op)))
                 .arg(nameFor(m_b))
@@ -434,5 +433,6 @@ void mdn::gui::OpsController::cancel() {
     }
     Log_Debug3("emit requestStatus([], 0)");
     emit requestStatus(QString(), 0);
+    emit requestStatus(QString("* Cancelled *"), 2000);
     Log_Debug2_T("");
 }
