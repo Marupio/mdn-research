@@ -9,6 +9,7 @@
 #include "GuiTools.hpp"
 #include "Project.hpp"
 #include "Selection.hpp"
+#include "Tools.hpp"
 
 constexpr double mdn::gui::NumberDisplayWidget::kEdgeGuardFrac;
 
@@ -1116,9 +1117,22 @@ void mdn::gui::NumberDisplayWidget::commitCellEdit(SubmitMove how, bool stayInsi
     }
 
     const QString raw = m_cellEditor->text().trimmed();
-    const int base = m_model->config().base();
+    const Mdn2dConfig& config = m_model->config();
+    const int base = config.base();
+    Log_Debug3("trimmed=" << raw.toStdString() << ",base=" << base);
+    bool negative;
+    std::string intPart;
+    std::string fracPart;
+    int radix;
+    std::string message = Tools::verifyStringAsReal(
+        raw.toStdString(), base,
+        negative, intPart, fracPart, radix
+    );
+    Log_Debug3("trimmed=" << raw.toStdString() << ",base=" << base);
 
-    if (!textAcceptableForBase(raw, base)) {
+    if (message.size()) {
+        // Not a valid string input - already logged
+        emit requestStatus(QString::fromStdString(message), 2000);
         m_cellEditor->hide();
         m_editing = false;
         update();
@@ -1128,37 +1142,27 @@ void mdn::gui::NumberDisplayWidget::commitCellEdit(SubmitMove how, bool stayInsi
         return;
     }
 
-    bool neg = false;
-    const QString body = stripSign(raw, neg);
-    const bool hasDot = body.contains('.');
-
-    const mdn::Coord xy = m_selection->cursor1();
-    bool overwrite = m_mode == EditMode::Overwrite;
-
-    if (hasDot) {
-        bool ok = false;
-        int nFracDigits;
-        const double mag = parseBaseRealMagnitude(body, base, nFracDigits, ok);
-        const double val = neg ? -mag : mag;
-        if (ok) {
-            if (m_mode == EditMode::Subtract) {
-                m_model->subtract(xy, val, nFracDigits, overwrite, m_model->config().fraxis());
-            } else {
-                m_model->add(xy, val, nFracDigits, overwrite, m_model->config().fraxis());
-            }
-        }
-    } else {
-        bool ok = false;
-        const long long mag = parseBaseIntMagnitude(body, base, ok);
-        const long long val = neg ? -mag : mag;
-        if (ok) {
-            if (m_mode == EditMode::Subtract) {
-                m_model->subtract(xy, val, overwrite);
-            } else {
-                m_model->add(xy, val, overwrite);
-            }
-        }
+    if (m_mode == EditMode::Subtract) {
+        negative = !negative;
     }
+    bool overwrite = m_mode == EditMode::Overwrite;
+    const mdn::Coord xy = m_selection->cursor1();
+    const Fraxis fraxis(config.fraxis());
+    Log_Debug3("dispatch model->add(xy=" << xy << ",neg=" << negative << ",...)");
+    m_model->add(
+        xy,
+        negative,
+        intPart,
+        fracPart,
+        overwrite,
+        m_model->config().fraxis()
+    );
+    Log_Debug3(""
+        << "return model->add(xy=" << xy << ",neg=" << negative
+        << ",intPart=" << intPart << ",fracPart=" << fracPart
+        << ",overwrite=" << overwrite << ",fraxis=" << FraxisToName(fraxis)
+        << ")"
+    );
 
     m_cellEditor->hide();
     m_editing = false;

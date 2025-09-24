@@ -103,15 +103,20 @@ public:
                 bool overwrite=false,
                 Fraxis fraxis=Fraxis::Default
             ); public:
+
             void add(
                 const Coord& xy,
-                std::string realNum,
+                bool negative,
+                const std::string& intPart,
+                const std::string& fracPart,
                 bool overwrite=false,
                 Fraxis fraxis=Fraxis::Default
             );
             protected: CoordSet locked_add(
                 const Coord& xy,
-                std::string realNum,
+                bool negative,
+                const std::string& intPart,
+                const std::string& fracPart,
                 bool overwrite=false,
                 Fraxis fraxis=Fraxis::Default
             ); public:
@@ -305,7 +310,14 @@ protected:
             // Apply default to fraxis as required
             void internal_checkFraxis(Fraxis& fraxis) const;
 
-            // Execute the fraxis propagation algorithm
+            // Execute the fraxis propagation algorithm on a single digit
+            //  dX, dY, c - constants to guide propagation:
+            //      x Direction: -1, 0, -1
+            //      y Direction: 0, -1, 1
+            CoordSet internal_fraxis(
+                const Coord& xy, Digit d, bool overwrite, int dX, int dY, int c
+            );
+            // Execute the fraxis propagation algorithm on an entire double
             //  dX, dY, c - constants to guide propagation:
             //      x Direction: -1, 0, -1
             //      y Direction: 0, -1, 1

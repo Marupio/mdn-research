@@ -760,6 +760,8 @@ void mdn::gui::MainWindow::onOpsPlan(const OperationPlan& p) {
             }
             syncTabsToProject();
             setActiveTab(p.indexA);
+            clearStatus();
+            showStatus(QString("Calculation complete"), 2000);
             Log_Debug_T("");
             return;
         } else {
@@ -779,6 +781,8 @@ void mdn::gui::MainWindow::onOpsPlan(const OperationPlan& p) {
                 );
                 if (reply != QMessageBox::Yes) {
                     Log_Debug_T("User rejected overwrite");
+                    clearStatus();
+                    showStatus(QString("Calculation cancelled"), 2000);
                     return;
                 }
                 // User said Yes
@@ -813,6 +817,8 @@ void mdn::gui::MainWindow::onOpsPlan(const OperationPlan& p) {
             }
             syncTabsToProject();
             setActiveTab(t);
+            clearStatus();
+            showStatus(QString("Calculation complete"), 2000);
             Log_Debug_T("");
             return;
         }
@@ -854,6 +860,8 @@ void mdn::gui::MainWindow::onOpsPlan(const OperationPlan& p) {
         m_project->appendMdn(std::move(ans));
         syncTabsToProject();
         setActiveTab(m_project->size()-1);
+        clearStatus();
+        showStatus(QString("Calculation complete"), 2000);
         Log_Debug_T("");
         return;
     }
@@ -1446,6 +1454,12 @@ void mdn::gui::MainWindow::createTabForIndex(int index) {
         &NumberDisplayWidget::requestCycleFraxis,
         this,
         &MainWindow::cycleFraxis
+    );
+    connect(
+        ndw,
+        &NumberDisplayWidget::requestStatus,
+        this,
+        &MainWindow::showStatus
     );
 
     // Push current global mode into the new widget
@@ -2242,6 +2256,7 @@ void mdn::gui::MainWindow::enableSnugBottom(bool on)
     } else {
         releaseBottomClamp();
     }
+    Log_Debug3_T("");
 }
 
 

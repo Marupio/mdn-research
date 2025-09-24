@@ -244,30 +244,136 @@ mdn::CoordSet mdn::Mdn2d::locked_add(
 }
 
 
-void mdn::Mdn2d::add(const Coord& xy, std::string realNum, bool overwrite, Fraxis fraxis) {
+void mdn::Mdn2d::add(
+    const Coord& xy,
+    bool negative,
+    const std::string& intPart,
+    const std::string& fracPart,
+    bool overwrite,
+    Fraxis fraxis
+) {
     Log_N_Debug2_H("");
     auto lock = lockWriteable();
     internal_checkFraxis(fraxis);
     If_Log_Showing_Debug2(
-        Log_N_Debug2("add " << realNum << ", fraxis: " << FraxisToName(fraxis));
+        Log_N_Debug2(""
+            << "add at " << xy
+            << ", neg:" << negative
+            << ", intPart:" << intPart
+            << ", fracPart:" << fracPart
+            << ", overwrite:" << overwrite
+            << ", fraxis: " << FraxisToName(fraxis)
+        );
     );
-    locked_carryoverCleanup(locked_add(xy, realNum, overwrite, fraxis));
+    locked_carryoverCleanup(
+        locked_add(
+            xy,
+            negative,
+            intPart,
+            fracPart,
+            overwrite,
+            fraxis
+        )
+    );
     internal_operationComplete();
     Log_N_Debug2_T("");
 }
 
 
 mdn::CoordSet mdn::Mdn2d::locked_add(
-    const Coord& xy, std::string realNum, bool overwrite, Fraxis fraxis
+    const Coord& xy,
+    bool negative,
+    const std::string& intPart,
+    const std::string& fracPart,
+    bool overwrite,
+    Fraxis fraxis
 ) {
     Log_N_Debug3_H("");
     If_Log_Showing_Debug3(
-        Log_N_Debug3("add " << realNum << ", fraxis: " << FraxisToName(fraxis));
+        Log_N_Debug3(""
+            << "add at " << xy
+            << ", neg:" << negative
+            << ", intPart:" << intPart
+            << ", fracPart:" << fracPart
+            << ", overwrite:" << overwrite
+            << ", fraxis: " << FraxisToName(fraxis)
+        );
     );
-    double fracPart, intPart;
-    // fracPart = modf(realNum, &intPart);
-    CoordSet changed = locked_add(xy, static_cast<long>(intPart), overwrite);
-    // changed.merge(locked_addFraxis(xy, fracPart, nDigits, overwrite, fraxis));
+
+    CoordSet changed;
+    int maxIndex = intPart.size() - 1;
+    long lSign = negative ? -1 : 1;
+    long baseFactor = 1;
+    long lbase = m_config.base();
+    for (int i = 0; i <= maxIndex; ++i) {
+        int pos = maxIndex - i;
+        char c = intPart[pos];
+        long lDigit = Tools::unsafe_alphaToDigit(c);
+        changed.merge(locked_add(xy, lSign * lDigit * baseFactor, overwrite));
+        baseFactor *= lbase;
+    }
+    if (fracPart.empty()) {
+        internal_operationComplete();
+        Log_N_Debug3_T("changed " << changed.size() << " digits");
+        return changed;
+    }
+
+    // Prepare for fraxis expansion
+    Coord xyRoot = xy;
+    int dX;
+    int dY;
+    int c;
+    internal_checkFraxis(fraxis);
+
+    switch(fraxis) {
+        case Fraxis::X:
+            dX = -1;
+            dY = 0;
+            c = -1;
+            Log_Debug4("X");
+            break;
+        case Fraxis::Y:
+            dX = 0;
+            dY = -1;
+            c = 1;
+            Log_Debug4("Y");
+            break;
+        default:
+            std::ostringstream oss;
+            oss << "Fraxis not valid: " << FraxisToName(fraxis);
+            std::invalid_argument err(oss.str());
+            Log_N_Error(err.what());
+            throw err;
+            break;
+    }
+    maxIndex = fracPart.size() - 1;
+    Log_Debug4("d(" << dX << "," << dY << "),c=" << c << ",maxIndex=" << maxIndex);
+
+    int iSign = negative ? -1 : 1;
+    for (int i = 0; i <= maxIndex; ++i) {
+        // int pos = maxIndex - i;
+        char ch = fracPart[i];
+        int iDigit = Tools::unsafe_alphaToDigit(ch) * iSign;
+
+        // Move
+        xyRoot.translate(dX, dY);
+
+        // Add fractional part root
+        Log_Debug4("dispatch locked_add(" << xyRoot << "," << iDigit << ",...)");
+        changed.merge(locked_add(xyRoot, iDigit, overwrite));
+
+        Log_Debug4("dispatch cascade(" << xyRoot << "," << iDigit << ",c=" << c << ")");
+        // Add fraxis cascade
+        changed.merge(internal_fraxisCascade(xyRoot, iDigit, overwrite, c));
+
+        Log_Debug4("cascade return");
+
+        // changed.merge(locked_add(xyWorking, d, overwrite));
+        // changed.merge(internal_fraxisCascade(xyWorking, d, overwrite, c));
+        // f -= d;
+        // xyWorking.translate(dX, dY);
+
+    }
     internal_operationComplete();
     Log_N_Debug3_T("changed " << changed.size() << " digits");
     return changed;
@@ -874,10 +980,8 @@ mdn::CoordSet mdn::Mdn2d::internal_fraxis(
     while (precisionOkay && numericsOkay && nDigits--) {
         f *= m_config.baseDouble();
         Digit d = nDigits ? static_cast<Digit>(f) : static_cast<Digit>(std::round(f));
-        if (d != 0) {
-            changed.merge(locked_add(xyWorking, d, overwrite));
-            changed.merge(internal_fraxisCascade(xyWorking, d, overwrite, c));
-        }
+        changed.merge(locked_add(xyWorking, d, overwrite));
+        changed.merge(internal_fraxisCascade(xyWorking, d, overwrite, c));
         f -= d;
         xyWorking.translate(dX, dY);
         precisionOkay = locked_checkPrecisionWindow(xyWorking) != PrecisionStatus::Below;

@@ -20,7 +20,15 @@ class MDN_API Tools {
 
 public:
 
-    static const std::vector<char> m_digToAlpha;
+    // Lower case alphanumeric
+    static const std::vector<char> m_digToAlphaLower;
+
+    // Upper case alphanumeric
+    static const std::vector<char> m_digToAlphaUpper;
+
+    // Display case - choose best between upper / lower (use lower unless ambiguous)
+    static const std::vector<char> m_digToAlphaDisplay;
+
     static const std::string BoxArtStr_h; // ─
     static const std::string BoxArtStr_v; // │
     static const std::string BoxArtStr_x; // ┼
@@ -182,6 +190,11 @@ public:
         char close=')'
     );
 
+    // Convert the given (uppercase) alphanumeric character, return int value
+    // unsafe: assumes c is '0' .. '9' or 'A' .. 'Z'
+    static int unsafe_alphaToDigit(char c);
+
+
     // Ensure div is not too close to zero
     static void stabilise(float& div);
     static void stabilise(double& div);
@@ -191,6 +204,46 @@ public:
 
     // Decompose given string into a string and an integer, return int has -1 if none
     static std::pair<std::string, int> strInt(const std::string& inStr);
+
+    // Convert string to a valid real number with arbitrary number of digits
+    // intPart and fracPart break the digit expression into integers of 12 digits at a time:
+    //       intPart=(999'999'999'999, 999'999'999'999, 999'999'999'999, ...)
+    //      fracPart=(999'999'999'999, 999'999'999'999, 999'999'999'999, ...)
+    // for example, pi might be expressed as:
+    //       intPart=(3)
+    //      fracPart=(141592653589, 793238462643, 383279502884, 197169399375, 105820974944, ...)
+    // On failure returns a string describing the failure, on success returns an empty string
+    static std::string stringToArbitraryPrecisionReal(
+        bool& negative,
+        std::vector<long>& intPart,
+        std::vector<long>& fracPart,
+        int base,
+        const std::string& input
+    );
+
+    // Helper function to test for valid digits in a string
+    static constexpr bool validUppercaseDigit(const char digit, int base) noexcept;
+
+    // Checks if the supplied string would be a valid number in the given base, with
+    //  * an optional leading negative '-' character,
+    //  * an optional radix (e.g. decimal) character at any position in the string
+    //  * all other characters being valid alphanumeric digits for the given base (2 .. 32),
+    //  for example:
+    //      * base 2  : 0..1
+    //      * base 10 : 0..9
+    //      * base 16 : 0..9, A-F (upper or lower case)
+    //      * base 32 : 0..9, A-V
+    // Returns:
+    //      * an empty string if the string is valid
+    //      * a non-empty string detailing the parsing problems if the string is not valid
+    //  Outputs:
+    //      * negative = true only if '-' appears at the start of the string
+    //      * radix has the position of the '.', or -1 if not present
+    //      * hasIntPart and hasFracPart are true only when those components are non-zero
+    static std::string verifyStringAsReal(
+        const std::string& strIn, int base,
+        bool& negative, std::string& intPart, std::string& fracPart, int& radix
+    );
 };
 
 } // namespace mdn
