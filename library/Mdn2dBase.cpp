@@ -1600,11 +1600,18 @@ int mdn::Mdn2dBase::locked_setPrecision(int newPrecision) {
     m_config.setPrecision(newPrecision);
     Log_N_Debug3("Precision was: " << oldPrecision << ", new value: " << newPrecision);
 
-    if (oldPrecision < newPrecision)
-    {
+    bool opUnlimited = oldPrecision < 0;
+    bool npUnlimited = newPrecision < 0;
+
+    // Ensure no 'unlimited' precision gets used in gt / lt comparisons
+    if (
+        (opUnlimited && !npUnlimited)
+        || !(opUnlimited || npUnlimited) && (oldPrecision < newPrecision)
+    ) {
+        std::string opstr = opUnlimited ? "unlimited" : std::to_string(oldPrecision);
+        std::string npstr = npUnlimited ? "unlimited" : std::to_string(newPrecision);
         Log_N_Debug3_H(
-            "purging excess digits, oldPrecision=" << oldPrecision << ", newPrecision="
-                << newPrecision
+            "purging excess digits, oldPrecision=" << opstr << ", newPrecision=" << npstr
         );
         int result = internal_purgeExcessDigits();
         Log_N_Debug3_T("returning " << result);
@@ -1632,6 +1639,10 @@ mdn::PrecisionStatus mdn::Mdn2dBase::locked_checkPrecisionWindow(const Coord& xy
         return PrecisionStatus::Inside;
     }
     int precision = m_config.precision();
+    if (precision < 0) {
+        Log_N_Debug4("At: " << xy << ", unlimited precision, result: Inside");
+        return PrecisionStatus::Inside;
+    }
 
     // minLimit - below this and the new value should not be added
     Coord minLimit = m_bounds.max() - precision;

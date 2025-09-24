@@ -1341,11 +1341,11 @@ void mdn::gui::Project::saveBinary(std::ostream& out) const {
     GuiTools::binaryWriteString(out, m_name);
 
     // Global config (store the 5 knobs your dialog manipulates)
-    // base, precision, signConvention, maxCarryOverIters, fraxis
+    // base, precision, signConvention, fraxisCascadeDepth, fraxis
     GuiTools::binaryWrite(out, static_cast<int32_t>(m_config.base()));
     GuiTools::binaryWrite(out, static_cast<int32_t>(m_config.precision()));
     GuiTools::binaryWrite(out, static_cast<int32_t>(static_cast<int>(m_config.signConvention())));
-    GuiTools::binaryWrite(out, static_cast<int32_t>(m_config.maxCarryoverIters()));
+    GuiTools::binaryWrite(out, static_cast<int32_t>(m_config.fraxisCascadeDepth()));
     GuiTools::binaryWrite(out, static_cast<int32_t>(static_cast<int>(m_config.fraxis())));
 
     // Active tab index
@@ -1406,8 +1406,8 @@ std::unique_ptr<mdn::gui::Project> mdn::gui::Project::loadBinary(
     std::string projName = GuiTools::binaryReadString(in);
 
     // Config (same order as saved)
-    int32_t base=10, precision=32, sign=0, maxIters=20, fraxis=0;
-    GuiTools::binaryRead(in, base); GuiTools::binaryRead(in, precision); GuiTools::binaryRead(in, sign); GuiTools::binaryRead(in, maxIters); GuiTools::binaryRead(in, fraxis);
+    int32_t base=10, precision=32, sign=0, cascadeDepth=20, fraxis=0;
+    GuiTools::binaryRead(in, base); GuiTools::binaryRead(in, precision); GuiTools::binaryRead(in, sign); GuiTools::binaryRead(in, cascadeDepth); GuiTools::binaryRead(in, fraxis);
 
     // Active index
     int32_t activeIdx = 0; GuiTools::binaryRead(in, activeIdx);
@@ -1421,7 +1421,7 @@ std::unique_ptr<mdn::gui::Project> mdn::gui::Project::loadBinary(
             base,
             precision,
             static_cast<mdn::SignConvention>(sign),
-            maxIters,
+            cascadeDepth,
             static_cast<mdn::Fraxis>(fraxis)
         );
         proj->setConfig(cfg);
@@ -1431,15 +1431,14 @@ std::unique_ptr<mdn::gui::Project> mdn::gui::Project::loadBinary(
     uint32_t count = 0; GuiTools::binaryRead(in, count);
 
     // Read each tab, preserving indices; let each Mdn2d load itself.
-    // We *append/insert* using your existing API, which rebuilds addressing maps.
-    // (Matches how the constructor seeds new tabs and appendMdn wires maps.) :contentReference[oaicite:3]{index=3}
+    // (Matches how the constructor seeds new tabs and appendMdn wires maps.)
     for (uint32_t k = 0; k < count; ++k) {
         int32_t idx = 0; GuiTools::binaryRead(in, idx);
         std::string tabName = GuiTools::binaryReadString(in);
 
         Log_Debug4("Creating {'" << tabName << "'," << idx << "}");
         // Create a fresh number with project config + correct name
-        Mdn2d num = Mdn2d::NewInstance(proj->m_config, tabName); // mirrors normal create path :contentReference[oaicite:4]{index=4}
+        Mdn2d num = Mdn2d::NewInstance(proj->m_config, tabName);
 
         // Load payload
         try {
@@ -1451,7 +1450,7 @@ std::unique_ptr<mdn::gui::Project> mdn::gui::Project::loadBinary(
 
         // Insert at the right position (use your existing function to keep maps in sync)
         Log_Debug4("Inserting new mdn, {'" << tabName << "'," << idx << "}");
-        proj->insertMdn(std::move(num), idx); // handles out-of-range as "place at end" per your docs :contentReference[oaicite:5]{index=5}
+        proj->insertMdn(std::move(num), idx); // handles out-of-range
     }
 
     int want = activeIdx;

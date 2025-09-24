@@ -324,7 +324,9 @@ protected:
             CoordSet internal_fraxis(
                 const Coord& xy, double f, int nDigits, bool overwrite, int dX, int dY, int c
             );
-            CoordSet internal_fraxisCascade(const Coord& xy, Digit d, bool overwrite, int c);
+            CoordSet internal_fraxisCascade(
+                const Coord& xy, Digit d, bool overwrite, int c, int cascade
+            );
 
             // // plusEquals variant: *this += rhs x scalar, used in mdn x mdn algorithm
             // Mdn2d& internal_plusEquals(const Mdn2d& rhs, int scalar);

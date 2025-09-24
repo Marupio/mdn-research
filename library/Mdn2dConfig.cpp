@@ -44,7 +44,7 @@ mdn::Mdn2dConfig::Mdn2dConfig(
     int baseIn,
     int precisionIn,
     SignConvention signConventionIn,
-    int maxCarryoverItersIn,
+    int fraxisCascadeDepthIn,
     Fraxis fraxisIn,
     Mdn2dFramework* parent
 ) :
@@ -55,7 +55,7 @@ mdn::Mdn2dConfig::Mdn2dConfig(
     m_precision(precisionIn),
     m_epsilon(static_calculateEpsilon(m_precision, m_base)),
     m_signConvention(signConventionIn),
-    m_maxCarryoverIters(maxCarryoverItersIn),
+    m_fraxisCascadeDepth(fraxisCascadeDepthIn),
     m_fraxis(fraxisIn)
 {
     Log_Debug3_H("");
@@ -126,7 +126,7 @@ void mdn::Mdn2dConfig::validateConfig() const {
         oss << "    precision = " << m_precision << ", must be > 0" << std::endl;
         oss << "    signConvention = " << SignConventionToName(m_signConvention);
         oss << ", expecting: 'Neutral', 'Positive', or 'Negative'" << std::endl;
-        oss << "    maxCarryoverIters = " << m_maxCarryoverIters << std::endl;
+        oss << "    fraxisCascadeDepth = " << m_fraxisCascadeDepth << std::endl;
         oss << "    fraxis = " << FraxisToName(m_fraxis)
             << ", expecting 'X' or 'Y'";
         InvalidArgument err(oss.str());
@@ -150,7 +150,7 @@ void mdn::Mdn2dConfig::update(const Mdn2dConfig& cfg) {
     m_precision = cfg.m_precision;
     m_epsilon = cfg.m_epsilon;
     m_signConvention = cfg.m_signConvention;
-    m_maxCarryoverIters = cfg.m_maxCarryoverIters;
+    m_fraxisCascadeDepth = cfg.m_fraxisCascadeDepth;
     m_fraxis = cfg.m_fraxis;
 }
 
@@ -167,7 +167,7 @@ bool mdn::Mdn2dConfig::operator==(const Mdn2dConfig& rhs) const {
         rhs.m_base == m_base &&
         rhs.m_precision == m_precision &&
         rhs.m_signConvention == m_signConvention &&
-        rhs.m_maxCarryoverIters == m_maxCarryoverIters &&
+        rhs.m_fraxisCascadeDepth == m_fraxisCascadeDepth &&
         rhs.m_fraxis == m_fraxis
     );
     If_Log_Showing_Debug3(

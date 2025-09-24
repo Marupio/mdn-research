@@ -11,6 +11,7 @@
 #include "MdnException.hpp"
 #include "Tools.hpp"
 
+constexpr int maxCarryoverIters = 20;
 
 mdn::Carryover mdn::Mdn2dRules::static_checkCarryover(Digit p, Digit x, Digit y, Digit base) {
     Log_Debug4_H("");
@@ -296,7 +297,7 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryoverCleanup(const CoordSet& coords) {
 
     CoordSet workingSet(coords);
     bool achievedGreatness = false;
-    for (int i = 0; i < m_config.maxCarryoverIters(); ++i) {
+    for (int i = 0; i < maxCarryoverIters; ++i) {
         for (const Coord& xy: workingSet) {
             Carryover co = locked_checkCarryover(xy);
             if (co == Carryover::Required || co == wrongSign) {
@@ -313,7 +314,7 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryoverCleanup(const CoordSet& coords) {
     if (!achievedGreatness) {
         Log_N_Warn(
             "Failed to finish all required carryovers and carryover sign " << "conventions.\n"
-            << "\tMax iterations: " << m_config.maxCarryoverIters() << '\n'
+            << "\tMax iterations: " << maxCarryoverIters << '\n'
             << "\tDigits remaining to check: " << workingSet.size() << '\n'
             << "\tTotal digits affected: " << affectedCoords.size() << '\n'
         );

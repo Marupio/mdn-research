@@ -39,8 +39,8 @@ void mdn::gui::Clipboard::encodeRectToClipboard(
     configDict["precision"] = srcConfig.precision();
     configDict["signConvention"] =
         MdnQtInterface::toQString(SignConventionToName(srcConfig.signConvention()));
-    if (!srcConfig.maxCarryoverItersIsDefault()) {
-        configDict["carryoverIters"] = srcConfig.maxCarryoverIters();
+    if (!srcConfig.fraxisCascadeDepthIsDefault()) {
+        configDict["fraxisCascadeDepth"] = srcConfig.fraxisCascadeDepth();
     }
     configDict["fraxis"] = MdnQtInterface::toQString(FraxisToName(srcConfig.fraxis()));
 

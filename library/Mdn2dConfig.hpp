@@ -32,8 +32,8 @@ class MDN_API Mdn2dConfig {
 
 public:
 
-    // Return default carryOverIters
-    static int defaultCarryOverIters() {
+    // Return default fraxisCascadeDepth
+    static int defaultFraxisCascadeDepth() {
         return 20;
     }
 
@@ -94,7 +94,7 @@ private:
     // Maximum number of outerloops allowed in attempting to reach polymorphic stability
     //  That is, all required carryovers are done, and polymorphic carryovers meet the default sign
     //  convention.  Use -1 for infinite loops allowed.
-    int m_maxCarryoverIters;
+    int m_fraxisCascadeDepth;
 
     // Affects 1) fractional addition, 2) divide direction
     Fraxis m_fraxis;
@@ -113,7 +113,7 @@ public:
         int baseIn=10,
         int precisionIn=32,
         SignConvention signConventionIn=SignConvention::Positive,
-        int maxCarryoverItersIn = 20,
+        int fraxisCascadeDepthIn = 20,
         Fraxis fraxisIn=Fraxis::X,
         Mdn2dFramework* parent = nullptr
     );
@@ -175,12 +175,12 @@ public:
         m_signConvention = signConventionIn;
     }
 
-    int maxCarryoverIters() const { return m_maxCarryoverIters; }
-    bool maxCarryoverItersIsDefault() const {
-        return m_maxCarryoverIters == defaultCarryOverIters();
+    int fraxisCascadeDepth() const { return m_fraxisCascadeDepth; }
+    bool fraxisCascadeDepthIsDefault() const {
+        return m_fraxisCascadeDepth == defaultFraxisCascadeDepth();
     }
-    void setMaxCarryoverIters(int newVal) {
-        m_maxCarryoverIters = newVal < 0 ? constants::intMax : newVal;
+    void setFraxisCascadeDepth(int newVal) {
+        m_fraxisCascadeDepth = newVal < 0 ? constants::intMax : newVal;
     }
 
     Fraxis fraxis() const { return m_fraxis; }
@@ -209,7 +209,7 @@ public:
                 << ", p:" << c.m_precision
                 // << ", e:" << c.m_epsilon
                 << ", s:" << c.m_signConvention
-                << ", c:" << c.m_maxCarryoverIters
+                << ", c:" << c.m_fraxisCascadeDepth
                 << ", f:" << FraxisToName(c.m_fraxis)
             << ")";
     }
@@ -236,7 +236,7 @@ public:
         c.m_signConvention = NameToSignConvention(sname);
 
         //Reading [ c:20]
-        is >> letter >> colon >> c.m_maxCarryoverIters;
+        is >> letter >> colon >> c.m_fraxisCascadeDepth;
 
         //Reading [, f:X])
         is >> comma >> letter >> colon;
@@ -253,7 +253,7 @@ public:
     }
 
     // SignConvention m_signConvention;
-    // int m_maxCarryoverIters;
+    // int m_fraxisCascadeDepth;
     // Fraxis m_fraxis;
 
         // From the perspective of an Mdn2d, look for compatibility

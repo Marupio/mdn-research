@@ -160,6 +160,9 @@ mdn::CoordSet mdn::Mdn2d::locked_multiply(const Mdn2d& rhs, Mdn2d& ans) const {
     int thisPrecision = locked_getPrecision();
     int rhsPrecision = rhs.locked_getPrecision();
     int sumPrecision = thisPrecision + rhsPrecision;
+    if (rhsPrecision < 0 || thisPrecision < 0) {
+        sumPrecision = -1; // unlimited
+    }
     ans.locked_setPrecision(sumPrecision);
     ans.locked_clear();
     for (const auto& [xy, digit] : rhs.m_raw) {
@@ -170,7 +173,8 @@ mdn::CoordSet mdn::Mdn2d::locked_multiply(const Mdn2d& rhs, Mdn2d& ans) const {
         ans.locked_plusEquals(std::move(temp));
         Log_N_Debug4("Done plusEquals step");
     }
-    int finalPrecision = std::round(sumPrecision*0.5);
+    int finalPrecision =
+        sumPrecision < 0 ? -1 : std::round(sumPrecision*0.5);
     ans.locked_setPrecision(finalPrecision);
     Log_N_Debug3_T("ans has " << ans.m_index.size() << " changed digits");
     return ans.m_index;
@@ -330,13 +334,11 @@ mdn::CoordSet mdn::Mdn2d::locked_add(
             dX = -1;
             dY = 0;
             c = -1;
-            Log_Debug4("X");
             break;
         case Fraxis::Y:
             dX = 0;
             dY = -1;
             c = 1;
-            Log_Debug4("Y");
             break;
         default:
             std::ostringstream oss;
@@ -364,7 +366,9 @@ mdn::CoordSet mdn::Mdn2d::locked_add(
 
         Log_Debug4("dispatch cascade(" << xyRoot << "," << iDigit << ",c=" << c << ")");
         // Add fraxis cascade
-        changed.merge(internal_fraxisCascade(xyRoot, iDigit, overwrite, c));
+        changed.merge(
+            internal_fraxisCascade(xyRoot, iDigit, overwrite, c, m_config.fraxisCascadeDepth())
+        );
 
         Log_Debug4("cascade return");
 
@@ -963,6 +967,10 @@ mdn::CoordSet mdn::Mdn2d::internal_fraxis(
 
     if (nDigits < 0) {
         nDigits = m_config.precision();
+        if (nDigits < 0) {
+            // Arbitrarily
+            nDigits = 100;
+        }
     }
     // --nDigits;
 
@@ -981,7 +989,9 @@ mdn::CoordSet mdn::Mdn2d::internal_fraxis(
         f *= m_config.baseDouble();
         Digit d = nDigits ? static_cast<Digit>(f) : static_cast<Digit>(std::round(f));
         changed.merge(locked_add(xyWorking, d, overwrite));
-        changed.merge(internal_fraxisCascade(xyWorking, d, overwrite, c));
+        changed.merge(
+            internal_fraxisCascade(xyWorking, d, overwrite, c, m_config.fraxisCascadeDepth())
+        );
         f -= d;
         xyWorking.translate(dX, dY);
         precisionOkay = locked_checkPrecisionWindow(xyWorking) != PrecisionStatus::Below;
@@ -1011,8 +1021,9 @@ mdn::CoordSet mdn::Mdn2d::internal_fraxis(
 }
 
 
-mdn::CoordSet mdn::Mdn2d::internal_fraxisCascade(const Coord& xy, Digit d, bool overwrite, int c)
-{
+mdn::CoordSet mdn::Mdn2d::internal_fraxisCascade(
+    const Coord& xy, Digit d, bool overwrite, int c, int cascade
+) {
     If_Log_Showing_Debug4(
         Log_N_Debug4_H("cascade: " << static_cast<int>(d) << " at " << xy);
     );
@@ -1027,7 +1038,7 @@ mdn::CoordSet mdn::Mdn2d::internal_fraxisCascade(const Coord& xy, Digit d, bool 
         return changed;
     }
     changed.merge(locked_add(xyNext, d, overwrite));
-    changed.merge(internal_fraxisCascade(xyNext, d, overwrite, c));
+    changed.merge(internal_fraxisCascade(xyNext, d, overwrite, c, cascade-1));
     Log_N_Debug3_T("finalising cascade, changed " << changed.size() << " digits");
     return changed;
 }

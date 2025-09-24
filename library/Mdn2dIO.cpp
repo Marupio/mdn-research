@@ -721,7 +721,7 @@ mdn::TextReadSummary mdn::Mdn2dIO::locked_loadText(
     const Mdn2dConfig& dstCfg = dst.locked_config();
     Mdn2dConfig cfg(
         base, prec, static_cast<SignConvention>(sign),
-        dstCfg.maxCarryoverIters(),
+        dstCfg.fraxisCascadeDepth(),
         dstCfg.fraxis()
     );
     Log_Debug4("Assembled config=" << cfg << ", applying to number");
@@ -997,7 +997,7 @@ void mdn::Mdn2dIO::locked_loadBinary(
         static_cast<int>(base32),
         static_cast<int>(prec32),
         static_cast<SignConvention>(sign8),
-        dstCfg.maxCarryoverIters(),
+        dstCfg.fraxisCascadeDepth(),
         dstCfg.fraxis()
     );
 

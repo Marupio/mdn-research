@@ -1,6 +1,10 @@
 #include "ProjectPropertiesDialog.hpp"
 
+#include <algorithm>
+
+
 #include <QButtonGroup>
+#include <QCheckBox>
 #include <QDialogButtonBox>
 #include <QFormLayout>
 #include <QGroupBox>
@@ -49,13 +53,29 @@ void ProjectPropertiesDialog::buildUi() {
     auto* gNum = new QGroupBox(tr("Global Number Settings"), this);
     auto* formN = new QFormLayout(gNum);
 
+    // Base
     m_base = new QSpinBox(gNum);
     m_base->setRange(2, 32);
     m_base->setAccelerated(true);
 
+    // Precision (+ Unlimited checkbox)
     m_precision = new QSpinBox(gNum);
     m_precision->setRange(2, std::numeric_limits<int>::max());
     m_precision->setAccelerated(true);
+
+    // Row container for precision widgets
+    auto* precisionRow = new QWidget(gNum);
+    auto* precisionLay = new QHBoxLayout(precisionRow);
+    precisionLay->setContentsMargins(0,0,0,0);
+
+    // Checkbox: Unlimited
+    m_precisionUnlimited = new QCheckBox(tr("Unlimited"), precisionRow);
+    m_precisionUnlimited->setToolTip(tr("Treat precision as unlimited (-1)."));
+
+    precisionLay->addWidget(m_precision);
+    precisionLay->addSpacing(8);
+    precisionLay->addWidget(m_precisionUnlimited);
+    precisionLay->addStretch(1);
 
     // Fraxis
     auto* fraxisRow = new QWidget(gNum);
@@ -77,10 +97,11 @@ void ProjectPropertiesDialog::buildUi() {
     signLay->addWidget(m_signNeutral);
     signLay->addWidget(m_signNeg);
 
-    formN->addRow(tr("Base:"), m_base);
-    formN->addRow(tr("Precision:"), m_precision);
-    formN->addRow(tr("Fraxis:"), fraxisRow);
-    formN->addRow(tr("Sign:"), signRow);
+    // Add rows
+    formN->addRow(tr("Base:"),      m_base);
+    formN->addRow(tr("Precision:"), precisionRow);
+    formN->addRow(tr("Fraxis:"),    fraxisRow);
+    formN->addRow(tr("Sign:"),      signRow);
     outer->addWidget(gNum);
 
     // Impact preview
@@ -116,9 +137,14 @@ void ProjectPropertiesDialog::buildUi() {
     auto fieldChanged = [this]{
         onAnyFieldChanged();
     };
+
     connect(m_nameEdit, &QLineEdit::textChanged, this, fieldChanged);
     connect(m_base,     qOverload<int>(&QSpinBox::valueChanged), this, fieldChanged);
     connect(m_precision,qOverload<int>(&QSpinBox::valueChanged), this, fieldChanged);
+    connect(m_precisionUnlimited, &QCheckBox::toggled, this, [this, fieldChanged](bool on){
+        m_precision->setEnabled(!on);
+        fieldChanged();
+    });
     connect(m_fraxisX,  &QRadioButton::toggled, this, fieldChanged);
     connect(m_fraxisY,  &QRadioButton::toggled, this, fieldChanged);
     connect(m_signPos,  &QRadioButton::toggled, this, fieldChanged);
@@ -127,6 +153,10 @@ void ProjectPropertiesDialog::buildUi() {
 
     connect(reset, &QPushButton::clicked, this, &ProjectPropertiesDialog::onResetDefaults);
     connect(help,  &QPushButton::clicked, this, &ProjectPropertiesDialog::onLearnMore);
+
+    // Initial UI state (default to limited unless you set it from your model later)
+    m_precisionUnlimited->setChecked(false);
+    m_precision->setEnabled(true);
 }
 
 
@@ -164,9 +194,17 @@ QString ProjectPropertiesDialog::projectName() const { return m_nameEdit->text()
 
 
 Mdn2dConfig ProjectPropertiesDialog::chosenConfig() const {
-    int baseIn = m_base->value();
-    int precisionIn = m_precision->value();
-    Fraxis fraxisIn = m_fraxisX->isChecked() ? Fraxis::X : Fraxis::Y;
+    const int baseIn = std::clamp(m_base->value(), 2, 32);
+
+    // Precision: -1 when Unlimited is checked, else spinbox value (clamped to >= 2)
+    const int precisionIn = m_precisionUnlimited->isChecked()
+        ? -1
+        : std::max(2, m_precision->value());
+
+    // Fraxis
+    const Fraxis fraxisIn = m_fraxisX->isChecked() ? Fraxis::X : Fraxis::Y;
+
+    // Sign convention
     SignConvention signConventionIn;
     if (m_signPos->isChecked()) {
         signConventionIn = SignConvention::Positive;
@@ -175,14 +213,42 @@ Mdn2dConfig ProjectPropertiesDialog::chosenConfig() const {
     } else {
         signConventionIn = SignConvention::Negative;
     }
+
+    // Build config (keep your existing cascade depth default)
     Mdn2dConfig c(
         baseIn,
         precisionIn,
         signConventionIn,
-        20, // default maxCarryOverIters
+        20,          // fraxisCascadeDepth (unchanged)
         fraxisIn
     );
     return c;
+}
+
+
+void ProjectPropertiesDialog::applyConfig(const Mdn2dConfig& model) {
+    m_base->setValue(std::clamp(model.base(), 2, 32));
+
+    const bool unlimited = (model.precision() < 0);
+    m_precisionUnlimited->setChecked(unlimited);
+    m_precision->setEnabled(!unlimited);
+    if (!unlimited) {
+        m_precision->setValue(std::max(2, model.precision()));
+    }
+
+    // Fraxis
+    if (model.fraxis() == Fraxis::X) {
+        m_fraxisX->setChecked(true);
+    } else {
+        m_fraxisY->setChecked(true);
+    }
+
+    // Sign
+    switch (model.signConvention()) {
+        case SignConvention::Positive: m_signPos->setChecked(true); break;
+        case SignConvention::Neutral:  m_signNeutral->setChecked(true); break;
+        case SignConvention::Negative: m_signNeg->setChecked(true); break;
+    }
 }
 
 

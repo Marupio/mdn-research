@@ -1,11 +1,12 @@
 #pragma once
 #include <QDialog>
 
-class QSpinBox;
-class QLineEdit;
-class QLabel;
-class QRadioButton;
+class QCheckBox;
 class QDialogButtonBox;
+class QLabel;
+class QLineEdit;
+class QRadioButton;
+class QSpinBox;
 
 namespace mdn {
     class Mdn2dConfig;
@@ -26,6 +27,8 @@ public:
 
     QString projectName() const;
     mdn::Mdn2dConfig chosenConfig() const;
+    void applyConfig(const Mdn2dConfig& model);
+
 
 private slots:
     void onAnyFieldChanged();
@@ -44,6 +47,7 @@ private:
 
     QSpinBox*  m_base{nullptr};
     QSpinBox*  m_precision{nullptr};
+    QCheckBox*  m_precisionUnlimited{nullptr};
     QRadioButton* m_fraxisX{nullptr};
     QRadioButton* m_fraxisY{nullptr};
     QRadioButton* m_signPos{nullptr};
