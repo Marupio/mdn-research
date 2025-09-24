@@ -623,7 +623,7 @@ std::vector<std::string> mdn::gui::Project::toc() const {
     Log_Debug2_H("");
     std::vector<std::string> result(size());
     for (const auto& [index, name] : m_addressingIndexToName) {
-        std::string strName = getMdn(index).name();
+        std::string strName = getMdn(index)->name();
         result[index] = strName;
     }
     If_Log_Showing_Debug3(

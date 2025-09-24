@@ -30,6 +30,10 @@ Make Selection thread safe
 * Change precision to fraxis depth, and allow infinite precision
 
 GUI library
+* Log idents are royally screwed up in Release mode
+* Mdn0 op Mdn0 -> Mdn0 lockup
+* Status text area does not (slider) grow with font size
+* New tab should select new tab, operations should select result
 * OVER doesn't work on diagonals - don't get pascal numbers
 * Be able to change config - config button
 * New Project window lost [Enter] button
