@@ -26,9 +26,6 @@ Make Selection thread safe
 * Get rid of invalidReason in Mdn2dConfig
 * Make Selection thread safe?
 
-* Check overwrite might be broken with if (d != 0) in Mdn2d::internalFraxis
-* Change precision to fraxis depth, and allow infinite precision
-
 GUI library
 * Log idents are royally screwed up in Release mode
 * Mdn0 op Mdn0 -> Mdn0 lockup

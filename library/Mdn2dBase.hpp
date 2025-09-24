@@ -232,6 +232,7 @@ public:
             // Write out a continuous range for a rows covering an area from Coord c0 to Coord c1
             //  Returns bounds of output digits
             void getAreaRows(const Rect& window, VecVecDigit& out) const;
+            bool tryGetAreaRows(const Rect& bounds, VecVecDigit& out) const;
             protected:
             void locked_getAreaRows(const Rect& window, VecVecDigit& out) const;
             public:
@@ -417,6 +418,7 @@ public:
             // Retuns bounds of non zero entries in m_raw
             const Rect& bounds() const;
             protected: const Rect& locked_bounds() const; public:
+            bool tryGetBounds(Rect& bounds) const;
 
 
         // *** Direct access to underlying data

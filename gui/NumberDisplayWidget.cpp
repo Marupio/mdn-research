@@ -4,6 +4,7 @@
 #include <QGuiApplication>
 #include <QStyle>
 #include <QStyleOption>
+#include <QTimer>
 
 #include "CellLineEdit.hpp"
 #include "GuiTools.hpp"
@@ -207,10 +208,44 @@ void mdn::gui::NumberDisplayWidget::paintEvent(QPaintEvent* event) {
         false // No need to fix ordering
     );
 
-    VecVecDigit rows;
-    m_model->getAreaRows(m_viewBounds, rows);
+// Non-blocking fetch: try; if writer active, reuse cache and queue a repaint
+VecVecDigit freshRows;
+bool got = false;
+if (m_model) {
+    // NEW: model side should provide a try-get that returns false if a writer holds the lock
+    got = m_model->tryGetAreaRows(m_viewBounds, freshRows);
+}
 
-    const Rect& modelBounds = m_model->bounds();
+    const VecVecDigit* rowsPtr = nullptr;
+    if (got) {
+        m_cachedRows = std::move(freshRows);
+        m_haveCacheRows  = true;
+        rowsPtr      = &m_cachedRows;
+    } else {
+        if (m_haveCacheRows) {
+            rowsPtr = &m_cachedRows;
+            // Try again soon; don't block the UI now
+            QTimer::singleShot(0, this, [this]{ update(); });
+        } else {
+            // First frame and model busy: synthesize zeros so we can still draw the grid
+            m_cachedRows.assign(std::max(1, m_rows), VecDigit(std::max(1, m_cols), Digit(0)));
+            m_haveCacheRows = true;
+            rowsPtr     = &m_cachedRows;
+            QTimer::singleShot(0, this, [this]{ update(); });
+        }
+    }
+
+    Rect modelBounds;
+    if (!m_model->tryGetBounds(modelBounds)) {
+        if (m_haveCacheBounds) {
+            modelBounds = m_boundsCache;
+        } else {
+            // Log_Warn("Failed to acquire bounds and no cache");
+        }
+    } else {
+        m_boundsCache = modelBounds;
+        m_haveCacheBounds = true;
+    }
     const Rect viewIbounds = Rect::Intersection(m_viewBounds, modelBounds);
     // int nzRowStart = -1;
     // int nzRowEnd = -1;
@@ -240,7 +275,7 @@ void mdn::gui::NumberDisplayWidget::paintEvent(QPaintEvent* event) {
     for (int vy = 0; vy < m_rows; ++vy) {
 
         int rowI = m_rows - 1 - vy;
-        const VecDigit& currentRow = rows[rowI];
+        const VecDigit& currentRow = rowsPtr->operator[](rowI);
 
         for (int vx = 0; vx < m_cols; ++vx) {
             // Convert view cell (vx,vy) to model coordinate (x,y).

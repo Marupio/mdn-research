@@ -248,6 +248,11 @@ private:
     bool m_editing{false};
     HighlightRole m_highlightRole = HighlightRole::None;
 
+    // Unblocking display
+    VecVecDigit m_cachedRows;
+    bool m_haveCacheRows{false};
+    Rect m_boundsCache;
+    bool m_haveCacheBounds{false};
 };
 
 } // end namespace gui

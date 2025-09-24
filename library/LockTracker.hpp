@@ -226,12 +226,100 @@ public:
         bool engaged_{false};
     };
 
+    class TryWritableLock {
+    public:
+        explicit TryWritableLock(std::shared_mutex& m, std::atomic<int>& ctr)
+            : lk_(m, std::try_to_lock), ctr_(&ctr)
+        {
+#ifdef MDN_DEBUG
+            if (lk_.owns_lock()) {
+                const void* key = static_cast<const void*>(&m);
+                g_lt_counts.wr[key] += 1;
+            }
+#endif
+            engaged_ = lk_.owns_lock();
+            if (engaged_) ctr_->fetch_add(1, std::memory_order_relaxed);
+        }
+        ~TryWritableLock() { release(); }
+        TryWritableLock(TryWritableLock&& o) noexcept
+            : lk_(std::move(o.lk_)), ctr_(std::exchange(o.ctr_, nullptr)), engaged_(std::exchange(o.engaged_, false)) {}
+        TryWritableLock& operator=(TryWritableLock&& o) noexcept {
+            if (this != &o) { release(); lk_ = std::move(o.lk_); ctr_ = std::exchange(o.ctr_, nullptr); engaged_ = std::exchange(o.engaged_, false); }
+            return *this;
+        }
+        bool owns_lock() const noexcept { return lk_.owns_lock(); }
+        explicit operator bool() const noexcept { return owns_lock(); }
+        void unlock() { release(); }
+    private:
+        void release() {
+            if (engaged_) {
+#ifdef MDN_DEBUG
+                const void* key = static_cast<const void*>(lk_.mutex());
+                if (key) { auto it = g_lt_counts.wr.find(key); if (it != g_lt_counts.wr.end() && it->second > 0) --(it->second); }
+#endif
+                lk_.unlock();
+                ctr_->fetch_sub(1, std::memory_order_relaxed);
+                engaged_ = false;
+            }
+        }
+        std::unique_lock<std::shared_mutex> lk_;
+        std::atomic<int>* ctr_{nullptr};
+        bool engaged_{false};
+    };
+
+    class TryReadOnlyLock {
+    public:
+        explicit TryReadOnlyLock(std::shared_mutex& m, std::atomic<int>& ctr)
+            : lk_(m, std::try_to_lock), ctr_(&ctr)
+        {
+#ifdef MDN_DEBUG
+            if (lk_.owns_lock()) {
+                const void* key = static_cast<const void*>(&m);
+                g_lt_counts.rd[key] += 1;
+            }
+#endif
+            engaged_ = lk_.owns_lock();
+            if (engaged_) ctr_->fetch_add(1, std::memory_order_relaxed);
+        }
+        ~TryReadOnlyLock() { release(); }
+        TryReadOnlyLock(TryReadOnlyLock&& o) noexcept
+            : lk_(std::move(o.lk_)), ctr_(std::exchange(o.ctr_, nullptr)), engaged_(std::exchange(o.engaged_, false)) {}
+        TryReadOnlyLock& operator=(TryReadOnlyLock&& o) noexcept {
+            if (this != &o) { release(); lk_ = std::move(o.lk_); ctr_ = std::exchange(o.ctr_, nullptr); engaged_ = std::exchange(o.engaged_, false); }
+            return *this;
+        }
+        bool owns_lock() const noexcept { return lk_.owns_lock(); }
+        explicit operator bool() const noexcept { return owns_lock(); }
+        void unlock() { release(); }
+    private:
+        void release() {
+            if (engaged_) {
+#ifdef MDN_DEBUG
+                const void* key = static_cast<const void*>(lk_.mutex());
+                if (key) { auto it = g_lt_counts.rd.find(key); if (it != g_lt_counts.rd.end() && it->second > 0) --(it->second); }
+#endif
+                lk_.unlock();
+                ctr_->fetch_sub(1, std::memory_order_relaxed);
+                engaged_ = false;
+            }
+        }
+        std::shared_lock<std::shared_mutex> lk_;
+        std::atomic<int>* ctr_{nullptr};
+        bool engaged_{false};
+    };
+
     // Factory helpers (const so you can call them from const methods)
     WritableLock lockWriteable(std::shared_mutex& m) const {
         return WritableLock(m, writers_);
     }
     ReadOnlyLock lockReadOnly(std::shared_mutex& m) const {
         return ReadOnlyLock(m, readers_);
+    }
+    TryWritableLock tryLockWriteable(std::shared_mutex& m) const {
+        return TryWritableLock(m, writers_);
+    }
+    TryReadOnlyLock tryLockReadOnly(std::shared_mutex& m)  const {
+        return TryReadOnlyLock(m, readers_);
     }
 
     int activeWriterCount() const noexcept {

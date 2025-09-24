@@ -111,7 +111,7 @@ public:
     // Construct from parts, or null
     Mdn2dConfig(
         int baseIn=10,
-        int precisionIn=32,
+        int precisionIn=-1, // unlimited
         SignConvention signConventionIn=SignConvention::Positive,
         int fraxisCascadeDepthIn = 20,
         Fraxis fraxisIn=Fraxis::X,

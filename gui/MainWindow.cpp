@@ -66,8 +66,7 @@ mdn::gui::MainWindow::MainWindow(QWidget *parent, Mdn2dConfig* cfg) :
 }
 
 
-mdn::gui::MainWindow::~MainWindow()
-{
+mdn::gui::MainWindow::~MainWindow() {
     // 1) Guard against app-wide signals firing during teardown.
     if (qApp) {
         disconnect(
@@ -1630,6 +1629,12 @@ void mdn::gui::MainWindow::initOperationsUi() {
             this,
             &mdn::gui::MainWindow::onNewMdn2d
         );
+    }
+    auto* s = m_ops->status();
+    if (s) {
+        connect(s, &StatusDisplayWidget::contentHeightChanged,
+                this, [this](int){ QMetaObject::invokeMethod(this, "fixBottomToContents", Qt::QueuedConnection); });
+        QMetaObject::invokeMethod(this, "fixBottomToContents", Qt::QueuedConnection);
     }
 }
 

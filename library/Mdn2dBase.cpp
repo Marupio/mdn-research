@@ -789,10 +789,26 @@ mdn::Rect mdn::Mdn2dBase::getAreaRows(VecVecDigit& out) const {
 }
 
 
+bool mdn::Mdn2dBase::tryGetAreaRows(const Rect& window, VecVecDigit& out) const {
+    Log_N_Debug2_H("");
+    auto rlock = m_lockTracker.tryLockReadOnly(m_mutex);
+    if (!rlock.owns_lock()) {
+        Log_N_Debug2_T("tryGetAreaRows: read lock not acquired (writer active)");
+        return false;
+    }
+    locked_getAreaRows(window, out);
+    Log_N_Debug2_T("");
+    return true;
+}
+
+
 void mdn::Mdn2dBase::getAreaRows(const Rect& window, VecVecDigit& out) const {
     Log_N_Debug2_H("");
+    Log_Debug4("");
     auto lock = lockReadOnly();
+    Log_Debug4("");
     locked_getAreaRows(window, out);
+    Log_Debug4("");
     Log_N_Debug2_T("");
 }
 
@@ -1528,6 +1544,19 @@ const mdn::Rect& mdn::Mdn2dBase::bounds() const {
 const mdn::Rect& mdn::Mdn2dBase::locked_bounds() const {
     Log_N_Debug3("Result: " << m_bounds);
     return m_bounds;
+}
+
+
+bool mdn::Mdn2dBase::tryGetBounds(Rect& bounds) const {
+    Log_N_Debug2_H("");
+    auto rlock = m_lockTracker.tryLockReadOnly(m_mutex);
+    if (!rlock.owns_lock()) {
+        Log_N_Debug2_T("tryGetBounds: read lock not acquired (writer active)");
+        return false;
+    }
+    bounds = locked_bounds();
+    Log_N_Debug2_T("Success, got " << bounds);
+    return true;
 }
 
 
