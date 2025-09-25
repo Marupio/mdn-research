@@ -265,6 +265,7 @@ void mdn::gui::MainWindow::onProjectTabsChanged(int currentIndex)
 
     // This will create the plusTab as well
     createTabs();
+    ensureTabCorner();
 
     int idx = currentIndex;
     const int count = m_tabWidget->count();
@@ -1310,7 +1311,6 @@ void mdn::gui::MainWindow::createToolbars() {
     tbProject->setIconSize(QSize(18, 18));
     tbProject->setToolButtonStyle(Qt::ToolButtonTextBesideIcon); // << important
 
-    auto actNewProj = tbProject->addAction(QIcon::fromTheme("document-new"), tr("New Project"));
     auto iconNew  = QIcon::fromTheme("document-new",  style()->standardIcon(QStyle::SP_FileDialogNewFolder));
     auto iconSave  = QIcon::fromTheme("document-save",  style()->standardIcon(QStyle::SP_DialogSaveButton));
     auto iconOpen  = QIcon::fromTheme("document-open",  style()->standardIcon(QStyle::SP_DialogOpenButton));
@@ -1340,22 +1340,23 @@ void mdn::gui::MainWindow::createToolbars() {
     tbEdit->setObjectName("tbEdit");
     tbEdit->setMovable(true);
     tbEdit->setIconSize(QSize(18, 18));
+    tbEdit->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
 
-    auto actCopy  = tbEdit->addAction(QIcon::fromTheme("edit-copy"),  tr("Copy"));
-    auto actPaste = tbEdit->addAction(QIcon::fromTheme("edit-paste"), tr("Paste"));
-    auto actCut   = tbEdit->addAction(QIcon::fromTheme("edit-cut"),   tr("Cut"));
+    auto iconCopy  = QIcon::fromTheme("edit-copy",  style()->standardIcon(QStyle::SP_DialogYesButton));
+    auto iconPaste = QIcon::fromTheme("edit-paste", style()->standardIcon(QStyle::SP_DialogApplyButton));
+    auto iconCut   = QIcon::fromTheme("edit-cut",   style()->standardIcon(QStyle::SP_TrashIcon));
+
+    auto actCopy  = tbEdit->addAction(iconCopy,  tr("Copy"));
+    auto actPaste = tbEdit->addAction(iconPaste, tr("Paste"));
+    auto actCut   = tbEdit->addAction(iconCut,   tr("Cut"));
 
     actCopy->setShortcut(QKeySequence::Copy);
     actPaste->setShortcut(QKeySequence::Paste);
     actCut->setShortcut(QKeySequence::Cut);
 
-    // Wire these to NumberDisplayWidget (active grid) if present
-    connect(actCopy,  &QAction::triggered, this, [this]{ if (auto* w = activeGridWidget())
-            QMetaObject::invokeMethod(w, "copy",  Qt::AutoConnection); });
-    connect(actPaste, &QAction::triggered, this, [this]{ if (auto* w = activeGridWidget())
-            QMetaObject::invokeMethod(w, "paste", Qt::AutoConnection); });
-    connect(actCut,   &QAction::triggered, this, [this]{ if (auto* w = activeGridWidget())
-            QMetaObject::invokeMethod(w, "cut",   Qt::AutoConnection); });
+    connect(actCopy,  &QAction::triggered, this, [this]{ if (auto* w = activeGridWidget()) QMetaObject::invokeMethod(w, "copy"); });
+    connect(actPaste, &QAction::triggered, this, [this]{ if (auto* w = activeGridWidget()) QMetaObject::invokeMethod(w, "paste"); });
+    connect(actCut,   &QAction::triggered, this, [this]{ if (auto* w = activeGridWidget()) QMetaObject::invokeMethod(w, "cut"); });
 }
 
 
@@ -1428,6 +1429,9 @@ void mdn::gui::MainWindow::setupLayout(Mdn2dConfig* cfg) {
     Log_Debug3("Dispatch - initFocusModel");
     initFocusModel();
 
+    Log_Debug3("Dispatch - createToolBars");
+    createToolbars();
+
     Log_Debug3_T("");
 }
 
@@ -1478,7 +1482,7 @@ void mdn::gui::MainWindow::createTabs() {
     h->addWidget(btnOpen);
     h->addWidget(btnClose);
     corner->setLayout(h);
-    m_tabWidget->setCornerWidget(corner, Qt::TopRightCorner);
+    m_tabWidget->setCornerWidget(corner, Qt::BottomRightCorner);
 
     connect(btnSave, &QToolButton::clicked, this, &MainWindow::onSaveMdn2d);
     connect(btnOpen, &QToolButton::clicked, this, &MainWindow::onOpenMdn2d);
@@ -2598,6 +2602,6 @@ void mdn::gui::MainWindow::ensureTabCorner() {
     }
 
     // (Re)attach – safe to call many times
-    m_tabWidget->setCornerWidget(m_tabCorner, Qt::TopRightCorner);
+    m_tabWidget->setCornerWidget(m_tabCorner, Qt::BottomRightCorner);
     m_tabCorner->show();
 }
