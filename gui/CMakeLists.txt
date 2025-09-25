@@ -46,6 +46,8 @@ add_executable(mdn_gui
 
 target_link_libraries(mdn_gui PRIVATE ${QT_LIBS} mdn)
 
+target_sources(mdn_gui PRIVATE help.qrc)
+
 include_directories("../library")
 
 # Console test app that exercises Project (no windows shown)

@@ -15,8 +15,11 @@ HelpDialog::HelpDialog(QWidget* parent) : QDialog(parent) {
     m_view = new QTextEdit(this);
     m_view->setReadOnly(true);
 
-    // Load from resources:  qrc:/help/overview.md   (add this to your .qrc)
-    QFile f(":/help/overview.md");
+    // #ifdef QT_DEBUG
+    //     QFile f(QCoreApplication::applicationDirPath() + "/help/overview.md");
+    // #else
+        QFile f(":/help/overview.md");
+    // #endif
     if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
         const QString md = QString::fromUtf8(f.readAll());
         m_view->setMarkdown(md); // Qt 5.14+ / Qt6
