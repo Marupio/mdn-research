@@ -1406,7 +1406,11 @@ std::unique_ptr<mdn::gui::Project> mdn::gui::Project::loadBinary(
     std::string projName = GuiTools::binaryReadString(in);
 
     // Config (same order as saved)
-    int32_t base=10, precision=32, sign=0, cascadeDepth=20, fraxis=0;
+    int32_t base=10;
+    int32_t precision=-1;
+    int32_t sign=0;
+    int32_t cascadeDepth=Mdn2dConfig::defaultFraxisCascadeDepth();
+    int32_t fraxis=0;
     GuiTools::binaryRead(in, base); GuiTools::binaryRead(in, precision); GuiTools::binaryRead(in, sign); GuiTools::binaryRead(in, cascadeDepth); GuiTools::binaryRead(in, fraxis);
 
     // Active index

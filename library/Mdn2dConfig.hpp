@@ -20,9 +20,13 @@ namespace mdn {
 class MDN_API Mdn2dConfig {
 
     // Calculate minimum fraction value to add to a digit, that it will appear as a non-zero
-    // digit within m_precision
+    // digit within m_precision.  Returns 0 for unlimited precision.
     static double static_calculateEpsilon(int precisionIn, int baseIn) {
-        return pow((1.0 / baseIn), (precisionIn + 1));
+        if (precisionIn < 0) {
+            return 0.0;
+        } else {
+            return pow((1.0 / baseIn), (precisionIn + 1));
+        }
     }
 
     // Pointer to framework governing class - what object holds this Mdn2d?
@@ -111,7 +115,7 @@ public:
     // Construct from parts, or null
     Mdn2dConfig(
         int baseIn=10,
-        int precisionIn=32,
+        int precisionIn=-1,
         SignConvention signConventionIn=SignConvention::Positive,
         int fraxisCascadeDepthIn = 20,
         Fraxis fraxisIn=Fraxis::X,

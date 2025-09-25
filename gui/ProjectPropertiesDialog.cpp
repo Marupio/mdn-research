@@ -17,10 +17,11 @@
 #include <QSpinBox>
 #include <QVBoxLayout>
 
+#include "../library/Logger.hpp"
 #include "../library/Mdn2dConfig.hpp"
-#include "Project.hpp"
-#include "../library/SignConvention.hpp"
 #include "../library/Mdn2dConfigImpact.hpp"
+#include "../library/SignConvention.hpp"
+#include "Project.hpp"
 
 using mdn::Mdn2dConfig;
 using mdn::Mdn2dConfigImpact;
@@ -63,6 +64,11 @@ void ProjectPropertiesDialog::buildUi() {
     m_precision->setRange(2, std::numeric_limits<int>::max());
     m_precision->setAccelerated(true);
 
+    // Fraxis cascade depth
+    m_fraxisCascadeDepth = new QSpinBox(gNum);
+    m_fraxisCascadeDepth->setRange(0, std::numeric_limits<int>::max());
+    m_fraxisCascadeDepth->setAccelerated(true);
+
     // Row container for precision widgets
     auto* precisionRow = new QWidget(gNum);
     auto* precisionLay = new QHBoxLayout(precisionRow);
@@ -71,6 +77,7 @@ void ProjectPropertiesDialog::buildUi() {
     // Checkbox: Unlimited
     m_precisionUnlimited = new QCheckBox(tr("Unlimited"), precisionRow);
     m_precisionUnlimited->setToolTip(tr("Treat precision as unlimited (-1)."));
+
 
     precisionLay->addWidget(m_precision);
     precisionLay->addSpacing(8);
@@ -100,6 +107,7 @@ void ProjectPropertiesDialog::buildUi() {
     // Add rows
     formN->addRow(tr("Base:"),      m_base);
     formN->addRow(tr("Precision:"), precisionRow);
+    formN->addRow(tr("Cascade:"), m_fraxisCascadeDepth);
     formN->addRow(tr("Fraxis:"),    fraxisRow);
     formN->addRow(tr("Sign:"),      signRow);
     outer->addWidget(gNum);
@@ -142,9 +150,12 @@ void ProjectPropertiesDialog::buildUi() {
     connect(m_base,     qOverload<int>(&QSpinBox::valueChanged), this, fieldChanged);
     connect(m_precision,qOverload<int>(&QSpinBox::valueChanged), this, fieldChanged);
     connect(m_precisionUnlimited, &QCheckBox::toggled, this, [this, fieldChanged](bool on){
+        Log_Debug3_H("lambda, on=" << on);
         m_precision->setEnabled(!on);
         fieldChanged();
+        Log_Debug3_T("");
     });
+    connect(m_fraxisCascadeDepth, qOverload<int>(&QSpinBox::valueChanged), this, fieldChanged);
     connect(m_fraxisX,  &QRadioButton::toggled, this, fieldChanged);
     connect(m_fraxisY,  &QRadioButton::toggled, this, fieldChanged);
     connect(m_signPos,  &QRadioButton::toggled, this, fieldChanged);
@@ -154,9 +165,9 @@ void ProjectPropertiesDialog::buildUi() {
     connect(reset, &QPushButton::clicked, this, &ProjectPropertiesDialog::onResetDefaults);
     connect(help,  &QPushButton::clicked, this, &ProjectPropertiesDialog::onLearnMore);
 
-    // Initial UI state (default to limited unless you set it from your model later)
-    m_precisionUnlimited->setChecked(false);
-    m_precision->setEnabled(true);
+    m_precision->setValue(32);
+    m_precision->setEnabled(false);
+    m_precisionUnlimited->setCheckState(Qt::CheckState::Checked);
 }
 
 
@@ -170,7 +181,15 @@ void ProjectPropertiesDialog::setInitial(
 
     // Cache defaults from cfg
     m_defBase      = cfg.base();
-    m_defPrecision = cfg.precision();
+    int tmpPrec = cfg.precision();
+    if (tmpPrec < 0) {
+        m_defPrecisionUnlimited = true;
+        m_defPrecision = 32;
+    } else {
+        m_defPrecisionUnlimited = false;
+        m_defPrecision = tmpPrec;
+    }
+    m_defFraxisCascadeDepth = cfg.fraxisCascadeDepth();
     m_defFraxis    = (cfg.fraxis() == mdn::Fraxis::X) ? 0 : 1;
     int sc = 0;
     switch (cfg.signConvention()) {
@@ -183,6 +202,8 @@ void ProjectPropertiesDialog::setInitial(
     // Set widgets to cfg
     m_base->setValue(m_defBase);
     m_precision->setValue(m_defPrecision);
+    m_precisionUnlimited->setChecked(m_defPrecisionUnlimited);
+    m_fraxisCascadeDepth->setValue(m_defFraxisCascadeDepth);
     (m_defFraxis == 0 ? m_fraxisX : m_fraxisY)->setChecked(true);
     (m_defSign == 0 ? m_signPos : (m_defSign==1 ? m_signNeutral : m_signNeg))->setChecked(true);
 
@@ -202,6 +223,9 @@ Mdn2dConfig ProjectPropertiesDialog::chosenConfig() const {
         : std::max(2, m_precision->value());
 
     // Fraxis
+    const int fraxisCascadeDepthIn(
+        std::max(m_fraxisCascadeDepth->value(), 0)
+    );
     const Fraxis fraxisIn = m_fraxisX->isChecked() ? Fraxis::X : Fraxis::Y;
 
     // Sign convention
@@ -219,7 +243,7 @@ Mdn2dConfig ProjectPropertiesDialog::chosenConfig() const {
         baseIn,
         precisionIn,
         signConventionIn,
-        20,          // fraxisCascadeDepth (unchanged)
+        fraxisCascadeDepthIn,
         fraxisIn
     );
     return c;
@@ -235,6 +259,8 @@ void ProjectPropertiesDialog::applyConfig(const Mdn2dConfig& model) {
     if (!unlimited) {
         m_precision->setValue(std::max(2, model.precision()));
     }
+
+    m_fraxisCascadeDepth->setValue(model.fraxisCascadeDepth());
 
     // Fraxis
     if (model.fraxis() == Fraxis::X) {
@@ -258,7 +284,9 @@ void ProjectPropertiesDialog::onAnyFieldChanged() {
 
 
 void ProjectPropertiesDialog::refreshImpactLabel() {
-    if (!m_project) return;
+    if (!m_project) {
+    return;
+    }
 
     const Mdn2dConfig cfg = chosenConfig();
     const Mdn2dConfigImpact imp = m_project->assessConfigChange(cfg);
@@ -274,6 +302,8 @@ void ProjectPropertiesDialog::refreshImpactLabel() {
 void ProjectPropertiesDialog::onResetDefaults() {
     m_base->setValue(m_defBase);
     m_precision->setValue(m_defPrecision);
+    m_precisionUnlimited->setChecked(m_defPrecisionUnlimited);
+    m_fraxisCascadeDepth->setValue(m_defFraxisCascadeDepth);
     m_fraxisX->setChecked(m_defFraxis == 0);
     m_fraxisY->setChecked(m_defFraxis == 1);
     m_signPos->setChecked(m_defSign == 0);
@@ -287,6 +317,8 @@ void ProjectPropertiesDialog::onLearnMore() {
     QMessageBox::information(this, tr("Number settings"),
         tr("• Base: numeral base (2–32). Changing base may clear all digits.\n"
            "• Precision: limits the non-zero digit envelope; excess digits drop at the far edge.\n"
+           "• Cascade: fraxis cascade depth - fractional values expand diagonally away from the \n"
+           "    digit axes, this controls the allowed distance.\n"
            "• Fraxis: controls which axis the fractional part ‘fans out’ along (X or Y).\n"
            "• Sign: resolves ambiguous carryovers (Positive/Neutral/Negative)."));
 }

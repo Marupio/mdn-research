@@ -1631,6 +1631,27 @@ void mdn::gui::MainWindow::initOperationsUi() {
             &mdn::gui::MainWindow::onNewMdn2d
         );
     }
+    auto* s = m_ops->status();
+    if (s) {
+        connect(
+            s,
+            &StatusDisplayWidget::contentHeightChanged,
+            this,
+            [this](int){
+                QMetaObject::invokeMethod(
+                    this,
+
+                    "onRequestFitBottomToContents",
+                    Qt::QueuedConnection
+                );
+            }
+        );
+        QMetaObject::invokeMethod(
+            this,
+            "onRequestFitBottomToContents",
+            Qt::QueuedConnection
+        );
+    }
 }
 
 
@@ -1702,8 +1723,8 @@ bool mdn::gui::MainWindow::createNewProjectFromConfig(Mdn2dConfig& cfg, bool req
         Log_Debug3_T("Failed to close existing project, cannot continue");
         return false;
     }
-
-    m_project = new Project(this, cfg.parentName(), nStartMdnDefault);
+    m_globalConfig = cfg;
+    m_project = new Project(this, cfg, nStartMdnDefault);
     if (m_project) {
         connect(m_project, &mdn::gui::Project::tabsAboutToChange,
                 this, &mdn::gui::MainWindow::onProjectTabsAboutToChange);

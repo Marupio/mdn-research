@@ -1839,6 +1839,11 @@ int mdn::Mdn2dBase::internal_purgeExcessDigits() {
     }
 
     int precision = m_config.precision();
+    if (precision < 0) {
+        // Unlimited precision, no need to discard any digits
+        Log_N_Debug3_T("Unlimited precision, no purge needed");
+        return 0;
+    }
     Coord gridSize = m_bounds.gridSize();
     CoordSet purgeSet;
     int purgeX = gridSize.x() - precision;

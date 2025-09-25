@@ -762,18 +762,64 @@ void mdn::gui::NumberDisplayWidget::mouseReleaseEvent(QMouseEvent* e) {
 
 
 void mdn::gui::NumberDisplayWidget::wheelEvent(QWheelEvent* e) {
-    // Ctrl+Wheel zooms font
-    if (e->modifiers().testFlag(Qt::ControlModifier)) {
-        // 120 per notch
-        const int numSteps = e->angleDelta().y() / 120;
-        if (numSteps > 0) {
-            increaseFont();
-        } else if (numSteps < 0) {
-            decreaseFont();
-        }
+    const bool ctrl  = e->modifiers().testFlag(Qt::ControlModifier);
+    const bool shift = e->modifiers().testFlag(Qt::ShiftModifier);
+
+    // Ctrl+wheel = zoom (keep your existing behaviour)
+    if (ctrl) {
+        const int steps = e->angleDelta().y() / 120; // 120 per notch
+        if (steps > 0)      increaseFont();
+        else if (steps < 0) decreaseFont();
         e->accept();
         return;
     }
+
+    // ---- Scrolling (no Ctrl) ----
+    // Prefer pixelDelta for high-res trackpads; fallback to angleDelta "steps"
+    QPoint px = e->pixelDelta();
+    QPoint ad = e->angleDelta();
+
+    // Convert to cell units
+    //   +Y (wheel up) => scroll view up (show higher Y) -> increase m_viewOriginY
+    //   +X (wheel right) => scroll view right -> increase m_viewOriginX
+    int dxCells = 0;
+    int dyCells = 0;
+
+    if (!px.isNull()) {
+        // pixelDelta is in screen pixels; map to whole cells
+        const int cs = std::max(1, m_cellSize);
+        dxCells = px.x() / cs;
+        dyCells = px.y() / cs;
+    } else {
+        // angleDelta is in eighths of a degree; 120 units = 1 notch
+        const int xSteps = ad.x() / 120;
+        const int ySteps = ad.y() / 120;
+
+        // Choose a sensible scroll quanta per notch (fraction of the visible window)
+        const int colsPerStep = std::max(1, (m_cols - 1) / 6);  // ~⅙ screen per notch
+        const int rowsPerStep = std::max(1, (m_rows - 1) / 6);
+
+        dxCells = xSteps * colsPerStep;
+        dyCells = ySteps * rowsPerStep;
+
+        // If device only reports vertical but user holds Shift, treat as horizontal
+        if (dxCells == 0 && shift && dyCells != 0) {
+            dxCells = dyCells;
+            dyCells = 0;
+        }
+    }
+
+    // Apply scroll (positive deltas move the view to reveal content in that direction)
+    // Vertical: +dy => show higher Y -> increase originY
+    // Horizontal: +dx => show larger X -> increase originX
+    if (dxCells != 0 || dyCells != 0) {
+        m_viewOriginX += dxCells;
+        m_viewOriginY += dyCells;
+        update();
+        e->accept();
+        return;
+    }
+
     QWidget::wheelEvent(e);
 }
 

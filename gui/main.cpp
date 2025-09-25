@@ -54,7 +54,7 @@ bool runLauncher(QApplication& app) {
             }
 
             cfg = dlg.chosenConfig();
-            Log_Debug2("");
+            Log_Debug2("cfg=" << cfg);
             mdn::gui::MainWindow mainApp(nullptr, &cfg);
 
             // false= do not ask for confirmation to close existing (dummy, empty) project

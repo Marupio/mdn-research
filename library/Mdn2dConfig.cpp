@@ -66,7 +66,8 @@ mdn::Mdn2dConfig::Mdn2dConfig(
 
 
 void mdn::Mdn2dConfig::setPrecision(int precisionIn) {
-    if (precisionIn < 0) {
+    if ((precisionIn < 1) && (precisionIn != -1)) {
+
         throw std::invalid_argument(
             "Got " + std::to_string(precisionIn) + ", precision cannot be less than 1"
         );
@@ -106,7 +107,7 @@ void mdn::Mdn2dConfig::setFraxis(int newVal) {
 bool mdn::Mdn2dConfig::checkConfig() const {
     return (
         (m_base >= 2 && m_base <= 32) &&
-        (m_precision > 0) &&
+        (m_precision > 0 || m_precision == -1) &&
         (
             (m_signConvention == SignConvention::Positive) ||
             (m_signConvention == SignConvention::Negative) ||

@@ -58,17 +58,19 @@ mdn::gui::StatusDisplayWidget::StatusDisplayWidget(QWidget* parent)
 
     setFontSize(m_fontPx);
     showPermanentMessage(QString());
+    setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    setMinimumHeight(sizeHint().height());
 }
 
 
-void mdn::gui::StatusDisplayWidget::setFontSize(int px)
-{
+void mdn::gui::StatusDisplayWidget::setFontSize(int px) {
     m_fontPx = px > 0 ? px : 12;
     QFont f = m_label->font();
     f.setPixelSize(m_fontPx);
     m_label->setFont(f);
     updateLineCountByWidth();
     updateGeometry();
+    maybeEmitHeightChanged();
 }
 
 

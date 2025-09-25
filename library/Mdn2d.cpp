@@ -306,13 +306,13 @@ mdn::CoordSet mdn::Mdn2d::locked_add(
 
     CoordSet changed;
     int maxIndex = intPart.size() - 1;
-    long lSign = negative ? -1 : 1;
-    long baseFactor = 1;
+    long long lSign = negative ? -1 : 1;
+    long long baseFactor = 1;
     long lbase = m_config.base();
     for (int i = 0; i <= maxIndex; ++i) {
         int pos = maxIndex - i;
         char c = intPart[pos];
-        long lDigit = Tools::unsafe_alphaToDigit(c);
+        long long lDigit = Tools::unsafe_alphaToDigit(c);
         changed.merge(locked_add(xy, lSign * lDigit * baseFactor, overwrite));
         baseFactor *= lbase;
     }
@@ -1032,14 +1032,17 @@ mdn::CoordSet mdn::Mdn2d::internal_fraxisCascade(
     d *= -1;
     if (locked_checkPrecisionWindow(xyNext) == PrecisionStatus::Below) {
         // Cascade done
-        Log_N_Debug3_T(
+        Log_N_Debug4_T(
             "cascaded to edge of precision window, changed " << changed.size() << " digits"
         );
         return changed;
     }
     changed.merge(locked_add(xyNext, d, overwrite));
-    changed.merge(internal_fraxisCascade(xyNext, d, overwrite, c, cascade-1));
-    Log_N_Debug3_T("finalising cascade, changed " << changed.size() << " digits");
+    if (--cascade) {
+        Log_N_Debug4("cascade=" << cascade);
+        changed.merge(internal_fraxisCascade(xyNext, d, overwrite, c, cascade));
+    }
+    Log_N_Debug4_T("finalising cascade, changed " << changed.size() << " digits");
     return changed;
 }
 

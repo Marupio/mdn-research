@@ -46,6 +46,7 @@ private:
     QLineEdit* m_pathEdit{nullptr};
 
     QSpinBox*  m_base{nullptr};
+    QSpinBox*  m_fraxisCascadeDepth{nullptr};
     QSpinBox*  m_precision{nullptr};
     QCheckBox*  m_precisionUnlimited{nullptr};
     QRadioButton* m_fraxisX{nullptr};
@@ -59,7 +60,10 @@ private:
     QDialogButtonBox* m_btns{nullptr};
 
     // cache of initial defaults (from cfg)
-    int m_defBase{10}, m_defPrecision{32};
+    int m_defBase{10};
+    int m_defFraxisCascadeDepth{20};
+    int m_defPrecision{32};
+    bool m_defPrecisionUnlimited{true};
     int m_defFraxis{0};  // 0=X, 1=Y
     int m_defSign{0};    // 0=Positive, 1=Neutral, 2=Negative
 };
