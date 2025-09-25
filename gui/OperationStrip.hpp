@@ -30,10 +30,10 @@ public:
     void reset();
 
 signals:
-    // user clicked an op button
+    void transformClicked();
     void operationClicked(Operation op);
-    // user clicked Cancel
     void cancelClicked();
+    void propertiesClicked();
 
 private:
     QPushButton* m_btnCancel = nullptr;
@@ -43,6 +43,9 @@ private:
     QPushButton* m_btnMul    = nullptr;
     QPushButton* m_btnDiv    = nullptr;
     std::array<QPushButton*, 4> m_allOpButtons;
+
+    QToolButton* m_btnProps = nullptr;
+    QToolButton* m_btnTransform = nullptr;
 
     QPushButton* buttonFor(Operation op) const;
     void setOpsEnabled(bool enabled);

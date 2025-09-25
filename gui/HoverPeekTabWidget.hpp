@@ -33,6 +33,11 @@ public:
     void setPreviewTextColor(const QColor& c) { m_previewTextColor = c; }
     void clearPreviewTextColor() { m_previewTextColor = QColor(); }
 
+    // Sizing
+    QSize minimumSizeHint() const override;
+    QSize sizeHint() const override;
+
+
 signals:
     void beganPreview(int hoveredIndex);
     void endedPreview(int restoredIndex);

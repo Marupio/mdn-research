@@ -46,6 +46,19 @@ void mdn::gui::HoverPeekTabWidget::setPlusTab(int idx, MarkerWidget* page) {
 }
 
 
+QSize mdn::gui::HoverPeekTabWidget::minimumSizeHint() const {
+    const QSize tabBarH = QSize(0, tabBar() ? tabBar()->sizeHint().height() : 0);
+    const QWidget* page = currentWidget();
+    const QSize pageMin = page ? page->minimumSizeHint() : QSize(640, 360);
+    return QSize(pageMin.width(), pageMin.height() + tabBarH.height());
+}
+
+
+QSize mdn::gui::HoverPeekTabWidget::sizeHint() const {
+    return minimumSizeHint();
+}
+
+
 void mdn::gui::HoverPeekTabWidget::onTabMoved(int from, int to) {
     // If a real tab was dragged “past” the end, it’ll land at 'last'.
     // We want [+] to remain last, so nudge that tab back before plus.

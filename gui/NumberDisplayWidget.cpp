@@ -92,8 +92,7 @@ void mdn::gui::NumberDisplayWidget::setFontPointSize(int pt) {
 }
 
 
-void mdn::gui::NumberDisplayWidget::cancelCellEdit()
-{
+void mdn::gui::NumberDisplayWidget::cancelCellEdit() {
     Log_Debug3_H("");
     if (m_cellEditor) {
         m_cellEditor->hide();
@@ -102,6 +101,22 @@ void mdn::gui::NumberDisplayWidget::cancelCellEdit()
     update();
     setFocus(Qt::OtherFocusReason);
     Log_Debug3_T("");
+}
+
+
+QSize mdn::gui::NumberDisplayWidget::minimumSizeHint() const {
+    const int minCols = 24;        // show at least 24 columns
+    const int minRows = 12;        // and 12 rows (tweak to taste)
+    const int cell    = std::max(1, m_cellSize);
+    const int padX    = 2 * m_paddingX;
+    const int padY    = 2 * m_paddingY;
+
+    return QSize(minCols * cell + padX, minRows * cell + padY);
+}
+
+
+QSize mdn::gui::NumberDisplayWidget::sizeHint() const {
+    return minimumSizeHint() + QSize(120, 80);
 }
 
 

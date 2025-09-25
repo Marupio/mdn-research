@@ -139,6 +139,7 @@ private:
     void createSplitter();
     void createCommandWidget();
     void createMenus();
+    void createToolbars();
     void setupLayout(Mdn2dConfig* cfg=nullptr);
     void createTabs();
     void createTabForIndex(int index);
@@ -207,6 +208,7 @@ private:
     bool isFocusAllowedWidget(QWidget* w) const;
     void onAppFocusChanged(QWidget* old, QWidget* now);
     void applySplitRatio();
+    void ensureTabCorner();
 
     // When true, no splitter movement allowed
     bool m_snugBottom = false;
@@ -241,6 +243,12 @@ private:
     OperationStrip* m_strip{nullptr};
     StatusDisplayWidget* m_status{nullptr};
     Project* m_project{nullptr};
+
+    // MainWindow.hpp
+    QWidget* m_tabCorner{nullptr};
+    QToolButton* m_tabSaveBtn{nullptr};
+    QToolButton* m_tabOpenBtn{nullptr};
+    QToolButton* m_tabCloseBtn{nullptr};
 
 };
 

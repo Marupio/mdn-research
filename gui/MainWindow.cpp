@@ -16,8 +16,10 @@
 #include <QSplitter>
 #include <QStandardPaths>
 #include <QStatusBar>
+#include <QStyle>
 #include <QTabBar>
 #include <QTabWidget>
+#include <QToolBar>
 #include <QToolButton>
 
 #include "../library/Logger.hpp"
@@ -1258,19 +1260,19 @@ void mdn::gui::MainWindow::createCommandWidget() {
 void mdn::gui::MainWindow::createMenus() {
     Log_Debug3_H("");
     QMenu* fileMenu = menuBar()->addMenu("&File");
-    fileMenu->addAction("New Project", this, &mdn::gui::MainWindow::onNewProject);
-    fileMenu->addAction("Open Project", this, &mdn::gui::MainWindow::onOpenProject);
-    fileMenu->addAction("Save Project", this, &mdn::gui::MainWindow::onSaveProject);
-    fileMenu->addAction("Close Project", this, &mdn::gui::MainWindow::onCloseProject);
+    fileMenu->addAction("&New Project", this, &mdn::gui::MainWindow::onNewProject);
+    fileMenu->addAction("&Open Project", this, &mdn::gui::MainWindow::onOpenProject);
+    fileMenu->addAction("&Save Project", this, &mdn::gui::MainWindow::onSaveProject);
+    fileMenu->addAction("&Close Project", this, &mdn::gui::MainWindow::onCloseProject);
     fileMenu->addSeparator();
     fileMenu->addAction("New Mdn2d", this, &mdn::gui::MainWindow::onNewMdn2d);
     fileMenu->addAction("Open Mdn2d", this, &mdn::gui::MainWindow::onOpenMdn2d);
     fileMenu->addAction("Save Mdn2d", this, &mdn::gui::MainWindow::onSaveMdn2d);
     fileMenu->addAction("Close Mdn2d", this, &mdn::gui::MainWindow::onTabCloseRequested);
     fileMenu->addSeparator();
-    fileMenu->addAction("Project Properties", this, &mdn::gui::MainWindow::onProjectProperties);
+    fileMenu->addAction("&Project Properties", this, &mdn::gui::MainWindow::onProjectProperties);
     fileMenu->addSeparator();
-    fileMenu->addAction("Exit", this, &mdn::gui::MainWindow::close);
+    fileMenu->addAction("E&xit", this, &mdn::gui::MainWindow::close);
 
     QMenu* editMenu = menuBar()->addMenu("&Edit");
     // editMenu->addAction("Undo");
@@ -1297,6 +1299,63 @@ void mdn::gui::MainWindow::createMenus() {
     helpMenu->addAction("Donate");
     helpMenu->addAction("About");
     Log_Debug3_T("");
+}
+
+
+void mdn::gui::MainWindow::createToolbars() {
+    // ---- Project toolbar
+    auto* tbProject = addToolBar(tr("Project"));
+    tbProject->setObjectName("tbProject");
+    tbProject->setMovable(true);
+    tbProject->setIconSize(QSize(18, 18));
+    tbProject->setToolButtonStyle(Qt::ToolButtonTextBesideIcon); // << important
+
+    auto actNewProj = tbProject->addAction(QIcon::fromTheme("document-new"), tr("New Project"));
+    auto iconNew  = QIcon::fromTheme("document-new",  style()->standardIcon(QStyle::SP_FileDialogNewFolder));
+    auto iconSave  = QIcon::fromTheme("document-save",  style()->standardIcon(QStyle::SP_DialogSaveButton));
+    auto iconOpen  = QIcon::fromTheme("document-open",  style()->standardIcon(QStyle::SP_DialogOpenButton));
+    auto iconClose = QIcon::fromTheme("window-close",   style()->standardIcon(QStyle::SP_DialogCloseButton));
+    auto iconGear  = QIcon::fromTheme("preferences-system", style()->standardIcon(QStyle::SP_FileDialogDetailedView));
+
+    auto aNew  = tbProject->addAction(iconNew,  tr("New Project"));
+    auto aSave  = tbProject->addAction(iconSave,  tr("Save Project"));
+    auto aOpen  = tbProject->addAction(iconOpen,  tr("Open Project"));
+    auto aClose = tbProject->addAction(iconClose, tr("Close Project"));
+    tbProject->addSeparator();
+    auto aProps = tbProject->addAction(iconGear,  tr("Properties"));
+
+    aNew->setShortcut(QKeySequence::New);
+    aSave->setShortcut(QKeySequence::Save);
+    aOpen->setShortcut(QKeySequence::Open);
+    aClose->setShortcut(QKeySequence::Close);
+
+    connect(aNew,   &QAction::triggered, this, &MainWindow::onNewProject);
+    connect(aSave,  &QAction::triggered, this, &MainWindow::onSaveProject);
+    connect(aOpen,  &QAction::triggered, this, &MainWindow::onOpenProject);
+    connect(aClose, &QAction::triggered, this, &MainWindow::onCloseProject);
+    connect(aProps, &QAction::triggered, this, &MainWindow::onProjectProperties);
+
+    // ---- Edit toolbar
+    auto* tbEdit = addToolBar(tr("Edit"));
+    tbEdit->setObjectName("tbEdit");
+    tbEdit->setMovable(true);
+    tbEdit->setIconSize(QSize(18, 18));
+
+    auto actCopy  = tbEdit->addAction(QIcon::fromTheme("edit-copy"),  tr("Copy"));
+    auto actPaste = tbEdit->addAction(QIcon::fromTheme("edit-paste"), tr("Paste"));
+    auto actCut   = tbEdit->addAction(QIcon::fromTheme("edit-cut"),   tr("Cut"));
+
+    actCopy->setShortcut(QKeySequence::Copy);
+    actPaste->setShortcut(QKeySequence::Paste);
+    actCut->setShortcut(QKeySequence::Cut);
+
+    // Wire these to NumberDisplayWidget (active grid) if present
+    connect(actCopy,  &QAction::triggered, this, [this]{ if (auto* w = activeGridWidget())
+            QMetaObject::invokeMethod(w, "copy",  Qt::AutoConnection); });
+    connect(actPaste, &QAction::triggered, this, [this]{ if (auto* w = activeGridWidget())
+            QMetaObject::invokeMethod(w, "paste", Qt::AutoConnection); });
+    connect(actCut,   &QAction::triggered, this, [this]{ if (auto* w = activeGridWidget())
+            QMetaObject::invokeMethod(w, "cut",   Qt::AutoConnection); });
 }
 
 
@@ -1393,8 +1452,37 @@ void mdn::gui::MainWindow::createTabs() {
 
     Log_Debug3("Creating plusTab");
     createPlusTab();
-
     updateStatusModeText(m_globalMode);
+
+    // m_tabWidget->setTabsClosable(true);
+
+    // Small corner widget for tab-scope file actions
+    auto* corner = new QWidget(m_tabWidget);
+    auto* h = new QHBoxLayout(corner);
+    h->setContentsMargins(4, 2, 4, 2);
+    h->setSpacing(4);
+
+    auto mkBtn = [corner](const char* theme, const QString& tip) {
+        auto* b = new QToolButton(corner);
+        b->setAutoRaise(true);
+        b->setIcon(QIcon::fromTheme(theme));
+        b->setToolTip(tip);
+        return b;
+    };
+
+    auto* btnSave = mkBtn("document-save",  tr("Save current tab"));
+    auto* btnOpen = mkBtn("document-open",  tr("Open into new tab"));
+    auto* btnClose= mkBtn("window-close",   tr("Close current tab"));
+
+    h->addWidget(btnSave);
+    h->addWidget(btnOpen);
+    h->addWidget(btnClose);
+    corner->setLayout(h);
+    m_tabWidget->setCornerWidget(corner, Qt::TopRightCorner);
+
+    connect(btnSave, &QToolButton::clicked, this, &MainWindow::onSaveMdn2d);
+    connect(btnOpen, &QToolButton::clicked, this, &MainWindow::onOpenMdn2d);
+    connect(btnClose, &QToolButton::clicked, this, &MainWindow::onTabCloseRequested);
     Log_Debug2_T("");
 }
 
@@ -2463,4 +2551,53 @@ void mdn::gui::MainWindow::applySplitRatio() {
     QList<int> newSizes;
     newSizes << first << second;
     m_splitter->setSizes(newSizes);
+}
+
+
+void mdn::gui::MainWindow::ensureTabCorner() {
+    if (!m_tabWidget) return;
+
+    if (!m_tabCorner) {
+        m_tabCorner = new QWidget(m_tabWidget);
+        auto* h = new QHBoxLayout(m_tabCorner);
+        h->setContentsMargins(4,2,4,2);
+        h->setSpacing(4);
+
+        auto mkBtn = [this](const QIcon& ic, const QString& tip){
+            auto* b = new QToolButton(m_tabCorner);
+            b->setAutoRaise(true);
+            b->setIcon(ic);
+            b->setToolTip(tip);
+            return b;
+        };
+
+        auto icSave = QIcon::fromTheme(
+            "document-save",
+            style()->standardIcon(QStyle::SP_DialogSaveButton)
+        );
+        auto icOpen = QIcon::fromTheme(
+            "document-open",
+            style()->standardIcon(QStyle::SP_DialogOpenButton)
+        );
+        auto icClose = QIcon::fromTheme(
+            "window-close",
+            style()->standardIcon(QStyle::SP_DialogCloseButton)
+        );
+
+        m_tabSaveBtn  = mkBtn(icSave,  tr("Save current tab"));
+        m_tabOpenBtn  = mkBtn(icOpen,  tr("Open into new tab"));
+        m_tabCloseBtn = mkBtn(icClose, tr("Close current tab"));
+
+        h->addWidget(m_tabSaveBtn);
+        h->addWidget(m_tabOpenBtn);
+        h->addWidget(m_tabCloseBtn);
+
+        connect(m_tabSaveBtn, &QToolButton::clicked, this, &MainWindow::onSaveMdn2d);
+        connect(m_tabOpenBtn, &QToolButton::clicked, this, &MainWindow::onOpenMdn2d);
+        connect(m_tabCloseBtn, &QToolButton::clicked, this, &MainWindow::onTabCloseRequested);
+    }
+
+    // (Re)attach – safe to call many times
+    m_tabWidget->setCornerWidget(m_tabCorner, Qt::TopRightCorner);
+    m_tabCorner->show();
 }

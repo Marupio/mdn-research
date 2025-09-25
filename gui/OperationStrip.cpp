@@ -1,5 +1,7 @@
 #include "OperationStrip.hpp"
 
+#include <QToolButton>
+
 #include "MdnQtInterface.hpp"
 
 mdn::gui::OperationStrip::OperationStrip(QWidget* parent)
@@ -44,13 +46,43 @@ mdn::gui::OperationStrip::OperationStrip(QWidget* parent)
     connect(m_btnDiv, &QPushButton::clicked, this, &OperationStrip::onDiv);
     connect(m_btnCancel, &QPushButton::clicked, this, &OperationStrip::onCancel);
 
-    // Layout: [Cancel] [+] [–] [×] [÷]
+    // Layout: [gear] [Cancel] [+] [–] [×] [÷]
+    // lay->addSpacing(8);
+
+    m_btnProps = new QToolButton(this);
+    m_btnProps->setAutoRaise(true);
+    m_btnProps->setToolTip(tr("Project Properties…"));
+    QIcon gear = QIcon::fromTheme(QStringLiteral("preferences-system"));
+    if (!gear.isNull()) {
+        m_btnProps->setIcon(gear);
+    } else {
+        // Fallbacks if no theme icon
+        m_btnProps->setText(QStringLiteral("⚙"));
+        m_btnProps->setMinimumWidth(24);
+    }
+    connect(m_btnProps, &QToolButton::clicked, this, &OperationStrip::propertiesClicked);
+
+    m_btnTransform = new QToolButton(this);
+    m_btnTransform->setAutoRaise(true);
+    m_btnTransform->setToolTip(tr("Transform"));
+    QIcon ticon = QIcon::fromTheme("transform-move");
+    if (!ticon.isNull()) {
+        m_btnTransform->setIcon(ticon);
+    } else {
+        m_btnTransform->setText(QStringLiteral("T↔"));
+    }
+
+    connect(m_btnTransform, &QToolButton::clicked, this, &OperationStrip::transformClicked);
+
+    lay->addWidget(m_btnProps);
+    lay->addSpacing(8);
     lay->addWidget(m_btnCancel);
     lay->addSpacing(8);
     lay->addWidget(m_btnAdd);
     lay->addWidget(m_btnSub);
     lay->addWidget(m_btnMul);
     lay->addWidget(m_btnDiv);
+    lay->addWidget(m_btnTransform);
     lay->addStretch(1);
 
     // Idle state by default

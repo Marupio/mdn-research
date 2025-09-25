@@ -100,6 +100,9 @@ public:
 
     inline EditMode editMode() const { return m_mode; }
 
+    // Sizing
+    QSize minimumSizeHint() const override;
+    QSize sizeHint() const override;
 
 signals:
     void focusDownRequested();
@@ -109,7 +112,6 @@ signals:
     void requestCycleFraxis();
     void requestStatus(const QString& s, int timeOut);
 
-Q_SIGNALS:
     void requestSelectNextTab();
     void requestSelectPrevTab();
     void requestMoveTabRight();
@@ -247,6 +249,10 @@ private:
     // Editing state
     bool m_editing{false};
     HighlightRole m_highlightRole = HighlightRole::None;
+
+    // Spacing
+    int m_paddingX{10};
+    int m_paddingY{10};
 
 };
 
