@@ -22,6 +22,7 @@
 #include "../library/Mdn2dConfigImpact.hpp"
 #include "../library/SignConvention.hpp"
 #include "Project.hpp"
+#include "HelpDialog.hpp"
 
 using mdn::Mdn2dConfig;
 using mdn::Mdn2dConfigImpact;
@@ -314,13 +315,8 @@ void ProjectPropertiesDialog::onResetDefaults() {
 
 
 void ProjectPropertiesDialog::onLearnMore() {
-    QMessageBox::information(this, tr("Number settings"),
-        tr("• Base: numeral base (2–32). Changing base may clear all digits.\n"
-           "• Precision: limits the non-zero digit envelope; excess digits drop at the far edge.\n"
-           "• Cascade: fraxis cascade depth - fractional values expand diagonally away from the \n"
-           "    digit axes, this controls the allowed distance.\n"
-           "• Fraxis: controls which axis the fractional part ‘fans out’ along (X or Y).\n"
-           "• Sign: resolves ambiguous carryovers (Positive/Neutral/Negative)."));
+    HelpDialog dlg("projectProperties", this);
+    dlg.exec();
 }
 
 

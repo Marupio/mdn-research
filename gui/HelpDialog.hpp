@@ -7,8 +7,9 @@ class QLineEdit;
 class HelpDialog : public QDialog {
     Q_OBJECT
 public:
-    explicit HelpDialog(QWidget* parent=nullptr);
+    explicit HelpDialog(QString title, QWidget* parent=nullptr);
 private:
-    QTextEdit*  m_view;
-    QLineEdit*  m_find;
+    QTextEdit* m_view;
+    QLineEdit* m_find;
+    QString m_title;
 };

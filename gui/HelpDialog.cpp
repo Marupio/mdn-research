@@ -8,17 +8,21 @@
 #include <QTextDocument>
 #include <QFile>
 
-HelpDialog::HelpDialog(QWidget* parent) : QDialog(parent) {
+HelpDialog::HelpDialog(QString title, QWidget* parent) :
+    QDialog(parent),
+    m_title(title)
+{
     setWindowTitle(tr("Help"));
     resize(720, 540);
 
     m_view = new QTextEdit(this);
     m_view->setReadOnly(true);
 
+    QFile f(":/help/" + title + ".md");
     // #ifdef QT_DEBUG
     //     QFile f(QCoreApplication::applicationDirPath() + "/help/overview.md");
     // #else
-        QFile f(":/help/overview.md");
+    //    QFile f(":/help/overview.md");
     // #endif
     if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
         const QString md = QString::fromUtf8(f.readAll());

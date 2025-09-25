@@ -9,7 +9,7 @@ such as:
 
 ```     3.1415926536```
 
-and since a _line_ is a __1 dimensional__ entity, what happens if we extend this?
+and since a _line_ is a **1 dimensional** entity, what happens if we extend this?
 
 ### Two Dimensional Numbers
 
@@ -96,9 +96,9 @@ MDN's behave very differently for the integer part and fractional part of a Real
 ───┼────────────────────────────
  0 │  0  0  0  0  0  0  0  0  0
 ```
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__Integer part__
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Integer part**
 
-__However__ the fractional amount experiences a form of _symmetry breaking_, and can be expressed _either_ as an _x_ form or _y_ form.  The application calls this its __Fraxis__.
+**However** the fractional amount experiences a form of _symmetry breaking_, and can be expressed _either_ as an _x_ form or _y_ form.  The application calls this its **Fraxis**.
 
 ```text
  0 │  1  0  0  0  0  0  0  0  0        0 │  3  0  0  0  0  0  0  0  0
@@ -113,5 +113,5 @@ __However__ the fractional amount experiences a form of _symmetry breaking_, and
 ───┼────────────────────────────       0 │  5  3  1  0  4  8  3 ─2  0
  0 │  0  0  0  0  0  0  0  0  0        0 │  4  4  5  7  8  4  0  5  0
 ```
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__Pi, x fraxis__&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__Pi, y fraxis__
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Pi, x fraxis**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Pi, y fraxis**
 

@@ -1353,20 +1353,29 @@ void mdn::gui::MainWindow::createMenus() {
     editMenu->addSeparator();
     editMenu->addAction("Delete", this, &mdn::gui::MainWindow::onEditDelete);
 
-    QMenu* toolsMenu = menuBar()->addMenu("&Tools");
-    // Placeholder for future items
+    // QMenu* toolsMenu = menuBar()->addMenu("&Tools");
 
     QMenu* helpMenu = menuBar()->addMenu("&Help");
-    QAction* actGetHelp = helpMenu->addAction("Get &Help");
-
-    connect(actGetHelp, &QAction::triggered, this, [this]{
-        HelpDialog dlg(this);
+    QAction* actOverview = helpMenu->addAction("&Overview");
+    QAction* actGuide = helpMenu->addAction("&Guide");
+    QAction* actAbout = helpMenu->addAction("&About");
+    QAction* actLicense = helpMenu->addAction("&License");
+    connect(actOverview, &QAction::triggered, this, [this]{
+        HelpDialog dlg("overview", this);
         dlg.exec();
     });
-
-
-    helpMenu->addAction("Donate");
-    helpMenu->addAction("About");
+    connect(actGuide, &QAction::triggered, this, [this]{
+        HelpDialog dlg("guide", this);
+        dlg.exec();
+    });
+    connect(actAbout, &QAction::triggered, this, [this]{
+        HelpDialog dlg("about", this);
+        dlg.exec();
+    });
+    connect(actLicense, &QAction::triggered, this, [this]{
+        HelpDialog dlg("license", this);
+        dlg.exec();
+    });
     Log_Debug3_T("");
 }
 

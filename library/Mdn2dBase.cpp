@@ -242,7 +242,12 @@ mdn::Mdn2dConfigImpact mdn::Mdn2dBase::locked_assessConfigChange(
     Mdn2dConfigImpact result = Mdn2dConfigImpact::Unknown;
     if (newConfig.base() != m_config.base()) {
         result = Mdn2dConfigImpact::AllDigitsCleared;
-    } else if (newConfig.precision() < m_config.precision()) {
+    } else if (
+        // unlimited --> limited
+        (newConfig.precision() >= 0 && m_config.precision() < 0)
+        // limited --> limited (but less precision)
+        || (newConfig.precision() >= 0 && newConfig.precision() < m_config.precision())
+    ) {
         if (newConfig.signConvention() != m_config.signConvention()) {
             result = Mdn2dConfigImpact::PossibleDigitLossAndPolymorphism;
         }
