@@ -285,10 +285,6 @@ void mdn::gui::OpsController::rebuildBottomContainer() {
                 );
             }
         );
-        connect(m_strip, &OperationStrip::transformClicked, this, [this]{
-            // TODO: connect
-            // e.g., m_plan = { Transform, ... } or open a transform dialog
-        });
     }
     lay->addWidget(m_strip, 0);
 

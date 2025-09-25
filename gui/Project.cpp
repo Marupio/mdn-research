@@ -1193,6 +1193,7 @@ bool mdn::gui::Project::pasteOnSelection(int index) {
     }
     Mdn2d& dst = sel->ref();
     Rect selRect = sel->rect();
+    Log_Debug("Destination: " << dst.name() << ", rect=" << selRect);
     Clipboard::DecodedPaste p = Clipboard::decodeClipboard();
     if (!p.valid()) {
         return false;
@@ -1270,6 +1271,8 @@ bool mdn::gui::Project::pasteOnSelection(int index) {
     for (int rowI = 0; rowI < H; ++rowI) {
         dst.setRow(Coord(ax, ay + rowI), p.rows[size_t(rowI)]);
     }
+    Log_Debug3("emit mdnContentChanged()");
+    emit mdnContentChanged();
     Log_Debug2_T("");
     return true;
 }
@@ -1297,6 +1300,8 @@ void mdn::gui::Project::deleteSelection() {
         If_Not_Log_Showing_Debug3(
             Log_Debug2_T("Zeroed " << changed.size() << " digits");
         );
+        Log_Debug3("emit mdnContentChanged()");
+        emit mdnContentChanged();
     }
 }
 

@@ -162,7 +162,11 @@ void mdn::gui::HoverPeekTabWidget::onCommitIndex(int idx) {
 
     // Make this the permanent selection and end preview if any
     endPreviewHighlight(currentIndex());
-    m_lastPermanentIndex = idx;
+    if (m_lastPermanentIndex != idx) {
+        m_lastPermanentIndex = idx;
+        Log_Debug3("emit changedActiveIndex(idx=" << idx << ")");
+        emit changedActiveIndex(idx);
+    }
     if (m_previewActive) {
         m_previewActive = false;
         Log_Debug3("emit endedPreview(m_lastPermanentIndex=" << m_lastPermanentIndex << ")");

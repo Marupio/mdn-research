@@ -25,6 +25,7 @@ add_executable(mdn_gui
     CellLineEdit.cpp CellLineEdit.hpp
     Clipboard.cpp Clipboard.hpp
     CommandWidget.hpp CommandWidget.cpp
+    HelpDialog.hpp HelpDialog.cpp
     HoverPeekTabBar.hpp HoverPeekTabBar.cpp
     HoverPeekTabWidget.hpp HoverPeekTabWidget.cpp
     LoggerConfigurator.hpp LoggerConfigurator.cpp

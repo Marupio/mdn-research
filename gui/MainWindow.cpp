@@ -25,6 +25,7 @@
 #include "../library/Logger.hpp"
 
 #include "GuiTools.hpp"
+#include "HelpDialog.hpp"
 #include "HoverPeekTabWidget.hpp"
 #include "MarkerWidget.hpp"
 #include "MdnQtInterface.hpp"
@@ -354,8 +355,7 @@ void mdn::gui::MainWindow::onTabPeekEnd()
 }
 
 
-void mdn::gui::MainWindow::onTabCommit(int idx)
-{
+void mdn::gui::MainWindow::onTabCommit(int idx) {
     Log_Debug3_H("idx=" << idx);
     if (!m_tabWidget) {
         Log_Debug3_T("No tabWidget");
@@ -380,6 +380,13 @@ void mdn::gui::MainWindow::onTabCommit(int idx)
 
     m_peekActive = false;
     Log_Debug3_T("");
+}
+
+
+void mdn::gui::MainWindow::onChangedActiveIndex(int idx) {
+    if (m_project) {
+        m_project->setActiveMdn(idx);
+    }
 }
 
 
@@ -871,6 +878,22 @@ void mdn::gui::MainWindow::onOpsPlan(const OperationPlan& p) {
 }
 
 
+void mdn::gui::MainWindow::onTransposeClicked() {
+    if (m_project) {
+        Mdn2d* tgt(m_project->activeMdn());
+        if (!tgt) {
+            return;
+        }
+        tgt->transpose();
+        int activeIndex = m_project->activeIndex();
+        if (auto* ndw = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(activeIndex))) {
+            ndw->update();
+        }
+
+    }
+}
+
+
 void mdn::gui::MainWindow::cycleEditMode() {
     // Shift-click cycles backward; normal click forward (optional UX sugar)
     const bool forward = !(QApplication::keyboardModifiers() & Qt::ShiftModifier);
@@ -1065,8 +1088,12 @@ void mdn::gui::MainWindow::slotSelectNextTab()
     const int count = m_tabWidget->count();
     int maxIndex = count - 1 - (m_plusTab ? 1 : 0);
     if (idx < maxIndex) {
+        int activeIndex = idx + 1;
         m_tabWidget->setCurrentIndex(idx + 1);
         focusActiveGrid();
+        if (m_project) {
+            m_project->setActiveMdn(activeIndex);
+        }
     }
     Log_Debug3_T("");
 }
@@ -1081,8 +1108,12 @@ void mdn::gui::MainWindow::slotSelectPrevTab()
     }
     const int idx = m_tabWidget->currentIndex();
     if (idx - 1 >= 0) {
-        m_tabWidget->setCurrentIndex(idx - 1);
+        int activeIndex = idx - 1;
+        m_tabWidget->setCurrentIndex(activeIndex);
         focusActiveGrid();
+        if (m_project) {
+            m_project->setActiveMdn(activeIndex);
+        }
     }
     Log_Debug3_T("");
 }
@@ -1101,9 +1132,13 @@ void mdn::gui::MainWindow::slotMoveTabRight()
     const int maxIndex = hasPlusTab() ? count - 3 : count - 2;
     if (idx >= 0 && idx < maxIndex) {
         QTabBar* bar = m_tabWidget->tabBar();
-        bar->moveTab(idx, idx + 1);
-        m_tabWidget->setCurrentIndex(idx + 1);
+        int activeIndex = idx + 1;
+        bar->moveTab(idx, activeIndex);
+        m_tabWidget->setCurrentIndex(activeIndex);
         focusActiveGrid();
+        if (m_project) {
+            m_project->setActiveMdn(activeIndex);
+        }
     }
     Log_Debug3_T("");
 }
@@ -1119,16 +1154,19 @@ void mdn::gui::MainWindow::slotMoveTabLeft()
     const int idx = m_tabWidget->currentIndex();
     if (idx > 0) {
         QTabBar* bar = m_tabWidget->tabBar();
-        bar->moveTab(idx, idx - 1);
-        m_tabWidget->setCurrentIndex(idx - 1);
+        int activeIndex = idx - 1;
+        bar->moveTab(idx, activeIndex);
+        m_tabWidget->setCurrentIndex(activeIndex);
         focusActiveGrid();
+        if (m_project) {
+            m_project->setActiveMdn(activeIndex);
+        }
     }
     Log_Debug3_T("");
 }
 
 
-void mdn::gui::MainWindow::slotDebugShowAllTabs()
-{
+void mdn::gui::MainWindow::slotDebugShowAllTabs() {
     Log_Debug3_H("");
     if (m_project)
     {
@@ -1144,6 +1182,38 @@ void mdn::gui::MainWindow::slotDebugShowAllTabs()
         Log_Info(oss.str());
     }
     Log_Debug3_T("");
+}
+
+
+void mdn::gui::MainWindow::onEditCopy() {
+    if (m_project) {
+        m_project->copySelection();
+    }
+}
+
+
+void mdn::gui::MainWindow::onEditPaste() {
+    if (m_project) {
+        m_project->pasteOnSelection();
+    }
+}
+
+
+void mdn::gui::MainWindow::onEditCut() {
+    if (m_project) {
+        m_project->cutSelection();
+    }
+}
+
+
+void mdn::gui::MainWindow::onEditDelete() {
+    if (m_project) {
+        m_project->deleteSelection();
+        int activeIndex = m_project->activeIndex();
+        if (auto* ndw = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(activeIndex))) {
+            ndw->update();
+        }
+    }
 }
 
 
@@ -1276,27 +1346,25 @@ void mdn::gui::MainWindow::createMenus() {
     fileMenu->addAction("E&xit", this, &mdn::gui::MainWindow::close);
 
     QMenu* editMenu = menuBar()->addMenu("&Edit");
-    // editMenu->addAction("Undo");
-    // editMenu->addAction("Redo");
-    // editMenu->addSeparator();
     editMenu->addAction("Select All", this, &mdn::gui::MainWindow::onSelectAll);
-    // editMenu->addAction("Select Row");
-    // editMenu->addAction("Select Column");
-    // editMenu->addAction("Select Box");
-    // editMenu->addSeparator();
-    // editMenu->addAction("Properties");
-    // editMenu->addSeparator();
-    editMenu->addAction("Copy");
-    editMenu->addAction("Cut");
-    editMenu->addAction("Paste");
+    editMenu->addAction("Copy", this, &mdn::gui::MainWindow::onEditCopy);
+    editMenu->addAction("Cut", this, &mdn::gui::MainWindow::onEditCut);
+    editMenu->addAction("Paste", this, &mdn::gui::MainWindow::onEditPaste);
     editMenu->addSeparator();
-    editMenu->addAction("Delete");
+    editMenu->addAction("Delete", this, &mdn::gui::MainWindow::onEditDelete);
 
     QMenu* toolsMenu = menuBar()->addMenu("&Tools");
     // Placeholder for future items
 
     QMenu* helpMenu = menuBar()->addMenu("&Help");
-    helpMenu->addAction("Get Help");
+    QAction* actGetHelp = helpMenu->addAction("Get &Help");
+
+    connect(actGetHelp, &QAction::triggered, this, [this]{
+        HelpDialog dlg(this);
+        dlg.exec();
+    });
+
+
     helpMenu->addAction("Donate");
     helpMenu->addAction("About");
     Log_Debug3_T("");
@@ -1354,9 +1422,9 @@ void mdn::gui::MainWindow::createToolbars() {
     actPaste->setShortcut(QKeySequence::Paste);
     actCut->setShortcut(QKeySequence::Cut);
 
-    connect(actCopy,  &QAction::triggered, this, [this]{ if (auto* w = activeGridWidget()) QMetaObject::invokeMethod(w, "copy"); });
-    connect(actPaste, &QAction::triggered, this, [this]{ if (auto* w = activeGridWidget()) QMetaObject::invokeMethod(w, "paste"); });
-    connect(actCut,   &QAction::triggered, this, [this]{ if (auto* w = activeGridWidget()) QMetaObject::invokeMethod(w, "cut"); });
+    connect(actCopy,  &QAction::triggered, this, &mdn::gui::MainWindow::onEditCopy);
+    connect(actPaste, &QAction::triggered, this, &mdn::gui::MainWindow::onEditPaste);
+    connect(actCut,   &QAction::triggered, this, &mdn::gui::MainWindow::onEditCut);
 }
 
 
@@ -1392,6 +1460,12 @@ void mdn::gui::MainWindow::setupLayout(Mdn2dConfig* cfg) {
         &QTabBar::tabBarDoubleClicked,
         this,
         &mdn::gui::MainWindow::renameTab
+    );
+    connect(
+        m_tabWidget,
+        &HoverPeekTabWidget::changedActiveIndex,
+        this,
+        &mdn::gui::MainWindow::onChangedActiveIndex
     );
 
     Log_Debug4("");
@@ -1563,6 +1637,12 @@ void mdn::gui::MainWindow::createTabForIndex(int index) {
         this,
         &MainWindow::setGlobalFontSize
     );
+    connect(
+        m_project,
+        &Project::mdnContentChanged,
+        ndw,
+        qOverload<>(&mdn::gui::NumberDisplayWidget::update)
+    );
 
     std::string name = src->name();
     Log_Debug4("addTab(" << name << ")");
@@ -1721,6 +1801,12 @@ void mdn::gui::MainWindow::initOperationsUi() {
             &OpsController::plusClicked,
             this,
             &mdn::gui::MainWindow::onNewMdn2d
+        );
+        connect(
+            m_strip,
+            &OperationStrip::transposeClicked,
+            this,
+            &mdn::gui::MainWindow::onTransposeClicked
         );
     }
     auto* s = m_ops->status();
@@ -2166,11 +2252,29 @@ void mdn::gui::MainWindow::closeTab(int index) {
     }
     if (index < 0) {
         index = m_tabWidget ? m_tabWidget->currentIndex() : m_project->activeIndex();
-    } else if (index == m_tabWidget->count() - 1 && hasPlusTab()) {
+    } else if (m_tabWidget && index == m_tabWidget->count() - 1 && hasPlusTab()) {
         Log_WarnQ("Attempting to 'closeTab' the 'plusTab', skipping step");
         Log_Debug3_T("cannot 'closeTab' 'plusTab'");
         return;
     }
+    Mdn2d* tgt = m_project->getMdn(index);
+    if (!tgt->bounds().empty()) {
+        std::ostringstream oss;
+        oss << "Unsaved data on tab '" << tgt->name() << "' will be lost.\n\n"
+            << "Are you sure?";
+        QMessageBox::StandardButton reply = QMessageBox::question(
+            this,
+            "Overwrite Number?",
+            QString(oss.str().c_str()),
+            QMessageBox::Close | QMessageBox::Cancel,
+            QMessageBox::Cancel // Default button
+        );
+        if (reply != QMessageBox::Close) {
+            Log_Debug3_T("User rejected close operation");
+            return;
+        }
+    }
+    // User said 'Close'
     m_project->deleteMdn(index);
     Log_Debug3_T("");
 }

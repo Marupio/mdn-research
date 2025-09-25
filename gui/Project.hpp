@@ -87,8 +87,10 @@ public:
 signals:
     void tabsAboutToChange();
     void tabsChanged(int currentIndex);
+    void mdnContentChanged();
 
 public:
+
 
     // *** Mdn2dFramework API
 

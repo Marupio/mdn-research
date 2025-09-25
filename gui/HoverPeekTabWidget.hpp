@@ -43,6 +43,7 @@ signals:
     void endedPreview(int restoredIndex);
     void committedIndex(int index);
     void plusClicked();
+    void changedActiveIndex(int index);
 
 private slots:
     void onTabMoved(int from, int to);

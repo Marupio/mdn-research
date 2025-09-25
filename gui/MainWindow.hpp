@@ -80,6 +80,7 @@ private slots:
     void onTabPeek(int idx);
     void onTabPeekEnd();
     void onTabCommit(int idx);
+    void onChangedActiveIndex(int idx);
 
     // File menu operations
     bool onNewProject();
@@ -99,6 +100,8 @@ private slots:
     void onSplitterMoved(int pos, int index);
     void onCommandSubmitted(const QString& text);
     void onOpsPlan(const OperationPlan& p);
+
+    void onTransposeClicked();
 
     void cycleEditMode();
     void setGlobalEditMode(NumberDisplayWidget::EditMode m);
@@ -130,6 +133,12 @@ private slots:
     void slotMoveTabRight();
     void slotMoveTabLeft();
     void slotDebugShowAllTabs();
+
+    // Edit menu
+    void onEditCopy();
+    void onEditPaste();
+    void onEditCut();
+    void onEditDelete();
 
 protected:
     bool eventFilter(QObject* watched, QEvent* event) override;

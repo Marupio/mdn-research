@@ -30,7 +30,7 @@ public:
     void reset();
 
 signals:
-    void transformClicked();
+    void transposeClicked();
     void operationClicked(Operation op);
     void cancelClicked();
     void propertiesClicked();
@@ -45,7 +45,7 @@ private:
     std::array<QPushButton*, 4> m_allOpButtons;
 
     QToolButton* m_btnProps = nullptr;
-    QToolButton* m_btnTransform = nullptr;
+    QToolButton* m_btnTranspose = nullptr;
 
     QPushButton* buttonFor(Operation op) const;
     void setOpsEnabled(bool enabled);
