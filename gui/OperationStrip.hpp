@@ -31,6 +31,9 @@ public:
 
 signals:
     void transposeClicked();
+    void carryOverClicked();
+    void carryPosClicked();
+    void carryNegClicked();
     void operationClicked(Operation op);
     void cancelClicked();
     void propertiesClicked();
@@ -38,16 +41,18 @@ signals:
 private:
     QPushButton* m_btnCancel = nullptr;
 
-    QPushButton* m_btnAdd    = nullptr;
-    QPushButton* m_btnSub    = nullptr;
-    QPushButton* m_btnMul    = nullptr;
-    QPushButton* m_btnDiv    = nullptr;
-    std::array<QPushButton*, 4> m_allOpButtons;
+    QToolButton* m_btnAdd    = nullptr;
+    QToolButton* m_btnSub    = nullptr;
+    QToolButton* m_btnMul    = nullptr;
+    QToolButton* m_btnDiv    = nullptr;
+    std::array<QToolButton*, 4> m_allOpButtons;
 
-    QToolButton* m_btnProps = nullptr;
     QToolButton* m_btnTranspose = nullptr;
+    QToolButton* m_btnCarryOver = nullptr;
+    QToolButton* m_btnCarryPos  = nullptr;
+    QToolButton* m_btnCarryNeg  = nullptr;
 
-    QPushButton* buttonFor(Operation op) const;
+    QToolButton* buttonFor(Operation op) const;
     void setOpsEnabled(bool enabled);
     void setOthersDisabledExcept(Operation op);
 

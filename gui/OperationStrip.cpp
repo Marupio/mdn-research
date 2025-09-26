@@ -12,38 +12,50 @@ mdn::gui::OperationStrip::OperationStrip(QWidget* parent)
     lay->setContentsMargins(0,0,0,0);
     lay->setSpacing(6);
     m_btnCancel = new QPushButton(tr("Cancel"), this);
-    m_btnAdd    = new QPushButton(
+    // Compact op buttons as toolbuttons
+    auto mkOpBtn = [this](const QString& text, const QString& tip) {
+        auto* b = new QToolButton(this);
+        b->setText(text);
+        b->setToolTip(tip);
+        b->setToolButtonStyle(Qt::ToolButtonTextOnly);
+        b->setAutoRaise(true);
+        b->setCheckable(true);
+        b->setFocusPolicy(Qt::NoFocus);
+        return b;
+    };
+    m_btnAdd = mkOpBtn(
         MdnQtInterface::toQString(OperationToOpStr(Operation::Add)),
-        this
+        tr("Add")
     );
-    m_btnSub    = new QPushButton(
+    m_btnSub = mkOpBtn(
         MdnQtInterface::toQString(OperationToOpStr(Operation::Subtract)),
-        this
+        tr("Subtract")
     );
-    m_btnMul    = new QPushButton(
+    m_btnMul = mkOpBtn(
         MdnQtInterface::toQString(OperationToOpStr(Operation::Multiply)),
-        this
+        tr("Multiply")
     );
-    m_btnDiv    = new QPushButton(
+    m_btnDiv = mkOpBtn(
         MdnQtInterface::toQString(OperationToOpStr(Operation::Divide)),
-        this
+        tr("Divide")
     );
 
     // Convenience
     m_allOpButtons = { m_btnAdd, m_btnSub, m_btnMul, m_btnDiv };
 
-    // Make op buttons checkable so the active one looks “clicked in”
-    for (QPushButton* b : { m_btnAdd, m_btnSub, m_btnMul, m_btnDiv }) {
-        b->setCheckable(true);
-        b->setFocusPolicy(Qt::NoFocus);
-        b->setMinimumWidth(28);
-    }
+    // // Make op buttons checkable so the active one looks “clicked in”
+    // for (QPushButton* b : { m_btnAdd, m_btnSub, m_btnMul, m_btnDiv }) {
+    //     b->setCheckable(true);
+    //     b->setFocusPolicy(Qt::NoFocus);
+    //     b->setMinimumWidth(28);
+    // }
+    // No minWidth here; we’ll set a uniform fixed width below.
 
     // Wire user intent -> OpsController (OpsController will call activate/reset)
-    connect(m_btnAdd, &QPushButton::clicked, this, &OperationStrip::onAdd);
-    connect(m_btnSub, &QPushButton::clicked, this, &OperationStrip::onSub);
-    connect(m_btnMul, &QPushButton::clicked, this, &OperationStrip::onMul);
-    connect(m_btnDiv, &QPushButton::clicked, this, &OperationStrip::onDiv);
+    connect(m_btnAdd, &QToolButton::clicked, this, &OperationStrip::onAdd);
+    connect(m_btnSub, &QToolButton::clicked, this, &OperationStrip::onSub);
+    connect(m_btnMul, &QToolButton::clicked, this, &OperationStrip::onMul);
+    connect(m_btnDiv, &QToolButton::clicked, this, &OperationStrip::onDiv);
     connect(m_btnCancel, &QPushButton::clicked, this, &OperationStrip::onCancel);
 
     // Layout: [gear] [Cancel] [+] [–] [×] [÷]
@@ -61,6 +73,43 @@ mdn::gui::OperationStrip::OperationStrip(QWidget* parent)
 
     connect(m_btnTranspose, &QToolButton::clicked, this, &OperationStrip::transposeClicked);
 
+    // New carry-over buttons (text-only, compact)
+    auto mkSmallBtn = [this](const QString& text, const QString& tip) {
+        auto* b = new QToolButton(this);
+        b->setText(text);
+        b->setToolTip(tip);
+        b->setToolButtonStyle(Qt::ToolButtonTextOnly);
+        b->setAutoRaise(true);
+        b->setFocusPolicy(Qt::NoFocus);
+        return b;
+    };
+    m_btnCarryOver = mkSmallBtn(QStringLiteral("c/o"), tr("Carry-over this digit"));
+    m_btnCarryPos  = mkSmallBtn(QStringLiteral("c/+"), tr("Carry-over all → positive"));
+    m_btnCarryNeg  = mkSmallBtn(QStringLiteral("c/-"), tr("Carry-over all → negative"));
+    connect(m_btnCarryOver, &QToolButton::clicked, this, &OperationStrip::carryOverClicked);
+    connect(m_btnCarryPos,  &QToolButton::clicked, this, &OperationStrip::carryPosClicked);
+    connect(m_btnCarryNeg,  &QToolButton::clicked, this, &OperationStrip::carryNegClicked);
+
+    // Compute a uniform width for all compact buttons based on the widest label
+    QStringList labels;
+    labels << m_btnAdd->text() << m_btnSub->text() << m_btnMul->text() << m_btnDiv->text();
+    labels << (m_btnTranspose->text().isEmpty() ? QStringLiteral("T↔") : m_btnTranspose->text());
+    labels << m_btnCarryOver->text() << m_btnCarryPos->text() << m_btnCarryNeg->text();
+    QFontMetrics fm(font());
+    int maxTextW = 0;
+    for (const auto& s : labels) maxTextW = std::max(maxTextW, fm.horizontalAdvance(s));
+    // Add a little padding so text isn’t cramped (style may add a bit more)
+    const int uniformW = maxTextW + 10;
+    auto applyFixedW = [uniformW](QToolButton* b){
+        b->setFixedWidth(uniformW);
+        b->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    };
+    for (auto* b : m_allOpButtons) applyFixedW(b);
+    applyFixedW(m_btnTranspose);
+    applyFixedW(m_btnCarryOver);
+    applyFixedW(m_btnCarryPos);
+    applyFixedW(m_btnCarryNeg);
+
     lay->addWidget(m_btnCancel);
     lay->addSpacing(8);
     lay->addWidget(m_btnAdd);
@@ -68,6 +117,9 @@ mdn::gui::OperationStrip::OperationStrip(QWidget* parent)
     lay->addWidget(m_btnMul);
     lay->addWidget(m_btnDiv);
     lay->addWidget(m_btnTranspose);
+    lay->addWidget(m_btnCarryOver);
+    lay->addWidget(m_btnCarryPos);
+    lay->addWidget(m_btnCarryNeg);
     lay->addStretch(1);
 
     // Idle state by default
@@ -95,7 +147,7 @@ void mdn::gui::OperationStrip::battlestations(Operation op)
 }
 
 
-QPushButton* mdn::gui::OperationStrip::buttonFor(Operation op) const
+QToolButton* mdn::gui::OperationStrip::buttonFor(Operation op) const
 {
     Log_Debug2_H("");
     switch (op) {
@@ -127,7 +179,7 @@ QPushButton* mdn::gui::OperationStrip::buttonFor(Operation op) const
 void mdn::gui::OperationStrip::setOpsEnabled(bool enabled)
 {
     Log_Debug2_H("enabled=" << enabled);
-    for (QPushButton* b : { m_btnAdd, m_btnSub, m_btnMul, m_btnDiv }) {
+    for (QToolButton* b : { m_btnAdd, m_btnSub, m_btnMul, m_btnDiv }) {
         b->setEnabled(enabled);
     }
     Log_Debug2_T("");
@@ -155,7 +207,7 @@ void mdn::gui::OperationStrip::reset()
     setOpsEnabled(true);
 
     // Clear checked state without breaking exclusivity
-    for (QPushButton* b : { m_btnAdd, m_btnSub, m_btnMul, m_btnDiv }) {
+    for (QToolButton* b : { m_btnAdd, m_btnSub, m_btnMul, m_btnDiv }) {
         b->setChecked(false);
     }
     Log_Debug2_T("");
