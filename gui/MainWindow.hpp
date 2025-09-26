@@ -70,7 +70,7 @@ signals:
 
 public slots:
     bool clearStatus();
-    bool showStatus(QString message, int timeOut);
+    bool showStatus(QString message, int timeOut, bool forceUpdate=false);
 
 private slots:
     void onTabContextMenu(const QPoint& pos);
@@ -91,6 +91,7 @@ private slots:
     bool onSaveMdn2d();
     bool saveMdn2d(int idx = -1);
     bool onOpenMdn2d();
+    bool onZeroMdn2d();
     bool onCloseProject();
 
     // Edit menu operations
@@ -102,6 +103,9 @@ private slots:
     void onOpsPlan(const OperationPlan& p);
 
     void onTransposeClicked();
+    void onCarryOverClicked();
+    void onCarryPosClicked();
+    void onCarryNegClicked();
 
     void cycleEditMode();
     void setGlobalEditMode(NumberDisplayWidget::EditMode m);
@@ -203,8 +207,8 @@ private:
 
     // Slider
     void fitBottomToContents();
-    void releaseBottomClamp();
-    void enableSnugBottom(bool on);
+    void releaseBottomWeld();
+    void weldSliderToBottom(bool on);
 
     // Status bar
     void updateStatusModeText(NumberDisplayWidget::EditMode m);
@@ -253,10 +257,10 @@ private:
     StatusDisplayWidget* m_status{nullptr};
     Project* m_project{nullptr};
 
-    // MainWindow.hpp
     QWidget* m_tabCorner{nullptr};
     QToolButton* m_tabSaveBtn{nullptr};
     QToolButton* m_tabOpenBtn{nullptr};
+    QToolButton* m_tabZeroBtn{nullptr};
     QToolButton* m_tabCloseBtn{nullptr};
 
 };

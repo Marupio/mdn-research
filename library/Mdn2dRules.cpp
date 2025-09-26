@@ -259,10 +259,10 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryover(const Coord& xy, int carry) {
 }
 
 
-mdn::CoordSet mdn::Mdn2dRules::carryoverCleanup(const CoordSet& coords) {
+mdn::CoordSet mdn::Mdn2dRules::carryoverCleanup(const CoordSet& coords, SignConvention sc) {
     Log_N_Debug2_H("Carryover clean up on " << coords.size() << " coords");
     auto lock = lockWriteable();
-    CoordSet changed = locked_carryoverCleanup(coords);
+    CoordSet changed = locked_carryoverCleanup(coords, sc);
     // if (coords.size()) {
     // }
     internal_operationComplete();
@@ -275,7 +275,7 @@ mdn::CoordSet mdn::Mdn2dRules::carryoverCleanup(const CoordSet& coords) {
 }
 
 
-mdn::CoordSet mdn::Mdn2dRules::locked_carryoverCleanup(const CoordSet& coords) {
+mdn::CoordSet mdn::Mdn2dRules::locked_carryoverCleanup(const CoordSet& coords, SignConvention sc) {
     CoordSet affectedCoords;
     if (coords.empty()) {
         Log_N_Debug3("Carryover cleanup, no coords to check");
@@ -289,9 +289,12 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryoverCleanup(const CoordSet& coords) {
         Log_N_Debug4("coords=" << coordsList);
     );
     Carryover wrongSign = Carryover::Required;
-    if (m_config.signConvention() == SignConvention::Positive) {
+    if (sc == SignConvention::Invalid) {
+        sc = m_config.signConvention();
+    }
+    if (sc == SignConvention::Positive) {
         wrongSign = Carryover::OptionalNegative;
-    } else if (m_config.signConvention() == SignConvention::Negative) {
+    } else if (sc == SignConvention::Negative) {
         wrongSign = Carryover::OptionalPositive;
     }
 
@@ -326,17 +329,17 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryoverCleanup(const CoordSet& coords) {
 }
 
 
-mdn::CoordSet mdn::Mdn2dRules::carryoverCleanupAll() {
+mdn::CoordSet mdn::Mdn2dRules::carryoverCleanupAll(SignConvention sc) {
     Log_N_Debug2_H("");
     auto lock = lockWriteable();
-    CoordSet changed = locked_carryoverCleanupAll();
+    CoordSet changed = locked_carryoverCleanupAll(sc);
     internal_operationComplete();
     Log_N_Debug2_T("result=[set of coords with " << changed.size() << " elements]");
     return changed;
 }
 
 
-mdn::CoordSet mdn::Mdn2dRules::locked_carryoverCleanupAll() {
+mdn::CoordSet mdn::Mdn2dRules::locked_carryoverCleanupAll(SignConvention sc) {
     Log_N_Debug4_H("");
     CoordSet changed = locked_carryoverCleanup(m_index);
     If_Log_Showing_Debug4(

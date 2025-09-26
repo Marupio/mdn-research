@@ -100,7 +100,7 @@ void mdn::gui::OpsController::battlestations(Operation op) {
         .arg(QString::fromStdString(OperationToOpStr(m_op)))
     );
     Log_Debug3("emit requestStatus(rqs=[" << rqs.toStdString() << "], 0)");
-    emit requestStatus(rqs, 0);
+    emit requestStatus(rqs, 0, false);
 
     m_strip->battlestations(op);
     m_phase = OperationPhase::PickB;
@@ -162,7 +162,7 @@ void mdn::gui::OpsController::onTabCommitted(int idx) {
                 .arg(nameFor(m_b))
             );
             Log_Debug3("emit requestStatus(rqs=[" << rqs.toStdString() << "], 0)");
-            emit requestStatus(rqs, 0);
+            emit requestStatus(rqs, 0, false);
             Log_Debug2_T("");
             return;
         }
@@ -406,7 +406,7 @@ void mdn::gui::OpsController::endBattle(int destIndex, bool isNew) {
     );
     Log_Debug3("emit requestStatus(rqs=[" << rqs.toStdString() << "], 0)");
     emit requestClearStatus();
-    emit requestStatus(rqs, 5000);
+    emit requestStatus(rqs, 5000, false);
     QString defaultName = "";
     if (destIndex < 0) {
         defaultName = QString(
@@ -443,7 +443,7 @@ void mdn::gui::OpsController::cancel() {
         m_strip->reset();
     }
     Log_Debug3("emit requestStatus([], 0)");
-    emit requestStatus(QString(), 0);
-    emit requestStatus(QString("* Cancelled *"), 2000);
+    emit requestStatus(QString(), 0, false);
+    emit requestStatus(QString("* Cancelled *"), 2000, false);
     Log_Debug2_T("");
 }

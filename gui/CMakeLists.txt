@@ -48,7 +48,7 @@ target_link_libraries(mdn_gui PRIVATE ${QT_LIBS} mdn)
 
 target_sources(mdn_gui PRIVATE help.qrc)
 
-include_directories("../library")
+include_directories("../library" ${PROJECT_BINARY_DIR})
 
 # Console test app that exercises Project (no windows shown)
 add_executable(guiTest
@@ -59,6 +59,7 @@ add_executable(guiTest
     QtLoggingBridge.cpp QtLoggingBridge.hpp
 )
 
+target_link_libraries(mdn PUBLIC mdn_config)
 target_link_libraries(guiTest PRIVATE ${QT_LIBS} mdn)
 target_include_directories(guiTest PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}" "../library")
 

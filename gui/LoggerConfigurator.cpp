@@ -20,26 +20,36 @@ using mdn::cli::LoggerConfigurator;
 namespace mdn::cli {
 
 LoggerConfigurator::LoggerConfigurator(QString appDescription)
-    : m_optLogLevel(
-          QStringList{QStringLiteral("l"), QStringLiteral("log-level")},
-          QStringLiteral("Set log verbosity. One of: %1").arg(allowedLevelsList()),
-          QStringLiteral("level")),
-      m_optLogFile(
-          QStringList{QStringLiteral("f"), QStringLiteral("log-file")},
-          QStringLiteral("Write logs to the given file path (creates/overwrites)."),
-          QStringLiteral("path")),
-      m_optNoLogFile(
-          QStringList{QStringLiteral("no-log-file")},
-          QStringLiteral("Do not write logs to a file (overrides any defaults).")),
-      m_optLogIndentation(
-          QStringList{QStringLiteral("check-indents")},
-          QStringLiteral("Monitor debug logging for missing indentation calls")),
-      m_optJsonInput(
-          QStringList{QStringLiteral("i"), QStringLiteral("input")},
-          QStringLiteral("Path to JSON settings file."),
-          QStringLiteral("path")),
-      m_appDescription(std::move(appDescription)),
-      m_userLogFileChoice(0)
+:
+    m_optLogLevel(
+        QStringList{QStringLiteral("l"), QStringLiteral("log-level")},
+        QStringLiteral("Set log verbosity. One of: %1").arg(allowedLevelsList()),
+        QStringLiteral("level")
+    ),
+    m_optLogFile(
+        QStringList{QStringLiteral("f"), QStringLiteral("log-file")},
+        QStringLiteral("Write logs to the given file path (creates/overwrites)."),
+        QStringLiteral("path")
+    ),
+    m_optNoLogFile(
+        QStringList{QStringLiteral("no-log-file")},
+        QStringLiteral("Do not write logs to a file (overrides any defaults).")
+    ),
+    m_optLogIndentation(
+        QStringList{QStringLiteral("check-indents")},
+        QStringLiteral("Monitor debug logging for missing indentation calls")
+    ),
+    m_optJsonInput(
+        QStringList{QStringLiteral("i"), QStringLiteral("input")},
+        QStringLiteral("Path to JSON settings file."),
+        QStringLiteral("path")
+    ),
+    // m_optVersion(
+    //     QStringList{QStringLiteral("version")},
+    //     QStringLiteral("Display version number")
+    // ),
+    m_appDescription(std::move(appDescription)),
+    m_userLogFileChoice(0)
 {
     // Help + version always available
     m_parser.addHelpOption();
@@ -56,6 +66,7 @@ void LoggerConfigurator::addStandardOptions() {
     m_parser.addOption(m_optNoLogFile);
     m_parser.addOption(m_optLogIndentation);
     m_parser.addOption(m_optJsonInput);
+    // m_parser.addOption(m_optVersion);
 }
 
 
@@ -131,6 +142,14 @@ bool LoggerConfigurator::applyCliToLogger() {
     if (m_parser.isSet(m_optLogIndentation)) {
         sirTalksAlot.enableIndentChecking();
     }
+
+    // if (m_parser.isSet(m_optVersion)) {
+    //     std::cout << "\n"
+    //         << QCoreApplication::applicationName().toStdString() << " Version "
+    //         << QCoreApplication::applicationVersion().toStdString() << "\n"
+    //         << std::endl;
+    //     return false;
+    // }
 
     return true;
 }

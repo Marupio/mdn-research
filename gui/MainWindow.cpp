@@ -23,6 +23,7 @@
 #include <QToolButton>
 
 #include "../library/Logger.hpp"
+#include "../library/Carryover.hpp"
 
 #include "GuiTools.hpp"
 #include "HelpDialog.hpp"
@@ -112,7 +113,7 @@ bool mdn::gui::MainWindow::setCommandVisibility(bool visible) {
         return true;
     }
     m_command->setVisible(visible);
-    enableSnugBottom(!visible);
+    weldSliderToBottom(!visible);
     if (visible && m_splitter) {
         QList<int> sizes = m_splitter->sizes();
         sizes[1] = std::max(200, sizes[1]);
@@ -142,22 +143,28 @@ bool mdn::gui::MainWindow::clearStatus() {
 }
 
 
-bool mdn::gui::MainWindow::showStatus(QString message, int timeOut) {
+bool mdn::gui::MainWindow::showStatus(QString message, int timeOut, bool forceUpdate) {
     Log_Debug_H("message=[" << message.toStdString() << "]");
     if (m_status) {
         m_status->showMessage(message, timeOut);
-        Log_Debug_T("");
-        return true;
-    }
 
-    QStatusBar* status = statusBar();
-    if (!status) {
-        Log_Debug_T("No status");
-        return false;
+        if (forceUpdate) {
+            // Hacky - make sure message shows up
+            QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+        }
+
+        Log_Debug_T("");
+            return true;
     }
-    status->showMessage(message, timeOut);
-    Log_Debug_T("");
     return true;
+    // QStatusBar* status = statusBar();
+    // if (!status) {
+    //     Log_Debug_T("No status");
+    //     return false;
+    // }
+    // status->showMessage(message, timeOut);
+    // Log_Debug_T("");
+    // return true;
 }
 
 
@@ -441,6 +448,7 @@ bool mdn::gui::MainWindow::onSaveProject() {
 
     if (path.isEmpty()) {
         Log_Debug2_T("user cancelled")
+        showStatus(tr("Cancelled save"), 2000);
         return false;
     }
 
@@ -535,6 +543,7 @@ bool mdn::gui::MainWindow::saveMdn2d(int idx) {
 
     if (path.isEmpty()) {
         Log_Debug2_T("cancelled");
+        showStatus(tr("Cancelled save"), 2000);
         return false;
     }
 
@@ -586,7 +595,8 @@ bool mdn::gui::MainWindow::saveMdn2d(int idx) {
         return false;
     }
 
-    showStatus(tr("Number saved"), 2000);
+    showStatus(tr("Tab(%1) saved").arg(idx), 2000);
+    // showStatus(tr("Number saved"), 2000);
     Log_Debug2_T("ok");
     return true;
 }
@@ -673,8 +683,57 @@ bool mdn::gui::MainWindow::onOpenMdn2d() {
     }
     // rebuild tabs; preserves current selection logic
     syncTabsToProject();
-    showStatus(tr("Number loaded"), 2000);
+    showStatus(tr("Loaded new tab"), 2000);
     Log_Debug2_T("ok");
+    return true;
+}
+
+
+bool mdn::gui::MainWindow::onZeroMdn2d() {
+    if (!m_project) {
+        showStatus(tr("No project, cannot zero tabs"), 2000);
+        return false;
+    }
+    const int idx = m_project->activeIndex();
+    Mdn2d* tgt(m_project->getMdn(idx));
+    if (!tgt) {
+        showStatus(tr("Failed to reach data for tab %1").arg(idx), 2000);
+        return false;
+    }
+    const std::string& tgtName(tgt->name());
+    const Rect& bounds(tgt->bounds());
+    const QString tabName = QString::fromStdString(tgt->name());
+    if (bounds.empty()) {
+        showStatus(tr("No non-zero digits exist for '%1'").arg(tgtName), 2000);
+        if (auto* ndw = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(idx))) {
+            ndw->armCentreViewOnOrigin();
+            ndw->update();
+        }
+    }
+    std::ostringstream oss;
+    oss << "Zero all digits on " << tgtName << "?  This cannot be undone.\n\n"
+        << "Are you sure?";
+    QMessageBox::StandardButton reply = QMessageBox::question(
+        this,
+        tr("Zero all digits?"),
+        tr(oss.str().c_str()),
+        QMessageBox::Yes | QMessageBox::No,
+        QMessageBox::No // Default button
+    );
+    if (reply != QMessageBox::Yes) {
+        Log_Debug_T("User rejected zero operation");
+        clearStatus();
+        showStatus(tr("Zeroing cancelled"), 2000);
+        return false;
+    }
+    // User said Yes
+
+    tgt->setToZero(bounds);
+    if (auto* ndw = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(idx))) {
+        ndw->armCentreViewOnOrigin();
+        ndw->update();
+        showStatus(tr("Tab '%1' zeroed").arg(tgtName), 2000);
+    }
     return true;
 }
 
@@ -689,6 +748,7 @@ bool mdn::gui::MainWindow::onCloseProject() {
 
 void mdn::gui::MainWindow::onSelectAll() {
     if (!m_tabWidget) {
+        showStatus(tr("Select all >> nothing to select"), 2000);
         return;
     }
     int index = m_tabWidget->currentIndex();
@@ -736,7 +796,7 @@ void mdn::gui::MainWindow::onOpsPlan(const OperationPlan& p) {
         );
         return;
     }
-    showStatus(QString("Calculating . . ."), 0);
+    showStatus(tr("Calculating . . . (please wait, app will hang until complete)"), 0, true);
     Mdn2d& a = *aPtr;
     Mdn2d& b = *bPtr;
     if (p.indexDest >= 0) {
@@ -771,7 +831,7 @@ void mdn::gui::MainWindow::onOpsPlan(const OperationPlan& p) {
             syncTabsToProject();
             setActiveTab(p.indexA);
             clearStatus();
-            showStatus(QString("Calculation complete"), 2000);
+            showStatus(tr("Calculation complete"), 2000);
             Log_Debug_T("");
             return;
         } else {
@@ -785,14 +845,14 @@ void mdn::gui::MainWindow::onOpsPlan(const OperationPlan& p) {
                 QMessageBox::StandardButton reply = QMessageBox::question(
                     this,
                     "Overwrite Number?",
-                    QString(oss.str().c_str()),
+                    tr(oss.str().c_str()),
                     QMessageBox::Yes | QMessageBox::No,
                     QMessageBox::No // Default button
                 );
                 if (reply != QMessageBox::Yes) {
                     Log_Debug_T("User rejected overwrite");
                     clearStatus();
-                    showStatus(QString("Calculation cancelled"), 2000);
+                    showStatus(tr("Calculation cancelled"), 2000);
                     return;
                 }
                 // User said Yes
@@ -828,7 +888,7 @@ void mdn::gui::MainWindow::onOpsPlan(const OperationPlan& p) {
             syncTabsToProject();
             setActiveTab(t);
             clearStatus();
-            showStatus(QString("Calculation complete"), 2000);
+            showStatus(tr("Calculation complete"), 2000);
             Log_Debug_T("");
             return;
         }
@@ -871,7 +931,7 @@ void mdn::gui::MainWindow::onOpsPlan(const OperationPlan& p) {
         syncTabsToProject();
         setActiveTab(m_project->size()-1);
         clearStatus();
-        showStatus(QString("Calculation complete"), 2000);
+        showStatus(tr("Calculation complete"), 2000);
         Log_Debug_T("");
         return;
     }
@@ -882,14 +942,76 @@ void mdn::gui::MainWindow::onTransposeClicked() {
     if (m_project) {
         Mdn2d* tgt(m_project->activeMdn());
         if (!tgt) {
+            showStatus(tr("No active MDN tab"), 2000);
             return;
         }
         tgt->transpose();
+        showStatus(tr("Transpose complete >> x ←→ y"), 2000);
         int activeIndex = m_project->activeIndex();
         if (auto* ndw = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(activeIndex))) {
             ndw->update();
         }
 
+    }
+}
+
+
+void mdn::gui::MainWindow::onCarryOverClicked() {
+    if (m_project) {
+        Mdn2d* tgt(m_project->activeMdn());
+        if (!tgt) {
+            return;
+        }
+        const Selection& sel = tgt->selection();
+        const Coord& c1 = sel.cursor1();
+        Carryover co = tgt->checkCarryover(c1);
+        if (co == Carryover::Invalid) {
+            showStatus(tr("Invalid carryover"), 2000);
+        } else {
+            tgt->carryover(c1);
+            int activeIndex = m_project->activeIndex();
+            if (auto* ndw = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(activeIndex))) {
+                ndw->update();
+            }
+        }
+    }
+}
+
+
+void mdn::gui::MainWindow::onCarryPosClicked() {
+    if (m_project) {
+        Mdn2d* tgt(m_project->activeMdn());
+        if (!tgt) {
+            showStatus(tr("No active MDN tab"), 2000);
+            return;
+        }
+        const Selection& sel = tgt->selection();
+        const Coord& c1 = sel.cursor1();
+        CoordSet changed = tgt->carryoverCleanupAll(SignConvention::Positive);
+        int activeIndex = m_project->activeIndex();
+        if (auto* ndw = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(activeIndex))) {
+            ndw->update();
+        }
+        showStatus(tr("Carryover(+) changed %1 digits").arg(changed.size()), 2000);
+    }
+}
+
+
+void mdn::gui::MainWindow::onCarryNegClicked() {
+    if (m_project) {
+        Mdn2d* tgt(m_project->activeMdn());
+        if (!tgt) {
+            showStatus(tr("No active MDN tab"), 2000);
+            return;
+        }
+        const Selection& sel = tgt->selection();
+        const Coord& c1 = sel.cursor1();
+        CoordSet changed = tgt->carryoverCleanupAll(SignConvention::Negative);
+        int activeIndex = m_project->activeIndex();
+        if (auto* ndw = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(activeIndex))) {
+            ndw->update();
+        }
+        showStatus(tr("Carryover(-) changed %1 digits").arg(changed.size()), 2000);
     }
 }
 
@@ -998,6 +1120,7 @@ void mdn::gui::MainWindow::setGlobalFontSize(int pt) {
     }
     if (m_status) {
         m_status->setFontSize(m_globalFontSize);
+        showStatus(tr("New font size %1").arg(m_globalFontSize), 2000);
     }
 }
 
@@ -1025,7 +1148,10 @@ void mdn::gui::MainWindow::setGlobalConfig(Mdn2dConfig c, bool force) {
         return;
     }
     m_globalConfig = c;
-    m_project->setConfig(m_globalConfig);
+    if (m_project) {
+        m_globalConfig.setParent(*m_project);
+        m_project->setConfig(m_globalConfig);
+    }
     updateStatusFraxisText(c.fraxis());
     Log_Debug2_T("");
 }
@@ -1038,7 +1164,10 @@ void mdn::gui::MainWindow::updateGlobalConfig(Mdn2dConfig c, bool force) {
         return;
     }
     m_globalConfig = c;
-    m_project->setConfig(m_globalConfig);
+    if (m_project) {
+        m_globalConfig.setParent(*m_project);
+        m_project->setConfig(m_globalConfig);
+    }
     updateStatusFraxisText(c.fraxis());
     Log_Debug2_T("");
 }
@@ -1063,6 +1192,7 @@ void mdn::gui::MainWindow::chooseFraxisX() {
     if (!m_project) return;
     mdn::Mdn2dConfig cfg = m_project->config();
     if (cfg.fraxis() == mdn::Fraxis::X) return;
+    showStatus(tr("Fraxis >> X"), 2000);
     cfg.setFraxis(mdn::Fraxis::X);
     updateGlobalConfig(cfg);
 }
@@ -1072,6 +1202,7 @@ void mdn::gui::MainWindow::chooseFraxisY() {
     if (!m_project) return;
     mdn::Mdn2dConfig cfg = m_project->config();
     if (cfg.fraxis() == mdn::Fraxis::Y) return;
+    showStatus(tr("Fraxis >> Y"), 2000);
     cfg.setFraxis(mdn::Fraxis::Y);
     updateGlobalConfig(cfg);
 }
@@ -1188,6 +1319,7 @@ void mdn::gui::MainWindow::slotDebugShowAllTabs() {
 void mdn::gui::MainWindow::onEditCopy() {
     if (m_project) {
         m_project->copySelection();
+        showStatus(tr("Copied to clipboard"), 2000);
     }
 }
 
@@ -1195,6 +1327,7 @@ void mdn::gui::MainWindow::onEditCopy() {
 void mdn::gui::MainWindow::onEditPaste() {
     if (m_project) {
         m_project->pasteOnSelection();
+        showStatus(tr("Paste from clipboard"), 2000);
     }
 }
 
@@ -1202,6 +1335,7 @@ void mdn::gui::MainWindow::onEditPaste() {
 void mdn::gui::MainWindow::onEditCut() {
     if (m_project) {
         m_project->cutSelection();
+        showStatus(tr("Cut selection"), 2000);
     }
 }
 
@@ -1213,6 +1347,7 @@ void mdn::gui::MainWindow::onEditDelete() {
         if (auto* ndw = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(activeIndex))) {
             ndw->update();
         }
+        showStatus(tr("Delete selection"), 2000);
     }
 }
 
@@ -1502,7 +1637,7 @@ void mdn::gui::MainWindow::setupLayout(Mdn2dConfig* cfg) {
 
     if (!enableCommandWidget) {
         // m_command->setVisible(false);
-        enableSnugBottom(true);
+        weldSliderToBottom(true);
     }
 
 
@@ -1539,7 +1674,7 @@ void mdn::gui::MainWindow::createTabs() {
 
     Log_Debug3("Creating plusTab");
     createPlusTab();
-    updateStatusModeText(m_globalMode);
+    // updateStatusModeText(m_globalMode);
 
     // m_tabWidget->setTabsClosable(true);
 
@@ -1559,16 +1694,19 @@ void mdn::gui::MainWindow::createTabs() {
 
     auto* btnSave = mkBtn("document-save",  tr("Save current tab"));
     auto* btnOpen = mkBtn("document-open",  tr("Open into new tab"));
+    auto* btnZero = mkBtn("edit-clear", tr("Zero all digits"));
     auto* btnClose= mkBtn("window-close",   tr("Close current tab"));
 
     h->addWidget(btnSave);
     h->addWidget(btnOpen);
+    h->addWidget(btnZero);
     h->addWidget(btnClose);
     corner->setLayout(h);
     m_tabWidget->setCornerWidget(corner, Qt::BottomRightCorner);
 
     connect(btnSave, &QToolButton::clicked, this, &MainWindow::onSaveMdn2d);
     connect(btnOpen, &QToolButton::clicked, this, &MainWindow::onOpenMdn2d);
+    connect(btnZero, &QToolButton::clicked, this, &MainWindow::onZeroMdn2d);
     connect(btnClose, &QToolButton::clicked, this, &MainWindow::onTabCloseRequested);
     Log_Debug2_T("");
 }
@@ -1785,15 +1923,6 @@ void mdn::gui::MainWindow::removePlusTab() {
 
 
 void mdn::gui::MainWindow::initOperationsUi() {
-    // int idx = m_splitter->indexOf(m_command);
-    // m_ops = new OpsController(this, m_project, m_tabWidget, m_command, this);
-    // QWidget* container = m_ops->bottomContainer();
-    // if (idx >= 0) {
-    //     m_splitter->replaceWidget(idx, container);
-    // } else {
-    //     m_splitter->addWidget(container);
-    // }
-
     if (m_ops) {
         m_strip = m_ops->strip();
         m_status = m_ops->status();
@@ -1816,6 +1945,24 @@ void mdn::gui::MainWindow::initOperationsUi() {
             &OperationStrip::transposeClicked,
             this,
             &mdn::gui::MainWindow::onTransposeClicked
+        );
+        connect(
+            m_strip,
+            &OperationStrip::carryOverClicked,
+            this,
+            &mdn::gui::MainWindow::onCarryOverClicked
+        );
+        connect(
+            m_strip,
+            &OperationStrip::carryPosClicked,
+            this,
+            &mdn::gui::MainWindow::onCarryPosClicked
+        );
+        connect(
+            m_strip,
+            &OperationStrip::carryNegClicked,
+            this,
+            &mdn::gui::MainWindow::onCarryNegClicked
         );
     }
     auto* s = m_ops->status();
@@ -1988,17 +2135,20 @@ bool mdn::gui::MainWindow::openProject(bool requireConfirm) {
 
     if (path.isEmpty()) {
         Log_Debug2_T("user cancelled")
+        showStatus(tr("Load cancelled"), 2000);
         return false;
     }
 
     if (!confirmedCloseProject(requireConfirm)) {
         Log_Debug2_T("Did not succeed in closing existing project");
+        showStatus(tr("Load cancelled"), 2000);
         return false;
     }
 
     std::unique_ptr<Project> ptr = Project::loadFromFile(this, path.toStdString());
     if (!ptr.get()) {
         // Load failed
+        showStatus(tr("Failed to read file"), 2000);
         Log_Debug2_T("Read failed");
         return false;
     }
@@ -2031,6 +2181,7 @@ bool mdn::gui::MainWindow::confirmedCloseProject(bool requireConfirm) {
     Log_Debug2_H("");
     if (!m_project) {
         Log_Debug2_T("Project already closed");
+        showStatus(tr("Cannot close project - no active project"), 2000);
         return true;
     }
     if (!requireConfirm) {
@@ -2060,11 +2211,13 @@ bool mdn::gui::MainWindow::confirmedCloseProject(bool requireConfirm) {
         }
     } else if (reply == QMessageBox::Cancel) {
         Log_Debug2("User cancelled when asked to save");
+        showStatus(tr("Cancelled 'Close project' operation"), 2000);
         return false;
     }
     // User probably chose Discard
     Log_Debug3("Deleting existing project");
     bool result = closeProject();
+    showStatus(tr("Project closed"), 2000);
     Log_Debug2_T("result = " << result);
     return result;
 }
@@ -2095,7 +2248,8 @@ bool mdn::gui::MainWindow::closeProject() {
     delete m_project;
     m_project = nullptr;
 
-    setWindowTitle(QStringLiteral("MDN Editor"));
+    QString m(tr("MDN Editor"));
+    setWindowTitle(QStringLiteral("%1").arg(m));
     if (m_status) {
         m_status->clearMessage();
     }
@@ -2117,12 +2271,18 @@ bool mdn::gui::MainWindow::createNewMdn2d(QString name, int index, bool makeActi
     );
     if (!m_project) {
         Log_Debug2_T("No project, cannot create Mdn2d");
+        showStatus(tr("No project, cannot create tab"), 2000);
         return false;
     }
     Mdn2d num = Mdn2d::NewInstance(m_globalConfig, name.toStdString());
     std::string actualName = num.name();
     Log_Debug3("Created Mdn2d '" << nameStd << "', actual assigned name='" << actualName << "'");
     // Insertion will trigger a tabWidget update
+    if (nameStd.size() && actualName != nameStd) {
+        showStatus(tr("Tab '%1' created (requested '%2')").arg(actualName).arg(nameStd), 2000);
+    } else {
+        showStatus(tr("Tab '%1' created").arg(actualName), 2000);
+    }
     removePlusTab();
     m_project->insertMdn(std::move(num), index);
     int actualIndex = m_project->indexOfMdn(actualName);
@@ -2162,6 +2322,7 @@ void mdn::gui::MainWindow::doProjectProperties() {
         m_globalConfig
     );
     if (dlg.exec() != QDialog::Accepted) {
+        showStatus(tr("Cancelled changes to properties"), 2000);
         Log_Debug2_T("User rejected change");
         return;
     }
@@ -2171,7 +2332,7 @@ void mdn::gui::MainWindow::doProjectProperties() {
     Log_Debug3_H("setGlobalConfig dispatch");
     setGlobalConfig(dlg.chosenConfig());
     Log_Debug3_T("setGlobalConfig return");
-
+    showStatus(tr("Updated project properties"), 2000);
     Log_Debug2_T("Done projectProperties window");
     // If tabs changed due to clearing or other effects, your existing logic keeps UI in sync.
 }
@@ -2185,12 +2346,6 @@ void mdn::gui::MainWindow::buildFraxisMenu() {
     // right side arrow; right-click opens menu
     m_statusFraxisBtn->setPopupMode(QToolButton::MenuButtonPopup);
 }
-
-
-// void mdn::gui::MainWindow::absorbProjectProperties(ProjectPropertiesDialog* dlg) {
-//
-//     setWindowTitle();
-// }
 
 
 void mdn::gui::MainWindow::updateStatusFraxisText(mdn::Fraxis f) {
@@ -2207,16 +2362,19 @@ void mdn::gui::MainWindow::updateStatusFraxisText(mdn::Fraxis f) {
         case Fraxis::X: {
             Log_Debug4("Setting fraxis status to 'X'");
             m_statusFraxisBtn->setText("X");
+            showStatus(tr("Fraxis >> X"), 2000);
             break;
         }
         case Fraxis::Y: {
             Log_Debug4("Setting fraxis status to 'Y'");
             m_statusFraxisBtn->setText("Y");
+            showStatus(tr("Fraxis >> Y"), 2000);
             break;
         }
         default: {
             Log_Warn("Setting fraxis status to '?'");
             m_statusFraxisBtn->setText("?");
+            showStatus(tr("Fraxis >> ?"), 2000);
             break;
         }
     }
@@ -2273,18 +2431,20 @@ void mdn::gui::MainWindow::closeTab(int index) {
             << "Are you sure?";
         QMessageBox::StandardButton reply = QMessageBox::question(
             this,
-            "Overwrite Number?",
-            QString(oss.str().c_str()),
+            tr("Overwrite Number?"),
+            tr(oss.str().c_str()),
             QMessageBox::Close | QMessageBox::Cancel,
             QMessageBox::Cancel // Default button
         );
         if (reply != QMessageBox::Close) {
+            showStatus(tr("Cancelled 'Close tab' operation"), 2000);
             Log_Debug3_T("User rejected close operation");
             return;
         }
     }
     // User said 'Close'
     m_project->deleteMdn(index);
+    showStatus(tr("Tab closed"), 2000);
     Log_Debug3_T("");
 }
 
@@ -2344,6 +2504,7 @@ void mdn::gui::MainWindow::duplicateTab(int index)
     Log_Debug3_H("index=" << index);
     // 1) Ask Project to create a new model from this one
     std::pair<int, std::string>newIdName = m_project->duplicateMdn(index);
+    showStatus(tr("Duplicated tab"), 2000);
     Log_Debug3_T("");
 }
 
@@ -2356,6 +2517,7 @@ void mdn::gui::MainWindow::copyTab(int index)
         return;
     }
     m_project->copyMdn(index);
+    showStatus(tr("Copy tab to clipboard"), 2000);
     Log_Debug3_T("");
 }
 
@@ -2364,10 +2526,12 @@ void mdn::gui::MainWindow::pasteTab(int insertAt)
 {
     Log_Debug3_H("");
     if (!m_project) {
+        showStatus(tr("No project: Cannot paste tab"), 2000);
         Log_Debug3_T("");
         return;
     }
     m_project->pasteOnSelection(insertAt);
+    showStatus(tr("Tab pasted (at %1) from clipboard").arg(insertAt), 2000);
     Log_Debug3_T("");
 }
 
@@ -2441,7 +2605,7 @@ void mdn::gui::MainWindow::fitBottomToContents() {
 }
 
 
-void mdn::gui::MainWindow::releaseBottomClamp()
+void mdn::gui::MainWindow::releaseBottomWeld()
 {
     Log_Debug3_H("");
     if (!m_ops || !m_ops->bottomContainer()) {
@@ -2455,7 +2619,7 @@ void mdn::gui::MainWindow::releaseBottomClamp()
 }
 
 
-void mdn::gui::MainWindow::enableSnugBottom(bool on)
+void mdn::gui::MainWindow::weldSliderToBottom(bool on)
 {
     Log_Debug3_H("on=" << on);
     m_snugBottom = on;
@@ -2480,14 +2644,15 @@ void mdn::gui::MainWindow::enableSnugBottom(bool on)
     if (on) {
         QTimer::singleShot(0, this, [this]{ fitBottomToContents(); });
     } else {
-        releaseBottomClamp();
+        releaseBottomWeld();
     }
     Log_Debug3_T("");
 }
 
 
 void mdn::gui::MainWindow::updateStatusModeText(NumberDisplayWidget::EditMode m) {
-    Log_Debug3_H(NumberDisplayWidget::EditModeToString(m));
+    std::string mStr(NumberDisplayWidget::EditModeToString(m));
+    Log_Debug3_H(mStr);
     if (!m_statusModeBtn) {
         Log_Debug3_T("Missing statusMode pieces");
         return;
@@ -2506,6 +2671,7 @@ void mdn::gui::MainWindow::updateStatusModeText(NumberDisplayWidget::EditMode m)
             break;
         }
     }
+    showStatus(tr("Edit mode >> %1").arg(mStr), 2000);
     Log_Debug3_T("");
 }
 
@@ -2696,6 +2862,10 @@ void mdn::gui::MainWindow::ensureTabCorner() {
             "document-open",
             style()->standardIcon(QStyle::SP_DialogOpenButton)
         );
+        auto icZero = QIcon::fromTheme(
+            "clear-all",
+            style()->standardIcon(QStyle::SP_DialogDiscardButton)
+        );
         auto icClose = QIcon::fromTheme(
             "window-close",
             style()->standardIcon(QStyle::SP_DialogCloseButton)
@@ -2703,14 +2873,17 @@ void mdn::gui::MainWindow::ensureTabCorner() {
 
         m_tabSaveBtn  = mkBtn(icSave,  tr("Save current tab"));
         m_tabOpenBtn  = mkBtn(icOpen,  tr("Open into new tab"));
+        m_tabZeroBtn = mkBtn(icZero, tr("Zero all digits"));
         m_tabCloseBtn = mkBtn(icClose, tr("Close current tab"));
 
         h->addWidget(m_tabSaveBtn);
         h->addWidget(m_tabOpenBtn);
+        h->addWidget(m_tabZeroBtn);
         h->addWidget(m_tabCloseBtn);
 
         connect(m_tabSaveBtn, &QToolButton::clicked, this, &MainWindow::onSaveMdn2d);
         connect(m_tabOpenBtn, &QToolButton::clicked, this, &MainWindow::onOpenMdn2d);
+        connect(m_tabZeroBtn, &QToolButton::clicked, this, &MainWindow::onZeroMdn2d);
         connect(m_tabCloseBtn, &QToolButton::clicked, this, &MainWindow::onTabCloseRequested);
     }
 

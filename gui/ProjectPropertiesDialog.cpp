@@ -118,7 +118,11 @@ void ProjectPropertiesDialog::buildUi() {
     auto* v = new QVBoxLayout(gImpact);
     m_impactHeader = new QLabel(tr("—"), gImpact);
     m_impactHeader->setStyleSheet("font-weight:600;");
-    m_impactBody   = new QLabel(tr("Adjust fields to see impact."), gImpact);
+    m_impactBody =
+        new QLabel(
+            tr("When changing an existing project, effect of changes will be shown here"),
+            gImpact
+        );
     m_impactBody->setWordWrap(true);
     v->addWidget(m_impactHeader);
     v->addWidget(m_impactBody);

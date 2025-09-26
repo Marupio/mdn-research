@@ -59,7 +59,7 @@ public:
 signals:
     // to status bar
     void requestClearStatus();
-    void requestStatus(const QString& s, int timeOut);
+    void requestStatus(const QString& s, int timeOut, bool forceUpdate);
     void requestFitBottomToContents();
 
     void planReady(const OperationPlan& plan);

@@ -54,6 +54,7 @@ private:
     QCommandLineOption m_optNoLogFile;
     QCommandLineOption m_optLogIndentation;
     QCommandLineOption m_optJsonInput;
+    // QCommandLineOption m_optVersion;
 
     std::optional<QString> m_jsonPath;
     QString m_appDescription;

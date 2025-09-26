@@ -733,12 +733,14 @@ void mdn::gui::BinaryOperationDialog::updateSummary() {
 
     QString destStr;
     if (m_dest == DestinationMode::CreateNew) {
-        destStr = QStringLiteral("Create \"%1\"").arg(m_newNameEdit->text());
+        QString c(tr("Create"));
+        destStr = QStringLiteral("%1 \"%2\"").arg(c).arg(m_newNameEdit->text());
     } else {
         QString dn = m_names.value(m_indexDest);
         if (m_indexDest == m_indexA) dn += "  (A)";
         if (m_indexDest == m_indexB) dn += "  (B)";
-        destStr = QStringLiteral("Overwrite %1").arg(dn);
+        QString o(tr("Overwrite"));
+        destStr = QStringLiteral("%1 %2").arg(o).arg(dn);
     }
 
     QString s = QStringLiteral("%1  %2  %3  →  %4").arg(a, sym, b, destStr);

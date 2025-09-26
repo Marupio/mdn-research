@@ -78,13 +78,21 @@ public:
 
             // Given set of suspicious coords, check if any need carryovers, and if so, do them
             //  Returns set of coordinates that actually have changed
-            CoordSet carryoverCleanup(const CoordSet& coords);
-            protected: CoordSet locked_carryoverCleanup(const CoordSet& coords); public:
+            CoordSet carryoverCleanup(const CoordSet& coords,
+                SignConvention sc = SignConvention::Invalid
+            );
+            protected:
+                CoordSet locked_carryoverCleanup(
+                    const CoordSet& coords, SignConvention sc = SignConvention::Invalid
+                );
+            public:
 
             // Given all the non-zero coords, check if any need carryovers, and if so, do them
             //  Returns set of coordinates that actually have changed
-            CoordSet carryoverCleanupAll();
-            protected: CoordSet locked_carryoverCleanupAll(); public:
+            CoordSet carryoverCleanupAll(SignConvention sc = SignConvention::Invalid);
+            protected:
+                CoordSet locked_carryoverCleanupAll(SignConvention sc = SignConvention::Invalid);
+            public:
 
             // General shift interface
             void shift(int xDigits, int yDigits);

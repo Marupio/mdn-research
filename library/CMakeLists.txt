@@ -21,6 +21,7 @@ Mdn2dIO.hpp;Mdn2dRules.hpp;MdnException.hpp;MdnObserver.hpp;PrecisionStatus.hpp;
 Rect.hpp;SignConvention.hpp;TextOptions.hpp;Tools.hpp"
 )
 
-target_include_directories(mdn PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(mdn PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${PROJECT_BINARY_DIR})
+target_link_libraries(mdn PUBLIC mdn_config)
 target_compile_definitions(mdn PRIVATE mdn_EXPORTS)
 

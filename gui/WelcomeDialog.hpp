@@ -7,6 +7,8 @@
 #include <QUrl>
 #include <QMessageBox>
 
+#include "HelpDialog.hpp"
+
 class WelcomeDialog : public QDialog {
     Q_OBJECT
 public:
@@ -36,25 +38,35 @@ public:
 
         auto* layout = new QVBoxLayout(this);
 
-        auto* title = new QLabel(tr("MultiDimensional Number Research"), this);
+        auto* title = new QLabel(tr("Multi-Dimensional Number (MDN)"), this);
+        auto* subTitle = new QLabel(tr("Research Toolkit"), this);
         title->setAlignment(Qt::AlignCenter);
+        subTitle->setAlignment(Qt::AlignCenter);
         QFont f = title->font();
         f.setPointSize(18);
         title->setFont(f);
+        subTitle->setFont(f);
         layout->addWidget(title);
+        layout->addWidget(subTitle);
 
         auto* newBtn    = new QPushButton(tr("New Project"), this);
         // auto* recentBtn = new QPushButton(tr("Open Recent"), this);
         auto* openBtn   = new QPushButton(tr("Open Project"), this);
+        auto* overviewBtn  = new QPushButton(tr("Overview"), this);
+        auto* guideBtn  = new QPushButton(tr("Guide"), this);
         auto* aboutBtn  = new QPushButton(tr("About"), this);
-        auto* donateBtn = new QPushButton(tr("Donate"), this);
+        auto* licenseBtn  = new QPushButton(tr("License"), this);
+        // auto* donateBtn = new QPushButton(tr("Donate"), this);
         auto* exitBtn   = new QPushButton(tr("Exit"), this);
 
         layout->addWidget(newBtn);
         // layout->addWidget(recentBtn);
         layout->addWidget(openBtn);
+        layout->addWidget(overviewBtn);
+        layout->addWidget(guideBtn);
         layout->addWidget(aboutBtn);
-        layout->addWidget(donateBtn);
+        layout->addWidget(licenseBtn);
+        // layout->addWidget(donateBtn);
         layout->addWidget(exitBtn);
 
         // Closing choices (hand the decision back to main.cpp)
@@ -76,14 +88,25 @@ public:
         });
 
         // Non-closing helpers (keep dialog open)
+        connect(overviewBtn, &QPushButton::clicked, this, [this]{
+            HelpDialog dlg("overview", this);
+            dlg.exec();
+        });
+        connect(guideBtn, &QPushButton::clicked, this, [this]{
+            HelpDialog dlg("guide", this);
+            dlg.exec();
+        });
         connect(aboutBtn, &QPushButton::clicked, this, [this]{
-            QMessageBox::about(this, tr("About MDN"),
-                               tr("<b>MDN GUI</b><br/>"
-                                  "MultiDimensional Numbers research & tooling."));
+            HelpDialog dlg("about", this);
+            dlg.exec();
         });
-        connect(donateBtn, &QPushButton::clicked, this, []{
-            QDesktopServices::openUrl(QUrl("https://example.org/donate"));
+        connect(licenseBtn, &QPushButton::clicked, this, [this]{
+            HelpDialog dlg("license", this);
+            dlg.exec();
         });
+        // connect(donateBtn, &QPushButton::clicked, this, []{
+        //     QDesktopServices::openUrl(QUrl("https://example.org/donate"));
+        // });
 
         // Slightly nicer default size
         resize(420, 360);

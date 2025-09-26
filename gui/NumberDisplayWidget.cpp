@@ -1193,7 +1193,7 @@ void mdn::gui::NumberDisplayWidget::commitCellEdit(SubmitMove how, bool stayInsi
 
     if (message.size()) {
         // Not a valid string input - already logged
-        emit requestStatus(QString::fromStdString(message), 2000);
+        emit requestStatus(QString::fromStdString(message), 2000, false);
         m_cellEditor->hide();
         m_editing = false;
         update();

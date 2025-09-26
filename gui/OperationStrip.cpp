@@ -43,14 +43,6 @@ mdn::gui::OperationStrip::OperationStrip(QWidget* parent)
     // Convenience
     m_allOpButtons = { m_btnAdd, m_btnSub, m_btnMul, m_btnDiv };
 
-    // // Make op buttons checkable so the active one looks “clicked in”
-    // for (QPushButton* b : { m_btnAdd, m_btnSub, m_btnMul, m_btnDiv }) {
-    //     b->setCheckable(true);
-    //     b->setFocusPolicy(Qt::NoFocus);
-    //     b->setMinimumWidth(28);
-    // }
-    // No minWidth here; we’ll set a uniform fixed width below.
-
     // Wire user intent -> OpsController (OpsController will call activate/reset)
     connect(m_btnAdd, &QToolButton::clicked, this, &OperationStrip::onAdd);
     connect(m_btnSub, &QToolButton::clicked, this, &OperationStrip::onSub);
@@ -58,7 +50,7 @@ mdn::gui::OperationStrip::OperationStrip(QWidget* parent)
     connect(m_btnDiv, &QToolButton::clicked, this, &OperationStrip::onDiv);
     connect(m_btnCancel, &QPushButton::clicked, this, &OperationStrip::onCancel);
 
-    // Layout: [gear] [Cancel] [+] [–] [×] [÷]
+    // Layout: [Cancel] [+] [–] [×] [÷] [T↔] [c/o] [c/+] [c/-]
     // lay->addSpacing(8);
 
     m_btnTranspose = new QToolButton(this);
@@ -99,7 +91,7 @@ mdn::gui::OperationStrip::OperationStrip(QWidget* parent)
     int maxTextW = 0;
     for (const auto& s : labels) maxTextW = std::max(maxTextW, fm.horizontalAdvance(s));
     // Add a little padding so text isn’t cramped (style may add a bit more)
-    const int uniformW = maxTextW + 10;
+    const int uniformW = maxTextW + 20;
     auto applyFixedW = [uniformW](QToolButton* b){
         b->setFixedWidth(uniformW);
         b->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
@@ -121,6 +113,67 @@ mdn::gui::OperationStrip::OperationStrip(QWidget* parent)
     lay->addWidget(m_btnCarryPos);
     lay->addWidget(m_btnCarryNeg);
     lay->addStretch(1);
+
+    auto tagOpBtn = [](QToolButton* b){
+        b->setProperty("opstyle", true);
+        // show border even when not hovered
+        b->setAutoRaise(false);
+        // optional: allow keyboard focus
+        b->setFocusPolicy(Qt::TabFocus);
+    };
+
+    for (
+        auto* b :
+        {
+            m_btnAdd,
+            m_btnSub,
+            m_btnMul,
+            m_btnDiv,
+            m_btnTranspose,
+            m_btnCarryOver,
+            m_btnCarryPos,
+            m_btnCarryNeg
+        }
+    ) {
+        tagOpBtn(b);
+    }
+
+    const QString opCss = R"(
+    QToolButton[opstyle="true"] {
+    padding: 2px 6px;
+    border: 1px solid palette(mid);
+    border-radius: 6px;                     /* pill look? use 999px */
+    background-color: palette(alternate-base);
+    color: palette(button-text);
+    }
+
+    QToolButton[opstyle="true"]:hover {
+    background-color: palette(button);
+    }
+
+    QToolButton[opstyle="true"]:pressed {
+    background-color: palette(midlight);
+    }
+
+    QToolButton[opstyle="true"]:checked {
+    background-color: palette(highlight);
+    color: palette(highlighted-text);
+    border-color: palette(highlight);
+    }
+
+    QToolButton[opstyle="true"]:disabled {
+    color: palette(mid);
+    border-color: palette(midlight);
+    background-color: palette(window);
+    }
+
+    /* Optional: clearer keyboard focus */
+    QToolButton[opstyle="true"]:focus {
+    outline: none;
+    border: 1px solid palette(highlight);
+    }
+    )";
+    this->setStyleSheet(opCss);
 
     // Idle state by default
     reset();

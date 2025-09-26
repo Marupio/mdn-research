@@ -3,6 +3,7 @@
 #include "../library/Logger.hpp"
 #include "../library/Mdn2dConfig.hpp"
 
+#include "mdn_config.h"
 #include "QtLoggingBridge.hpp"
 #include "LoggerConfigurator.hpp"
 #include "MainWindow.hpp"
@@ -104,8 +105,12 @@ int main(int argc, char* argv[]) {
     mdn_installQtMessageHandler();
 
     QApplication app(argc, argv);
-    QCoreApplication::setApplicationName("mdn_gui");
-    QCoreApplication::setApplicationVersion(QT_VERSION_STR);
+
+    // --- App identity for QSettings, file paths, etc. (set this EARLY) ---
+    QCoreApplication::setOrganizationName("Gadensoft");
+    // QCoreApplication::setOrganizationDomain("gadensoft.ca");
+    QCoreApplication::setApplicationName("MDN Research");
+    QCoreApplication::setApplicationVersion(QStringLiteral(MDN_TOOLS_VERSION_STR));
 
     // Build the common CLI+JSON logger setup
     mdn::cli::LoggerConfigurator logCfg("MDN GUI");

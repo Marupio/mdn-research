@@ -30,12 +30,9 @@ Make Selection thread safe
 * Change precision to fraxis depth, and allow infinite precision
 
 GUI library
+* Add shortcut keys & their descriptions
 * Log idents are royally screwed up in Release mode
-* Mdn0 op Mdn0 -> Mdn0 lockup
-* Status text area does not (slider) grow with font size
 * New tab should select new tab, operations should select result
-* OVER doesn't work on diagonals - don't get pascal numbers
-* Be able to change config - config button
 * New Project window lost [Enter] button
 * Opens with slider all the way at the top
 * SegFaults with math
@@ -53,14 +50,8 @@ Bugs
 * Cursor goes out-of-view on submit
 
 Features
-* Scroll wheel scrolls view when no other modifiers, sideways allowed also
-* Copy,Cut,Paste clipboard operations not wired in
 * Save only opens file dialog if path not set
 * SaveAs always opens file dialog
-* Hover peaks tab always
-* Click Operation button, hover peaks tab
-* After clicking operation button, click B tab, then dest tab, including + tab (i.e new)
-* Add a '+ tab' which creates a new tab
 * Shortcut keys:
     For these, Ctrl+letter->applies to Mdn2d, Ctrl+Shift+Letter->applies to Project
         N = New, S = Save, W=Close
@@ -68,9 +59,6 @@ Features
         Ctrl+C or Ctrl+Insert = Clipboard copy
         Ctrl+X or Shift+Del = Clipboard cut
         Ctrl+V or Shift+Insert = Clipboard paste
-
-* Change operation buttons from text to symbols
-* Add a gear button for ProjectProjectiesDialog
 * Add a 'Clear All' button & edit menu item
 * Update operation toolbar to make Destination more selectable
 * Get rid of Operation->[opName] (in place) and (to new) menu items
