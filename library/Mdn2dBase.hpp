@@ -200,11 +200,24 @@ public:
             Coord jump(const Coord& xy, CardinalDirection cd) const;
             protected: Coord locked_jump(const Coord& xy, CardinalDirection cd) const; public:
 
-        // *** Getters
+
+        // *** Value Getters
 
             // Retrieves the value at coordinate (x, y), or 0 if not present.
             Digit getValue(const Coord& xy) const;
             protected: Digit locked_getValue(const Coord& xy) const; public:
+
+
+        // *** Row Getters
+
+            double getRowValue(const Coord& xy) const;
+            protected: double locked_getRowValue(const Coord& xy) const; public:
+
+            // Return the xy position of the head of the row with the maximum magnitude
+            //  val contains the value (signed), prefers higher y values, tie breaker
+            //  Returns false if no non-zeroes
+            bool getRowMagMax(Coord& xy, double& val) const;
+            protected: bool locked_getRowMagMax(Coord& xy, double& val) const; public:
 
             // Assembles the row at the given y index value, spanning the x bounds of full MDN
             VecDigit getRow(int y) const;
@@ -236,6 +249,14 @@ public:
             void locked_getAreaRows(const Rect& window, VecVecDigit& out) const;
             public:
 
+
+        // *** Column Getters
+
+            double getColValue(const Coord& xy) const;
+            protected: double locked_getColValue(const Coord& xy) const; public:
+
+            bool getColMagMax(Coord& xy, double& val) const;
+            protected: bool locked_getColMagMax(Coord& xy, double& val) const; public:
 
             // Assembles the col at the given x index value, spanning the y bounds of full MDN
             VecDigit getCol(int x) const;
@@ -452,6 +473,11 @@ public:
 
             // Set the m_modified flag to trigger housekeeping with derived data when operations are
             // complete
+
+            protected:
+                // Helper - given a order of magnitude, returns base^orderOfMagnitude
+                double internal_baseFactor(int orderOfMagnitude) const;
+            public:
 
             // Use when the data has changed, but operation may not yet be complete
             void internal_modified();

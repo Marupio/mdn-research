@@ -1,4 +1,3 @@
-// Rect.hpp  — UPDATED
 #pragma once
 
 #include <vector>

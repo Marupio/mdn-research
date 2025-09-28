@@ -36,7 +36,7 @@ mdn::Mdn2d mdn::Mdn2dBase::Duplicate(const Mdn2d& other, std::string nameIn) {
     std::string newName = nameIn;
     if (nameIn.empty()) {
         Log_Debug3("nameIn empty, generating new name from " << other.m_name);
-        newName = const_cast<Mdn2dConfig&>(other.config()).parent().suggestCopyName(other.m_name);
+        newName = const_cast<Mdn2dConfig&>(other.m_config).parent().suggestCopyName(other.m_name);
     }
     If_Log_Showing_Debug2(
         Log_Debug2_T("Name of new Mdn2d will be " << newName);
@@ -651,6 +651,75 @@ mdn::Digit mdn::Mdn2dBase::locked_getValue(const Coord& xy) const {
 }
 
 
+double mdn::Mdn2dBase::getRowValue(const Coord& xy) const {
+    Log_N_Debug2_H("At " << xy);
+    auto lock = lockReadOnly();
+    double result = locked_getRowValue(xy);
+    Log_N_Debug2_T("result=" << result);
+    return result;
+}
+
+
+double mdn::Mdn2dBase::locked_getRowValue(const Coord& xy) const {
+    VecDigit digits;
+    locked_getRow(xy.y(), digits);
+    int xMin = m_bounds.min().x();
+    int count = m_bounds.width();
+    double baseFactor = internal_baseFactor(xMin);
+    double result = 0.0;
+    for (int i = 0; i < count; ++i) {
+        double d = static_cast<double>(digits[i]);
+        result += d*baseFactor;
+    }
+    return result;
+}
+
+
+bool mdn::Mdn2dBase::getRowMagMax(Coord& xy, double& val) const {
+    Log_N_Debug2_H("");
+    auto lock = lockReadOnly();
+    bool result = locked_getRowMagMax(xy, val);
+    if (result) {
+        Log_N_Debug2_T("result=" << result << ", xy=" << xy << ", val=" << val);
+    } else {
+        Log_N_Debug2_T("Failed to get values");
+    }
+    return result;
+}
+
+
+bool mdn::Mdn2dBase::locked_getRowMagMax(Coord& xy, double& val) const {
+    if (m_index.empty()) {
+        Log_Debug2("No non-zeroes available, returning false (failed)");
+        return false;
+    }
+    auto last = m_xIndex.rbegin();
+    int col = last->first;
+    const CoordSet& nonZeroes = last->second;
+    double pVal = -1.0;
+    double pSign = 0.0;
+    int pRow = constants::intMin;
+    for (const Coord& xy : nonZeroes) {
+        double curVal = getRowValue(xy);
+        double curSign = 1.0;
+        int curRow = xy.y();
+        if (curVal < 0) {
+            curVal = -curVal;
+            curSign = -1.0;
+        }
+        if ((curVal == pVal && curRow > pRow) || (curVal > pVal)) {
+            // Prefer higher x value
+            pVal = curVal;
+            pSign = curSign;
+            pRow = curRow;
+        }
+    }
+    val = pVal * pSign;
+    xy = Coord(col, pRow);
+    return true;
+}
+
+
 mdn::VecDigit mdn::Mdn2dBase::getRow(int y) const {
     Log_N_Debug2_H("");
     auto lock = lockReadOnly();
@@ -827,6 +896,75 @@ void mdn::Mdn2dBase::locked_getAreaRows(const Rect& window, VecVecDigit& out) co
         out.push_back(row);
     }
     Log_N_Debug3_T("");
+}
+
+
+double mdn::Mdn2dBase::getColValue(const Coord& xy) const {
+    Log_N_Debug2_H("At " << xy);
+    auto lock = lockReadOnly();
+    double result = locked_getColValue(xy);
+    Log_N_Debug2_T("result=" << result);
+    return result;
+}
+
+
+double mdn::Mdn2dBase::locked_getColValue(const Coord& xy) const {
+    VecDigit digits;
+    locked_getCol(xy.x(), digits);
+    int yMin = m_bounds.min().y();
+    int count = m_bounds.height();
+    double baseFactor = internal_baseFactor(yMin);
+    double result = 0.0;
+    for (int i = 0; i < count; ++i) {
+        double d = static_cast<double>(digits[i]);
+        result += d*baseFactor;
+    }
+    return result;
+}
+
+
+bool mdn::Mdn2dBase::getColMagMax(Coord& xy, double& val) const {
+    Log_N_Debug2_H("");
+    auto lock = lockReadOnly();
+    bool result = locked_getColMagMax(xy, val);
+    if (result) {
+        Log_N_Debug2_T("result=" << result << ", xy=" << xy << ", val=" << val);
+    } else {
+        Log_N_Debug2_T("Failed to get values");
+    }
+    return result;
+}
+
+
+bool mdn::Mdn2dBase::locked_getColMagMax(Coord& xy, double& val) const {
+    if (m_index.empty()) {
+        Log_Debug2("No non-zeroes available, returning false (failed)");
+        return false;
+    }
+    auto last = m_xIndex.rbegin();
+    int row = last->first;
+    const CoordSet& nonZeroes = last->second;
+    double pVal = -1.0;
+    double pSign = 0.0;
+    int pCol = constants::intMin;
+    for (const Coord& xy : nonZeroes) {
+        double curVal = getColValue(xy);
+        double curSign = 1.0;
+        int curCol = xy.x();
+        if (curVal < 0) {
+            curVal = -curVal;
+            curSign = -1.0;
+        }
+        if ((curVal == pVal && curCol > pCol) || (curVal > pVal)) {
+            // Prefer higher x value
+            pVal = curVal;
+            pSign = curSign;
+            pCol = curCol;
+        }
+    }
+    val = pVal * pSign;
+    xy = Coord(pCol, row);
+    return true;
 }
 
 
@@ -1672,6 +1810,26 @@ mdn::PrecisionStatus mdn::Mdn2dBase::locked_checkPrecisionWindow(const Coord& xy
     }
     Log_N_Debug4("At: " << xy << ", result: Inside");
     return PrecisionStatus::Inside;
+}
+
+
+double mdn::Mdn2dBase::internal_baseFactor(int orderOfMagnitude) const {
+    double base = m_config.baseDouble();
+    double result = 1.0;
+    if (orderOfMagnitude == 0) {
+        return result;
+    } else if (orderOfMagnitude < 0) {
+        int om = -orderOfMagnitude;
+        for (int i = 0; i < om; ++i) {
+            result /= base;
+        }
+        return result;
+    }
+    // orderOfMagnitude > 0
+    for (int i = 0; i < orderOfMagnitude; ++i) {
+        result *= base;
+    }
+    return result;
 }
 
 

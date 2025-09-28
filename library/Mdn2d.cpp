@@ -198,7 +198,58 @@ mdn::CoordSet mdn::Mdn2d::locked_divide(const Mdn2d& rhs, Mdn2d& ans, Fraxis fra
     If_Log_Showing_Debug3(
         Log_N_Debug3_H("ans = *this / rhs, fraxis: " << FraxisToName(fraxis));
     );
+    if (rhs.m_index.empty()) {
+        Log_N_Debug3_T("Divisor is zero, answer is undefined");
+        return m_nullCoordSet;
+    }
+
+    ans.locked_clear();
+    Coord changed;
+    if (m_config.fraxis() == Fraxis::X) {
+        // Find principal row for division - row with largest absolute magnitude
+        Coord pOffset;
+        double pVal;
+        if (!rhs.locked_getRowMagMax(pOffset, pVal)) {
+            Log_Warn("Failed to find max magnitude row");
+            return m_nullCoordSet;
+        }
+        Mdn2d remainder(*this);
+        bool keepGoing = true;
+        int nIters = 0;
+        while (keepGoing) {
+            Coord qOffset;
+            double qVal;
+            if (!remainder.locked_getRowMagMax(qOffset, qVal)) {
+                if (nIters) {
+                    // Found answer, we think
+                    return changed;
+                } else {
+                    Log_Warn("Failed to find principal value of divisor (A) in A / B");
+                    return m_nullCoordSet;
+                }
+                double div = qVal / pVal;
+                1/100 = 0.001
+                100 offset=3
+                1/100 = 0.001
+            }
+        }
+    }
+
     // TODO
+    // Fraxis X, A / B = C
+    //  Create a new Mdn2d answer
+    //  Create a working Mdn2d remainder, copy of A
+    //  Find right-most (then upper-most) digit of B
+    //      get full row of that digit --> this one is always in use
+    //  Find right-most (then upper-most) digit of A
+    //      get full row of that digit
+    //  Convert both rows into real numbers
+    //  Re(Ai) / Re(Bi), at the position
+    //  Calculate Re(Ai) / Re(Bi)
+    //  add result to answer Mdn2d, at the correct position
+    //  temp = B x answer
+    //  remainder = A - temp
+    //  in remainder, find the right-most (then upper-most) digit
     Log_N_Debug3_T("");
     return CoordSet();
 }

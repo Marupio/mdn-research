@@ -60,10 +60,6 @@ Features
         Ctrl+X or Shift+Del = Clipboard cut
         Ctrl+V or Shift+Insert = Clipboard paste
 * Add a 'Clear All' button & edit menu item
-* Update operation toolbar to make Destination more selectable
-* Get rid of Operation->[opName] (in place) and (to new) menu items
-* Carryover button
-* Transpose button
 * Negative button
 * Invert button
 * Scalar multiply button

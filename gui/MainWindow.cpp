@@ -407,7 +407,11 @@ bool mdn::gui::MainWindow::onNewProject() {
 
 bool mdn::gui::MainWindow::onNewMdn2d() {
     Log_Debug3_H("");
-    bool result = onNewNamedMdn2d("", -1);
+    int idx = -1;
+    if (m_project) {
+        idx = m_project->activeIndex();
+    }
+    bool result = onNewNamedMdn2d("", idx);
     Log_Debug3_T("result=" << result);
     return result;
 }
