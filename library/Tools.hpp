@@ -244,6 +244,37 @@ public:
         const std::string& strIn, int base,
         bool& negative, std::string& intPart, std::string& fracPart, int& radix
     );
+
+    // Unit in the last place
+    static inline double ulp(double x) {
+        if (!std::isfinite(x)) {
+            return std::numeric_limits<double>::infinity();
+        }
+        double ax = std::fabs(x);
+        double next = std::nextafter(ax, std::numeric_limits<double>::infinity());
+        return next - ax; // >= 0
+    }
+
+    // Get the significance band for x in the given base (no checks on base, assumes 2..32)
+    //  returns {kMin, kMax}, which are the lowest and highest exponents to keep, respectively,
+    //  kMin and kMax are *inclusive* bounds.
+    static std::pair<int, int> significanceBand(long double x, int base);
+
+    // How many fractional digits are actually meaningful?
+    static inline int maxFracDigits(long double x, int base) {
+        std::pair<int, int> s = significanceBand(x, base);
+        // Fractional digits live at exponents < 0. We keep from kMin up to -1.
+        return std::max(0, -s.first);
+    }
+
+    static bool toVecDigits(
+        long double value,
+        int base,
+        VecDigit& digits,
+        int& offset,
+        std::pair<int, int>& kRange
+    );
+
 };
 
 } // namespace mdn

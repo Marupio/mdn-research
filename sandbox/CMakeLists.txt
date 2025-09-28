@@ -19,4 +19,5 @@ target_link_libraries(mdn PUBLIC mdn_config)
 
 # Define the two apps using the helper
 add_mdn_app(sandbox sandbox_main.cpp)
-add_mdn_app(libraryTest libraryTest_main.cpp)
+add_mdn_app(test_library test_library_main.cpp)
+add_mdn_app(test_toVecDigits test_toVecDigits_main.cpp)

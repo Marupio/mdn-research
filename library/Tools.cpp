@@ -1,5 +1,7 @@
 #include <algorithm>
+#include <cmath>
 #include <filesystem>
+#include <limits>
 
 #include "Tools.hpp"
 #include "Logger.hpp"
@@ -338,7 +340,8 @@ std::string mdn::Tools::stringToArbitraryPrecisionReal(
             };
 
             while (!fracDigits.empty()) {
-                // Stop if this fractional state repeats (decimal expansion would be non-terminating)
+                // Stop if this fractional state repeats
+                // (decimal expansion would be non-terminating)
                 std::string key = stateKey();
                 if (!seen.insert(key).second) {
                     // Non-terminating decimal expansion for this base and digit tail.
@@ -360,7 +363,8 @@ std::string mdn::Tools::stringToArbitraryPrecisionReal(
                 fracPart.push_back(static_cast<long>(carry));
 
                 // Trim any zeros at the end of the fractional tail so we eventually terminate
-                // when the fraction truly terminates in decimal (e.g., bases with factors 2 and/or 5).
+                // when the fraction truly terminates in decimal
+                // (e.g., bases with factors 2 and/or 5).
                 while (!fracDigits.empty() && fracDigits.back() == 0) {
                     fracDigits.pop_back();
                 }
@@ -463,4 +467,110 @@ std::string mdn::Tools::verifyStringAsReal(
     // A valid number
     Log_Debug3_T("valid");
     return "";
+}
+
+
+std::pair<int, int> mdn::Tools::significanceBand(long double x, int base) {
+    // if (base < 2 || base > 32) throw std::invalid_argument("base in [2,32]");
+    long double value = std::fabs(x);
+    if (value == 0.0) {
+        // just "0"
+        return {0, 0};
+    }
+
+    // half-ULP absolute uncertainty
+    const long double delta = 0.5 * ulp(value);
+    const long double lb = std::log(static_cast<long double>(base));
+    const int kmax = static_cast<int>(std::floor(std::log(value) / lb));
+    int kleast = static_cast<int>(std::floor(std::log(delta) / lb) + 1);
+    if (kleast > kmax) {
+        // at least one digit
+        kleast = kmax;
+    }
+
+    return {kleast, kmax};
+}
+
+
+bool mdn::Tools::toVecDigits(
+    long double value,
+    int base,
+    VecDigit& digits,
+    int& offset,
+    std::pair<int, int>& kBand
+) {
+    // if (base < 2 || base > 32) throw std::invalid_argument("base must be in [2,32]");
+
+    bool negative = std::signbit(value);
+    int sign = 1;
+    if (negative) {
+        value *= -1;
+        sign = -1;
+    }
+    value = std::fabs(value);
+    if (!std::isfinite((double)value)) {
+        Log_Warn("Non-finite value supplied");
+        return false;
+    }
+
+    // Zero shortcut
+    if (value == 0.0L) {
+        digits   = {0};
+        offset   = 0;
+        negative = false;
+        kBand.first = 0;
+        kBand.second = 0;
+        return true;
+    }
+
+    // Significance band in base 'base'
+    // half-ULP absolute error bound
+    const double delta = 0.5 * ulp(static_cast<double>(value));
+    const long double lb = std::log(static_cast<long double>(base));
+
+    const int kmax = (int)std::floor(std::log(static_cast<long double>(value)) / lb);
+    int kleast = (int)std::floor(std::log(static_cast<long double>(delta)) / lb) + 1;
+    if (kleast > kmax) {
+        // keep at least one digit
+        kleast = kmax;
+    }
+
+    unsigned long long Q;
+
+    if ((base & (base - 1)) == 0) {
+        // base is power of two
+        int log2b = 0; unsigned b = base; while ((b >>= 1) != 0) ++log2b;
+        const long double scaled_ld = std::scalbnl(value, -kleast * log2b);
+        Q = static_cast<unsigned long long>(llround(scaled_ld));
+    } else {
+        const long double scale = std::powl(static_cast<long double>(base),
+                                            static_cast<long double>(-kleast));
+        const long double scaled_ld = value * scale;
+        Q = static_cast<unsigned long long>(llround(scaled_ld));
+    }
+
+    // Strip least-significant base factors from Q so we don't emit LSD zeros.
+    // This turns e.g. {0,0,1} with kleast=k into {1} with kleast=k+2 (offset unchanged).
+    if (Q != 0ULL) {
+        const unsigned B = static_cast<unsigned>(base);
+        while (Q % B == 0ULL) {
+            Q /= B;
+            // we've shifted everything up by one exponent
+            ++kleast;
+        }
+    }
+
+    digits.clear();
+    unsigned long long tmp = Q;
+    while (tmp > 0ULL) {
+        const int d = static_cast<int>(tmp % static_cast<unsigned>(base));
+        digits.push_back(static_cast<Digit>(d)*sign);
+        tmp /= static_cast<unsigned>(base);
+    }
+
+    // The last digit corresponds to exponent kleast + (digits.size()-1)
+    offset = kleast + static_cast<int>(digits.size()) - 1;
+    kBand.first = kleast;
+    kBand.second = kmax;
+    return true;
 }

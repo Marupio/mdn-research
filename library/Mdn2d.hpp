@@ -335,7 +335,6 @@ protected:
             //  return = (*this x value).shift(xy)
             Mdn2d internal_copyMultiplyAndShift(int value, const Coord& shiftXY) const;
 
-
             int internal_checkOverwrite(const Coord& xy, bool overwrite) const;
             template <class Type>
             Type internal_checkOverwrite(const Coord& xy, bool overwrite) const {
@@ -351,6 +350,21 @@ protected:
                 }
                 return static_cast<Type>(locked_getValue(xy));
             }
+
+        // Fraxis x: place the given value at xy.y(), whose x position is driven by the decimal
+        // Fraxis y: place the given value at xy.x(), whose y position is driven by the decimal
+        CoordSet internal_emplace(const Coord& xy, double val, Fraxis fraxis);
+
+        // Convert value to digits, offset is the distance from axis of the last element of digits
+        bool internal_toVecDigits(
+            double value,
+            VecDigit& digits,
+            int& offset
+        );
+
+        // Helpers for toVecDigits
+        double internal_ulp(double x);
+
 
 };
 

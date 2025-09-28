@@ -204,7 +204,7 @@ mdn::CoordSet mdn::Mdn2d::locked_divide(const Mdn2d& rhs, Mdn2d& ans, Fraxis fra
     }
 
     ans.locked_clear();
-    Coord changed;
+    CoordSet changed;
     if (m_config.fraxis() == Fraxis::X) {
         // Find principal row for division - row with largest absolute magnitude
         Coord pOffset;
@@ -228,9 +228,22 @@ mdn::CoordSet mdn::Mdn2d::locked_divide(const Mdn2d& rhs, Mdn2d& ans, Fraxis fra
                     return m_nullCoordSet;
                 }
                 double div = qVal / pVal;
-                1/100 = 0.001
-                100 offset=3
-                1/100 = 0.001
+                // division here accounts for x position
+                // y position must be manually calculated
+                // rhs (q), this (p), calculating q / p
+                // qOffset
+                // q = 10
+                // p = 2 pOffset = +2, qOffset = 0. ansOffset = -2
+                // ans = 5 .. ansOffset = -2
+                // qoffset = +2, pOffset=0, ansOffset = +2
+                // qoffset = +2, pOffset = -2, ansOffset = 4
+                int ansOffsetY = qOffset.y() - pOffset.y();
+
+
+
+                // 1/100 = 0.001
+                // 100 offset=3
+                // 1/100 = 0.001
             }
         }
     }
@@ -1108,4 +1121,16 @@ mdn::Mdn2d mdn::Mdn2d::internal_copyMultiplyAndShift(int value, const Coord& shi
     }
     Log_N_Debug4_T("");
     return temp;
+}
+
+
+mdn::CoordSet mdn::Mdn2d::internal_emplace(const Coord& xy, double val, Fraxis fraxis) {
+    if (fraxis == Fraxis::X) {
+    } else if (fraxis == Fraxis::Y) {
+    } else {
+        InvalidState err("Invalid fraxis: must be X or Y");
+        Log_Error(err.what());
+        throw err;
+    }
+    return CoordSet();
 }
