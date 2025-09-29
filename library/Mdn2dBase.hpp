@@ -207,17 +207,23 @@ public:
             Digit getValue(const Coord& xy) const;
             protected: Digit locked_getValue(const Coord& xy) const; public:
 
+            // Get overall value - arbitrary rule - sum all row magnitudes
+            long double getTotalValue() const;
+            protected: long double locked_getTotalValue() const; public:
+
 
         // *** Row Getters
 
-            double getRowValue(const Coord& xy) const;
-            protected: double locked_getRowValue(const Coord& xy) const; public:
+            long double getRowValue(const Coord& xy) const;
+            protected: long double locked_getRowValue(const Coord& xy) const; public:
 
-            // Return the xy position of the head of the row with the maximum magnitude
-            //  val contains the value (signed), prefers higher y values, tie breaker
-            //  Returns false if no non-zeroes
-            bool getRowMagMax(Coord& xy, double& val) const;
-            protected: bool locked_getRowMagMax(Coord& xy, double& val) const; public:
+            // If all the rows calculated their total value, account for negative digits, this
+            //  function finds the one with the largest absolute magnitude (positive or negative)
+            //  xy gets set to the position of the head of the row (furthest right, x+ digit), and
+            //  val contains the value (signed).  Tie breaker - prefers higher y values.
+            //  Returns false if no non-zeroes.
+            bool getRowMagMax(Coord& xy, long double& val) const;
+            protected: bool locked_getRowMagMax(Coord& xy, long double& val) const; public:
 
             // Assembles the row at the given y index value, spanning the x bounds of full MDN
             VecDigit getRow(int y) const;
@@ -252,11 +258,16 @@ public:
 
         // *** Column Getters
 
-            double getColValue(const Coord& xy) const;
-            protected: double locked_getColValue(const Coord& xy) const; public:
+            long double getColValue(const Coord& xy) const;
+            protected: long double locked_getColValue(const Coord& xy) const; public:
 
-            bool getColMagMax(Coord& xy, double& val) const;
-            protected: bool locked_getColMagMax(Coord& xy, double& val) const; public:
+            // If all the columns calculated their total value, account for negative digits, this
+            //  function finds the one with the largest absolute magnitude (positive or negative)
+            //  xy gets set to the position of the head of the column (furthest right, x+ digit),
+            //  and val contains the value (signed).  Tie breaker - prefers higher x values.
+            //  Returns false if no non-zeroes.
+            bool getColMagMax(Coord& xy, long double& val) const;
+            protected: bool locked_getColMagMax(Coord& xy, long double& val) const; public:
 
             // Assembles the col at the given x index value, spanning the y bounds of full MDN
             VecDigit getCol(int x) const;
@@ -476,7 +487,7 @@ public:
 
             protected:
                 // Helper - given a order of magnitude, returns base^orderOfMagnitude
-                double internal_baseFactor(int orderOfMagnitude) const;
+                long double internal_baseFactor(int orderOfMagnitude) const;
             public:
 
             // Use when the data has changed, but operation may not yet be complete
@@ -527,6 +538,10 @@ protected:
 
             // Add xy as a non-zero number position to the metadata
             void internal_insertAddress(const Coord& xy) const;
+
+            // Fraxis x: place the given value at xy.y(), whose x position is driven by the decimal
+            // Fraxis y: place the given value at xy.x(), whose y position is driven by the decimal
+            CoordSet internal_emplace(const Coord& xy, long double val, Fraxis fraxis);
 
             // Checks if value is within +/- (m_base-1).  If not, throws or returns false.
             template <class Type>

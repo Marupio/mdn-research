@@ -651,31 +651,63 @@ mdn::Digit mdn::Mdn2dBase::locked_getValue(const Coord& xy) const {
 }
 
 
-double mdn::Mdn2dBase::getRowValue(const Coord& xy) const {
-    Log_N_Debug2_H("At " << xy);
+long double mdn::Mdn2dBase::getTotalValue() const {
+    Log_N_Debug2_H("");
     auto lock = lockReadOnly();
-    double result = locked_getRowValue(xy);
+    long double result = locked_getTotalValue();
     Log_N_Debug2_T("result=" << result);
     return result;
 }
 
 
-double mdn::Mdn2dBase::locked_getRowValue(const Coord& xy) const {
+long double mdn::Mdn2dBase::locked_getTotalValue() const {
+    Log_N_Debug3_H("");
+    long double result = 0.0;
+    if (m_xIndex.size() == 0) {
+        Log_N_Debug3_T("No non-zeroes");
+        return result;
+    }
+    for (auto it = m_xIndex.begin(); it != m_xIndex.end(); ++it) {
+        const int rowI = it->first;
+        const CoordSet& coords = it->second;
+        if (coords.empty()) {
+            continue;
+        }
+        Coord cursor(0, rowI);
+        long double rowVal = getRowValue(Coord (0, rowI));
+        result += rowVal;
+        Log_N_Debug4("row " << rowI << " = " << rowVal << ", sum = " << result);
+    }
+    Log_N_Debug3_T("returning " << result);
+    return result;
+}
+
+
+long double mdn::Mdn2dBase::getRowValue(const Coord& xy) const {
+    Log_N_Debug2_H("At " << xy);
+    auto lock = lockReadOnly();
+    long double result = locked_getRowValue(xy);
+    Log_N_Debug2_T("result=" << result);
+    return result;
+}
+
+
+long double mdn::Mdn2dBase::locked_getRowValue(const Coord& xy) const {
     VecDigit digits;
     locked_getRow(xy.y(), digits);
     int xMin = m_bounds.min().x();
     int count = m_bounds.width();
-    double baseFactor = internal_baseFactor(xMin);
-    double result = 0.0;
+    long double baseFactor = internal_baseFactor(xMin);
+    long double result = 0.0;
     for (int i = 0; i < count; ++i) {
-        double d = static_cast<double>(digits[i]);
+        long double d = static_cast<long double>(digits[i]);
         result += d*baseFactor;
     }
     return result;
 }
 
 
-bool mdn::Mdn2dBase::getRowMagMax(Coord& xy, double& val) const {
+bool mdn::Mdn2dBase::getRowMagMax(Coord& xy, long double& val) const {
     Log_N_Debug2_H("");
     auto lock = lockReadOnly();
     bool result = locked_getRowMagMax(xy, val);
@@ -688,7 +720,7 @@ bool mdn::Mdn2dBase::getRowMagMax(Coord& xy, double& val) const {
 }
 
 
-bool mdn::Mdn2dBase::locked_getRowMagMax(Coord& xy, double& val) const {
+bool mdn::Mdn2dBase::locked_getRowMagMax(Coord& xy, long double& val) const {
     if (m_index.empty()) {
         Log_Debug2("No non-zeroes available, returning false (failed)");
         return false;
@@ -899,31 +931,31 @@ void mdn::Mdn2dBase::locked_getAreaRows(const Rect& window, VecVecDigit& out) co
 }
 
 
-double mdn::Mdn2dBase::getColValue(const Coord& xy) const {
+long double mdn::Mdn2dBase::getColValue(const Coord& xy) const {
     Log_N_Debug2_H("At " << xy);
     auto lock = lockReadOnly();
-    double result = locked_getColValue(xy);
+    long double result = locked_getColValue(xy);
     Log_N_Debug2_T("result=" << result);
     return result;
 }
 
 
-double mdn::Mdn2dBase::locked_getColValue(const Coord& xy) const {
+long double mdn::Mdn2dBase::locked_getColValue(const Coord& xy) const {
     VecDigit digits;
     locked_getCol(xy.x(), digits);
     int yMin = m_bounds.min().y();
     int count = m_bounds.height();
-    double baseFactor = internal_baseFactor(yMin);
-    double result = 0.0;
+    long double baseFactor = internal_baseFactor(yMin);
+    long double result = 0.0;
     for (int i = 0; i < count; ++i) {
-        double d = static_cast<double>(digits[i]);
+        long double d = static_cast<long double>(digits[i]);
         result += d*baseFactor;
     }
     return result;
 }
 
 
-bool mdn::Mdn2dBase::getColMagMax(Coord& xy, double& val) const {
+bool mdn::Mdn2dBase::getColMagMax(Coord& xy, long double& val) const {
     Log_N_Debug2_H("");
     auto lock = lockReadOnly();
     bool result = locked_getColMagMax(xy, val);
@@ -936,7 +968,7 @@ bool mdn::Mdn2dBase::getColMagMax(Coord& xy, double& val) const {
 }
 
 
-bool mdn::Mdn2dBase::locked_getColMagMax(Coord& xy, double& val) const {
+bool mdn::Mdn2dBase::locked_getColMagMax(Coord& xy, long double& val) const {
     if (m_index.empty()) {
         Log_Debug2("No non-zeroes available, returning false (failed)");
         return false;
@@ -944,12 +976,12 @@ bool mdn::Mdn2dBase::locked_getColMagMax(Coord& xy, double& val) const {
     auto last = m_xIndex.rbegin();
     int row = last->first;
     const CoordSet& nonZeroes = last->second;
-    double pVal = -1.0;
-    double pSign = 0.0;
+    long double pVal = -1.0;
+    long double pSign = 0.0;
     int pCol = constants::intMin;
     for (const Coord& xy : nonZeroes) {
-        double curVal = getColValue(xy);
-        double curSign = 1.0;
+        long double curVal = getColValue(xy);
+        long double curSign = 1.0;
         int curCol = xy.x();
         if (curVal < 0) {
             curVal = -curVal;
@@ -1813,9 +1845,9 @@ mdn::PrecisionStatus mdn::Mdn2dBase::locked_checkPrecisionWindow(const Coord& xy
 }
 
 
-double mdn::Mdn2dBase::internal_baseFactor(int orderOfMagnitude) const {
-    double base = m_config.baseDouble();
-    double result = 1.0;
+long double mdn::Mdn2dBase::internal_baseFactor(int orderOfMagnitude) const {
+    long double base = m_config.baseDouble();
+    long double result = 1.0;
     if (orderOfMagnitude == 0) {
         return result;
     } else if (orderOfMagnitude < 0) {
@@ -1990,6 +2022,43 @@ void mdn::Mdn2dBase::internal_insertAddress(const Coord& xy) const {
         yit->second.insert(xy);
     }
     m_bounds.growToInclude(xy);
+}
+
+
+mdn::CoordSet mdn::Mdn2dBase::internal_emplace(const Coord& xy, long double val, Fraxis fraxis) {
+    CoordSet changed;
+    VecDigit digits;
+    int offset;
+    std::pair<int, int> kRange;
+    bool success(
+        Tools::toVecDigits(
+            val,
+            m_config.base(),
+            digits,
+            offset,
+            kRange
+        )
+    );
+    if (fraxis == Fraxis::X) {
+        Coord cursor(offset, xy.y());
+        for (const Digit d : digits) {
+            internal_setValueRaw(cursor, d);
+            changed.insert(cursor);
+            cursor.translateX(-1);
+        }
+    } else if (fraxis == Fraxis::Y) {
+        Coord cursor(xy.x(), offset);
+        for (const Digit d : digits) {
+            internal_setValueRaw(cursor, d);
+            changed.insert(cursor);
+            cursor.translateY(-1);
+        }
+    } else {
+        InvalidState err("Invalid fraxis: must be X or Y");
+        Log_Error(err.what());
+        throw err;
+    }
+    return changed;
 }
 
 

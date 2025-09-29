@@ -195,6 +195,10 @@ void mdn::Mdn2d::divide(const Mdn2d& rhs, Mdn2d& ans, Fraxis fraxis) const {
 
 
 mdn::CoordSet mdn::Mdn2d::locked_divide(const Mdn2d& rhs, Mdn2d& ans, Fraxis fraxis) const {
+    // Calculating: ans = *this / rhs, aka  t = p / q
+    //  *this = p values (pVal, pOffset, pSign, etc)
+    //  rhs   = q values (qVal, qOffset, qSign, etc)
+    //  ans   = t values (tVal, tOffset, tSign, etc)
     If_Log_Showing_Debug3(
         Log_N_Debug3_H("ans = *this / rhs, fraxis: " << FraxisToName(fraxis));
     );
@@ -204,21 +208,22 @@ mdn::CoordSet mdn::Mdn2d::locked_divide(const Mdn2d& rhs, Mdn2d& ans, Fraxis fra
     }
 
     ans.locked_clear();
+    Mdn2d remainder(*this, "remainder_divide");
+    auto lockRemainder = remainder.lockWriteable();
     CoordSet changed;
     if (m_config.fraxis() == Fraxis::X) {
         // Find principal row for division - row with largest absolute magnitude
         Coord pOffset;
-        double pVal;
+        long double pVal;
         if (!rhs.locked_getRowMagMax(pOffset, pVal)) {
             Log_Warn("Failed to find max magnitude row");
             return m_nullCoordSet;
         }
-        Mdn2d remainder(*this);
         bool keepGoing = true;
         int nIters = 0;
         while (keepGoing) {
             Coord qOffset;
-            double qVal;
+            long double qVal;
             if (!remainder.locked_getRowMagMax(qOffset, qVal)) {
                 if (nIters) {
                     // Found answer, we think
@@ -227,23 +232,20 @@ mdn::CoordSet mdn::Mdn2d::locked_divide(const Mdn2d& rhs, Mdn2d& ans, Fraxis fra
                     Log_Warn("Failed to find principal value of divisor (A) in A / B");
                     return m_nullCoordSet;
                 }
-                double div = qVal / pVal;
-                // division here accounts for x position
-                // y position must be manually calculated
-                // rhs (q), this (p), calculating q / p
-                // qOffset
-                // q = 10
-                // p = 2 pOffset = +2, qOffset = 0. ansOffset = -2
-                // ans = 5 .. ansOffset = -2
-                // qoffset = +2, pOffset=0, ansOffset = +2
-                // qoffset = +2, pOffset = -2, ansOffset = 4
+                long double div = qVal / pVal;
+
+                // division here accounts for x position; y position must be manually calculated
                 int ansOffsetY = qOffset.y() - pOffset.y();
+                Mdn2d tmp(m_config, "tmp_divide");
+                static_cast<void>(tmp.internal_emplace(Coord(0, ansOffsetY), div, fraxis));
+                changed.merge(ans.locked_plusEquals(tmp));
 
-
-
-                // 1/100 = 0.001
-                // 100 offset=3
-                // 1/100 = 0.001
+                // Next, calculate remainder remainder = *this - ans*rhs
+                // Because of my awesome thread-safe design, ^^^ that becomes:
+                remainder.locked_clear();
+                remainder.locked_minusEquals(ans);
+                remainder.locked_timesEquals(rhs);
+                remainder.locked_plusEquals(*this);
             }
         }
     }
@@ -266,6 +268,8 @@ mdn::CoordSet mdn::Mdn2d::locked_divide(const Mdn2d& rhs, Mdn2d& ans, Fraxis fra
     Log_N_Debug3_T("");
     return CoordSet();
 }
+
+
 
 
 void mdn::Mdn2d::add(const Coord& xy, float realNum, int nDigits, bool overwrite, Fraxis fraxis) {
@@ -1121,16 +1125,4 @@ mdn::Mdn2d mdn::Mdn2d::internal_copyMultiplyAndShift(int value, const Coord& shi
     }
     Log_N_Debug4_T("");
     return temp;
-}
-
-
-mdn::CoordSet mdn::Mdn2d::internal_emplace(const Coord& xy, double val, Fraxis fraxis) {
-    if (fraxis == Fraxis::X) {
-    } else if (fraxis == Fraxis::Y) {
-    } else {
-        InvalidState err("Invalid fraxis: must be X or Y");
-        Log_Error(err.what());
-        throw err;
-    }
-    return CoordSet();
 }
