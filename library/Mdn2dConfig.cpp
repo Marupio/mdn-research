@@ -1,10 +1,21 @@
 #include "Mdn2dConfig.hpp"
 
+#include <cmath>
+
 #include "Logger.hpp"
 #include "MdnException.hpp"
 
 
 // mdn::Mdn2dFramework* mdn::Mdn2dConfig::m_parentPtr = nullptr;
+
+
+double mdn::Mdn2dConfig::static_calculateEpsilon(int precisionIn, int baseIn) {
+    if (precisionIn < 0) {
+        return 0.0;
+    } else {
+        return pow((1.0 / baseIn), (precisionIn + 1));
+    }
+}
 
 
 mdn::Mdn2dFramework& mdn::Mdn2dConfig::parent() {

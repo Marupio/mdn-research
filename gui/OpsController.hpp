@@ -90,8 +90,8 @@ private:
     QString nameFor(int idx) const;
     int activeIndex() const;
     void runDialog(Operation preset);
-    void endBattle(int destIndex, bool isNew);
-    void cancel();
+    void endBattle();
+    void cancel(bool showCancelMessage=true);
 
 private:
 
@@ -105,7 +105,11 @@ private:
     OperationStrip* m_strip{nullptr};
     OperationPhase m_phase { OperationPhase::Idle };
     Operation m_op { Operation::Add };
-    int m_a { -1 }, m_b { -1 };
+    // Index selections:
+    //      * >= 0  :   tab index
+    //      * -1    :   new tab (create a new tab for this), not valid for m_a or m_b
+    //      * -2    :   not set
+    int m_a { -2 }, m_b { -2 }, m_rem { -2 }, m_dest { -2 };
 
     QMenu* m_menuOps{nullptr};
 

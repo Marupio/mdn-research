@@ -4,6 +4,7 @@
 
 #include <QButtonGroup>
 #include <QHBoxLayout>
+#include <QToolButton>
 #include <QPushButton>
 #include <QWidget>
 

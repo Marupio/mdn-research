@@ -181,6 +181,91 @@ mdn::CoordSet mdn::Mdn2d::locked_multiply(const Mdn2d& rhs, Mdn2d& ans) const {
 }
 
 
+mdn::CoordSet mdn::Mdn2d::divideIterate(
+    int nIters, const Mdn2d& rhs, Mdn2d& ans, Mdn2d& rem, long double& remMag, Fraxis fraxis
+) const {
+    auto lockThis = lockReadOnly();
+    auto lockRhs = rhs.lockReadOnly();
+    auto lockAns = ans.lockWriteable();
+    auto lockRem = rem.lockWriteable();
+    return locked_divideIterate(nIters, rhs, ans, rem, remMag, fraxis);
+}
+
+
+mdn::CoordSet mdn::Mdn2d::locked_divideIterate(
+    int nIters, const Mdn2d& rhs, Mdn2d& ans, Mdn2d& rem, long double& remMag, Fraxis fraxis
+) const {
+    // Calculating: ans = *this / rhs, aka  t = p / q
+    //  *this = p values (pVal, pOffset, pSign, etc)
+    //  rhs   = q values (qVal, qOffset, qSign, etc)
+    //  ans   = t values (tVal, tOffset, tSign, etc)
+    If_Log_Showing_Debug3(
+        Log_N_Debug3_H("ans = *this / rhs, fraxis: " << FraxisToName(fraxis));
+    );
+    internal_checkFraxis(fraxis);
+    if (rhs.m_index.empty()) {
+        Log_N_Debug3_T("Divisor is zero, answer is undefined");
+        remMag = -1.0;
+        return CoordSet();
+    }
+
+    CoordSet changed;
+    // Find principal row for division - row with largest absolute magnitude
+    Coord pOffset;
+    long double pVal;
+    if (fraxis != Fraxis::X && fraxis != Fraxis::Y) {
+        Log_Warn("Fraxis set to invalid value, changing to Fraxis::X");
+        fraxis = Fraxis::X;
+    }
+
+    if (
+        (fraxis == Fraxis::X && !rhs.locked_getRowMagMax(pOffset, pVal))
+        || (fraxis == Fraxis::Y && !rhs.locked_getColMagMax(pOffset, pVal))
+    ) {
+        Log_Warn("Failed to find max magnitude row or col");
+        remMag = -1.0;
+        return CoordSet();
+    }
+    int iter = 0;
+    CoordSet changed;
+    for (; iter < nIters; ++iter) {
+        Coord qOffset;
+        long double qVal;
+        if (
+            (fraxis == Fraxis::X && !rem.locked_getRowMagMax(qOffset, qVal))
+            || (fraxis == Fraxis::Y && !rem.locked_getColMagMax(qOffset, qVal))
+        ) {
+            // Maybe found exact answer, we think
+            remMag = 0.0;
+            return changed;
+        }
+        long double div = qVal / pVal;
+
+        // division here accounts for x position; y position must be manually calculated
+        Coord emplacement;
+        if (fraxis == Fraxis::X) {
+            emplacement = Coord(0, qOffset.y() - pOffset.y());
+        } else {
+            emplacement = Coord(qOffset.x() - pOffset.x(), 0);
+        }
+        Mdn2d tmp(m_config, "tmp_divide");
+        static_cast<void>(tmp.internal_emplace(emplacement, div, fraxis));
+        changed.merge(ans.locked_plusEquals(tmp));
+
+        // Next, calculate reminder: rem = *this - ans*rhs
+        // Because of my awesome thread-safe design, ^^^ that calculation becomes:
+        rem.locked_clear();
+        rem.locked_minusEquals(ans);
+        rem.locked_timesEquals(rhs);
+        rem.locked_plusEquals(*this);
+    }
+    // Done all iterations
+    remMag = std::abs(rem.locked_getTotalValue());
+    Log_N_Debug3_T("remMag = " << remMag << ", returning changed.size() = " << changed.size());
+    return changed;
+}
+
+
 void mdn::Mdn2d::divide(const Mdn2d& rhs, Mdn2d& ans, Fraxis fraxis) const {
     If_Log_Showing_Debug2(
         Log_N_Debug2_H("ans = *this / rhs, fraxis: " << FraxisToName(fraxis));
@@ -189,87 +274,32 @@ void mdn::Mdn2d::divide(const Mdn2d& rhs, Mdn2d& ans, Fraxis fraxis) const {
     auto lockThis = lockReadOnly();
     auto lockAns = ans.lockWriteable();
     CoordSet changed = locked_divide(rhs, ans, fraxis);
-    ans.locked_carryoverCleanup(changed);
-    Log_N_Debug2_T("");
+    Log_N_Debug2_T("changed.size() = " << changed.size());
 }
 
 
 mdn::CoordSet mdn::Mdn2d::locked_divide(const Mdn2d& rhs, Mdn2d& ans, Fraxis fraxis) const {
-    // Calculating: ans = *this / rhs, aka  t = p / q
-    //  *this = p values (pVal, pOffset, pSign, etc)
-    //  rhs   = q values (qVal, qOffset, qSign, etc)
-    //  ans   = t values (tVal, tOffset, tSign, etc)
     If_Log_Showing_Debug3(
         Log_N_Debug3_H("ans = *this / rhs, fraxis: " << FraxisToName(fraxis));
     );
-    if (rhs.m_index.empty()) {
-        Log_N_Debug3_T("Divisor is zero, answer is undefined");
-        return m_nullCoordSet;
-    }
-
     ans.locked_clear();
-    Mdn2d remainder(*this, "remainder_divide");
-    auto lockRemainder = remainder.lockWriteable();
-    CoordSet changed;
-    if (m_config.fraxis() == Fraxis::X) {
-        // Find principal row for division - row with largest absolute magnitude
-        Coord pOffset;
-        long double pVal;
-        if (!rhs.locked_getRowMagMax(pOffset, pVal)) {
-            Log_Warn("Failed to find max magnitude row");
-            return m_nullCoordSet;
-        }
-        bool keepGoing = true;
-        int nIters = 0;
-        while (keepGoing) {
-            Coord qOffset;
-            long double qVal;
-            if (!remainder.locked_getRowMagMax(qOffset, qVal)) {
-                if (nIters) {
-                    // Found answer, we think
-                    return changed;
-                } else {
-                    Log_Warn("Failed to find principal value of divisor (A) in A / B");
-                    return m_nullCoordSet;
-                }
-                long double div = qVal / pVal;
-
-                // division here accounts for x position; y position must be manually calculated
-                int ansOffsetY = qOffset.y() - pOffset.y();
-                Mdn2d tmp(m_config, "tmp_divide");
-                static_cast<void>(tmp.internal_emplace(Coord(0, ansOffsetY), div, fraxis));
-                changed.merge(ans.locked_plusEquals(tmp));
-
-                // Next, calculate remainder remainder = *this - ans*rhs
-                // Because of my awesome thread-safe design, ^^^ that becomes:
-                remainder.locked_clear();
-                remainder.locked_minusEquals(ans);
-                remainder.locked_timesEquals(rhs);
-                remainder.locked_plusEquals(*this);
-            }
-        }
+    Mdn2d rem(*this, "rem_divide");
+    auto lockRem = rem.lockWriteable();
+    rem.locked_operatorEquals(*this);
+    long double lastRemMag = constants::ldoubleGreat;
+    long double remMag;
+    CoordSet changed = locked_divideIterate(100, rhs, ans, rem, remMag, fraxis);
+    while (remMag < lastRemMag && remMag >= 0.0) {
+        changed.merge(locked_divideIterate(100, rhs, ans, rem, remMag, fraxis));
     }
-
-    // TODO
-    // Fraxis X, A / B = C
-    //  Create a new Mdn2d answer
-    //  Create a working Mdn2d remainder, copy of A
-    //  Find right-most (then upper-most) digit of B
-    //      get full row of that digit --> this one is always in use
-    //  Find right-most (then upper-most) digit of A
-    //      get full row of that digit
-    //  Convert both rows into real numbers
-    //  Re(Ai) / Re(Bi), at the position
-    //  Calculate Re(Ai) / Re(Bi)
-    //  add result to answer Mdn2d, at the correct position
-    //  temp = B x answer
-    //  remainder = A - temp
-    //  in remainder, find the right-most (then upper-most) digit
-    Log_N_Debug3_T("");
-    return CoordSet();
+    if (remMag < 0) {
+        // Failed
+        Log_N_Debug3_T("Failed");
+        return changed;
+    }
+    Log_N_Debug3_T("Success, with remMag = " << remMag);
+    return changed;
 }
-
-
 
 
 void mdn::Mdn2d::add(const Coord& xy, float realNum, int nDigits, bool overwrite, Fraxis fraxis) {

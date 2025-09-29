@@ -708,7 +708,12 @@ bool mdn::gui::MainWindow::onZeroMdn2d() {
     const Rect& bounds(tgt->bounds());
     const QString tabName = QString::fromStdString(tgt->name());
     if (bounds.empty()) {
-        showStatus(tr("No non-zero digits exist for '%1'").arg(tgtName), 2000);
+        showStatus(
+            tr("No non-zero digits exist for '%1'")
+                .arg(MdnQtInterface::toQString(tgtName)
+            ),
+            2000
+        );
         if (auto* ndw = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(idx))) {
             ndw->armCentreViewOnOrigin();
             ndw->update();
@@ -736,7 +741,12 @@ bool mdn::gui::MainWindow::onZeroMdn2d() {
     if (auto* ndw = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(idx))) {
         ndw->armCentreViewOnOrigin();
         ndw->update();
-        showStatus(tr("Tab '%1' zeroed").arg(tgtName), 2000);
+        showStatus(
+            tr("Tab '%1' zeroed")
+                .arg(MdnQtInterface::toQString(tgtName)
+            ),
+            2000
+        );
     }
     return true;
 }
@@ -803,6 +813,9 @@ void mdn::gui::MainWindow::onOpsPlan(const OperationPlan& p) {
     showStatus(tr("Calculating . . . (please wait, app will hang until complete)"), 0, true);
     Mdn2d& a = *aPtr;
     Mdn2d& b = *bPtr;
+    if (p.op == Operation::Divide) {
+        divide(p, a, b);
+    }
     if (p.indexDest >= 0) {
         const int t = p.indexDest;
         if (t == p.indexA) {
@@ -2282,10 +2295,11 @@ bool mdn::gui::MainWindow::createNewMdn2d(QString name, int index, bool makeActi
     std::string actualName = num.name();
     Log_Debug3("Created Mdn2d '" << nameStd << "', actual assigned name='" << actualName << "'");
     // Insertion will trigger a tabWidget update
+    QString actualNameQ(MdnQtInterface::toQString(actualName));
     if (nameStd.size() && actualName != nameStd) {
-        showStatus(tr("Tab '%1' created (requested '%2')").arg(actualName).arg(nameStd), 2000);
+        showStatus(tr("Tab '%1' created (requested '%2')").arg(actualNameQ).arg(name), 2000);
     } else {
-        showStatus(tr("Tab '%1' created").arg(actualName), 2000);
+        showStatus(tr("Tab '%1' created").arg(actualNameQ), 2000);
     }
     removePlusTab();
     m_project->insertMdn(std::move(num), index);
@@ -2675,7 +2689,7 @@ void mdn::gui::MainWindow::updateStatusModeText(NumberDisplayWidget::EditMode m)
             break;
         }
     }
-    showStatus(tr("Edit mode >> %1").arg(mStr), 2000);
+    showStatus(tr("Edit mode >> %1").arg(MdnQtInterface::toQString(mStr)), 2000);
     Log_Debug3_T("");
 }
 
@@ -2894,4 +2908,39 @@ void mdn::gui::MainWindow::ensureTabCorner() {
     // (Re)attach – safe to call many times
     m_tabWidget->setCornerWidget(m_tabCorner, Qt::BottomRightCorner);
     m_tabCorner->show();
+}
+
+
+void mdn::gui::MainWindow::divide(const OperationPlan& p, Mdn2d& a, Mdn2d& b) {
+    // First - acquire references to destination and remainder
+    Mdn2d* destPtr(nullptr);
+    Mdn2d* remPtr(nullptr);
+    if (p.indexDest >= 0) {
+        destPtr = m_project->getMdn(p.indexDest);
+    } else {
+        Mdn2d newDest(m_globalConfig, p.newName.toStdString());
+        int destIndex = m_project->activeIndex() + 1;
+        m_project->insertMdn(std::move(newDest), destIndex);
+        destPtr = m_project->getMdn(destIndex);
+    }
+    if (p.indexRem >= 0) {
+        destPtr = m_project->getMdn(p.indexRem);
+    } else {
+        Mdn2d newRem(m_globalConfig, p.newName.toStdString());
+        int remIndex = m_project->activeIndex() + 1;
+        m_project->insertMdn(std::move(newRem), remIndex);
+        remPtr = m_project->getMdn(remIndex);
+    }
+
+    Mdn2d& dest = *destPtr;
+    Mdn2d& rem = *remPtr;
+
+    // Next, fly the division algorithm
+
+    long double remMag = constants::ldoubleGreat;
+    CoordSet changed = a.divideIterate(10, b, dest, rem, remMag, m_globalConfig.fraxis());
+    // TODO
+    // Need to update gui in OpsController and OperationStrip to allow the user to inspect
+    //  remainder and answer, and choose to continue divide or stop
+    // Need to update above dispatches to divide operation to come here instead
 }

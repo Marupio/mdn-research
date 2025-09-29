@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cmath>
 #include <sstream>
 
 #include "Constants.hpp"
@@ -21,13 +20,7 @@ class MDN_API Mdn2dConfig {
 
     // Calculate minimum fraction value to add to a digit, that it will appear as a non-zero
     // digit within m_precision.  Returns 0 for unlimited precision.
-    static double static_calculateEpsilon(int precisionIn, int baseIn) {
-        if (precisionIn < 0) {
-            return 0.0;
-        } else {
-            return pow((1.0 / baseIn), (precisionIn + 1));
-        }
-    }
+    static double static_calculateEpsilon(int precisionIn, int baseIn);
 
     // Pointer to framework governing class - what object holds this Mdn2d?
     // static Mdn2dFramework* m_parentPtr;

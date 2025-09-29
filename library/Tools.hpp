@@ -246,14 +246,7 @@ public:
     );
 
     // Unit in the last place
-    static inline double ulp(double x) {
-        if (!std::isfinite(x)) {
-            return std::numeric_limits<double>::infinity();
-        }
-        double ax = std::fabs(x);
-        double next = std::nextafter(ax, std::numeric_limits<double>::infinity());
-        return next - ax; // >= 0
-    }
+    static double ulp(double x);
 
     // Get the significance band for x in the given base (no checks on base, assumes 2..32)
     //  returns {kMin, kMax}, which are the lowest and highest exponents to keep, respectively,

@@ -68,7 +68,7 @@ int main() {
             return 0;
         }
         bool negative = false;
-        double val = std::stod(instr);
+        long double val = std::stold(instr);
 
         // Outputs
         mdn::VecDigit digits;

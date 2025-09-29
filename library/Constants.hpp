@@ -16,6 +16,8 @@ constexpr Digit DigitMax = std::numeric_limits<Digit>::max();
 constexpr float floatSmall = 1e-6;
 constexpr double doubleSmall = 1e-12;
 
+constexpr long double ldoubleGreat = std::numeric_limits<long double>::max();
+
 } // end namspace constants
 
 } // end namespace mdn

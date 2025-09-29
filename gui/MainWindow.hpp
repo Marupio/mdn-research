@@ -223,6 +223,8 @@ private:
     void applySplitRatio();
     void ensureTabCorner();
 
+    void divide(const OperationPlan& p, Mdn2d& a, Mdn2d& b);
+
     // When true, no splitter movement allowed
     bool m_snugBottom = false;
     QSplitter* m_splitter{nullptr};

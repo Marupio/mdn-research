@@ -154,20 +154,53 @@ void mdn::gui::OpsController::onTabCommitted(int idx) {
         case OperationPhase::PickB: {
             AssertQ(m_project && m_tabs, "Missing project or tabs, internal error");
             m_b = idx;
+            if (m_op != Operation::Divide) {
+                m_phase = OperationPhase::PickDest;
+                QString rqs(
+                    QString("%1 %2 %3  →  *Destination* >> Choose tab <<  Hover to peek")
+                    .arg(nameFor(m_a))
+                    .arg(QString::fromStdString(OperationToOpStr(m_op)))
+                    .arg(nameFor(m_b))
+                );
+                Log_Debug3("emit requestStatus(rqs=[" << rqs.toStdString() << "], 0)");
+                emit requestStatus(rqs, 0, false);
+                Log_Debug2_T("");
+                return;
+            } else {
+                m_phase = OperationPhase::PickRem;
+                QString rqs(
+                    QString("%1 %2 %3 rem( *Remainder* ) >> Choose tab <<  Hover to peek")
+                    .arg(nameFor(m_a))
+                    .arg(QString::fromStdString(OperationToOpStr(m_op)))
+                    .arg(nameFor(m_b))
+                );
+                Log_Debug3("emit requestStatus(rqs=[" << rqs.toStdString() << "], 0)");
+                emit requestStatus(rqs, 0, false);
+                Log_Debug2_T("");
+                return;
+            }
+        }
+        case OperationPhase::PickRem: {
+            AssertQ(m_op == Operation::Divide, "Internal error: PickRem state requires op Divide");
+            m_rem = idx;
             m_phase = OperationPhase::PickDest;
             QString rqs(
-                QString("%1 %2 %3  →  *Destination* >> Choose tab <<  Hover to peek")
+                QString("%1 %2 %3 rem(%4) →  *Destination* >> Choose tab <<  Hover to peek")
                 .arg(nameFor(m_a))
                 .arg(QString::fromStdString(OperationToOpStr(m_op)))
                 .arg(nameFor(m_b))
+                .arg(nameFor(m_rem))
             );
             Log_Debug3("emit requestStatus(rqs=[" << rqs.toStdString() << "], 0)");
             emit requestStatus(rqs, 0, false);
             Log_Debug2_T("");
             return;
+
+
         }
         case OperationPhase::PickDest: {
-            endBattle(idx, false);
+            m_dest = idx;
+            endBattle();
             Log_Debug2_T("");
             return;
         }
@@ -191,8 +224,24 @@ void mdn::gui::OpsController::onPlusClicked() {
             Log_Debug2_T("");
             return;
         }
+        case OperationPhase::PickRem: {
+            m_phase = OperationPhase::PickDest;
+            m_rem = -1;
+            QString rqs(
+                QString("%1 %2 %3 rem(%4)  →  *Destination* >> Choose tab <<  Hover to peek")
+                .arg(nameFor(m_a))
+                .arg(QString::fromStdString(OperationToOpStr(m_op)))
+                .arg(nameFor(m_b))
+                .arg(nameFor(m_rem))
+            );
+            Log_Debug3("emit requestStatus(rqs=[" << rqs.toStdString() << "], 0)");
+            emit requestStatus(rqs, 0, false);
+            Log_Debug2_T("");
+            return;
+        }
         case OperationPhase::PickDest: {
-            endBattle(-1, true);
+            m_dest = -1;
+            endBattle();
             Log_Debug2_T("");
             return;
         }
@@ -318,8 +367,14 @@ QString mdn::gui::OpsController::nameFor(int tabIndex) const {
         Log_Debug2_T("");
         return {};
     }
-    Log_Debug2_T("");
-    return QString::fromStdString(m_project->nameOfMdn(tabIndex));
+    std::string retVal;
+    if (tabIndex < 0) {
+        retVal = "New";
+    } else {
+        retVal = m_project->nameOfMdn(tabIndex);
+    }
+    Log_Debug2_T("nameFor(" << tabIndex << ")='" << retVal << "'");
+    return QString::fromStdString(retVal);
 }
 
 
@@ -389,27 +444,51 @@ void mdn::gui::OpsController::runDialog(Operation preset) {
 }
 
 
-void mdn::gui::OpsController::endBattle(int destIndex, bool isNew) {
+void mdn::gui::OpsController::endBattle() {
     Log_Debug2_H("");
-    if (m_a < 0 || m_b < 0) {
+    if (m_a < 0 || m_b < 0 || (m_rem < -1 && m_op == Operation::Divide)) {
         cancel();
         Log_Debug2_T("");
         return;
     }
 
-    QString rqs(
-        QString("%1 %2 %3  →  %4")
-        .arg(nameFor(m_a))
-        .arg(QString::fromStdString(OperationToOpStr(m_op)))
-        .arg(nameFor(m_b))
-        .arg(nameFor(destIndex))
-    );
-    Log_Debug3("emit requestStatus(rqs=[" << rqs.toStdString() << "], 0)");
-    emit requestClearStatus();
-    emit requestStatus(rqs, 5000, false);
-    QString defaultName = "";
-    if (destIndex < 0) {
-        defaultName = QString(
+    QString defaultRemName = "";
+    if (m_op == Operation::Divide) {
+        QString rqs(
+            QString("%1 %2 %3 rem(%4)  →  %5")
+            .arg(nameFor(m_a))
+            .arg(QString::fromStdString(OperationToOpStr(m_op)))
+            .arg(nameFor(m_b))
+            .arg(nameFor(m_rem))
+            .arg(nameFor(m_dest))
+        );
+        Log_Debug3("emit requestStatus(rqs=[" << rqs.toStdString() << "], 5000)");
+        emit requestClearStatus();
+        emit requestStatus(rqs, 5000, false);
+        if (m_dest < 0) {
+            defaultRemName = QString(
+                QString("rem(%1%2%3)")
+                    .arg(nameFor(m_a))
+                    .arg(QString::fromStdString(OperationToOpStr(m_op)))
+                    .arg(nameFor(m_b)
+                )
+            );
+        }
+    } else {
+        QString rqs(
+            QString("%1 %2 %3  →  %4")
+            .arg(nameFor(m_a))
+            .arg(QString::fromStdString(OperationToOpStr(m_op)))
+            .arg(nameFor(m_b))
+            .arg(nameFor(m_dest))
+        );
+        Log_Debug3("emit requestStatus(rqs=[" << rqs.toStdString() << "], 0)");
+        emit requestClearStatus();
+        emit requestStatus(rqs, 5000, false);
+    }
+    QString defaultDestName = "";
+    if (m_dest < 0) {
+        defaultDestName = QString(
             QString("%1%2%3")
                 .arg(nameFor(m_a))
                 .arg(QString::fromStdString(OperationToOpStr(m_op)))
@@ -422,28 +501,33 @@ void mdn::gui::OpsController::endBattle(int destIndex, bool isNew) {
     p.op = m_op;
     p.indexA = m_a;
     p.indexB = m_b;
-    p.indexDest = destIndex;
-    p.newName = defaultName;
+    p.indexDest = m_dest;
+    p.newName = defaultDestName;
+    p.indexRem = m_rem;
+    p.newRemName = defaultRemName;
 
     Log_Debug3("emit planReady(plan=" << p << ")");
     emit planReady(p);
 
-    m_phase = OperationPhase::Idle; m_a = m_b = -1;
-    if (m_strip) {
-        m_strip->reset();
-    }
+    cancel(false);
     Log_Debug2_T("");
 }
 
 
-void mdn::gui::OpsController::cancel() {
+void mdn::gui::OpsController::cancel(bool showCancelMessage) {
     Log_Debug2_H("");
-    m_phase = OperationPhase::Idle; m_a = m_b = -1;
+    m_phase = OperationPhase::Idle;
+    m_a = -2;
+    m_b = -2;
+    m_dest = -2;
+    m_rem = -2;
     if (m_strip) {
         m_strip->reset();
     }
     Log_Debug3("emit requestStatus([], 0)");
-    emit requestStatus(QString(), 0, false);
-    emit requestStatus(QString("* Cancelled *"), 2000, false);
+    if (showCancelMessage) {
+        emit requestStatus(QString(), 0, false);
+        emit requestStatus(QString("* Cancelled *"), 2000, false);
+    }
     Log_Debug2_T("");
 }

@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
 #include <filesystem>
 #include <limits>
 
@@ -470,6 +471,16 @@ std::string mdn::Tools::verifyStringAsReal(
 }
 
 
+double mdn::Tools::ulp(double x) {
+    if (!std::isfinite(x)) {
+        return std::numeric_limits<double>::infinity();
+    }
+    double ax = std::fabs(x);
+    double next = std::nextafter(ax, std::numeric_limits<double>::infinity());
+    return next - ax; // >= 0
+}
+
+
 std::pair<int, int> mdn::Tools::significanceBand(long double x, int base) {
     // if (base < 2 || base > 32) throw std::invalid_argument("base in [2,32]");
     long double value = std::fabs(x);
@@ -543,7 +554,7 @@ bool mdn::Tools::toVecDigits(
         const long double scaled_ld = std::scalbnl(value, -kleast * log2b);
         Q = static_cast<unsigned long long>(llround(scaled_ld));
     } else {
-        const long double scale = std::powl(static_cast<long double>(base),
+        const long double scale = std::pow(static_cast<long double>(base),
                                             static_cast<long double>(-kleast));
         const long double scaled_ld = value * scale;
         Q = static_cast<unsigned long long>(llround(scaled_ld));

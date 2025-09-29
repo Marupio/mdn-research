@@ -70,13 +70,45 @@ public:
             void multiply(const Mdn2d& rhs, Mdn2d& ans) const;
             protected: CoordSet locked_multiply(const Mdn2d& rhs, Mdn2d& ans) const; public:
 
+            // Division: interface with iterations and remainder
+            //  Gives user more control over division, displaying progress: remainder, iterations
+            //  Runs algorithm nIters iterations to solve: *this / rhs = ans
+            //  Keeps a running update of the current remainder: rem = *this - (ans*rhs)
+            //  Input Args:
+            //      * nIters - number of iterations to perform - each iteration should set around 16
+            //          digits in rem to zero
+            //      * rhs - the denominator (*this is the numerator)
+            //      * ans - the solution - will not initialise this value, caller should clear it
+            //          before first iteration
+            //      * rem - the remainder - caller should initilise this to *this before first
+            //          iteration
+            //  Returns the absolute magnitude of rem (abs(rem.getTotalValue), goal is to reach zero
+            //  A negative value means division failed
+            CoordSet divideIterate(
+                int nIters,
+                const Mdn2d& rhs,
+                Mdn2d& ans,
+                Mdn2d& rem,
+                long double& remMag,
+                Fraxis fraxis
+            ) const;
+            protected:
+                CoordSet locked_divideIterate(
+                    int nIters,
+                    const Mdn2d& rhs,
+                    Mdn2d& ans,
+                    Mdn2d& rem,
+                    long double& remMag,
+                    Fraxis fraxis
+                ) const;
+            public:
+
+
             // Division: *this / rhs = ans, overwrites ans
             void divide(const Mdn2d& rhs, Mdn2d& ans, Fraxis fraxis=Fraxis::Default) const;
             protected: CoordSet locked_divide(
                 const Mdn2d& rhs, Mdn2d& ans, Fraxis fraxis=Fraxis::Default
             ) const; public:
-            protected: CoordSet locked_divideX(const Mdn2d& rhs, Mdn2d& ans) const; public:
-            protected: CoordSet locked_divideY(const Mdn2d& rhs, Mdn2d& ans) const; public:
 
 
         // *** Addition / subtraction
