@@ -30,6 +30,10 @@ public:
     // Called by OpsController when the session ends/cancels.
     void reset();
 
+    void enterActiveDivisionVisual();
+    void leaveActiveDivisionVisual();
+    void setOpsEnabled(bool enabled);
+
 signals:
     void transposeClicked();
     void carryOverClicked();
@@ -39,7 +43,19 @@ signals:
     void cancelClicked();
     void propertiesClicked();
 
+    // user clicked Divide while in ActiveDivision mode
+    void divisionIterateClicked();
+
+    // user requested to stop active division (Cancel/Escape)
+    void divisionStopRequested();
+
 private:
+
+    // Private functions
+    QToolButton* buttonFor(Operation op) const;
+    void setOthersDisabledExcept(Operation op);
+
+    // Private data
     QPushButton* m_btnCancel = nullptr;
 
     QToolButton* m_btnAdd    = nullptr;
@@ -53,9 +69,7 @@ private:
     QToolButton* m_btnCarryPos  = nullptr;
     QToolButton* m_btnCarryNeg  = nullptr;
 
-    QToolButton* buttonFor(Operation op) const;
-    void setOpsEnabled(bool enabled);
-    void setOthersDisabledExcept(Operation op);
+    bool m_activeDivision{false};
 
 private slots:
     void onAdd() {
@@ -70,14 +84,9 @@ private slots:
         Log_Debug3("emit operationClicked(Multiply)");
         emit operationClicked(Operation::Multiply);
     }
-    void onDiv() {
-        Log_Debug3("emit operationClicked(Divide)");
-        emit operationClicked(Operation::Divide);
-    }
-    void onCancel() {
-        Log_Debug3("emit cancelClicked()");
-        emit cancelClicked();
-    }
+    void onDiv();
+    void onCancel();
+
 };
 
 } // end namespace gui

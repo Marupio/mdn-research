@@ -101,6 +101,8 @@ private slots:
     void onSplitterMoved(int pos, int index);
     void onCommandSubmitted(const QString& text);
     void onOpsPlan(const OperationPlan& p);
+    void onDivisionIterateRequested();
+    void onDivisionStopRequested();
 
     void onTransposeClicked();
     void onCarryOverClicked();
@@ -226,18 +228,24 @@ private:
     void divide(const OperationPlan& p, Mdn2d& a, Mdn2d& b);
 
     // When true, no splitter movement allowed
-    bool m_snugBottom = false;
+    bool m_welded = false;
+
     QSplitter* m_splitter{nullptr};
     double m_splitRatio{0.5};
+
     NumberDisplayWidget::EditMode m_globalMode = NumberDisplayWidget::EditMode::Overwrite;
 
     // MDN Digit Browser (upper pane)
     HoverPeekTabWidget* m_tabWidget{nullptr};
+
     bool m_plusTab = false;
+
     // true when hover-induced peeking is underway
     bool m_peekActive = false;
+
     // last user-committed index
     int m_explicitIndex = -1;
+
     // debounce to avoid flicker
     QTimer m_peekRestore;
 
@@ -245,26 +253,42 @@ private:
     CommandWidget* m_command{nullptr};
 
     QLabel* m_statusCursor{nullptr};
+
     QLabel* m_statusSel{nullptr};
+
     QToolButton* m_statusModeBtn{nullptr};
+
     QMenu* m_modeMenu{nullptr};
+
     QToolButton* m_statusFraxisBtn{nullptr};
-    QMenu*       m_fraxisMenu{nullptr};
+
+    QMenu* m_fraxisMenu{nullptr};
 
     int m_globalFontSize = 11;
+
     Mdn2dConfig m_globalConfig;
 
     OpsController* m_ops{nullptr};
+
     OperationStrip* m_strip{nullptr};
+
     StatusDisplayWidget* m_status{nullptr};
+
     Project* m_project{nullptr};
 
     QWidget* m_tabCorner{nullptr};
+
     QToolButton* m_tabSaveBtn{nullptr};
     QToolButton* m_tabOpenBtn{nullptr};
     QToolButton* m_tabZeroBtn{nullptr};
     QToolButton* m_tabCloseBtn{nullptr};
 
+    // Active division data
+    Mdn2d* m_ad_operandA{nullptr};
+    Mdn2d* m_ad_operandB{nullptr};
+    Mdn2d* m_ad_remainder{nullptr};
+    Mdn2d* m_ad_destination{nullptr};
+    long double m_ad_remMag{-1.0};
 };
 
 } // end namespace gui

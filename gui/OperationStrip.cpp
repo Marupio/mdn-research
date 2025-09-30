@@ -181,8 +181,7 @@ mdn::gui::OperationStrip::OperationStrip(QWidget* parent)
 }
 
 
-void mdn::gui::OperationStrip::battlestations(Operation op)
-{
+void mdn::gui::OperationStrip::battlestations(Operation op) {
     Log_Debug2_H("op=" << op);
     // Enable Cancel; lock the chosen op “in”
     m_btnCancel->setEnabled(true);
@@ -200,8 +199,57 @@ void mdn::gui::OperationStrip::battlestations(Operation op)
 }
 
 
-QToolButton* mdn::gui::OperationStrip::buttonFor(Operation op) const
-{
+void mdn::gui::OperationStrip::reset() {
+    // Cancel disabled; all ops enabled; none checked
+    Log_Debug2_H("");
+    m_btnCancel->setEnabled(false);
+    setOpsEnabled(true);
+
+    // Clear checked state without breaking exclusivity
+    for (QToolButton* b : { m_btnAdd, m_btnSub, m_btnMul, m_btnDiv }) {
+        b->setChecked(false);
+    }
+    // Clear ActiveDivision visuals if any
+    leaveActiveDivisionVisual();
+    Log_Debug2_T("");
+}
+
+
+void mdn::gui::OperationStrip::enterActiveDivisionVisual() {
+    if (m_activeDivision) {
+        return;
+    }
+    m_activeDivision = true;
+    // Make sure Divide is enabled and popped (unchecked)
+    m_btnDiv->setEnabled(true);
+    m_btnDiv->setChecked(false);
+
+    // soft amber
+    m_btnDiv->setStyleSheet("QToolButton { background: rgba(255, 215, 0, 0.25); }");
+}
+
+
+void mdn::gui::OperationStrip::leaveActiveDivisionVisual() {
+    if (!m_activeDivision) {
+        return;
+    }
+    m_activeDivision = false;
+
+    // back to theme defaults
+    m_btnDiv->setStyleSheet(QString());
+}
+
+
+void mdn::gui::OperationStrip::setOpsEnabled(bool enabled) {
+    Log_Debug2_H("enabled=" << enabled);
+    for (QToolButton* b : { m_btnAdd, m_btnSub, m_btnMul, m_btnDiv }) {
+        b->setEnabled(enabled);
+    }
+    Log_Debug2_T("");
+}
+
+
+QToolButton* mdn::gui::OperationStrip::buttonFor(Operation op) const {
     Log_Debug2_H("");
     switch (op) {
         case Operation::Add: {
@@ -229,18 +277,7 @@ QToolButton* mdn::gui::OperationStrip::buttonFor(Operation op) const
 }
 
 
-void mdn::gui::OperationStrip::setOpsEnabled(bool enabled)
-{
-    Log_Debug2_H("enabled=" << enabled);
-    for (QToolButton* b : { m_btnAdd, m_btnSub, m_btnMul, m_btnDiv }) {
-        b->setEnabled(enabled);
-    }
-    Log_Debug2_T("");
-}
-
-
-void mdn::gui::OperationStrip::setOthersDisabledExcept(Operation op)
-{
+void mdn::gui::OperationStrip::setOthersDisabledExcept(Operation op) {
     Log_Debug2_H("op=" << op);
     for (auto* b : m_allOpButtons) {
         if (b) { b->setEnabled(false); b->setChecked(false); }
@@ -252,16 +289,23 @@ void mdn::gui::OperationStrip::setOthersDisabledExcept(Operation op)
 }
 
 
-void mdn::gui::OperationStrip::reset()
-{
-    // Cancel disabled; all ops enabled; none checked
-    Log_Debug2_H("");
-    m_btnCancel->setEnabled(false);
-    setOpsEnabled(true);
-
-    // Clear checked state without breaking exclusivity
-    for (QToolButton* b : { m_btnAdd, m_btnSub, m_btnMul, m_btnDiv }) {
-        b->setChecked(false);
+void mdn::gui::OperationStrip::onDiv() {
+    if (m_activeDivision) {
+        Log_Debug3("emit divisionIterateClicked()");
+        emit divisionIterateClicked();
+    } else {
+        Log_Debug3("emit operationClicked(Divide)");
+        emit operationClicked(Operation::Divide);
     }
-    Log_Debug2_T("");
+}
+
+
+void mdn::gui::OperationStrip::onCancel() {
+    if (m_activeDivision) {
+        Log_Debug3("emit divisionStopRequested()");
+        emit divisionStopRequested();
+    } else {
+        Log_Debug3("emit cancelClicked()");
+        emit cancelClicked();
+    }
 }

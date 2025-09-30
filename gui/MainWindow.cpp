@@ -154,8 +154,9 @@ bool mdn::gui::MainWindow::showStatus(QString message, int timeOut, bool forceUp
         }
 
         Log_Debug_T("");
-            return true;
+        return true;
     }
+    Log_Debug_T("");
     return true;
     // QStatusBar* status = statusBar();
     // if (!status) {
@@ -815,6 +816,8 @@ void mdn::gui::MainWindow::onOpsPlan(const OperationPlan& p) {
     Mdn2d& b = *bPtr;
     if (p.op == Operation::Divide) {
         divide(p, a, b);
+        Log_Debug_T("");
+        return;
     }
     if (p.indexDest >= 0) {
         const int t = p.indexDest;
@@ -838,12 +841,12 @@ void mdn::gui::MainWindow::onOpsPlan(const OperationPlan& p) {
                     Log_Debug4_T("a *= b return");
                     break;
                 }
-                case Operation::Divide: {
-                    Log_Debug4_H("Dispatch a /= b");
-                    a /= b;
-                    Log_Debug4_T("a /= b return");
-                    break;
-                }
+                // case Operation::Divide: {
+                //     Log_Debug4_H("Dispatch a /= b");
+                //     a /= b;
+                //     Log_Debug4_T("a /= b return");
+                //     break;
+                // }
             }
             syncTabsToProject();
             setActiveTab(p.indexA);
@@ -895,12 +898,12 @@ void mdn::gui::MainWindow::onOpsPlan(const OperationPlan& p) {
                     Log_Debug4_T("Return a.multiply(b, ans);");
                     break;
                 }
-                case Operation::Divide:{
-                    Log_Debug4_H("Dispatch a.divide(b, ans);");
-                    a.divide(b, ans);
-                    Log_Debug4_T("Return a.divide(b, ans);");
-                    break;
-                }
+                // case Operation::Divide:{
+                //     Log_Debug4_H("Dispatch a.divide(b, ans);");
+                //     a.divide(b, ans);
+                //     Log_Debug4_T("Return a.divide(b, ans);");
+                //     break;
+                // }
             }
             syncTabsToProject();
             setActiveTab(t);
@@ -937,12 +940,12 @@ void mdn::gui::MainWindow::onOpsPlan(const OperationPlan& p) {
                 Log_Debug4("a.multiply(b, ans) return");
                 break;
             }
-            case Operation::Divide: {
-                Log_Debug4("Dispatch a.divide(b, ans)");
-                a.divide(b, ans);
-                Log_Debug4("a.divide(b, ans) return");
-                break;
-            }
+            // case Operation::Divide: {
+            //     Log_Debug4("Dispatch a.divide(b, ans)");
+            //     a.divide(b, ans);
+            //     Log_Debug4("a.divide(b, ans) return");
+            //     break;
+            // }
         }
         m_project->appendMdn(std::move(ans));
         syncTabsToProject();
@@ -952,6 +955,33 @@ void mdn::gui::MainWindow::onOpsPlan(const OperationPlan& p) {
         Log_Debug_T("");
         return;
     }
+}
+
+
+void mdn::gui::MainWindow::onDivisionIterateRequested() {
+    if (!m_ad_operandA) {
+        Log_Warn("Out-of-sequence division iteration request");
+        return;
+    }
+    static_cast<void>(
+        m_ad_operandA->divideIterate(
+            10,
+            *m_ad_operandB,
+            *m_ad_destination,
+            *m_ad_remainder,
+            m_ad_remMag,
+            m_globalConfig.fraxis()
+        )
+    );
+}
+
+
+void mdn::gui::MainWindow::onDivisionStopRequested() {
+    m_ad_operandA = nullptr;
+    m_ad_operandB = nullptr;
+    m_ad_remainder = nullptr;
+    m_ad_destination = nullptr;
+    m_ad_remMag = -1.0;
 }
 
 
@@ -1067,7 +1097,6 @@ void mdn::gui::MainWindow::toggleGlobalEditMode(NumberDisplayWidget::EditMode m)
 
 
 void mdn::gui::MainWindow::cycleGlobalEditMode(bool forward) {
-
     using M = NumberDisplayWidget::EditMode;
     M next;
     if (forward) {
@@ -1371,7 +1400,7 @@ void mdn::gui::MainWindow::onEditDelete() {
 
 bool mdn::gui::MainWindow::eventFilter(QObject* watched, QEvent* event) {
     // Block handle drags when snug
-    if (m_snugBottom) {
+    if (m_welded) {
         for (int i = 0; i < m_splitter->count() - 1; ++i) {
             if (watched == m_splitter->handle(i + 1)) {
                 switch (event->type()) {
@@ -1645,7 +1674,6 @@ void mdn::gui::MainWindow::setupLayout(Mdn2dConfig* cfg) {
     QWidget* container = m_ops->bottomContainer();
     m_splitter->addWidget(container);
 
-
     // m_splitter->addWidget(m_command);
     m_splitter->setStretchFactor(0, 3);
     m_splitter->setStretchFactor(1, 1);
@@ -1656,7 +1684,6 @@ void mdn::gui::MainWindow::setupLayout(Mdn2dConfig* cfg) {
         // m_command->setVisible(false);
         weldSliderToBottom(true);
     }
-
 
     Log_Debug3("Dispatch - initOperationsUi");
     initOperationsUi();
@@ -1866,7 +1893,7 @@ void mdn::gui::MainWindow::createPlusTab() {
 
     m_tabWidget->setPlusTab(plusIdx, marker);
     m_plusTab = true;
-    Log_Debug4("m_plusTab=" << m_plusTab << ", set to true");
+    Log_Debug3_T("");
 }
 
 
@@ -1956,6 +1983,18 @@ void mdn::gui::MainWindow::initOperationsUi() {
             &OpsController::plusClicked,
             this,
             &mdn::gui::MainWindow::onNewMdn2d
+        );
+        connect(
+            m_ops,
+            &OpsController::divisionIterateRequested,
+            this,
+            &mdn::gui::MainWindow::onDivisionIterateRequested
+        );
+        connect(
+            m_ops,
+            &OpsController::divisionStopRequested,
+            this,
+            &mdn::gui::MainWindow::onDivisionStopRequested
         );
         connect(
             m_strip,
@@ -2151,14 +2190,14 @@ bool mdn::gui::MainWindow::openProject(bool requireConfirm) {
     );
 
     if (path.isEmpty()) {
-        Log_Debug2_T("user cancelled")
         showStatus(tr("Load cancelled"), 2000);
+        Log_Debug2_T("user cancelled")
         return false;
     }
 
     if (!confirmedCloseProject(requireConfirm)) {
-        Log_Debug2_T("Did not succeed in closing existing project");
         showStatus(tr("Load cancelled"), 2000);
+        Log_Debug2_T("Did not succeed in closing existing project");
         return false;
     }
 
@@ -2227,8 +2266,8 @@ bool mdn::gui::MainWindow::confirmedCloseProject(bool requireConfirm) {
             return false;
         }
     } else if (reply == QMessageBox::Cancel) {
-        Log_Debug2("User cancelled when asked to save");
         showStatus(tr("Cancelled 'Close project' operation"), 2000);
+        Log_Debug2_T("User cancelled when asked to save");
         return false;
     }
     // User probably chose Discard
@@ -2620,6 +2659,7 @@ void mdn::gui::MainWindow::fitBottomToContents() {
     sizes[1] = want;
     sizes[0] = std::max(0, total - want);
     m_splitter->setSizes(sizes);
+    Log_Debug3_T("");
 }
 
 
@@ -2640,7 +2680,7 @@ void mdn::gui::MainWindow::releaseBottomWeld()
 void mdn::gui::MainWindow::weldSliderToBottom(bool on)
 {
     Log_Debug3_H("on=" << on);
-    m_snugBottom = on;
+    m_welded = on;
     if (!m_splitter) {
         Log_Debug3_T("Missing components");
         return;
@@ -2913,20 +2953,28 @@ void mdn::gui::MainWindow::ensureTabCorner() {
 
 void mdn::gui::MainWindow::divide(const OperationPlan& p, Mdn2d& a, Mdn2d& b) {
     // First - acquire references to destination and remainder
+    Log_Debug2_H("p=" << p << ", a=[" << a.name() << "],b=[" << b.name() << "]");
     Mdn2d* destPtr(nullptr);
     Mdn2d* remPtr(nullptr);
     if (p.indexDest >= 0) {
+        Log_Debug3("Getting destination " << p.indexDest);
         destPtr = m_project->getMdn(p.indexDest);
     } else {
-        Mdn2d newDest(m_globalConfig, p.newName.toStdString());
+        std::string pNameStr = p.newName.toStdString();
+        Log_Debug3("Creating new destination [" << pNameStr << "]");
+        Mdn2d newDest(m_globalConfig, pNameStr);
         int destIndex = m_project->activeIndex() + 1;
         m_project->insertMdn(std::move(newDest), destIndex);
         destPtr = m_project->getMdn(destIndex);
     }
     if (p.indexRem >= 0) {
+        Log_Debug3("Getting remainder " << p.indexRem);
         destPtr = m_project->getMdn(p.indexRem);
     } else {
-        Mdn2d newRem(m_globalConfig, p.newName.toStdString());
+        Log_Debug3("Getting remainder " << p.indexRem);
+        std::string pRemNameStr = p.newRemName.toStdString();
+        Log_Debug3("Creating new remainder [" << pRemNameStr << "]");
+        Mdn2d newRem(m_globalConfig, pRemNameStr);
         int remIndex = m_project->activeIndex() + 1;
         m_project->insertMdn(std::move(newRem), remIndex);
         remPtr = m_project->getMdn(remIndex);
@@ -2938,9 +2986,23 @@ void mdn::gui::MainWindow::divide(const OperationPlan& p, Mdn2d& a, Mdn2d& b) {
     // Next, fly the division algorithm
 
     long double remMag = constants::ldoubleGreat;
+    Log_Debug3_H("divideIterate dispatch");
     CoordSet changed = a.divideIterate(10, b, dest, rem, remMag, m_globalConfig.fraxis());
-    // TODO
-    // Need to update gui in OpsController and OperationStrip to allow the user to inspect
-    //  remainder and answer, and choose to continue divide or stop
-    // Need to update above dispatches to divide operation to come here instead
+    Log_Debug3_H("divideIterate return");
+    if (remMag > 0.0) {
+        m_ops->enterActiveDivision();
+        m_ad_operandA = &a;
+        m_ad_operandB = &b;
+        m_ad_remainder = &rem;
+        m_ad_destination = &dest;
+        m_ad_remMag = remMag;
+        showStatus(tr("Division underway - press [÷] to continue, or [Cancel]"), 0);
+    } else {
+        showStatus(tr("Calculation complete"), 2000);
+    }
+    syncTabsToProject();
+    setActiveTab(p.indexA);
+    clearStatus();
+    Log_Debug2_T("");
+    return;
 }

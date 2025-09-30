@@ -227,7 +227,6 @@ mdn::CoordSet mdn::Mdn2d::locked_divideIterate(
         return CoordSet();
     }
     int iter = 0;
-    CoordSet changed;
     for (; iter < nIters; ++iter) {
         Coord qOffset;
         long double qVal;

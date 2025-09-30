@@ -8,7 +8,7 @@
 namespace mdn {
 namespace gui {
 
-enum class OperationPhase { Idle, PickB, PickDest, PickRem };
+enum class OperationPhase { Idle, PickB, PickDest, PickRem, ActiveDivision };
 
 static std::string OperationPhaseToString(const OperationPhase& op) {
     switch (op) {
@@ -21,8 +21,11 @@ static std::string OperationPhaseToString(const OperationPhase& op) {
         case OperationPhase::PickDest: {
             return "PickDest";
         }
-        default: {// case Operation::PickRem: {
+        case OperationPhase::PickRem: {
             return "PickRem";
+        }
+        default: { // case OperationPhase::ActiveDivision: {
+            return "ActiveDivision";
         }
     }
 }
@@ -33,6 +36,8 @@ static OperationPhase StringToOperationPhase(const std::string& s) {
         return OperationPhase::PickDest;
     } else if (s == "PickRem") {
         return OperationPhase::PickRem;
+    } else if (s == "ActiveDivision") {
+        return OperationPhase::ActiveDivision;
     } else { // s == "Idle"
         return OperationPhase::Idle;
     }

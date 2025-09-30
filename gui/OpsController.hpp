@@ -55,12 +55,20 @@ public:
     bool inBattle() const;
     void resetModel(Project* project);
     void clearModel();
+    void enterActiveDivision();
+    void leaveActiveDivision(bool showCancelMessage = false);
 
 signals:
     // to status bar
     void requestClearStatus();
     void requestStatus(const QString& s, int timeOut, bool forceUpdate);
     void requestFitBottomToContents();
+
+    // user clicked Divide while ActiveDivision
+    void divisionIterateRequested();
+
+    // user stopped ActiveDivision (Cancel/Escape)
+    void divisionStopRequested();
 
     void planReady(const OperationPlan& plan);
     void tabClicked(int idx);

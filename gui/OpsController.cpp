@@ -89,6 +89,36 @@ void mdn::gui::OpsController::clearModel() {
 }
 
 
+void mdn::gui::OpsController::enterActiveDivision() {
+    Log_Debug2_H("");
+    m_phase = OperationPhase::ActiveDivision;
+    if (m_strip) {
+        // In ActiveDivision, Divide is popped but highlighted and enabled
+        m_strip->enterActiveDivisionVisual();
+        // Keep other ops enabled; user can still switch ops via normal click flow if desired
+        m_strip->setOpsEnabled(true);
+    }
+    // Optional: status hint
+    emit requestStatus(QStringLiteral("Divide active — click ÷ to iterate; Esc/Cancel to stop"), 0, false);
+    Log_Debug2_T("");
+}
+
+
+void mdn::gui::OpsController::leaveActiveDivision(bool showCancelMessage) {
+    Log_Debug2_H("");
+    m_phase = OperationPhase::Idle;
+    if (m_strip) {
+        m_strip->leaveActiveDivisionVisual();
+        m_strip->reset(); // back to default: no op checked, all enabled, Cancel disabled
+    }
+    if (showCancelMessage) {
+        emit requestStatus(QString(), 0, false);
+        emit requestStatus(QStringLiteral("* Stopped division *"), 2000, false);
+    }
+    Log_Debug2_T("");
+}
+
+
 void mdn::gui::OpsController::battlestations(Operation op) {
     Log_Debug2_H("op=" << op);
     m_op = op;
@@ -334,6 +364,23 @@ void mdn::gui::OpsController::rebuildBottomContainer() {
                 );
             }
         );
+        connect(m_strip, &OperationStrip::divisionIterateClicked, this, [this]{
+            if (m_phase == OperationPhase::ActiveDivision) {
+                Log_Debug2_H("emit divisionIterateRequested()");
+                emit divisionIterateRequested();
+                Log_Debug2_T("");
+            }
+        });
+        connect(m_strip, &OperationStrip::divisionStopRequested, this, [this]{
+            if (m_phase == OperationPhase::ActiveDivision) {
+                Log_Debug2_H("emit divisionStopRequested()");
+                emit divisionStopRequested();
+                leaveActiveDivision(false);
+                Log_Debug2_T("");
+            } else {
+                onCancel();
+            }
+        });
     }
     lay->addWidget(m_strip, 0);
 
