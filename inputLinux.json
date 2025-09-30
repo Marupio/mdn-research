@@ -1,0 +1,18 @@
+{
+    "Logger": {
+        "Level": "Debug4",
+        "CheckIndents": true,
+        "WindowsOutput": "C:/Users/daveg/OneDrive/Documents/Projects/MDN/mdn-research/output",
+        "Output_": "C:/Users/daveg/OneDrive/Documents/Projects/MDN/mdn-research/output",
+        "Output": "/home/dave/GADEN/MDN/mdn-research/output",
+        "LinuxOutput": "/home/dave/GADEN/MDN/mdn-research/output",
+        "Filter": {
+            "Comment_Exclude": [],
+            "Exclude": [
+                "debugShowAllTabs",
+                "getValue", "setValue",
+                "LockTracker", "lockReadOnly", "lockWriteable"
+            ]
+        }
+    }
+}

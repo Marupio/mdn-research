@@ -91,8 +91,8 @@ mdn::Mdn2dBase::Mdn2dBase(const Mdn2dBase& other, std::string nameIn):
     m_event(0)
 {
     Log_N_Debug3_H("copy ctor, copying " << other.m_name << ", newName=" << nameIn);
-    auto lock = other.lockReadOnly();
-    if (m_name.empty()) {
+    // auto lock = other.lockReadOnly();
+    if (nameIn.empty()) {
         Log_N_Debug4("nameIn empty, generating new name from " << other.m_name);
         m_name = m_config.parent().suggestCopyName(other.m_name);
         Log_N_Debug3("changed name to " << m_name);
@@ -674,7 +674,7 @@ long double mdn::Mdn2dBase::locked_getTotalValue() const {
             continue;
         }
         Coord cursor(0, rowI);
-        long double rowVal = getRowValue(Coord (0, rowI));
+        long double rowVal = locked_getRowValue(Coord (0, rowI));
         result += rowVal;
         Log_N_Debug4("row " << rowI << " = " << rowVal << ", sum = " << result);
     }
