@@ -58,7 +58,7 @@ int main() {
                 return 0;
             }
             int tmp = std::atoi(instr.c_str());
-            if (tmp >= 2 <= 32) {
+            if (tmp >= 2 && tmp <= 32) {
                 base = tmp;
             }
         }

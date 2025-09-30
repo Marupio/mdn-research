@@ -101,15 +101,16 @@ void mdn::gui::HoverPeekTabWidget::onCurrentChangedGuard(int index) {
     // If something programmatically set current to the plus page, bounce off it.
     Log_Debug2_H("index=" << index);
     if (index == plusIndex()) {
-        Log_Debug3("emit plusClicked()");
-        emit plusClicked();
-        if (m_lastRealIndex >= 0 && m_lastRealIndex < count() && m_lastRealIndex != index)
+        QSignalBlocker b1(this);
+        if (m_lastRealIndex >= 0 && m_lastRealIndex < count() && m_lastRealIndex != index) {
             setCurrentIndex(m_lastRealIndex);
-        else if (int lastReal = count() - (hasPlus() ? 2 : 1); lastReal >= 0)
+        } else if (int lastReal = count() - (hasPlus() ? 2 : 1); lastReal >= 0) {
             setCurrentIndex(lastReal);
-    } else {
-        m_lastRealIndex = index;
+        }
+        Log_Debug2_T("");
+        return;
     }
+    m_lastRealIndex = index;
     Log_Debug2_T("");
 }
 
@@ -154,8 +155,8 @@ void mdn::gui::HoverPeekTabWidget::onCommitIndex(int idx) {
         return;
     }
     if (idx == m_plusTabIndex) {
-        Log_Debug3("emit plusClicked()");
-        emit plusClicked();
+        // Log_Debug3("emit plusClicked()");
+        // emit plusClicked();
         Log_Debug2_T("plus tab");
         return;
     }

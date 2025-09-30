@@ -195,21 +195,28 @@ mdn::CoordSet mdn::Mdn2d::divideIterate(
 mdn::CoordSet mdn::Mdn2d::locked_divideIterate(
     int nIters, const Mdn2d& rhs, Mdn2d& ans, Mdn2d& rem, long double& remMag, Fraxis fraxis
 ) const {
+    If_Log_Showing_Debug(
+        Log_N_Debug_H(""
+            << "nIters=" << nIters
+            << ", rhs=" << rhs.locked_name()
+            << ", ans=" << ans.locked_name()
+            << ", rem=" << rem.locked_name()
+            << ", remMag=" << remMag
+            << ", fraxis=" << FraxisToName(fraxis)
+        );
+    );
     // Calculating: ans = *this / rhs, aka  t = p / q
     //  *this = p values (pVal, pOffset, pSign, etc)
     //  rhs   = q values (qVal, qOffset, qSign, etc)
     //  ans   = t values (tVal, tOffset, tSign, etc)
-    If_Log_Showing_Debug3(
-        Log_N_Debug3_H("ans = *this / rhs, fraxis: " << FraxisToName(fraxis));
-    );
     internal_checkFraxis(fraxis);
     if (rhs.m_index.empty()) {
-        Log_N_Debug3_T("Divisor is zero, answer is undefined");
+        Log_N_Debug_T("Divisor is zero, answer is undefined");
         remMag = -1.0;
         return CoordSet();
     }
-
     CoordSet changed;
+
     // Find principal row for division - row with largest absolute magnitude
     Coord pOffset;
     long double pVal;
@@ -218,28 +225,37 @@ mdn::CoordSet mdn::Mdn2d::locked_divideIterate(
         fraxis = Fraxis::X;
     }
 
+    Log_N_Debug3_H("rhs row/col magMax dispatch");
     if (
         (fraxis == Fraxis::X && !rhs.locked_getRowMagMax(pOffset, pVal))
         || (fraxis == Fraxis::Y && !rhs.locked_getColMagMax(pOffset, pVal))
     ) {
+        Log_N_Debug3_T("rhs row/col magMax return");
         Log_Warn("Failed to find max magnitude row or col");
         remMag = -1.0;
+        Log_N_Debug_T("Failed magMax")
         return CoordSet();
     }
+    Log_N_Debug3_T("rhs row/col magMax return, pOffset=" << pOffset << ", pVal=" << pVal);
     int iter = 0;
     for (; iter < nIters; ++iter) {
+        Log_N_Debug3("iter " << iter << " of " << nIters);
         Coord qOffset;
         long double qVal;
+        Log_N_Debug2_H("rem row/col magMax dispatch");
         if (
             (fraxis == Fraxis::X && !rem.locked_getRowMagMax(qOffset, qVal))
             || (fraxis == Fraxis::Y && !rem.locked_getColMagMax(qOffset, qVal))
         ) {
+            Log_N_Debug2_T("rem row/col magMax return - zero");
             // Maybe found exact answer, we think
             remMag = 0.0;
+            Log_N_Debug_T("Returning changed.size=" << changed.size());
             return changed;
         }
+        Log_N_Debug3_T("rem row/col magMax return, qOffset=" << qOffset << ", qVal=" << qVal);
         long double div = qVal / pVal;
-
+        Log_N_Debug3("div=qVal/pVal=" << qVal << "/" << pVal << "=" << div);
         // division here accounts for x position; y position must be manually calculated
         Coord emplacement;
         if (fraxis == Fraxis::X) {
@@ -247,20 +263,28 @@ mdn::CoordSet mdn::Mdn2d::locked_divideIterate(
         } else {
             emplacement = Coord(qOffset.x() - pOffset.x(), 0);
         }
+        Log_N_Debug3("emplacement=" << emplacement);
         Mdn2d tmp(m_config, "tmp_divide");
+        Log_N_Debug3("internal_emplace(emplacement, div=" << div << ", fraxis)");
         static_cast<void>(tmp.internal_emplace(emplacement, div, fraxis));
+        Log_N_Debug3("ans.locked_plusEquals(tmp)");
         changed.merge(ans.locked_plusEquals(tmp));
 
         // Next, calculate reminder: rem = *this - ans*rhs
         // Because of my awesome thread-safe design, ^^^ that calculation becomes:
+        Log_N_Debug3("rem.locked_clear();");
         rem.locked_clear();
+        Log_N_Debug3("rem.locked_minusEquals(ans);");
         rem.locked_minusEquals(ans);
+        Log_N_Debug3("rem.locked_timesEquals(rhs);");
         rem.locked_timesEquals(rhs);
+        Log_N_Debug3("rem.locked_plusEquals(*this);");
         rem.locked_plusEquals(*this);
     }
     // Done all iterations
+    Log_N_Debug3("Done all iterations, rem.getTotalValue");
     remMag = std::abs(rem.locked_getTotalValue());
-    Log_N_Debug3_T("remMag = " << remMag << ", returning changed.size() = " << changed.size());
+    Log_N_Debug_T("remMag = " << remMag << ", returning changed.size() = " << changed.size());
     return changed;
 }
 

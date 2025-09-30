@@ -2982,13 +2982,15 @@ void mdn::gui::MainWindow::divide(const OperationPlan& p, Mdn2d& a, Mdn2d& b) {
 
     Mdn2d& dest = *destPtr;
     Mdn2d& rem = *remPtr;
+    rem.clear();
+    rem += a;
 
     // Next, fly the division algorithm
 
     long double remMag = constants::ldoubleGreat;
     Log_Debug3_H("divideIterate dispatch");
     CoordSet changed = a.divideIterate(10, b, dest, rem, remMag, m_globalConfig.fraxis());
-    Log_Debug3_H("divideIterate return");
+    Log_Debug3_T("divideIterate return");
     if (remMag > 0.0) {
         m_ops->enterActiveDivision();
         m_ad_operandA = &a;

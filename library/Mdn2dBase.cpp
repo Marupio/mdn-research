@@ -721,8 +721,9 @@ bool mdn::Mdn2dBase::getRowMagMax(Coord& xy, long double& val) const {
 
 
 bool mdn::Mdn2dBase::locked_getRowMagMax(Coord& xy, long double& val) const {
+    Log_N_Debug3_H("xy=" << xy);
     if (m_index.empty()) {
-        Log_Debug2("No non-zeroes available, returning false (failed)");
+        Log_N_Debug3_T("No non-zeroes available, returning false (failed)");
         return false;
     }
     auto last = m_xIndex.rbegin();
@@ -731,10 +732,13 @@ bool mdn::Mdn2dBase::locked_getRowMagMax(Coord& xy, long double& val) const {
     double pVal = -1.0;
     double pSign = 0.0;
     int pRow = constants::intMin;
-    for (const Coord& xy : nonZeroes) {
-        double curVal = getRowValue(xy);
+    for (const Coord& xyi : nonZeroes) {
+        double curVal = locked_getRowValue(xyi);
         double curSign = 1.0;
-        int curRow = xy.y();
+        int curRow = xyi.y();
+        Log_N_Debug4(
+            "xyi=" << xyi << ",curVal=" << curVal << ",curSign=" << curSign << ",curRow=" << curRow
+        );
         if (curVal < 0) {
             curVal = -curVal;
             curSign = -1.0;
@@ -748,6 +752,7 @@ bool mdn::Mdn2dBase::locked_getRowMagMax(Coord& xy, long double& val) const {
     }
     val = pVal * pSign;
     xy = Coord(col, pRow);
+    Log_N_Debug3_T("val=" << val << ",xy=" << xy);
     return true;
 }
 
@@ -969,8 +974,9 @@ bool mdn::Mdn2dBase::getColMagMax(Coord& xy, long double& val) const {
 
 
 bool mdn::Mdn2dBase::locked_getColMagMax(Coord& xy, long double& val) const {
+    Log_N_Debug3_H("xy=" << xy);
     if (m_index.empty()) {
-        Log_Debug2("No non-zeroes available, returning false (failed)");
+        Log_N_Debug3_T("No non-zeroes available, returning false (failed)");
         return false;
     }
     auto last = m_xIndex.rbegin();
@@ -979,10 +985,13 @@ bool mdn::Mdn2dBase::locked_getColMagMax(Coord& xy, long double& val) const {
     long double pVal = -1.0;
     long double pSign = 0.0;
     int pCol = constants::intMin;
-    for (const Coord& xy : nonZeroes) {
-        long double curVal = getColValue(xy);
+    for (const Coord& xyi : nonZeroes) {
+        long double curVal = locked_getColValue(xyi);
         long double curSign = 1.0;
-        int curCol = xy.x();
+        int curCol = xyi.x();
+        Log_N_Debug4(
+            "xyi=" << xyi << ",curVal=" << curVal << ",curSign=" << curSign << ",curCol=" << curCol
+        );
         if (curVal < 0) {
             curVal = -curVal;
             curSign = -1.0;
@@ -996,6 +1005,7 @@ bool mdn::Mdn2dBase::locked_getColMagMax(Coord& xy, long double& val) const {
     }
     val = pVal * pSign;
     xy = Coord(pCol, row);
+    Log_N_Debug3_T("val=" << val << ",xy=" << xy);
     return true;
 }
 

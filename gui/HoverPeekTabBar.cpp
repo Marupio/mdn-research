@@ -81,8 +81,10 @@ void mdn::gui::HoverPeekTabBar::mousePressEvent(QMouseEvent* e) {
     Log_Debug2_H("");
     const int idx = tabAt(MS_POINT(e));
     if (idx >= 0) {
-        Log_Debug3("emit commitIndex(idx=" << idx << ")");
-        emit commitIndex(idx);
+        if (!isPlusIndex(idx)) {
+            Log_Debug3("emit commitIndex(idx=" << idx << ")");
+            emit commitIndex(idx);
+        }
     }
     QTabBar::mousePressEvent(e);
     Log_Debug2_T("");
