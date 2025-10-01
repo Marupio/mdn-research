@@ -635,7 +635,8 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
         }
 
         case Qt::Key_Escape:
-            clearSelection();
+            emit cancelRequested(true);
+            // clearSelection();
             // emit focusDownRequested();
             e->accept();
             return;

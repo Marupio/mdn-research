@@ -57,6 +57,8 @@ public:
     void clearModel();
     void enterActiveDivision();
     void leaveActiveDivision(bool showCancelMessage = false);
+    bool cancelRequested();
+    // TODO
 
 signals:
     // to status bar

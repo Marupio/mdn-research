@@ -121,6 +121,7 @@ signals:
     void statusSelectionChanged(const mdn::Selection& s);
     void editModeChanged(mdn::gui::NumberDisplayWidget::EditMode m);
     void requestFontSizeChange(int pt);
+    void cancelRequested(bool echoBackNeeded);
 
 public slots:
     void onCursorChanged(mdn::Coord c);

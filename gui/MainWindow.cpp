@@ -169,6 +169,14 @@ bool mdn::gui::MainWindow::showStatus(QString message, int timeOut, bool forceUp
 }
 
 
+bool mdn::gui::MainWindow::onCancelRequested(bool echoBack) {
+    if (m_ops->cancelRequested())
+    m_ops
+// TODO
+    m_strip
+}
+
+
 void mdn::gui::MainWindow::onTabContextMenu(const QPoint& pos)
 {
     Log_Debug3_H("");
@@ -1824,6 +1832,12 @@ void mdn::gui::MainWindow::createTabForIndex(int index) {
         &NumberDisplayWidget::requestStatus,
         this,
         &MainWindow::showStatus
+    );
+    connect(
+        ndw,
+        &NumberDisplayWidget::cancelRequested,
+        this,
+        &MainWindow::onCancelRequested
     );
 
     // Push current global mode into the new widget
