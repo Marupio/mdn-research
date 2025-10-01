@@ -40,7 +40,7 @@ Notice how π above is backwards?  That's how we do it for higher dimension numb
 
 #### Carry-overs
 
-Everything else is the same, except for one thing: carry-overs.  When counting up in 2-dimensions, the carry-over spreads both towards _x_+ and _y_+:
+Everything else is the same, except for one thing: carry-overs.  When counting up in 2-dimensions, the carry-over spreads both towards *x*+ and *y*+:
 
 ```text
  0 │ 0 0 0        0 │ 0 0 0        0 │ 1 0 0

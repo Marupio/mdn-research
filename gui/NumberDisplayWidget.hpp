@@ -98,11 +98,15 @@ public:
     // Cell editting
     void cancelCellEdit();
 
+    // When sending cancelRequest out with echoBack, this is the function to echo back
+    void cancelEchoBack();
+
     inline EditMode editMode() const { return m_mode; }
 
     // Sizing
     QSize minimumSizeHint() const override;
     QSize sizeHint() const override;
+
 
 signals:
     void focusDownRequested();
@@ -121,7 +125,7 @@ signals:
     void statusSelectionChanged(const mdn::Selection& s);
     void editModeChanged(mdn::gui::NumberDisplayWidget::EditMode m);
     void requestFontSizeChange(int pt);
-    void cancelRequested(bool echoBackNeeded);
+    void cancelRequested(NumberDisplayWidget* echoBackIfNotNull);
 
 public slots:
     void onCursorChanged(mdn::Coord c);

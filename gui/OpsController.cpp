@@ -119,6 +119,16 @@ void mdn::gui::OpsController::leaveActiveDivision(bool showCancelMessage) {
 }
 
 
+bool mdn::gui::OpsController::cancelRequested() {
+    if (m_phase != OperationPhase::Idle) {
+        cancel(true);
+        // Absorbed the 'cancel'
+        return true;
+    }
+    return false;
+}
+
+
 void mdn::gui::OpsController::battlestations(Operation op) {
     Log_Debug2_H("op=" << op);
     m_op = op;

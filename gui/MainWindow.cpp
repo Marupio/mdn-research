@@ -169,11 +169,20 @@ bool mdn::gui::MainWindow::showStatus(QString message, int timeOut, bool forceUp
 }
 
 
-bool mdn::gui::MainWindow::onCancelRequested(bool echoBack) {
-    if (m_ops->cancelRequested())
-    m_ops
-// TODO
-    m_strip
+bool mdn::gui::MainWindow::onCancelRequested(NumberDisplayWidget* echoBack) {
+    if (m_ops) {
+        if (m_ops->cancelRequested()) {
+            // Absorbed the cancel, no echo back
+            return true;
+        }
+    }
+    // No action taken, check echo back
+    if (echoBack) {
+        echoBack->cancelEchoBack();
+        return true;
+    }
+    // No one used the cancel
+    return false;
 }
 
 
@@ -3010,7 +3019,7 @@ void mdn::gui::MainWindow::divide(const OperationPlan& p, Mdn2d& a, Mdn2d& b) {
 
     long double remMag = constants::ldoubleGreat;
     Log_Debug3_H("divideIterate dispatch");
-    CoordSet changed = a.divideIterate(10, b, dest, rem, remMag, m_globalConfig.fraxis());
+    a.divideIterate(10, b, dest, rem, remMag, m_globalConfig.fraxis());
     Log_Debug3_T("divideIterate return");
     if (remMag > 0.0) {
         Log_Debug4("remMag non-zero:" << remMag);

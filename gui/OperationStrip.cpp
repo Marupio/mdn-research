@@ -185,6 +185,7 @@ void mdn::gui::OperationStrip::battlestations(Operation op) {
     Log_Debug2_H("op=" << op);
     // Enable Cancel; lock the chosen op “in”
     m_btnCancel->setEnabled(true);
+    buttonEnableAndHighlight(m_btnCancel, true);
 
     // Disable all other ops; chosen one enabled + checked
     setOthersDisabledExcept(op);
@@ -222,12 +223,9 @@ void mdn::gui::OperationStrip::enterActiveDivisionVisual() {
         return;
     }
     m_activeDivision = true;
-    // Make sure Divide is enabled and popped (unchecked)
-    m_btnDiv->setEnabled(true);
     m_btnDiv->setChecked(false);
-
-    // soft amber
-    m_btnDiv->setStyleSheet("QToolButton { background: rgba(255, 215, 0, 0.25); }");
+    buttonEnableAndHighlight(m_btnDiv, true);
+    buttonEnableAndHighlight(m_btnCancel, true);
     Log_Debug3_T("");
 }
 
@@ -241,7 +239,9 @@ void mdn::gui::OperationStrip::leaveActiveDivisionVisual() {
     m_activeDivision = false;
 
     // back to theme defaults
-    m_btnDiv->setStyleSheet(QString());
+    buttonEnableAndHighlight(m_btnDiv, false);
+    buttonEnableAndHighlight(m_btnCancel, false);
+
     Log_Debug3_T("");
 }
 
@@ -292,6 +292,17 @@ void mdn::gui::OperationStrip::setOthersDisabledExcept(Operation op) {
         keep->setEnabled(true); keep->setChecked(true);
     }
     Log_Debug2_T("");
+}
+
+
+void mdn::gui::OperationStrip::buttonEnableAndHighlight(QAbstractButton* btn, bool enable) {
+    if (enable) {
+        btn->setEnabled(true);
+        btn->setStyleSheet("QToolButton { background: rgba(255, 215, 0, 0.25); }");
+    } else {
+        btn->setEnabled(false);
+        btn->setStyleSheet(QString());
+    }
 }
 
 

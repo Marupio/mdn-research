@@ -71,7 +71,7 @@ signals:
 public slots:
     bool clearStatus();
     bool showStatus(QString message, int timeOut, bool forceUpdate=false);
-    bool onCancelRequested(bool echoBack);
+    bool onCancelRequested(NumberDisplayWidget* echoBack);
 
 private slots:
     void onTabContextMenu(const QPoint& pos);

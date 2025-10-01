@@ -84,7 +84,7 @@ public:
             //          iteration
             //  Returns the absolute magnitude of rem (abs(rem.getTotalValue), goal is to reach zero
             //  A negative value means division failed
-            CoordSet divideIterate(
+            void divideIterate(
                 int nIters,
                 const Mdn2d& rhs,
                 Mdn2d& ans,
@@ -93,7 +93,7 @@ public:
                 Fraxis fraxis
             ) const;
             protected:
-                CoordSet locked_divideIterate(
+                void locked_divideIterate(
                     int nIters,
                     const Mdn2d& rhs,
                     Mdn2d& ans,

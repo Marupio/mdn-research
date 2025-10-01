@@ -54,6 +54,7 @@ private:
     // Private functions
     QToolButton* buttonFor(Operation op) const;
     void setOthersDisabledExcept(Operation op);
+    void buttonEnableAndHighlight(QAbstractButton* btn, bool enable);
 
     // Private data
     QPushButton* m_btnCancel = nullptr;

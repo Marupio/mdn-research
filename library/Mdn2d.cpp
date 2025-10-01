@@ -181,7 +181,7 @@ mdn::CoordSet mdn::Mdn2d::locked_multiply(const Mdn2d& rhs, Mdn2d& ans) const {
 }
 
 
-mdn::CoordSet mdn::Mdn2d::divideIterate(
+void mdn::Mdn2d::divideIterate(
     int nIters, const Mdn2d& rhs, Mdn2d& ans, Mdn2d& rem, long double& remMag, Fraxis fraxis
 ) const {
     auto lockThis = lockReadOnly();
@@ -192,7 +192,7 @@ mdn::CoordSet mdn::Mdn2d::divideIterate(
 }
 
 
-mdn::CoordSet mdn::Mdn2d::locked_divideIterate(
+void mdn::Mdn2d::locked_divideIterate(
     int nIters, const Mdn2d& rhs, Mdn2d& ans, Mdn2d& rem, long double& remMag, Fraxis fraxis
 ) const {
     If_Log_Showing_Debug(
@@ -213,9 +213,10 @@ mdn::CoordSet mdn::Mdn2d::locked_divideIterate(
     if (rhs.m_index.empty()) {
         Log_N_Debug_T("Divisor is zero, answer is undefined");
         remMag = -1.0;
-        return CoordSet();
+        return;
     }
-    CoordSet changed;
+    CoordSet ansChanged;
+    CoordSet remChanged;
 
     // Find principal row for division - row with largest absolute magnitude
     Coord pOffset;
@@ -234,7 +235,7 @@ mdn::CoordSet mdn::Mdn2d::locked_divideIterate(
         Log_Warn("Failed to find max magnitude row or col");
         remMag = -1.0;
         Log_N_Debug_T("Failed magMax")
-        return CoordSet();
+        return;
     }
     Log_N_Debug3_T("rhs row/col magMax return, pOffset=" << pOffset << ", pVal=" << pVal);
     int iter = 0;
@@ -243,21 +244,6 @@ mdn::CoordSet mdn::Mdn2d::locked_divideIterate(
         Coord qOffset;
         long double qVal;
         Log_N_Debug2_H("rem row/col magMax dispatch");
-        // bool gotMagMax = false;
-        // if (fraxis == Fraxis::X) {
-        //     gotMagMax = rem.locked_getRowMagMax(qOffset, qVal);
-        //     Log_N_Debug4(""
-        //         << "gotMagMax=" << gotMagMax << ", qOffset=" << qOffset << ", qVal=" << qVal
-        //         << ", nonZeroes=" << rem.m_index.size()
-        //     );
-        // } else { // } else if (fraxis == Fraxis::Y) {
-        //     gotMagMax = rem.locked_getColMagMax(qOffset, qVal);
-        //     Log_N_Debug4(""
-        //         << "gotMagMax=" << gotMagMax << ", qOffset=" << qOffset << ", qVal=" << qVal
-        //         << ", nonZeroes=" << rem.m_index.size()
-        //     );
-        // }
-        // if (!gotMagMax) {
         if (
             (fraxis == Fraxis::X && !rem.locked_getRowMagMax(qOffset, qVal))
             || (fraxis == Fraxis::Y && !rem.locked_getColMagMax(qOffset, qVal))
@@ -266,8 +252,8 @@ mdn::CoordSet mdn::Mdn2d::locked_divideIterate(
             // Maybe found exact answer, we think
             remMag = 0.0;
             Log_Debug4("");
-            Log_N_Debug_T("Returning changed.size=" << changed.size());
-            return changed;
+            Log_N_Debug_T("");
+            return;
         }
         Log_N_Debug3_T("rem row/col magMax return, qOffset=" << qOffset << ", qVal=" << qVal);
         long double div = qVal / pVal;
@@ -284,24 +270,28 @@ mdn::CoordSet mdn::Mdn2d::locked_divideIterate(
         Log_N_Debug3("internal_emplace(emplacement, div=" << div << ", fraxis)");
         static_cast<void>(tmp.internal_emplace(emplacement, div, fraxis));
         Log_N_Debug3("ans.locked_plusEquals(tmp)");
-        changed.merge(ans.locked_plusEquals(tmp));
+        ansChanged.merge(ans.locked_plusEquals(tmp));
 
         // Next, calculate reminder: rem = *this - ans*rhs
         // Because of my awesome thread-safe design, ^^^ that calculation becomes:
         Log_N_Debug3("rem.locked_clear();");
         rem.locked_clear();
         Log_N_Debug3("rem.locked_minusEquals(ans);");
-        rem.locked_minusEquals(ans);
+        remChanged = rem.locked_minusEquals(ans);
         Log_N_Debug3("rem.locked_timesEquals(rhs);");
-        rem.locked_timesEquals(rhs);
+        remChanged = rem.locked_timesEquals(rhs);
         Log_N_Debug3("rem.locked_plusEquals(*this);");
-        rem.locked_plusEquals(*this);
+        remChanged = rem.locked_plusEquals(*this);
+        rem.locked_carryoverCleanup(remChanged);
+        remChanged.clear();
+        ans.locked_carryoverCleanup(ansChanged);
+        ansChanged.clear();
     }
     // Done all iterations
+
     Log_N_Debug3("Done all iterations, rem.getTotalMagnitude");
     remMag = std::abs(rem.locked_getTotalMagnitude());
-    Log_N_Debug_T("remMag = " << remMag << ", returning changed.size() = " << changed.size());
-    return changed;
+    Log_N_Debug_T("remMag = " << remMag);
 }
 
 
@@ -327,17 +317,18 @@ mdn::CoordSet mdn::Mdn2d::locked_divide(const Mdn2d& rhs, Mdn2d& ans, Fraxis fra
     rem.locked_operatorEquals(*this);
     long double lastRemMag = constants::ldoubleGreat;
     long double remMag;
-    CoordSet changed = locked_divideIterate(100, rhs, ans, rem, remMag, fraxis);
+    locked_divideIterate(100, rhs, ans, rem, remMag, fraxis);
     while (remMag < lastRemMag && remMag >= 0.0) {
-        changed.merge(locked_divideIterate(100, rhs, ans, rem, remMag, fraxis));
+        locked_divideIterate(100, rhs, ans, rem, remMag, fraxis);
     }
     if (remMag < 0) {
         // Failed
         Log_N_Debug3_T("Failed");
-        return changed;
+        return m_nullCoordSet;
     }
     Log_N_Debug3_T("Success, with remMag = " << remMag);
-    return changed;
+    // For now, divideIterate functionality performs carryoverCleanup, no changed CoordSet available
+    return m_nullCoordSet;
 }
 
 

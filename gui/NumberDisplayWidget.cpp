@@ -104,6 +104,11 @@ void mdn::gui::NumberDisplayWidget::cancelCellEdit() {
 }
 
 
+void mdn::gui::NumberDisplayWidget::cancelEchoBack() {
+    clearSelection();
+}
+
+
 QSize mdn::gui::NumberDisplayWidget::minimumSizeHint() const {
     const int minCols = 24;        // show at least 24 columns
     const int minRows = 12;        // and 12 rows (tweak to taste)
@@ -635,7 +640,7 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
         }
 
         case Qt::Key_Escape:
-            emit cancelRequested(true);
+            emit cancelRequested(this);
             // clearSelection();
             // emit focusDownRequested();
             e->accept();

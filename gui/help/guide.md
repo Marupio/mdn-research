@@ -84,3 +84,21 @@ Next choose _operand B_ by clicking on the next tab.  It can be the same as _ope
 
 Finally, click where you want the answer to go.  If you click the **[+]** tab, the app will create a new Mdn named something like **Mdn0+Mdn2**.
 
+### Division doesn't work the best ###
+
+The division algorithm is not fully reliable:
+
+* The user has to choose a **Remainder** in addition to the **Operand B** and **Answer** tabs.
+* Division will run for 10 iterations, and the user can click the **[÷] Division** button to run another 10 iterations each time.
+
+It's a sort of implementation of *long division*, but in two dimensions.
+
+#### Iterative ####
+
+The algorithm is _iterative_.  The app will try **10 iterations** first.  If it ever gets the exact answer (**Remainder** = 0), it will stop.  Otherwise it offers the user a chance to inspect the **Remainder** and **Answer**.  The user can click the **[÷] Division** button to run another 10 iterations.
+
+#### Choose Remainder ####
+
+Whereas **[+] Addition**, **[-] Subtraction**, and **[x] Multiplication** all require the user to select **Operand B** and **Destination** , **[÷] Division** also requires **Remainder**.
+
+Choose an existing **Mdn** tab to overwrite or choose the **[+]** tab to create a new tab.  The app will create a new tab named something like **rem(Mdn0÷Mdn2)**.
