@@ -77,7 +77,10 @@ Start menu - New, Open, Recent
 Problem with precision
 
 
-Clear all button
+Esc doesn't cancel operation button
+Esc doesn't work in general
+New tab should go *after* current tab, seems to go before
+
 
 Finish Selection cursor iterate functions
 NDW::moveCursorAfterSubmit

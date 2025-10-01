@@ -243,6 +243,21 @@ mdn::CoordSet mdn::Mdn2d::locked_divideIterate(
         Coord qOffset;
         long double qVal;
         Log_N_Debug2_H("rem row/col magMax dispatch");
+        // bool gotMagMax = false;
+        // if (fraxis == Fraxis::X) {
+        //     gotMagMax = rem.locked_getRowMagMax(qOffset, qVal);
+        //     Log_N_Debug4(""
+        //         << "gotMagMax=" << gotMagMax << ", qOffset=" << qOffset << ", qVal=" << qVal
+        //         << ", nonZeroes=" << rem.m_index.size()
+        //     );
+        // } else { // } else if (fraxis == Fraxis::Y) {
+        //     gotMagMax = rem.locked_getColMagMax(qOffset, qVal);
+        //     Log_N_Debug4(""
+        //         << "gotMagMax=" << gotMagMax << ", qOffset=" << qOffset << ", qVal=" << qVal
+        //         << ", nonZeroes=" << rem.m_index.size()
+        //     );
+        // }
+        // if (!gotMagMax) {
         if (
             (fraxis == Fraxis::X && !rem.locked_getRowMagMax(qOffset, qVal))
             || (fraxis == Fraxis::Y && !rem.locked_getColMagMax(qOffset, qVal))
@@ -250,6 +265,7 @@ mdn::CoordSet mdn::Mdn2d::locked_divideIterate(
             Log_N_Debug2_T("rem row/col magMax return - zero");
             // Maybe found exact answer, we think
             remMag = 0.0;
+            Log_Debug4("");
             Log_N_Debug_T("Returning changed.size=" << changed.size());
             return changed;
         }
@@ -282,8 +298,8 @@ mdn::CoordSet mdn::Mdn2d::locked_divideIterate(
         rem.locked_plusEquals(*this);
     }
     // Done all iterations
-    Log_N_Debug3("Done all iterations, rem.getTotalValue");
-    remMag = std::abs(rem.locked_getTotalValue());
+    Log_N_Debug3("Done all iterations, rem.getTotalMagnitude");
+    remMag = std::abs(rem.locked_getTotalMagnitude());
     Log_N_Debug_T("remMag = " << remMag << ", returning changed.size() = " << changed.size());
     return changed;
 }

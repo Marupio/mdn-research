@@ -241,11 +241,6 @@ void mdn::gui::OpsController::onTabCommitted(int idx) {
 
 void mdn::gui::OpsController::onPlusClicked() {
     Log_Debug2_H("");
-    if (m_ignoreNextPlusTab) {
-        m_ignoreNextPlusTab = false;
-        Log_Debug2_T("ignoring plus tab");
-        return;
-    }
     switch (m_phase) {
         case OperationPhase::Idle: {
             // Relay signal onwards
@@ -271,7 +266,6 @@ void mdn::gui::OpsController::onPlusClicked() {
             );
             Log_Debug3("emit requestStatus(rqs=[" << rqs.toStdString() << "], 0)");
             emit requestStatus(rqs, 0, false);
-            // m_ignoreNextPlusTab = true;
             Log_Debug2_T("");
             return;
         }
@@ -559,10 +553,11 @@ void mdn::gui::OpsController::endBattle() {
     p.indexRem = m_rem;
     p.newRemName = defaultRemName;
 
+    cancel(false);
+
     Log_Debug3("emit planReady(plan=" << p << ")");
     emit planReady(p);
 
-    cancel(false);
     Log_Debug2_T("");
 }
 

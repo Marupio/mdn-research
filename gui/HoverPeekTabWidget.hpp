@@ -27,6 +27,7 @@ public:
 
     // Returns the currentIndex that is actually selected, not hover-peeked
     int currentSelectedIndex() const { return m_lastPermanentIndex; }
+    void setCurrentSelectedIndex(int idx) { onCommitIndex(idx); }
 
     // Optional settings
     void setHoverDelayMs(int ms) { m_hoverDelayMs = std::max(0, ms); }

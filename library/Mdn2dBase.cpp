@@ -667,7 +667,7 @@ long double mdn::Mdn2dBase::locked_getTotalValue() const {
         Log_N_Debug3_T("No non-zeroes");
         return result;
     }
-    for (auto it = m_xIndex.begin(); it != m_xIndex.end(); ++it) {
+    for (auto it = m_yIndex.begin(); it != m_yIndex.end(); ++it) {
         const int rowI = it->first;
         const CoordSet& coords = it->second;
         if (coords.empty()) {
@@ -676,6 +676,38 @@ long double mdn::Mdn2dBase::locked_getTotalValue() const {
         Coord cursor(0, rowI);
         long double rowVal = locked_getRowValue(Coord (0, rowI));
         result += rowVal;
+        Log_N_Debug4("row " << rowI << " = " << rowVal << ", sum = " << result);
+    }
+    Log_N_Debug3_T("returning " << result);
+    return result;
+}
+
+
+long double mdn::Mdn2dBase::getTotalMagnitude() const {
+    Log_N_Debug2_H("");
+    auto lock = lockReadOnly();
+    long double result = locked_getTotalMagnitude();
+    Log_N_Debug2_T("result=" << result);
+    return result;
+}
+
+
+long double mdn::Mdn2dBase::locked_getTotalMagnitude() const {
+    Log_N_Debug3_H("");
+    long double result = 0.0;
+    if (m_xIndex.size() == 0) {
+        Log_N_Debug3_T("No non-zeroes");
+        return result;
+    }
+    for (auto it = m_yIndex.begin(); it != m_yIndex.end(); ++it) {
+        const int rowI = it->first;
+        const CoordSet& coords = it->second;
+        if (coords.empty()) {
+            continue;
+        }
+        Coord cursor(0, rowI);
+        long double rowVal = locked_getRowValue(Coord (0, rowI));
+        result += std::abs(rowVal);
         Log_N_Debug4("row " << rowI << " = " << rowVal << ", sum = " << result);
     }
     Log_N_Debug3_T("returning " << result);
@@ -693,16 +725,26 @@ long double mdn::Mdn2dBase::getRowValue(const Coord& xy) const {
 
 
 long double mdn::Mdn2dBase::locked_getRowValue(const Coord& xy) const {
+    Log_N_Debug2_H("xy=" << xy);
     VecDigit digits;
     locked_getRow(xy.y(), digits);
     int xMin = m_bounds.min().x();
     int count = m_bounds.width();
-    long double baseFactor = internal_baseFactor(xMin);
+    long double base = static_cast<long double>(m_config.baseDouble());
+    long double baseFactor = internal_baseFactor(base, xMin);
+    Log_N_Debug4("baseFactor(" << xMin << ")=" << baseFactor);
     long double result = 0.0;
     for (int i = 0; i < count; ++i) {
         long double d = static_cast<long double>(digits[i]);
+        If_Log_Showing_Debug4(
+            Log_N_Debug4(
+                "i=" << i << ",d=" << d << ",result+=d x baseFactor(" << baseFactor << ")"
+            );
+        );
         result += d*baseFactor;
+        baseFactor *= base;
     }
+    Log_N_Debug2_T("result=" << result);
     return result;
 }
 
@@ -946,16 +988,26 @@ long double mdn::Mdn2dBase::getColValue(const Coord& xy) const {
 
 
 long double mdn::Mdn2dBase::locked_getColValue(const Coord& xy) const {
+    Log_N_Debug2_H("xy=" << xy);
     VecDigit digits;
     locked_getCol(xy.x(), digits);
     int yMin = m_bounds.min().y();
     int count = m_bounds.height();
-    long double baseFactor = internal_baseFactor(yMin);
+    long double base = static_cast<long double>(m_config.baseDouble());
+    long double baseFactor = internal_baseFactor(base, yMin);
+    Log_N_Debug4("baseFactor(" << yMin << ")=" << baseFactor);
     long double result = 0.0;
     for (int i = 0; i < count; ++i) {
         long double d = static_cast<long double>(digits[i]);
+        If_Log_Showing_Debug4(
+            Log_N_Debug4(
+                "i=" << i << ",d=" << d << ",result+=d x baseFactor(" << baseFactor << ")"
+            );
+        );
         result += d*baseFactor;
+        baseFactor *= base;
     }
+    Log_N_Debug2_T("result=" << result);
     return result;
 }
 
@@ -1855,8 +1907,8 @@ mdn::PrecisionStatus mdn::Mdn2dBase::locked_checkPrecisionWindow(const Coord& xy
 }
 
 
-long double mdn::Mdn2dBase::internal_baseFactor(int orderOfMagnitude) const {
-    long double base = m_config.baseDouble();
+long double mdn::Mdn2dBase::internal_baseFactor(long double base, int orderOfMagnitude) const {
+    // long double base = m_config.baseDouble();
     long double result = 1.0;
     if (orderOfMagnitude == 0) {
         return result;

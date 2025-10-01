@@ -216,7 +216,9 @@ void mdn::gui::OperationStrip::reset() {
 
 
 void mdn::gui::OperationStrip::enterActiveDivisionVisual() {
+    Log_Debug3_H("m_activeDivision=" << m_activeDivision);
     if (m_activeDivision) {
+        Log_Debug3_T("Already there");
         return;
     }
     m_activeDivision = true;
@@ -226,17 +228,21 @@ void mdn::gui::OperationStrip::enterActiveDivisionVisual() {
 
     // soft amber
     m_btnDiv->setStyleSheet("QToolButton { background: rgba(255, 215, 0, 0.25); }");
+    Log_Debug3_T("");
 }
 
 
 void mdn::gui::OperationStrip::leaveActiveDivisionVisual() {
+    Log_Debug3_H("m_activeDivision=" << m_activeDivision);
     if (!m_activeDivision) {
+        Log_Debug3_T("already done");
         return;
     }
     m_activeDivision = false;
 
     // back to theme defaults
     m_btnDiv->setStyleSheet(QString());
+    Log_Debug3_T("");
 }
 
 
@@ -290,6 +296,7 @@ void mdn::gui::OperationStrip::setOthersDisabledExcept(Operation op) {
 
 
 void mdn::gui::OperationStrip::onDiv() {
+    Log_Debug3_H("m_activeDivision=" << m_activeDivision);
     if (m_activeDivision) {
         Log_Debug3("emit divisionIterateClicked()");
         emit divisionIterateClicked();
@@ -297,10 +304,12 @@ void mdn::gui::OperationStrip::onDiv() {
         Log_Debug3("emit operationClicked(Divide)");
         emit operationClicked(Operation::Divide);
     }
+    Log_Debug3_T("");
 }
 
 
 void mdn::gui::OperationStrip::onCancel() {
+    Log_Debug3_H("m_activeDivision=" << m_activeDivision);
     if (m_activeDivision) {
         Log_Debug3("emit divisionStopRequested()");
         emit divisionStopRequested();
@@ -308,4 +317,5 @@ void mdn::gui::OperationStrip::onCancel() {
         Log_Debug3("emit cancelClicked()");
         emit cancelClicked();
     }
+    Log_Debug3_T("");
 }

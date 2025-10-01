@@ -410,7 +410,7 @@ bool mdn::gui::MainWindow::onNewMdn2d() {
     Log_Debug3_H("");
     int idx = -1;
     if (m_project) {
-        idx = m_project->activeIndex();
+        idx = m_project->activeIndex()+1;
     }
     bool result = onNewNamedMdn2d("", idx);
     Log_Debug3_T("result=" << result);
@@ -959,8 +959,10 @@ void mdn::gui::MainWindow::onOpsPlan(const OperationPlan& p) {
 
 
 void mdn::gui::MainWindow::onDivisionIterateRequested() {
+    Log_Debug3_H("");
     if (!m_ad_operandA) {
         Log_Warn("Out-of-sequence division iteration request");
+        Log_Debug3_T("");
         return;
     }
     static_cast<void>(
@@ -973,6 +975,11 @@ void mdn::gui::MainWindow::onDivisionIterateRequested() {
             m_globalConfig.fraxis()
         )
     );
+    Log_Debug3("m_ad_remMag=" << m_ad_remMag);
+    if (m_ad_remMag == 0) {
+        onDivisionStopRequested();
+    }
+    Log_Debug3_T("");
 }
 
 
@@ -1266,7 +1273,7 @@ void mdn::gui::MainWindow::slotSelectNextTab()
     int maxIndex = count - 1 - (m_plusTab ? 1 : 0);
     if (idx < maxIndex) {
         int activeIndex = idx + 1;
-        m_tabWidget->setCurrentIndex(idx + 1);
+        m_tabWidget->setCurrentSelectedIndex(idx + 1);
         focusActiveGrid();
         if (m_project) {
             m_project->setActiveMdn(activeIndex);
@@ -1286,7 +1293,7 @@ void mdn::gui::MainWindow::slotSelectPrevTab()
     const int idx = m_tabWidget->currentIndex();
     if (idx - 1 >= 0) {
         int activeIndex = idx - 1;
-        m_tabWidget->setCurrentIndex(activeIndex);
+        m_tabWidget->setCurrentSelectedIndex(activeIndex);
         focusActiveGrid();
         if (m_project) {
             m_project->setActiveMdn(activeIndex);
@@ -1311,7 +1318,7 @@ void mdn::gui::MainWindow::slotMoveTabRight()
         QTabBar* bar = m_tabWidget->tabBar();
         int activeIndex = idx + 1;
         bar->moveTab(idx, activeIndex);
-        m_tabWidget->setCurrentIndex(activeIndex);
+        m_tabWidget->setCurrentSelectedIndex(activeIndex);
         focusActiveGrid();
         if (m_project) {
             m_project->setActiveMdn(activeIndex);
@@ -1333,7 +1340,7 @@ void mdn::gui::MainWindow::slotMoveTabLeft()
         QTabBar* bar = m_tabWidget->tabBar();
         int activeIndex = idx - 1;
         bar->moveTab(idx, activeIndex);
-        m_tabWidget->setCurrentIndex(activeIndex);
+        m_tabWidget->setCurrentSelectedIndex(activeIndex);
         focusActiveGrid();
         if (m_project) {
             m_project->setActiveMdn(activeIndex);
@@ -2969,7 +2976,7 @@ void mdn::gui::MainWindow::divide(const OperationPlan& p, Mdn2d& a, Mdn2d& b) {
     }
     if (p.indexRem >= 0) {
         Log_Debug3("Getting remainder " << p.indexRem);
-        destPtr = m_project->getMdn(p.indexRem);
+        remPtr = m_project->getMdn(p.indexRem);
     } else {
         Log_Debug3("Getting remainder " << p.indexRem);
         std::string pRemNameStr = p.newRemName.toStdString();
@@ -2992,6 +2999,7 @@ void mdn::gui::MainWindow::divide(const OperationPlan& p, Mdn2d& a, Mdn2d& b) {
     CoordSet changed = a.divideIterate(10, b, dest, rem, remMag, m_globalConfig.fraxis());
     Log_Debug3_T("divideIterate return");
     if (remMag > 0.0) {
+        Log_Debug4("remMag non-zero:" << remMag);
         m_ops->enterActiveDivision();
         m_ad_operandA = &a;
         m_ad_operandB = &b;
@@ -3000,11 +3008,12 @@ void mdn::gui::MainWindow::divide(const OperationPlan& p, Mdn2d& a, Mdn2d& b) {
         m_ad_remMag = remMag;
         showStatus(tr("Division underway - press [÷] to continue, or [Cancel]"), 0);
     } else {
+        Log_Debug4("remMag is zero");
+        clearStatus();
         showStatus(tr("Calculation complete"), 2000);
     }
     syncTabsToProject();
     setActiveTab(p.indexA);
-    clearStatus();
     Log_Debug2_T("");
     return;
 }

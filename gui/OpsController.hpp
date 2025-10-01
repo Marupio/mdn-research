@@ -118,8 +118,6 @@ private:
     //      * -1    :   new tab (create a new tab for this), not valid for m_a or m_b
     //      * -2    :   not set
     int m_a { -2 }, m_b { -2 }, m_rem { -2 }, m_dest { -2 };
-    // Bugfix hack - next plus tab click gets ignored when true
-    bool m_ignoreNextPlusTab {false};
 
     QMenu* m_menuOps{nullptr};
 

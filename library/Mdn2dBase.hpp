@@ -60,7 +60,7 @@ protected:
 
     // Addressing
     //  m_xIndex[x value] = CoordSet of non-zeroes in this column
-    //  m_yIdnex[y value] = Coordset of non-zeroes in this row
+    //  m_yIndex[y value] = Coordset of non-zeroes in this row
     mutable std::map<int, CoordSet> m_xIndex;
     mutable std::map<int, CoordSet> m_yIndex;
 
@@ -207,9 +207,13 @@ public:
             Digit getValue(const Coord& xy) const;
             protected: Digit locked_getValue(const Coord& xy) const; public:
 
-            // Get overall value - arbitrary rule - sum all row magnitudes
+            // Get overall value - sum all row signed values
             long double getTotalValue() const;
             protected: long double locked_getTotalValue() const; public:
+
+            // Get overall value - sum all row absolute magnitudes
+            long double getTotalMagnitude() const;
+            protected: long double locked_getTotalMagnitude() const; public:
 
 
         // *** Row Getters
@@ -487,7 +491,7 @@ public:
 
             protected:
                 // Helper - given a order of magnitude, returns base^orderOfMagnitude
-                long double internal_baseFactor(int orderOfMagnitude) const;
+                long double internal_baseFactor(long double base, int orderOfMagnitude) const;
             public:
 
             // Use when the data has changed, but operation may not yet be complete
