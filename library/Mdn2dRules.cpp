@@ -11,7 +11,7 @@
 #include "MdnException.hpp"
 #include "Tools.hpp"
 
-constexpr int maxCarryoverIters = 20;
+constexpr int maxCarryoverIters = 200;
 
 mdn::Carryover mdn::Mdn2dRules::static_checkCarryover(Digit p, Digit x, Digit y, Digit base) {
     Log_Debug4_H("");

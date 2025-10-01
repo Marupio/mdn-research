@@ -2,6 +2,7 @@
 
 #include <QAction>
 #include <QApplication>
+#include <QCloseEvent>
 #include <QEvent>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -996,6 +997,12 @@ void mdn::gui::MainWindow::onDivisionIterateRequested() {
     if (m_ad_remMag == 0) {
         onDivisionStopRequested();
     }
+    if (m_project) {
+        int activeIndex = m_project->activeIndex();
+        if (auto* ndw = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(activeIndex))) {
+            ndw->update();
+        }
+    }
     Log_Debug3_T("");
 }
 
@@ -1475,8 +1482,7 @@ bool mdn::gui::MainWindow::eventFilter(QObject* watched, QEvent* event) {
 }
 
 
-void mdn::gui::MainWindow::changeEvent(QEvent* e)
-{
+void mdn::gui::MainWindow::changeEvent(QEvent* e) {
     Log_Debug3_H("");
 
     if (!m_splitter)
@@ -1504,6 +1510,18 @@ void mdn::gui::MainWindow::changeEvent(QEvent* e)
 
     Log_Debug3_T("");
     QMainWindow::changeEvent(e);
+}
+
+
+void mdn::gui::MainWindow::closeEvent(QCloseEvent* e) {
+    // Ask to save before quitting the app
+    if (!confirmedCloseProject(true)) {
+        // user hit Cancel or save failed
+        e->ignore();
+        return;
+    }
+    // proceed with normal teardown
+    QMainWindow::closeEvent(e);
 }
 
 
@@ -2986,9 +3004,11 @@ void mdn::gui::MainWindow::divide(const OperationPlan& p, Mdn2d& a, Mdn2d& b) {
     Log_Debug2_H("p=" << p << ", a=[" << a.name() << "],b=[" << b.name() << "]");
     Mdn2d* destPtr(nullptr);
     Mdn2d* remPtr(nullptr);
+    int answerIndex;
     if (p.indexDest >= 0) {
         Log_Debug3("Getting destination " << p.indexDest);
         destPtr = m_project->getMdn(p.indexDest);
+        answerIndex = p.indexDest;
     } else {
         std::string pNameStr = p.newName.toStdString();
         Log_Debug3("Creating new destination [" << pNameStr << "]");
@@ -2996,6 +3016,7 @@ void mdn::gui::MainWindow::divide(const OperationPlan& p, Mdn2d& a, Mdn2d& b) {
         int destIndex = m_project->activeIndex() + 1;
         m_project->insertMdn(std::move(newDest), destIndex);
         destPtr = m_project->getMdn(destIndex);
+        answerIndex = destIndex;
     }
     if (p.indexRem >= 0) {
         Log_Debug3("Getting remainder " << p.indexRem);
@@ -3008,6 +3029,11 @@ void mdn::gui::MainWindow::divide(const OperationPlan& p, Mdn2d& a, Mdn2d& b) {
         int remIndex = m_project->activeIndex() + 1;
         m_project->insertMdn(std::move(newRem), remIndex);
         remPtr = m_project->getMdn(remIndex);
+    }
+    // Set activeIndex to answer
+    if (m_project && m_tabWidget) {
+        m_project->setActiveMdn(answerIndex);
+        m_tabWidget->setCurrentSelectedIndex(answerIndex);
     }
 
     Mdn2d& dest = *destPtr;
@@ -3037,6 +3063,12 @@ void mdn::gui::MainWindow::divide(const OperationPlan& p, Mdn2d& a, Mdn2d& b) {
     }
     syncTabsToProject();
     setActiveTab(p.indexA);
+    if (m_project) {
+        int activeIndex = m_project->activeIndex();
+        if (auto* ndw = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(activeIndex))) {
+            ndw->update();
+        }
+    }
     Log_Debug2_T("");
     return;
 }
