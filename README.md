@@ -10,6 +10,7 @@ A research project into **Multi-Dimensional Numbers**.  Includes three main comp
 ## Documentation
 
 - [Overview](gui/help/overview.md) — *What are Multi-Dimensional Numbers?*
+- [Installation Guide](gui/help/install.md) - *How to install the application*
 - [User’s Guide](gui/help/guide.md) — *How to use the application*
 
 ---
