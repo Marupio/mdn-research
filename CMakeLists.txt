@@ -68,9 +68,25 @@ else(Logs)
 endif(Logs)
 
 
-# Top-level CMakeLists.txt
+# --- Projects ---
+add_subdirectory(library)   # mdn (SHARED)
 
-# Choose which one to include by commenting out the other
-add_subdirectory(library)   # Builds the MDN library
-add_subdirectory(sandbox)   # Builds the sandbox tester
-add_subdirectory(gui)       # Builds the GUI application
+# Make sandbox/test apps opt-in. They are excluded from ALL even when present.
+option(BUILD_SANDBOX "Build sandbox/test helper apps" OFF)
+if(BUILD_SANDBOX)
+    add_subdirectory(sandbox EXCLUDE_FROM_ALL)
+else()
+    # Still add to permit IDE discovery, but never in default ALL.
+    add_subdirectory(sandbox EXCLUDE_FROM_ALL)
+endif()
+
+add_subdirectory(gui)       # mdn_gui (EXE)
+
+# add_subdirectory(library)   # Builds the MDN library
+# add_subdirectory(sandbox)   # Builds the sandbox tester
+# add_subdirectory(gui)       # Builds the GUI application
+# --- Bundle target: build only the shared library and the GUI ---
+add_custom_target(bundle
+    DEPENDS mdn mdn_gui
+    COMMENT "Build MDN shared library (mdn) and GUI (mdn_gui) only"
+)
