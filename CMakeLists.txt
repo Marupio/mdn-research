@@ -1,6 +1,24 @@
 cmake_minimum_required(VERSION 3.16)
 project(MDN_Tools VERSION 1.0.0)
 
+execute_process(
+    COMMAND git describe --tags --always
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    RESULT_VARIABLE GIT_DESCRIBE_OK
+    OUTPUT_VARIABLE GIT_DESCRIBE
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+if(GIT_DESCRIBE_OK EQUAL 0)
+    set(MDN_VERSION_STRING "${GIT_DESCRIBE}")
+else()
+    set(MDN_VERSION_STRING "${PROJECT_VERSION}")
+endif()
+
+
+# A place to drop packaged artefacts
+set(MDN_DIST_DIR "${CMAKE_BINARY_DIR}/dist")
+file(MAKE_DIRECTORY "${MDN_DIST_DIR}")
+
 file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/generated")
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in
                ${PROJECT_BINARY_DIR}/generated/mdn_config.h @ONLY)
@@ -29,12 +47,16 @@ add_compile_definitions($<$<CONFIG:Debug>:MDN_DEBUG>)
 
 # GLOBAL (applies to all targets)
 add_compile_options(
-  $<$<AND:$<NOT:$<CXX_COMPILER_ID:MSVC>>,$<CONFIG:Debug>>:-g>           # GCC/Clang Debug => -g
-  $<$<CXX_COMPILER_ID:MSVC>:/utf-8>                                     # nice to have on MSVC always
-  $<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/Zi>                 # MSVC Debug => PDB info
+  # GCC/Clang Debug => -g
+  $<$<AND:$<NOT:$<CXX_COMPILER_ID:MSVC>>,$<CONFIG:Debug>>:-g>
+  # nice to have on MSVC always
+  $<$<CXX_COMPILER_ID:MSVC>:/utf-8>
+  # MSVC Debug => PDB info
+  $<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/Zi>
 )
 add_link_options(
-  $<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/DEBUG>              # MSVC link: emit PDB
+  # MSVC link: emit PDB
+  $<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/DEBUG>
 )
 
 # Set default build type if not specified
