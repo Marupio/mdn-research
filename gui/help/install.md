@@ -1,13 +1,31 @@
 ## Installation Guide
 
-I haven't wrapped this up as pre-packaged binaries yet.  I haven't created a windows installer.  At this point, your only option is to _build from source_.
-
-This application should build on **all platforms**.  I have tested it on:
+_Version 1.0.0_ has been released.  I have finally produced a precompiled _install package_ for **Windows**.  You can also _build from source_.  This application should build on **all platforms**.  I have tested it on:
 
 * _Windows 11 Home Edition_, and
 * _Linux: Ubuntu 24.04 LTS (Noble Numbat)_,
 
 but it _should_ be possible to install it on others.
+
+## Installation Packages
+
+### Windows
+
+**➜ [Download the latest Windows build (ZIP)](https://github.com/Marupio/mdn-research/releases/latest)**
+
+If you prefer a specific version, grab it from the Releases page. For example:
+
+- **v1.0.0 (Windows ZIP):**
+  https://github.com/Marupio/mdn-research/releases/download/v1.0.0/MDN-v1.0.0-win64-Release.zip
+
+**How to run:**
+1. Unzip the file anywhere (e.g., `C:\Apps\MDN`).
+2. Double-click `mdn_gui.exe`. (Windows may warn about an unknown publisher—expected for an unsigned build.)
+3. Optional: verify the SHA-256 checksum listed on the Release page.
+
+## Build From Source
+
+This is FOSS.  It is possible to build from source on nearly any platform.
 
 ### Prerequisites
 

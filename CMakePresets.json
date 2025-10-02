@@ -30,7 +30,14 @@
         "CMAKE_CXX_FLAGS_DEBUG": "",
         "CMAKE_PREFIX_PATH": "C:/Qt/6.9.1/msvc2022_64",
         "Qt6_DIR": "C:/Qt/6.9.1/msvc2022_64/lib/cmake/Qt6",
-        "Logs": "OFF"
+        "Logs": "OFF",
+        "MDN_BUNDLE_WITH_SVG":       "OFF",
+        "MDN_BUNDLE_WITH_NETWORK":   "OFF",
+        "MDN_BUNDLE_WITH_GIF":       "OFF",
+        "MDN_BUNDLE_WITH_TOUCH":     "OFF",
+        "MDN_BUNDLE_WITH_MODERNUI":  "OFF",
+        "MDN_BUNDLE_WITH_DX_RHI":    "OFF",
+        "MDN_BUNDLE_WITH_SW_OPENGL": "ON"
       }
     }
   ]
