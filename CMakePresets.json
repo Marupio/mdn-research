@@ -24,6 +24,24 @@
       "hidden": false,
       "generator": "Ninja",
       "cacheVariables": {
+        "MDN_BUNDLING": "ON",
+        "IS_VSCODE_BUILD_BOOL": "ON",
+        "CMAKE_C_COMPILER": "cl",
+        "CMAKE_CXX_COMPILER": "cl",
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_FLAGS_DEBUG": "",
+        "CMAKE_PREFIX_PATH": "C:/Qt/6.9.1/msvc2022_64",
+        "Qt6_DIR": "C:/Qt/6.9.1/msvc2022_64/lib/cmake/Qt6",
+        "Logs": "OFF"
+      }
+    },
+    {
+      "name": "bundle",
+      "hidden": false,
+      "generator": "Ninja",
+      "cacheVariables": {
+        "MDN_BUNDLING": "ON",
+        "IS_VSCODE_BUILD_BOOL": "OFF",
         "CMAKE_C_COMPILER": "cl",
         "CMAKE_CXX_COMPILER": "cl",
         "CMAKE_BUILD_TYPE": "Release",

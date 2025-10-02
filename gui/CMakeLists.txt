@@ -63,7 +63,7 @@ target_link_libraries(mdn PUBLIC mdn_config)
 target_link_libraries(guiTest PRIVATE ${QT_LIBS} mdn)
 target_include_directories(guiTest PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}" "../library")
 
-if(IS_VSCODE_BUILD_BOOL)
+if(IS_VSCODE_BUILD_BOOL AND NOT MDN_BUNDLING)
     message(STATUS "Adding command to copy Qt DLLs and library for VS Code build")
     # Use --debug for Debug, --release otherwise
     add_custom_command(TARGET mdn_gui POST_BUILD
@@ -81,16 +81,26 @@ if(IS_VSCODE_BUILD_BOOL)
 endif()
 
 # ---- Bundle feature toggles (Windows) ----
-option(MDN_BUNDLE_WITH_SVG       "Bundle Qt SVG support (Qt6Svg.dll, qsvg*.dll)"              OFF)
-option(MDN_BUNDLE_WITH_NETWORK   "Bundle Qt Network (Qt6Network.dll, TLS backends, qNLM)"     OFF)
-option(MDN_BUNDLE_WITH_GIF       "Bundle GIF image plugin (qgif.dll)"                          OFF)
-option(MDN_BUNDLE_WITH_TOUCH     "Bundle TUIO/Touch generic plugin (qtuiotouchplugin.dll)"     OFF)
-option(MDN_BUNDLE_WITH_MODERNUI  "Bundle qmodernwindowsstyle.dll style plugin"                 OFF)
-option(MDN_BUNDLE_WITH_DX_RHI    "Bundle dxcompiler.dll/dxil.dll (D3D12 shader compiler)"      OFF)
+option(MDN_BUNDLING             "Building a distributable bundle"                               OFF)
+option(MDN_BUNDLE_WITH_SVG      "Bundle Qt SVG support (Qt6Svg.dll, qsvg*.dll)"                 OFF)
+option(MDN_BUNDLE_WITH_NETWORK  "Bundle Qt Network (Qt6Network.dll, TLS backends, qNLM)"        OFF)
+option(MDN_BUNDLE_WITH_GIF      "Bundle GIF image plugin (qgif.dll)"                            OFF)
+option(MDN_BUNDLE_WITH_TOUCH    "Bundle TUIO/Touch generic plugin (qtuiotouchplugin.dll)"       OFF)
+option(MDN_BUNDLE_WITH_MODERNUI "Bundle qmodernwindowsstyle.dll style plugin"                   OFF)
+option(MDN_BUNDLE_WITH_DX_RHI   "Bundle dxcompiler.dll/dxil.dll (D3D12 shader compiler)"        OFF)
 # usually ON
-option(MDN_BUNDLE_WITH_SW_OPENGL "Bundle opengl32sw.dll software fall-back renderer"           ON)
+option(MDN_BUNDLE_WITH_SW_OPENGL "Bundle opengl32sw.dll software fall-back renderer"            ON)
 # usually OFF for fully portable
-option(MDN_BUNDLE_INCLUDE_VCREDIST "Include vc_redist.x64.exe in bundle"                       OFF)
+option(MDN_BUNDLE_INCLUDE_VCREDIST "Include vc_redist.x64.exe in bundle"                        OFF)
+
+message(STATUS "MDN bundling: ${MDN_BUNDLING}, with trims:")
+message(STATUS " -> SVG=${MDN_BUNDLE_WITH_SVG}")
+message(STATUS " -> NET=${MDN_BUNDLE_WITH_NETWORK}")
+message(STATUS " -> GIF=${MDN_BUNDLE_WITH_GIF}")
+message(STATUS " -> TOUCH=${MDN_BUNDLE_WITH_TOUCH}")
+message(STATUS " -> MODUI=${MDN_BUNDLE_WITH_MODERNUI}")
+message(STATUS " -> DX=${MDN_BUNDLE_WITH_DX_RHI}")
+message(STATUS " -> SWGL=${MDN_BUNDLE_WITH_SW_OPENGL}")
 
 # --- Windows-only bundle target (portable zip) ---
 if(WIN32)
@@ -120,55 +130,105 @@ if(WIN32)
     # ---- Generate helper scripts at configure time ----
     file(WRITE "${MDN_CMAKE_HELPER_DIR}/trim_svg.cmake" [=[
 if(NOT MDN_BUNDLE_WITH_SVG)
-  file(REMOVE
-    "${BUNDLE_DIR}/Qt6Svg.dll"
-    "${BUNDLE_DIR}/qsvg.dll"
-    "${BUNDLE_DIR}/qsvgicon.dll"
-  )
+    set(_candidates
+        "${BUNDLE_DIR}/Qt6Svg.dll"
+        "${BUNDLE_DIR}/imageformats/qsvg.dll"
+        "${BUNDLE_DIR}/iconengines/qsvgicon.dll"
+    )
+    foreach(f IN LISTS _candidates)
+        if(EXISTS "${f}")
+            message(STATUS "Trim: removing ${f}")
+            file(REMOVE "${f}")
+        endif()
+    endforeach()
 endif()
 ]=])
 
     file(WRITE "${MDN_CMAKE_HELPER_DIR}/trim_network.cmake" [=[
 if(NOT MDN_BUNDLE_WITH_NETWORK)
-  file(REMOVE
-    "${BUNDLE_DIR}/Qt6Network.dll"
-    "${BUNDLE_DIR}/qnetworklistmanager.dll"
-    "${BUNDLE_DIR}/qcertonlybackend.dll"
-    "${BUNDLE_DIR}/qschannelbackend.dll"
-  )
+    set(_candidates
+        "${BUNDLE_DIR}/Qt6Network.dll"
+        "${BUNDLE_DIR}/networkinformation/qnetworklistmanager.dll"
+        "${BUNDLE_DIR}/tls/qcertonlybackend.dll"
+        "${BUNDLE_DIR}/tls/qschannelbackend.dll"
+    )
+    foreach(f IN LISTS _candidates)
+        if(EXISTS "${f}")
+            message(STATUS "Trim: removing ${f}")
+            file(REMOVE "${f}")
+        endif()
+    endforeach()
 endif()
 ]=])
 
     file(WRITE "${MDN_CMAKE_HELPER_DIR}/trim_gif.cmake" [=[
 if(NOT MDN_BUNDLE_WITH_GIF)
-  file(REMOVE "${BUNDLE_DIR}/qgif.dll")
+    set(_candidates
+        "${BUNDLE_DIR}/imageformats/qgif.dll"
+    )
+    foreach(f IN LISTS _candidates)
+        if(EXISTS "${f}")
+            message(STATUS "Trim: removing ${f}")
+            file(REMOVE "${f}")
+        endif()
+    endforeach()
 endif()
 ]=])
 
     file(WRITE "${MDN_CMAKE_HELPER_DIR}/trim_touch.cmake" [=[
 if(NOT MDN_BUNDLE_WITH_TOUCH)
-  file(REMOVE "${BUNDLE_DIR}/qtuiotouchplugin.dll")
+    set(_candidates
+        "${BUNDLE_DIR}/generic/qtuiotouchplugin.dll"
+    )
+    foreach(f IN LISTS _candidates)
+        if(EXISTS "${f}")
+            message(STATUS "Trim: removing ${f}")
+            file(REMOVE "${f}")
+        endif()
+    endforeach()
 endif()
 ]=])
 
     file(WRITE "${MDN_CMAKE_HELPER_DIR}/trim_modernui.cmake" [=[
 if(NOT MDN_BUNDLE_WITH_MODERNUI)
-  file(REMOVE "${BUNDLE_DIR}/qmodernwindowsstyle.dll")
+    set(_candidates
+        "${BUNDLE_DIR}/styles/qmodernwindowsstyle.dll"
+    )
+    foreach(f IN LISTS _candidates)
+        if(EXISTS "${f}")
+            message(STATUS "Trim: removing ${f}")
+            file(REMOVE "${f}")
+        endif()
+    endforeach()
 endif()
 ]=])
 
     file(WRITE "${MDN_CMAKE_HELPER_DIR}/trim_dx.cmake" [=[
 if(NOT MDN_BUNDLE_WITH_DX_RHI)
-  file(REMOVE
-    "${BUNDLE_DIR}/dxcompiler.dll"
-    "${BUNDLE_DIR}/dxil.dll"
-  )
+    set(_candidates
+        "${BUNDLE_DIR}/dxcompiler.dll"
+        "${BUNDLE_DIR}/dxil.dll"
+    )
+    foreach(f IN LISTS _candidates)
+        if(EXISTS "${f}")
+            message(STATUS "Trim: removing ${f}")
+            file(REMOVE "${f}")
+        endif()
+    endforeach()
 endif()
 ]=])
 
     file(WRITE "${MDN_CMAKE_HELPER_DIR}/trim_swgl.cmake" [=[
 if(NOT MDN_BUNDLE_WITH_SW_OPENGL)
-  file(REMOVE "${BUNDLE_DIR}/opengl32sw.dll")
+    set(_candidates
+        "${BUNDLE_DIR}/opengl32sw.dll"
+    )
+    foreach(f IN LISTS _candidates)
+        if(EXISTS "${f}")
+            message(STATUS "Trim: removing ${f}")
+            file(REMOVE "${f}")
+        endif()
+    endforeach()
 endif()
 ]=])
 
