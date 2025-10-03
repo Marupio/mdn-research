@@ -447,6 +447,25 @@ bool mdn::gui::MainWindow::onNewNamedMdn2d(QString name, int index) {
 
 bool mdn::gui::MainWindow::onSaveProject() {
     Log_Debug2_H("");
+    if (m_globalConfig.parentPath().empty()) {
+        Log_Debug3("Not previously saved, reverting to onSaveProjectAs...");
+        return onSaveProjectAs();
+    }
+
+    const QString name = QString::fromStdString(m_project->name());
+    const QString basePath = QString::fromStdString(m_project->path());
+
+    // Joins with exactly one separator and normalizes "." / ".."
+    const QString fullPath = QDir(basePath).filePath(name);
+    const QString fullPathNative = QDir::toNativeSeparators(fullPath);
+    bool result = saveProjectToPath(fullPathNative);
+    Log_Debug2_T("result=" << result);
+    return result;
+}
+
+
+bool mdn::gui::MainWindow::onSaveProjectAs() {
+    Log_Debug2_H("");
     if (!m_project) {
         Log_WarnQ("No project open, cannot save");
         Log_Debug2_T("");
@@ -475,6 +494,13 @@ bool mdn::gui::MainWindow::onSaveProject() {
         return false;
     }
 
+    bool result = saveProjectToPath(path);
+    Log_Debug2_T("result=" << result);
+    return result;
+}
+
+
+bool mdn::gui::MainWindow::saveProjectToPath(const QString& path) {
     bool ok = m_project->saveToFile(path.toStdString());
     if (!ok) {
         QMessageBox::warning(
@@ -492,8 +518,13 @@ bool mdn::gui::MainWindow::onSaveProject() {
     QString baseName = info.baseName();
 
     // Pass to project
-    m_project->setPath(folder.toStdString());
-    m_project->setName(baseName.toStdString());
+    std::string parentPath = folder.toStdString();
+    std::string parentName = baseName.toStdString();
+    m_project->setPath(parentPath);
+    m_project->setName(parentName);
+    m_globalConfig.setParentPath(parentPath);
+    m_globalConfig.setParentName(parentPath);
+
     setWindowTitle(baseName);
     showStatus(tr("Project saved"), 2000);
     Log_Debug2_T("ok")
@@ -1557,6 +1588,7 @@ void mdn::gui::MainWindow::createMenus() {
     fileMenu->addAction("&New Project", this, &mdn::gui::MainWindow::onNewProject);
     fileMenu->addAction("&Open Project", this, &mdn::gui::MainWindow::onOpenProject);
     fileMenu->addAction("&Save Project", this, &mdn::gui::MainWindow::onSaveProject);
+    fileMenu->addAction("&Save Project As...", this, &mdn::gui::MainWindow::onSaveProjectAs);
     fileMenu->addAction("&Close Project", this, &mdn::gui::MainWindow::onCloseProject);
     fileMenu->addSeparator();
     fileMenu->addAction("New Mdn2d", this, &mdn::gui::MainWindow::onNewMdn2d);

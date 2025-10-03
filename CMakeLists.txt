@@ -112,3 +112,36 @@ add_custom_target(bundle
     DEPENDS mdn mdn_gui
     COMMENT "Build MDN shared library (mdn) and GUI (mdn_gui) only"
 )
+
+# # ---- choose a FHS-friendly install prefix on Linux ----
+# if(UNIX AND NOT APPLE)
+#   # let packagers override, but default to /usr (Debian policy)
+#   if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+#     set(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "Install prefix" FORCE)
+#   endif()
+# endif()
+#
+# # ---- install your binaries ----
+# install(TARGETS mdn_gui
+#   RUNTIME DESTINATION bin
+# )
+# install(TARGETS mdn
+#   LIBRARY DESTINATION lib
+#   ARCHIVE DESTINATION lib
+#   RUNTIME DESTINATION bin # if mdn.dll-equivalent produces a runtime on Linux, usually not
+# )
+#
+# # ---- (optional) install shared data/help/resources ----
+# # install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/resources/ DESTINATION share/mdn)
+#
+# # ---- desktop integration (icon + .desktop entry) ----
+# # Put an app icon at: misc/icons/mdn.png (256x256 recommended)
+# install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/misc/icons/mdn.png
+#         DESTINATION share/icons/hicolor/256x256/apps)
+#
+# # Template at misc/mdn.desktop.in
+# configure_file(${CMAKE_CURRENT_SOURCE_DIR}/misc/mdn.desktop.in
+#                ${CMAKE_CURRENT_BINARY_DIR}/mdn.desktop @ONLY)
+# install(FILES ${CMAKE_CURRENT_BINARY_DIR}/mdn.desktop
+#         DESTINATION share/applications)
+#
