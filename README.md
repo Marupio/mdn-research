@@ -3,7 +3,7 @@
 A research project into **Multi-Dimensional Numbers**.  Includes three main components:
 * **library:** a _thread-safe_, _HPC-ready_ numerical library.
 * **gui:** a _QT-based_ graphical user interface for experimenting with **MDNs**.
-
+* **"sandbox"** an application library with various test apps, part of the dev process.
 
 ---
 

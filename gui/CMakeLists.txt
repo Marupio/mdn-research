@@ -115,17 +115,52 @@ if(WIN32)
     endif()
 
     if(NOT WINDEPLOYQT)
-        message(FATAL_ERROR "Could not find windeployqt(.exe). Ensure Qt is installed and in PATH or set Qt*_DIR.")
+        message(FATAL_ERROR
+            "Could not find windeployqt(.exe). Ensure Qt is installed and in PATH or set Qt*_DIR."
+        )
     endif()
 
-    # Bundle staging directory: one folder per config (Debug/Release)
-    set(BUNDLE_DIR "${CMAKE_BINARY_DIR}/MDN-${MDN_VERSION_STRING}-win64-$<CONFIG>")
-    set(BUNDLE_NAME "MDN-${MDN_VERSION_STRING}-win64-$<CONFIG>")
+    # Handle single-config (Ninja) and multi-config (VS) generators
+    set(MDN_CFG "$<IF:$<BOOL:$<CONFIG>>,$<CONFIG>,${CMAKE_BUILD_TYPE}>")
+
+    # Stage into a dedicated folder named with the cfg
+    set(BUNDLE_DIR   "${CMAKE_BINARY_DIR}/MDN-${MDN_VERSION_STRING}-win64-${MDN_CFG}")
+    set(BUNDLE_NAME  "MDN-${MDN_VERSION_STRING}-win64-${MDN_CFG}")
     set(BUNDLE_OUT_ZIP "${MDN_DIST_DIR}/${BUNDLE_NAME}.zip")
 
     # Where we keep tiny helper scripts for bundling
     set(MDN_CMAKE_HELPER_DIR "${CMAKE_CURRENT_BINARY_DIR}/cmake")
     file(MAKE_DIRECTORY "${MDN_CMAKE_HELPER_DIR}")
+
+    # --- DIAGNOSTIC: probe what files exist in BUNDLE_DIR right before trim ---
+    file(WRITE "${MDN_CMAKE_HELPER_DIR}/diag_exists.cmake" [=[
+message(STATUS "diag_exists: BUNDLE_DIR='${BUNDLE_DIR}'")
+# list a few expected files & plugin locations
+set(_probe
+  "${BUNDLE_DIR}/Qt6Network.dll"
+  "${BUNDLE_DIR}/Qt6Svg.dll"
+  "${BUNDLE_DIR}/imageformats/qsvg.dll"
+  "${BUNDLE_DIR}/iconengines/qsvgicon.dll"
+  "${BUNDLE_DIR}/networkinformation/qnetworklistmanager.dll"
+  "${BUNDLE_DIR}/tls/qcertonlybackend.dll"
+  "${BUNDLE_DIR}/tls/qschannelbackend.dll"
+  "${BUNDLE_DIR}/styles/qmodernwindowsstyle.dll"
+  "${BUNDLE_DIR}/generic/qtuiotouchplugin.dll"
+  "${BUNDLE_DIR}/imageformats/qgif.dll"
+  "${BUNDLE_DIR}/dxcompiler.dll"
+  "${BUNDLE_DIR}/dxil.dll"
+  "${BUNDLE_DIR}/opengl32sw.dll"
+  "${BUNDLE_DIR}/vc_redist.x64.exe"
+)
+foreach(f IN LISTS _probe)
+  if(EXISTS "${f}")
+    message(STATUS "diag_exists: YES  ${f}")
+  else()
+    message(STATUS "diag_exists: NO   ${f}")
+  endif()
+endforeach()
+    ]=])
+
 
     # ---- Generate helper scripts at configure time ----
     file(WRITE "${MDN_CMAKE_HELPER_DIR}/trim_svg.cmake" [=[
@@ -246,6 +281,8 @@ endif()
         COMMAND ${CMAKE_COMMAND} -E rm -rf "${BUNDLE_DIR}"
         COMMAND ${CMAKE_COMMAND} -E make_directory "${BUNDLE_DIR}"
 
+        COMMAND ${CMAKE_COMMAND} -E echo "Bundling into: ${BUNDLE_DIR}"
+
         # 1) Copy the GUI exe
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:mdn_gui>" "${BUNDLE_DIR}/"
 
@@ -260,15 +297,28 @@ endif()
             --dir "${BUNDLE_DIR}"
             "$<TARGET_FILE:mdn_gui>"
 
+        # ---- DIAGNOSTIC: show what exists before trims run ----
+        COMMAND ${CMAKE_COMMAND}
+        -D BUNDLE_DIR="${BUNDLE_DIR}"
+        -P "${MDN_CMAKE_HELPER_DIR}/diag_exists.cmake"
+
         # 4) Trim optional stuff based on toggles (ONE set; pass flags explicitly)
-        COMMAND ${CMAKE_COMMAND} -D BUNDLE_DIR="${BUNDLE_DIR}" -D MDN_BUNDLE_WITH_SVG:BOOL=${MDN_BUNDLE_WITH_SVG}         -P "${MDN_CMAKE_HELPER_DIR}/trim_svg.cmake"
-        COMMAND ${CMAKE_COMMAND} -D BUNDLE_DIR="${BUNDLE_DIR}" -D MDN_BUNDLE_WITH_NETWORK:BOOL=${MDN_BUNDLE_WITH_NETWORK} -P "${MDN_CMAKE_HELPER_DIR}/trim_network.cmake"
-        COMMAND ${CMAKE_COMMAND} -D BUNDLE_DIR="${BUNDLE_DIR}" -D MDN_BUNDLE_WITH_GIF:BOOL=${MDN_BUNDLE_WITH_GIF}         -P "${MDN_CMAKE_HELPER_DIR}/trim_gif.cmake"
-        COMMAND ${CMAKE_COMMAND} -D BUNDLE_DIR="${BUNDLE_DIR}" -D MDN_BUNDLE_WITH_TOUCH:BOOL=${MDN_BUNDLE_WITH_TOUCH}     -P "${MDN_CMAKE_HELPER_DIR}/trim_touch.cmake"
-        COMMAND ${CMAKE_COMMAND} -D BUNDLE_DIR="${BUNDLE_DIR}" -D MDN_BUNDLE_WITH_MODERNUI:BOOL=${MDN_BUNDLE_WITH_MODERNUI} -P "${MDN_CMAKE_HELPER_DIR}/trim_modernui.cmake"
-        COMMAND ${CMAKE_COMMAND} -D BUNDLE_DIR="${BUNDLE_DIR}" -D MDN_BUNDLE_WITH_DX_RHI:BOOL=${MDN_BUNDLE_WITH_DX_RHI}   -P "${MDN_CMAKE_HELPER_DIR}/trim_dx.cmake"
-        COMMAND ${CMAKE_COMMAND} -D BUNDLE_DIR="${BUNDLE_DIR}" -D MDN_BUNDLE_WITH_SW_OPENGL:BOOL=${MDN_BUNDLE_WITH_SW_OPENGL} -P "${MDN_CMAKE_HELPER_DIR}/trim_swgl.cmake"
-        COMMAND ${CMAKE_COMMAND} -D BUNDLE_DIR="${BUNDLE_DIR}" -D MDN_BUNDLE_INCLUDE_VCREDIST:BOOL=${MDN_BUNDLE_INCLUDE_VCREDIST} -D VCREDIST_SRC="${VCREDIST_SRC}" -P "${MDN_CMAKE_HELPER_DIR}/include_vcredist.cmake"
+        COMMAND ${CMAKE_COMMAND} -D BUNDLE_DIR:PATH=${BUNDLE_DIR} -D MDN_BUNDLE_WITH_SVG:BOOL=${MDN_BUNDLE_WITH_SVG} -P "${MDN_CMAKE_HELPER_DIR}/trim_svg.cmake"
+        COMMAND ${CMAKE_COMMAND} -E echo "${CMAKE_COMMAND} -D BUNDLE_DIR=${BUNDLE_DIR} -D MDN_BUNDLE_WITH_SVG:BOOL=${MDN_BUNDLE_WITH_SVG} -P ${MDN_CMAKE_HELPER_DIR}/trim_svg.cmake"
+        COMMAND ${CMAKE_COMMAND} -D BUNDLE_DIR:PATH=${BUNDLE_DIR} -D MDN_BUNDLE_WITH_NETWORK:BOOL=${MDN_BUNDLE_WITH_NETWORK} -P "${MDN_CMAKE_HELPER_DIR}/trim_network.cmake"
+        COMMAND ${CMAKE_COMMAND} -E echo "${CMAKE_COMMAND} -D BUNDLE_DIR=${BUNDLE_DIR} -D MDN_BUNDLE_WITH_NETWORK:BOOL=${MDN_BUNDLE_WITH_NETWORK} -P ${MDN_CMAKE_HELPER_DIR}/trim_network.cmake"
+        COMMAND ${CMAKE_COMMAND} -D BUNDLE_DIR:PATH=${BUNDLE_DIR} -D MDN_BUNDLE_WITH_GIF:BOOL=${MDN_BUNDLE_WITH_GIF} -P "${MDN_CMAKE_HELPER_DIR}/trim_gif.cmake"
+        COMMAND ${CMAKE_COMMAND} -E echo "${CMAKE_COMMAND} -D BUNDLE_DIR=${BUNDLE_DIR} -D MDN_BUNDLE_WITH_GIF:BOOL=${MDN_BUNDLE_WITH_GIF} -P ${MDN_CMAKE_HELPER_DIR}/trim_gif.cmake"
+        COMMAND ${CMAKE_COMMAND} -D BUNDLE_DIR:PATH=${BUNDLE_DIR} -D MDN_BUNDLE_WITH_TOUCH:BOOL=${MDN_BUNDLE_WITH_TOUCH} -P "${MDN_CMAKE_HELPER_DIR}/trim_touch.cmake"
+        COMMAND ${CMAKE_COMMAND} -E echo "${CMAKE_COMMAND} -D BUNDLE_DIR=${BUNDLE_DIR} -D MDN_BUNDLE_WITH_TOUCH:BOOL=${MDN_BUNDLE_WITH_TOUCH} -P ${MDN_CMAKE_HELPER_DIR}/trim_touch.cmake"
+        COMMAND ${CMAKE_COMMAND} -D BUNDLE_DIR:PATH=${BUNDLE_DIR} -D MDN_BUNDLE_WITH_MODERNUI:BOOL=${MDN_BUNDLE_WITH_MODERNUI} -P "${MDN_CMAKE_HELPER_DIR}/trim_modernui.cmake"
+        COMMAND ${CMAKE_COMMAND} -E echo "${CMAKE_COMMAND} -D BUNDLE_DIR=${BUNDLE_DIR} -D MDN_BUNDLE_WITH_MODERNUI:BOOL=${MDN_BUNDLE_WITH_MODERNUI} -P ${MDN_CMAKE_HELPER_DIR}/trim_modernui.cmake"
+        COMMAND ${CMAKE_COMMAND} -D BUNDLE_DIR:PATH=${BUNDLE_DIR} -D MDN_BUNDLE_WITH_DX_RHI:BOOL=${MDN_BUNDLE_WITH_DX_RHI} -P "${MDN_CMAKE_HELPER_DIR}/trim_dx.cmake"
+        COMMAND ${CMAKE_COMMAND} -E echo "${CMAKE_COMMAND} -D BUNDLE_DIR=${BUNDLE_DIR} -D MDN_BUNDLE_WITH_DX_RHI:BOOL=${MDN_BUNDLE_WITH_DX_RHI} -P ${MDN_CMAKE_HELPER_DIR}/trim_dx.cmake"
+        COMMAND ${CMAKE_COMMAND} -D BUNDLE_DIR:PATH=${BUNDLE_DIR} -D MDN_BUNDLE_WITH_SW_OPENGL:BOOL=${MDN_BUNDLE_WITH_SW_OPENGL} -P "${MDN_CMAKE_HELPER_DIR}/trim_swgl.cmake"
+        COMMAND ${CMAKE_COMMAND} -E echo "${CMAKE_COMMAND} -D BUNDLE_DIR=${BUNDLE_DIR} -D MDN_BUNDLE_WITH_SW_OPENGL:BOOL=${MDN_BUNDLE_WITH_SW_OPENGL} -P ${MDN_CMAKE_HELPER_DIR}/trim_swgl.cmake"
+        COMMAND ${CMAKE_COMMAND} -D BUNDLE_DIR:PATH=${BUNDLE_DIR} -D MDN_BUNDLE_INCLUDE_VCREDIST:BOOL=${MDN_BUNDLE_INCLUDE_VCREDIST} -D VCREDIST_SRC="${VCREDIST_SRC}" -P "${MDN_CMAKE_HELPER_DIR}/include_vcredist.cmake"
+        COMMAND ${CMAKE_COMMAND} -E echo "${CMAKE_COMMAND} -D BUNDLE_DIR=${BUNDLE_DIR} -D MDN_BUNDLE_INCLUDE_VCREDIST:BOOL=${MDN_BUNDLE_INCLUDE_VCREDIST} -D VCREDIST_SRC=${VCREDIST_SRC} -P ${MDN_CMAKE_HELPER_DIR}/include_vcredist.cmake"
 
         # 5) Create versioned zip
         COMMAND ${CMAKE_COMMAND} -E echo "Zipping -> ${BUNDLE_OUT_ZIP}"
