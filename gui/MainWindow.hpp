@@ -88,6 +88,7 @@ private slots:
     bool onNewMdn2d();
     bool onNewNamedMdn2d(QString name, int index);
     bool onSaveProject();
+    bool onSaveProjectAs();
     bool onOpenProject();
     bool onSaveMdn2d();
     bool saveMdn2d(int idx = -1);
@@ -199,6 +200,9 @@ private:
     // ProjectProperties window
     void doProjectProperties();
     // void absorbProjectProperties(ProjectPropertiesDialog* dlg);
+
+    // Save project to the given path
+    bool saveProjectToPath(const QString& path);
 
     // Fraxis helpers
     void updateStatusFraxisText(mdn::Fraxis f);
