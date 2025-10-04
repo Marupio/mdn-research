@@ -11,6 +11,7 @@
 #include <optional>
 #include <sstream>
 
+#include "mdn_config.h"
 #include "../library/Tools.hpp"
 
 // If you use your Qt->Logger bridge, keep installing it in main, not here.
@@ -44,6 +45,10 @@ LoggerConfigurator::LoggerConfigurator(QString appDescription)
         QStringLiteral("Path to JSON settings file."),
         QStringLiteral("path")
     ),
+    m_optInfo(
+        QStringList{QStringLiteral("info")},
+        QStringLiteral("Display application information")
+    ),
     // m_optVersion(
     //     QStringList{QStringLiteral("version")},
     //     QStringLiteral("Display version number")
@@ -66,6 +71,7 @@ void LoggerConfigurator::addStandardOptions() {
     m_parser.addOption(m_optNoLogFile);
     m_parser.addOption(m_optLogIndentation);
     m_parser.addOption(m_optJsonInput);
+    m_parser.addOption(m_optInfo);
     // m_parser.addOption(m_optVersion);
 }
 
@@ -142,6 +148,79 @@ bool LoggerConfigurator::applyCliToLogger() {
     if (m_parser.isSet(m_optLogIndentation)) {
         sirTalksAlot.enableIndentChecking();
     }
+
+    if (m_parser.isSet(m_optInfo)) {
+        // Pull name/version from QCoreApplication (set in main.cpp)
+        const std::string appName = QCoreApplication::applicationName().toStdString();
+        const std::string appVer  = QCoreApplication::applicationVersion().toStdString();
+
+        // Build type string from CMake-provided macro (string literal)
+    #ifdef MDN_RELEASE_TYPE
+        constexpr const char* kReleaseType = MDN_RELEASE_TYPE;
+    #else
+        // Fallback: try to infer from MDN_DEBUG
+        #ifdef MDN_DEBUG
+            constexpr const char* kReleaseType = "Debug";
+        #else
+            constexpr const char* kReleaseType = "Release";
+        #endif
+    #endif
+
+        // Flag values (compile-time)
+    #ifdef MDN_DEBUG
+        constexpr int kMdnDebug = 1;
+    #else
+        constexpr int kMdnDebug = 0;
+    #endif
+
+    #ifdef MDN_LOGS
+        constexpr int kMdnLogs = 1;
+    #else
+        constexpr int kMdnLogs = 0;
+    #endif
+
+    #ifdef QT_DEBUG
+        constexpr int kQtDebug = 1;
+    #else
+        constexpr int kQtDebug = 0;
+    #endif
+
+        std::cout << "\n"
+            << appName << " Version " << appVer
+            << ", " << kReleaseType
+            << ", with options:\n"
+            << "    MDN_DEBUG:\t"  << kMdnDebug << "\n"
+            << "    MDN_LOGS: \t" << kMdnLogs << "\n"
+            << "    QT_DEBUG: \t" << kQtDebug << "\n"
+            << std::endl;
+
+        // Return false so callers can exit early after printing info.
+        return false;
+    }
+
+    // if (m_parser.isSet(m_optInfo)) {
+    //     std::cout << "\n"
+    //         << QCoreApplication::applicationName().toStdString() << " Version "
+    //         << QCoreApplication::applicationVersion().toStdString() << ", "
+    //         << "" // <-- here we output the type of build: e.g. "Release", "Debug"
+    //     #ifdef MDN_DEBUG
+    //         << "MDN_DEBUG:\t1\n"
+    //     #else
+    //         << "MDN_DEBUG:\t0\n"
+    //     #endif
+    //     #ifdef MDN_LOGS
+    //         << "MDN_LOGS: \t1\n"
+    //     #else
+    //         << "MDN_LOGS: \t0\n"
+    //     #endif
+    //     #ifdef QT_DEBUG
+    //         << "QT_DEBUG: \t1\n"
+    //     #else
+    //         << "QT_DEBUG: \t0\n"
+    //     #endif
+    //         << std::endl;
+    //     return false;
+    // }
 
     // if (m_parser.isSet(m_optVersion)) {
     //     std::cout << "\n"

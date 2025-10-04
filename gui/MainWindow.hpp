@@ -135,6 +135,12 @@ private slots:
     void chooseFraxisX();
     void chooseFraxisY();
 
+    // Sign convention control
+    void cycleSignConvention();
+    void chooseSignConventionPositive();
+    void chooseSignConventionNeutral();
+    void chooseSignConventionNegative();
+
     void slotSelectNextTab();
     void slotSelectPrevTab();
     void slotMoveTabRight();
@@ -197,6 +203,10 @@ private:
     // Fraxis helpers
     void updateStatusFraxisText(mdn::Fraxis f);
     void buildFraxisMenu();
+
+    // SignConvention helpers
+    void updateStatusSignConventionText(mdn::SignConvention sc);
+    void buildSignConventionMenu();
 
     // Tab operations
     void onTabMoved(int from, int to);
@@ -266,6 +276,10 @@ private:
 
     QMenu* m_fraxisMenu{nullptr};
 
+    QToolButton* m_statusSignConventionBtn{nullptr};
+
+    QMenu* m_signConventionMenu{nullptr};
+
     int m_globalFontSize = 11;
 
     Mdn2dConfig m_globalConfig;
@@ -295,3 +309,20 @@ private:
 
 } // end namespace gui
 } // end namespace mdn
+
+
+// TODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODO
+//
+//    // Sign convention control
+//    void cycleSignConvention();
+//    void chooseSignConventionPositive();
+//    void chooseSignConventionNegative();
+//
+//    // SignConvention helpers
+//    void updateStatusSignConventionText(mdn::SignConvention sc);
+//    void buildSignConventionMenu();
+//
+//    QToolButton* m_statusSignConventionBtn{nullptr};
+//
+//    QMenu* m_signConventionMenu{nullptr};
+//

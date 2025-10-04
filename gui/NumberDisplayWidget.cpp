@@ -501,13 +501,23 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
     }
 
     if (!ctrl && !meta && !alt) {
+        // if (e->key() == Qt::Key_Plus || e->key() == Qt::Key_Equal) {
+        //     emit requestToggleEditMode(EditMode::Add);
+        //     e->accept();
+        //     return;
+        // }
+        // if (e->key() == Qt::Key_Minus) {
+        //     emit requestToggleEditMode(EditMode::Subtract);
+        //     e->accept();
+        //     return;
+        // }
         if (e->key() == Qt::Key_Plus || e->key() == Qt::Key_Equal) {
-            emit requestToggleEditMode(EditMode::Add);
+            beginCellEdit(QString("+"));
             e->accept();
             return;
         }
         if (e->key() == Qt::Key_Minus) {
-            emit requestToggleEditMode(EditMode::Subtract);
+            beginCellEdit(QString("-"));
             e->accept();
             return;
         }
@@ -523,6 +533,11 @@ void mdn::gui::NumberDisplayWidget::keyPressEvent_gridScope(QKeyEvent* e) {
         }
         if (e->key() == Qt::Key_F4) {
             emit requestCycleFraxis();
+            e->accept();
+            return;
+        }
+        if (e->key() == Qt::Key_F5) {
+            emit requestCycleSignConvention();
             e->accept();
             return;
         }
@@ -1293,7 +1308,7 @@ bool mdn::gui::NumberDisplayWidget::isGridTypingKey(const QKeyEvent* ev) const
             Log_Warn("Invalid base: " << base);
     }
     const int k = ev->key();
-    if (k == Qt::Key_Minus || k == Qt::Key_Period) {
+    if (k == Qt::Key_Minus || k == Qt::Key_Period || k == Qt::Key_Plus) {
         return true;
     }
     if ((k >= Qt::Key_0 && k <= maxNum) || (k >= Qt::Key_A && k < maxAlpha)) {

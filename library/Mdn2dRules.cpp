@@ -177,7 +177,14 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryover(const Coord& xy, int carry) {
     Digit p = locked_getValue(xy);
     Digit x = locked_getValue(xy_x);
     Digit y = locked_getValue(xy_y);
+    Log_N_Debug4_H("dispatch"
+        << "static_checkCarryover("
+        << static_cast<int>(p) << ","
+        << static_cast<int>(x) << ","
+        << static_cast<int>(y) << ",base)"
+    );
     Carryover co = static_checkCarryover(p, x, y, m_config.baseDigit());
+    Log_N_Debug4_T("static_checkCarryover return=" << CarryoverToName(co));
     if (co == Carryover::Invalid) {
         std::ostringstream oss;
         Log_N_Warn("Invalid carryover requested at " << xy << ": [" << static_cast<int>(p)
@@ -297,20 +304,27 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryoverCleanup(const CoordSet& coords, S
     } else if (sc == SignConvention::Negative) {
         wrongSign = Carryover::OptionalPositive;
     }
+    Log_N_Debug4("wrongSign=" << CarryoverToName(wrongSign));
 
     CoordSet workingSet(coords);
     bool achievedGreatness = false;
     for (int i = 0; i < maxCarryoverIters; ++i) {
         for (const Coord& xy: workingSet) {
             Carryover co = locked_checkCarryover(xy);
+            If_Log_Showing_Debug4(
+                Log_N_Debug4("Coord " << xy << ", got " << CarryoverToName(co));
+            );
             if (co == Carryover::Required || co == wrongSign) {
+                Log_N_Debug4_H("locked_carryover dispatch");
                 buffer.merge(locked_carryover(xy));
+                Log_N_Debug4_T("locked_carryover return");
             }
         }
         workingSet = buffer;
         affectedCoords.merge(buffer);
         buffer.clear();
         if (!workingSet.size()) {
+            Log_N_Debug4("achievedGreatness");
             achievedGreatness = true;
         }
     }
@@ -341,11 +355,12 @@ mdn::CoordSet mdn::Mdn2dRules::carryoverCleanupAll(SignConvention sc) {
 
 mdn::CoordSet mdn::Mdn2dRules::locked_carryoverCleanupAll(SignConvention sc) {
     Log_N_Debug4_H("");
-    CoordSet changed = locked_carryoverCleanup(m_index);
+    CoordSet changed = locked_carryoverCleanup(m_index, sc);
     If_Log_Showing_Debug4(
         std::string coordsList(Tools::setToString<Coord>(changed, ','));
         Log_N_Debug4("changed=" << coordsList);
     );
+    Log_N_Debug4_T("");
     return changed;
 }
 

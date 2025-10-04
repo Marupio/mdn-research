@@ -15,7 +15,9 @@ but it _should_ be possible to install it on others.
 
 If you prefer a specific version, grab it from the Releases page. For example:
 
-- **v1.0.0 (Windows ZIP):**
+- **[v1.0.1 (Windows ZIP)](https://github.com/Marupio/mdn-research/releases/download/v1.0.1/MDN-v1.0.1-win64-Release.zip):** _This version is stand-alone with no dependencies - just unzip and run.
+  https://github.com/Marupio/mdn-research/releases/download/v1.0.1/MDN-v1.0.1-win64-Release.zip
+- **[v1.0.0 (Windows ZIP)](https://github.com/Marupio/mdn-research/releases/download/v1.0.0/MDN-v1.0.0-win64-Release.zip):** _This version requires [VCC redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170) to be installed on your system.
   https://github.com/Marupio/mdn-research/releases/download/v1.0.0/MDN-v1.0.0-win64-Release.zip
 
 **How to run:**

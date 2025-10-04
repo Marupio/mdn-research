@@ -114,6 +114,7 @@ signals:
     void requestToggleEditMode(EditMode m);
     void requestSetEditMode(EditMode m);
     void requestCycleFraxis();
+    void requestCycleSignConvention();
     void requestStatus(const QString& s, int timeOut, bool forceUpdate);
 
     void requestSelectNextTab();

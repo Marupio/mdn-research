@@ -7,8 +7,8 @@
         "Output_": "/home/dave/GADEN/MDN/mdn-research/output",
         "LinuxOutput": "/home/dave/GADEN/MDN/mdn-research/output",
         "Filter": {
-            "Comment_Exclude": [],
-            "Exclude": [
+            "Exclude": [],
+            "Comment_Exclude": [
                 "debugShowAllTabs",
                 "getValue", "setValue",
                 "LockTracker", "lockReadOnly", "lockWriteable"

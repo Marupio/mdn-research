@@ -41,6 +41,7 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 
 add_compile_definitions($<$<CONFIG:Debug>:MDN_DEBUG>)
+add_compile_definitions(MDN_RELEASE_TYPE="$<CONFIG>")
 
 # Per-compiler debug options (compile + link), guarded properly
 # Use these globally, or put them per-target (recommended) – see below.

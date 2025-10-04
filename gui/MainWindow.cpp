@@ -1230,6 +1230,7 @@ void mdn::gui::MainWindow::setGlobalConfig(Mdn2dConfig c, bool force) {
         m_project->setConfig(m_globalConfig);
     }
     updateStatusFraxisText(c.fraxis());
+    updateStatusSignConventionText(c.signConvention());
     Log_Debug2_T("");
 }
 
@@ -1246,6 +1247,7 @@ void mdn::gui::MainWindow::updateGlobalConfig(Mdn2dConfig c, bool force) {
         m_project->setConfig(m_globalConfig);
     }
     updateStatusFraxisText(c.fraxis());
+    updateStatusSignConventionText(c.signConvention());
     Log_Debug2_T("");
 }
 
@@ -1255,8 +1257,8 @@ void mdn::gui::MainWindow::cycleFraxis() {
         return;
     }
 
-    mdn::Mdn2dConfig cfg = m_project->config();
-    const mdn::Fraxis next = (cfg.fraxis() == mdn::Fraxis::X) ? mdn::Fraxis::Y : mdn::Fraxis::X;
+    Mdn2dConfig cfg = m_project->config();
+    const Fraxis next = (cfg.fraxis() == Fraxis::X) ? Fraxis::Y : Fraxis::X;
     cfg.setFraxis(next);
 
     // Route through Project::setConfig so impact prompts/updates propagate to all tabs
@@ -1267,20 +1269,75 @@ void mdn::gui::MainWindow::cycleFraxis() {
 
 void mdn::gui::MainWindow::chooseFraxisX() {
     if (!m_project) return;
-    mdn::Mdn2dConfig cfg = m_project->config();
-    if (cfg.fraxis() == mdn::Fraxis::X) return;
+    Mdn2dConfig cfg = m_project->config();
+    if (cfg.fraxis() == Fraxis::X) return;
     showStatus(tr("Fraxis >> X"), 2000);
-    cfg.setFraxis(mdn::Fraxis::X);
+    cfg.setFraxis(Fraxis::X);
     updateGlobalConfig(cfg);
 }
 
 
 void mdn::gui::MainWindow::chooseFraxisY() {
     if (!m_project) return;
-    mdn::Mdn2dConfig cfg = m_project->config();
-    if (cfg.fraxis() == mdn::Fraxis::Y) return;
+    Mdn2dConfig cfg = m_project->config();
+    if (cfg.fraxis() == Fraxis::Y) return;
     showStatus(tr("Fraxis >> Y"), 2000);
-    cfg.setFraxis(mdn::Fraxis::Y);
+    cfg.setFraxis(Fraxis::Y);
+    updateGlobalConfig(cfg);
+}
+
+
+void mdn::gui::MainWindow::cycleSignConvention() {
+    if (!m_project) {
+        return;
+    }
+    Mdn2dConfig cfg = m_project->config();
+    SignConvention next;
+    switch (cfg.signConvention()) {
+        case SignConvention::Positive:
+            next = SignConvention::Neutral;
+            break;
+        case SignConvention::Neutral:
+            next = SignConvention::Negative;
+            break;
+        case SignConvention::Negative:
+            next = SignConvention::Positive;
+            break;
+    }
+    cfg.setSignConvention(next);
+
+    // Route through Project::setConfig so impact prompts/updates propagate to all tabs
+    // shows impact dialogs if needed
+    updateGlobalConfig(cfg);
+}
+
+
+void mdn::gui::MainWindow::chooseSignConventionPositive() {
+    if (!m_project) return;
+    Mdn2dConfig cfg = m_project->config();
+    if (cfg.signConvention() == SignConvention::Positive) return;
+    showStatus(tr("SignConvention >> Positive"), 2000);
+    cfg.setSignConvention(SignConvention::Positive);
+    updateGlobalConfig(cfg);
+}
+
+
+void mdn::gui::MainWindow::chooseSignConventionNeutral() {
+    if (!m_project) return;
+    Mdn2dConfig cfg = m_project->config();
+    if (cfg.signConvention() == SignConvention::Neutral) return;
+    showStatus(tr("SignConvention >> Neutral"), 2000);
+    cfg.setSignConvention(SignConvention::Neutral);
+    updateGlobalConfig(cfg);
+}
+
+
+void mdn::gui::MainWindow::chooseSignConventionNegative() {
+    if (!m_project) return;
+    Mdn2dConfig cfg = m_project->config();
+    if (cfg.signConvention() == SignConvention::Negative) return;
+    showStatus(tr("SignConvention >> Negative"), 2000);
+    cfg.setSignConvention(SignConvention::Negative);
     updateGlobalConfig(cfg);
 }
 
@@ -1856,6 +1913,12 @@ void mdn::gui::MainWindow::createTabForIndex(int index) {
     );
     connect(
         ndw,
+        &NumberDisplayWidget::requestCycleSignConvention,
+        this,
+        &MainWindow::cycleSignConvention
+    );
+    connect(
+        ndw,
         &NumberDisplayWidget::requestStatus,
         this,
         &MainWindow::showStatus
@@ -2120,15 +2183,26 @@ void mdn::gui::MainWindow::createStatusBar()
     m_statusFraxisBtn->setToolTip(tr("Fraxis (click to toggle; right-click to choose)"));
     m_statusFraxisBtn->setToolButtonStyle(Qt::ToolButtonTextOnly);
 
+    // ~~~ SignConvention button
+    m_statusSignConventionBtn = new QToolButton(this);
+    m_statusSignConventionBtn->setAutoRaise(true);
+    m_statusSignConventionBtn->setToolTip(
+        tr("SignConvention (click to toggle; right-click to choose)")
+    );
+    m_statusSignConventionBtn->setToolButtonStyle(Qt::ToolButtonTextOnly);
+
     // Seed initial label from project config
     if (m_project) {
         updateStatusFraxisText(m_globalConfig.fraxis());
+        updateStatusSignConventionText(m_globalConfig.signConvention());
     } else {
-        updateStatusFraxisText(mdn::Fraxis::X);
+        updateStatusFraxisText(Fraxis::X);
+        updateStatusSignConventionText(SignConvention::Positive);
     }
 
-    // Context menu to pick X or Y
+    // Context menu to pick X or Y / Positive, Neutral or Negative
     buildFraxisMenu();
+    buildSignConventionMenu();
 
     // Left-click: toggle X ↔ Y
     connect(
@@ -2138,7 +2212,16 @@ void mdn::gui::MainWindow::createStatusBar()
         &MainWindow::cycleFraxis
     );
 
+    // Left-click: toggle positive → neutral → negative
+    connect(
+        m_statusSignConventionBtn,
+        &QToolButton::clicked,
+        this,
+        &MainWindow::cycleSignConvention
+    );
+
     sb->addPermanentWidget(m_statusFraxisBtn);
+    sb->addPermanentWidget(m_statusSignConventionBtn);
 
     // ~~~ Cursor and selection text
     m_statusCursor = new QLabel(this);
@@ -2453,13 +2536,30 @@ void mdn::gui::MainWindow::buildFraxisMenu() {
 }
 
 
-void mdn::gui::MainWindow::updateStatusFraxisText(mdn::Fraxis f) {
+void mdn::gui::MainWindow::buildSignConventionMenu() {
+    m_signConventionMenu = new QMenu(this);
+    m_signConventionMenu->addAction(
+        "[+] Positive", this, &MainWindow::chooseSignConventionPositive
+    );
+    m_signConventionMenu->addAction(
+        "[o] Neutral", this, &MainWindow::chooseSignConventionNeutral
+    );
+    m_signConventionMenu->addAction(
+        "[-] Negative", this, &MainWindow::chooseSignConventionNegative
+    );
+    m_statusSignConventionBtn->setMenu(m_signConventionMenu);
+    // right side arrow; right-click opens menu
+    m_statusSignConventionBtn->setPopupMode(QToolButton::MenuButtonPopup);
+}
+
+
+void mdn::gui::MainWindow::updateStatusFraxisText(Fraxis f) {
     Log_Debug2_H("f=" << f);
     if (!m_statusFraxisBtn) {
         Log_Debug2_T("button missing");
         return;
     }
-    const QString text = (f == mdn::Fraxis::Y) ? QStringLiteral("FY") : QStringLiteral("FX");
+    const QString text = (f == Fraxis::Y) ? QStringLiteral("FY") : QStringLiteral("FX");
     m_statusFraxisBtn->setText(text);
 
     // reflect state in the popup menu (if present)
@@ -2483,6 +2583,34 @@ void mdn::gui::MainWindow::updateStatusFraxisText(mdn::Fraxis f) {
             break;
         }
     }
+    Log_Debug2_T("");
+}
+
+
+void mdn::gui::MainWindow::updateStatusSignConventionText(SignConvention sc) {
+    Log_Debug2_H("sc=" << sc);
+    if (!m_statusSignConventionBtn) {
+        Log_Debug2_T("button missing");
+        return;
+    }
+
+    QString text;
+    switch (sc) {
+        case SignConvention::Positive:
+            text = "+ Pos";
+            break;
+        case SignConvention::Neutral:
+            text = "+ / -";
+            break;
+        case SignConvention::Negative:
+            text = "Neg -";
+            break;
+    }
+    m_statusSignConventionBtn->setText(text);
+    std::string st("SignConvention >> " + SignConventionToName(sc));
+    QString qst(QString::fromStdString(st));
+    showStatus(qst, 2000);
+
     Log_Debug2_T("");
 }
 
@@ -2782,7 +2910,7 @@ void mdn::gui::MainWindow::updateStatusModeText(NumberDisplayWidget::EditMode m)
 }
 
 
-void mdn::gui::MainWindow::updateStatusSelectionText(const mdn::Selection& s) {
+void mdn::gui::MainWindow::updateStatusSelectionText(const Selection& s) {
     if (!m_statusSel) {
         return;
     }

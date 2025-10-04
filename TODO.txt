@@ -134,3 +134,7 @@ Resizing the digit grid with the slider works in making it smaller, but the calc
     * slide down, cursor seems to think its ratio is "very close to the top", like 0.1
     * it still moves down, but definitely not in keeping in the centre
 
+Duplicate --> can produce two Mdns with the same name
+Pressing '-' switches to Neg edit mode - should go straight into text line entry with a '-'
+Closing all tabs leads to many crashable interactions
+    Close tab button
