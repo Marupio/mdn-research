@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=MDN
+Comment=MDN numerical tools (Qt GUI)
+Exec=mdn_gui %F
+Icon=mdn
+Terminal=false
+Categories=Science;Math;Graphics;

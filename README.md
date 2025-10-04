@@ -15,6 +15,26 @@ A research project into **Multi-Dimensional Numbers**.  Includes three main comp
 
 ---
 
+## Release notes
+
+### Version 1.1.0
+
+* Fixed carryover buttons
+* Changed behaviour of [-] and [+] buttons - now they start cell editing, was shortcut to fraxis setting.
+
+#### Sign Convention
+
+* Added sign convention to status bar
+* Clicking sign convention button on status bar cycles its setting
+* Added [F5] shortcut key for sign convention cycling
+
+### Version 1.0.1
+
+* Fixed Windows release packaging script to include vcredistributable.
+
+
+---
+
 ## License
 
 See [LICENSE](license.md).

@@ -320,7 +320,7 @@ mdn::Mdn2dConfigImpact mdn::gui::Project::assessConfigChange(Mdn2dConfig config)
 }
 
 
-void mdn::gui::Project::setConfig(Mdn2dConfig config) {
+void mdn::gui::Project::setConfig(Mdn2dConfig config, bool ignoreSignConventionChanges) {
     Log_Debug2_H("config=" << config);
     // Ensure parent is set correctly
     config.setParent(*this);
@@ -390,8 +390,19 @@ void mdn::gui::Project::setConfig(Mdn2dConfig config) {
                 return;
             }
         }
+        case Mdn2dConfigImpact::PossiblePolymorphism: {
+            if (ignoreSignConventionChanges) {
+                for (auto& [index, tgt] : m_data) {
+                    tgt.setConfig(config);
+                }
+                m_config = config;
+                Log_Debug("Ignoring changed signConvention - Changed config to " << config);
+                Log_Debug2_T("");
+                return;
+            }
+            // else fallthrough
+        }
         case Mdn2dConfigImpact::PossibleDigitLoss:
-        case Mdn2dConfigImpact::PossiblePolymorphism:
         case Mdn2dConfigImpact::PossibleDigitLossAndPolymorphism: {
             std::string description = Mdn2dConfigImpactToDescription(impact);
             std::string question(

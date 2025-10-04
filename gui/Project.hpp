@@ -171,7 +171,7 @@ public:
         Mdn2dConfigImpact assessConfigChange(Mdn2dConfig config) const;
 
         // Setter for m_config requires resetting of the Mdn2d's
-        void setConfig(Mdn2dConfig config);
+        void setConfig(Mdn2dConfig config, bool ignoreSignConvention=false);
 
 
         // *** MDN Accessors

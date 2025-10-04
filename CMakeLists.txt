@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(MDN_Tools VERSION 1.0.0)
+project(MDN_Tools VERSION 1.1.0)
 
 execute_process(
     COMMAND git describe --tags --always

@@ -1258,7 +1258,7 @@ void mdn::gui::MainWindow::setGlobalConfig(Mdn2dConfig c, bool force) {
     m_globalConfig = c;
     if (m_project) {
         m_globalConfig.setParent(*m_project);
-        m_project->setConfig(m_globalConfig);
+        m_project->setConfig(m_globalConfig, true);
     }
     updateStatusFraxisText(c.fraxis());
     updateStatusSignConventionText(c.signConvention());
@@ -1275,7 +1275,7 @@ void mdn::gui::MainWindow::updateGlobalConfig(Mdn2dConfig c, bool force) {
     m_globalConfig = c;
     if (m_project) {
         m_globalConfig.setParent(*m_project);
-        m_project->setConfig(m_globalConfig);
+        m_project->setConfig(m_globalConfig, true);
     }
     updateStatusFraxisText(c.fraxis());
     updateStatusSignConventionText(c.signConvention());
