@@ -1,3 +1,4 @@
+# Root CMakeLists.txt
 cmake_minimum_required(VERSION 3.16)
 project(MDN_Tools VERSION 1.1.0)
 
@@ -114,35 +115,71 @@ add_custom_target(bundle
     COMMENT "Build MDN shared library (mdn) and GUI (mdn_gui) only"
 )
 
-# # ---- choose a FHS-friendly install prefix on Linux ----
-# if(UNIX AND NOT APPLE)
-#   # let packagers override, but default to /usr (Debian policy)
-#   if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-#     set(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "Install prefix" FORCE)
-#   endif()
-# endif()
-#
-# # ---- install your binaries ----
-# install(TARGETS mdn_gui
-#   RUNTIME DESTINATION bin
-# )
-# install(TARGETS mdn
-#   LIBRARY DESTINATION lib
-#   ARCHIVE DESTINATION lib
-#   RUNTIME DESTINATION bin # if mdn.dll-equivalent produces a runtime on Linux, usually not
-# )
-#
-# # ---- (optional) install shared data/help/resources ----
-# # install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/resources/ DESTINATION share/mdn)
-#
-# # ---- desktop integration (icon + .desktop entry) ----
-# # Put an app icon at: misc/icons/mdn.png (256x256 recommended)
-# install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/misc/icons/mdn.png
-#         DESTINATION share/icons/hicolor/256x256/apps)
-#
-# # Template at misc/mdn.desktop.in
-# configure_file(${CMAKE_CURRENT_SOURCE_DIR}/misc/mdn.desktop.in
-#                ${CMAKE_CURRENT_BINARY_DIR}/mdn.desktop @ONLY)
-# install(FILES ${CMAKE_CURRENT_BINARY_DIR}/mdn.desktop
-#         DESTINATION share/applications)
-#
+# ---------------- Linux packaging & install rules ----------------
+if(UNIX AND NOT APPLE)
+    include(GNUInstallDirs)
+
+    # Debian policy prefers /usr; keep overrideable
+    if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+        set(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "" FORCE)
+    endif()
+
+    # ---- Binaries/libraries ----
+    install(TARGETS mdn_gui
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+
+    # # Option A: install headers via PUBLIC_HEADER (if you use that property)
+    # # Ensure mdn has its PUBLIC_HEADER property populated somewhere earlier:
+    # #   set_target_properties(mdn PROPERTIES PUBLIC_HEADER
+    # #       "${PROJECT_SOURCE_DIR}/library/include/mdn/foo.hpp;"
+    # #       "${PROJECT_SOURCE_DIR}/library/include/mdn/bar.hpp"
+    # #   )
+    # install(TARGETS mdn
+    #     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    #     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    #     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} # harmless on Linux
+    #     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/mdn
+    # )
+
+    # Option B (alternative): install headers by directory instead, and clear PUBLIC_HEADER to avoid warnings
+    # install(DIRECTORY ${PROJECT_SOURCE_DIR}/library/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/mdn
+    #     FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
+    # set_target_properties(mdn PROPERTIES PUBLIC_HEADER "")    # silence warning if you chose Option B
+
+    # ---- Desktop integration (only if files exist) ----
+    if(EXISTS "${PROJECT_SOURCE_DIR}/misc/mdn.desktop.in")
+        configure_file("${PROJECT_SOURCE_DIR}/misc/mdn.desktop.in"
+                "${CMAKE_CURRENT_BINARY_DIR}/mdn.desktop" @ONLY)
+        install(FILES "${CMAKE_CURRENT_BINARY_DIR}/mdn.desktop"
+                        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
+    endif()
+
+    if(EXISTS "${PROJECT_SOURCE_DIR}/misc/icons/mdn.png")
+        install(FILES "${PROJECT_SOURCE_DIR}/misc/icons/mdn.png"
+                        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/256x256/apps
+                        RENAME mdn.png)
+    endif()
+
+    # ---- CPack: build a .deb using system Qt deps ----
+    set(CPACK_GENERATOR "DEB")
+    set(CPACK_PACKAGE_NAME "mdn")
+    set(CPACK_PACKAGE_VENDOR "Your Name or Org")
+    set(CPACK_PACKAGE_CONTACT "you@example.com")
+    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MDN: numerical tools with a Qt GUI")
+
+    # Use your existing version var if you have one
+    if(DEFINED MDN_VERSION_STRING)
+        set(CPACK_PACKAGE_VERSION "${MDN_VERSION_STRING}")
+    else()
+        set(CPACK_PACKAGE_VERSION "0.1.0")
+    endif()
+
+    # Let dpkg-shlibdeps compute deps from your built binaries
+    set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+
+    # Better file name (mdn_<ver>_amd64.deb)
+    set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
+
+    include(CPack)
+endif()

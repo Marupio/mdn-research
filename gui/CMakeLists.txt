@@ -1,3 +1,4 @@
+# gui/CMakeLists.txt
 # Try Qt6 first
 find_package(Qt6 COMPONENTS Widgets Core Gui QUIET)
 
@@ -33,7 +34,6 @@ add_executable(mdn_gui
     MainWindow.cpp MainWindow.hpp
     MarkerWidget.hpp
     NumberDisplayWidget.cpp NumberDisplayWidget.hpp
-    OperationHistory.ui
     OperationPlan.hpp
     OperationStrip.hpp OperationStrip.cpp
     OpsController.hpp OpsController.cpp

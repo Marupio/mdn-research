@@ -1,3 +1,4 @@
+# sandbox/CMakeLists.txt
 # Helper function to add an mdn-based executable
 function(add_mdn_app app_name app_source)
     add_executable(${app_name} ${app_source})

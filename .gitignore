@@ -55,5 +55,5 @@ compile_commands.json
 
 # Exclude build and out folders
 **/build/
-**/build_release/
+**/build_*/
 **/out/
