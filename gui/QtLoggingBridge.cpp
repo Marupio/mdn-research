@@ -1,6 +1,6 @@
 #include <QLoggingCategory>
 #include <QString>
-#include "../library/Logger.hpp"
+#include <mdn/Logger.hpp>
 
 namespace {
 

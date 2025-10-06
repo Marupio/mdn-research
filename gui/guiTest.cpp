@@ -6,10 +6,10 @@
 #include "Project.hpp"
 #include "QtLoggingBridge.hpp"
 
-#include "../library/GlobalConfig.hpp"
-#include "../library/Logger.hpp"
-#include "../library/Mdn2d.hpp"
-#include "../library/Tools.hpp"
+#include <mdn/GlobalConfig.hpp>
+#include <mdn/Logger.hpp>
+#include <mdn/Mdn2d.hpp>
+#include <mdn/Tools.hpp>
 
 using namespace mdn;
 using namespace mdn::gui;

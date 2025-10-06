@@ -23,8 +23,8 @@
 #include <QToolBar>
 #include <QToolButton>
 
-#include "../library/Logger.hpp"
-#include "../library/Carryover.hpp"
+#include <mdn/Logger.hpp>
+#include <mdn/Carryover.hpp>
 
 #include "GuiTools.hpp"
 #include "HelpDialog.hpp"

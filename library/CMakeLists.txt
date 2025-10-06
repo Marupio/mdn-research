@@ -1,28 +1,49 @@
 # library/CMakeLists.txt
 add_library(mdn SHARED
-    Logger.cpp
-    Mdn2d.cpp
-    Mdn2dBase.cpp
-    Mdn2dConfig.cpp
-    Mdn2dIO.cpp
-    Mdn2dRules.cpp
-    TextOptions.cpp
-    Tools.cpp
+    src/Logger.cpp
+    src/Mdn2d.cpp
+    src/Mdn2dBase.cpp
+    src/Mdn2dConfig.cpp
+    src/Mdn2dIO.cpp
+    src/Mdn2dRules.cpp
+    src/TextOptions.cpp
+    src/Tools.cpp
 )
 
+# Output dirs
 set_target_properties(mdn PROPERTIES
-    OUTPUT_NAME "mdn"
-    ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
-    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    PUBLIC_HEADER
-        "Carryover.hpp;Constants.hpp;Coord.hpp;CoordSet.hpp;Digit.hpp;Fraxis.hpp;GlobalConfig.hpp;\
-Logger.hpp;Mdn2d.hpp;Mdn2dBase.hpp;Mdn2dConfig.hpp;Mdn2dConfigImpact.hpp;Mdn2dFramework.hpp;\
-Mdn2dIO.hpp;Mdn2dRules.hpp;MdnException.hpp;MdnObserver.hpp;PrecisionStatus.hpp;\
-Rect.hpp;SignConvention.hpp;TextOptions.hpp;Tools.hpp"
+  OUTPUT_NAME "mdn"
+  ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+  LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+  RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+  PUBLIC_HEADER ""  # we use directory-based install; silence PUBLIC_HEADER warnings
 )
 
-target_include_directories(mdn PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${PROJECT_BINARY_DIR})
+# Public headers come from library/include during build; from <prefix>/include after install
+target_include_directories(mdn
+  PUBLIC
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/library/include>
+    $<INSTALL_INTERFACE:include>
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/library # for any private headers near sources
+    ${PROJECT_BINARY_DIR}         # generated config headers here
+)
+
+if(UNIX AND NOT APPLE)
+    include(GNUInstallDirs)
+
+    # Install the library artifacts
+    install(TARGETS mdn
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+
+    # Install all public headers under include/mdn/
+    install(DIRECTORY ${PROJECT_SOURCE_DIR}/library/include/
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/mdn
+            FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
+endif()
+
 target_link_libraries(mdn PUBLIC mdn_config)
 target_compile_definitions(mdn PRIVATE mdn_EXPORTS)
-

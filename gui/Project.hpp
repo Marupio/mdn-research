@@ -8,9 +8,9 @@
 #include <QMessageBox>
 #include <QObject>
 
-#include "../library/Mdn2d.hpp"
-#include "../library/Mdn2dFramework.hpp"
-#include "../library/Selection.hpp"
+#include <mdn/Mdn2d.hpp>
+#include <mdn/Mdn2dFramework.hpp>
+#include <mdn/Selection.hpp>
 
 namespace mdn {
 namespace gui {

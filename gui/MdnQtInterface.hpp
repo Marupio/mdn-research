@@ -11,8 +11,8 @@
 #include <QRect>
 #include <QJsonObject>
 
-#include "../library/Coord.hpp"
-#include "../library/Rect.hpp"
+#include <mdn/Coord.hpp>
+#include <mdn/Rect.hpp>
 
 
 namespace mdn {

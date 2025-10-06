@@ -17,10 +17,10 @@
 #include <QSpinBox>
 #include <QVBoxLayout>
 
-#include "../library/Logger.hpp"
-#include "../library/Mdn2dConfig.hpp"
-#include "../library/Mdn2dConfigImpact.hpp"
-#include "../library/SignConvention.hpp"
+#include <mdn/Logger.hpp>
+#include <mdn/Mdn2dConfig.hpp>
+#include <mdn/Mdn2dConfigImpact.hpp>
+#include <mdn/SignConvention.hpp>
 #include "Project.hpp"
 #include "HelpDialog.hpp"
 

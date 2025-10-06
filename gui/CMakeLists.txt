@@ -48,7 +48,11 @@ target_link_libraries(mdn_gui PRIVATE ${QT_LIBS} mdn)
 
 target_sources(mdn_gui PRIVATE help.qrc)
 
-include_directories("../library" ${PROJECT_BINARY_DIR})
+# include_directories("../library" ${PROJECT_BINARY_DIR})
+target_include_directories(mdn_gui PRIVATE
+  ${PROJECT_SOURCE_DIR}/library/include   # for #include <mdn/...>
+  ${PROJECT_BINARY_DIR}
+)
 
 # Console test app that exercises Project (no windows shown)
 add_executable(guiTest

@@ -8,7 +8,7 @@
 #include <QTabWidget>
 #include <QVBoxLayout>
 
-#include "../library/Logger.hpp"
+#include <mdn/Logger.hpp>
 
 #include "BinaryOperationDialog.hpp"
 #include "OperationStrip.hpp"

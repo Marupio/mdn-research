@@ -6,7 +6,7 @@
 #include "EnumDestinationMode.hpp"
 #include "EnumOperation.hpp"
 #include "OperationPlan.hpp"
-#include "../library/Logger.hpp"
+#include <mdn/Logger.hpp>
 
 class QAbstractButton;
 class QButtonGroup;

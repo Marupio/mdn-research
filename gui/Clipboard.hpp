@@ -8,9 +8,9 @@
 #include <QMimeData>
 #include <QStringList>
 
-#include "../library/Digit.hpp"
-#include "../library/Rect.hpp"
-#include "../library/Mdn2d.hpp"
+#include <mdn/Digit.hpp>
+#include <mdn/Rect.hpp>
+#include <mdn/Mdn2d.hpp>
 
 
 namespace mdn {

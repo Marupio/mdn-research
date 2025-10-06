@@ -2,7 +2,7 @@
 #include <QTabBar>
 #include <QSignalBlocker>
 
-#include "../library/Logger.hpp"
+#include <mdn/Logger.hpp>
 
 #include "HoverPeekTabBar.hpp"
 #include "MarkerWidget.hpp"

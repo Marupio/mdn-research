@@ -125,27 +125,15 @@ if(UNIX AND NOT APPLE)
     endif()
 
     # ---- Binaries/libraries ----
-    install(TARGETS mdn_gui
+    install(TARGETS mdn
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
-
-    # # Option A: install headers via PUBLIC_HEADER (if you use that property)
-    # # Ensure mdn has its PUBLIC_HEADER property populated somewhere earlier:
-    # #   set_target_properties(mdn PROPERTIES PUBLIC_HEADER
-    # #       "${PROJECT_SOURCE_DIR}/library/include/mdn/foo.hpp;"
-    # #       "${PROJECT_SOURCE_DIR}/library/include/mdn/bar.hpp"
-    # #   )
-    # install(TARGETS mdn
-    #     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    #     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    #     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} # harmless on Linux
-    #     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/mdn
-    # )
-
-    # Option B (alternative): install headers by directory instead, and clear PUBLIC_HEADER to avoid warnings
-    # install(DIRECTORY ${PROJECT_SOURCE_DIR}/library/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/mdn
-    #     FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
-    # set_target_properties(mdn PROPERTIES PUBLIC_HEADER "")    # silence warning if you chose Option B
+    install(DIRECTORY ${PROJECT_SOURCE_DIR}/library/include/
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/mdn
+        FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
+    )
 
     # ---- Desktop integration (only if files exist) ----
     if(EXISTS "${PROJECT_SOURCE_DIR}/misc/mdn.desktop.in")
@@ -164,8 +152,8 @@ if(UNIX AND NOT APPLE)
     # ---- CPack: build a .deb using system Qt deps ----
     set(CPACK_GENERATOR "DEB")
     set(CPACK_PACKAGE_NAME "mdn")
-    set(CPACK_PACKAGE_VENDOR "Your Name or Org")
-    set(CPACK_PACKAGE_CONTACT "you@example.com")
+    set(CPACK_PACKAGE_VENDOR "David Gaden")
+    set(CPACK_PACKAGE_CONTACT "davegaden@hotmail.com")
     set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MDN: numerical tools with a Qt GUI")
 
     # Use your existing version var if you have one

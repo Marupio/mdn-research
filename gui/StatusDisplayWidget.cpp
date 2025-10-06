@@ -6,7 +6,7 @@
 #include <QResizeEvent>
 #include <QPalette>
 
-#include "../library/Logger.hpp"
+#include <mdn/Logger.hpp>
 
 mdn::gui::StatusDisplayWidget::StatusDisplayWidget(QWidget* parent)
     : QWidget(parent),

@@ -14,11 +14,11 @@
 #include <QMimeData>
 #include <QStringList>
 
-#include "../library/Logger.hpp"
-#include "../library/MdnException.hpp"
-#include "../library/Rect.hpp"
-#include "../library/SignConvention.hpp"
-#include "../library/Tools.hpp"
+#include <mdn/Logger.hpp>
+#include <mdn/MdnException.hpp>
+#include <mdn/Rect.hpp>
+#include <mdn/SignConvention.hpp>
+#include <mdn/Tools.hpp>
 
 #include "Clipboard.hpp"
 #include "GuiTools.hpp"

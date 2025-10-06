@@ -10,11 +10,11 @@
 #include <QWheelEvent>
 #include <QWidget>
 
-#include "../library/GlobalConfig.hpp"
-#include "../library/Mdn2d.hpp"
-#include "../library/Coord.hpp"
-#include "../library/Rect.hpp"
-#include "../library/Digit.hpp"
+#include <mdn/GlobalConfig.hpp>
+#include <mdn/Mdn2d.hpp>
+#include <mdn/Coord.hpp>
+#include <mdn/Rect.hpp>
+#include <mdn/Digit.hpp>
 
 // Forward declarations
 namespace mdn {

@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-#include "../library/Logger.hpp"
+#include <mdn/Logger.hpp>
 
 namespace mdn::cli {
 

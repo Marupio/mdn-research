@@ -12,7 +12,7 @@
 #include <sstream>
 
 #include "mdn_config.h"
-#include "../library/Tools.hpp"
+#include <mdn/Tools.hpp>
 
 // If you use your Qt->Logger bridge, keep installing it in main, not here.
 

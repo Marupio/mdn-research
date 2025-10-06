@@ -1,6 +1,6 @@
 #include "HoverPeekTabBar.hpp"
 
-#include "../library/Logger.hpp"
+#include <mdn/Logger.hpp>
 
 // cross-version point helpers
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)

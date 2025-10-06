@@ -22,7 +22,7 @@
 #include "Project.hpp"
 
 
-#include "../library/Mdn2d.hpp"
+#include <mdn/Mdn2d.hpp>
 
 namespace mdn {
 namespace gui {
