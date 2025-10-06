@@ -2,14 +2,14 @@
 
 #include <sstream>
 
-#include "Constants.hpp"
-#include "Digit.hpp"
-#include "Fraxis.hpp"
-#include "GlobalConfig.hpp"
-#include "Logger.hpp"
-#include "MdnException.hpp"
-#include "Mdn2dFramework.hpp"
-#include "SignConvention.hpp"
+#include <mdn/Constants.hpp>
+#include <mdn/Digit.hpp>
+#include <mdn/Fraxis.hpp>
+#include <mdn/GlobalConfig.hpp>
+#include <mdn/Logger.hpp>
+#include <mdn/MdnException.hpp>
+#include <mdn/Mdn2dFramework.hpp>
+#include <mdn/SignConvention.hpp>
 
 namespace mdn {
 

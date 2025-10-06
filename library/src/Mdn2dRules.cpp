@@ -1,15 +1,15 @@
-#include "Mdn2dRules.hpp"
+#include <mdn/Mdn2dRules.hpp>
 
 #include <cassert>
 #include <cmath>
 #include <stdexcept>
 #include <sstream>
 
-#include "Constants.hpp"
-#include "Logger.hpp"
-#include "Mdn2d.hpp"
-#include "MdnException.hpp"
-#include "Tools.hpp"
+#include <mdn/Constants.hpp>
+#include <mdn/Logger.hpp>
+#include <mdn/Mdn2d.hpp>
+#include <mdn/MdnException.hpp>
+#include <mdn/Tools.hpp>
 
 constexpr int maxCarryoverIters = 200;
 
@@ -177,7 +177,7 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryover(const Coord& xy, int carry) {
     Digit p = locked_getValue(xy);
     Digit x = locked_getValue(xy_x);
     Digit y = locked_getValue(xy_y);
-    Log_N_Debug4_H("dispatch"
+    Log_N_Debug4_H("dispatch "
         << "static_checkCarryover("
         << static_cast<int>(p) << ","
         << static_cast<int>(x) << ","
@@ -253,15 +253,18 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryover(const Coord& xy, int carry) {
         Log_N_Debug4("cascading carryover to " << xy_x << " adding " << nCarry);
         affectedCoords.merge(locked_carryover(xy_x, nCarry));
     } else {
-        Log_N_Debug4("no further carryovers in y, at " << xy_x << " setting to " << iy);
+        Log_N_Debug4("no further carryovers in x, at " << xy_x << " setting to " << ix);
         locked_setValue(xy_x, ix);
     }
     // affectedCoords.merge(locked_carryoverCleanup(affectedCoords));
     If_Log_Showing_Debug4(
         std::string coordsList(Tools::setToString<Coord>(affectedCoords, ','));
         Log_N_Debug4("affectedCoords=" << coordsList);
+        Log_N_Debug3_T("");
     );
-    Log_N_Debug3_T("result=[set of coords with " << affectedCoords.size() << " elements]");
+    If_Not_Log_Showing_Debug4(
+        Log_N_Debug3_T("result=[set of coords with " << affectedCoords.size() << " elements]");
+    );
     return affectedCoords;
 }
 
@@ -320,12 +323,15 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryoverCleanup(const CoordSet& coords, S
                 Log_N_Debug4_T("locked_carryover return");
             }
         }
+        Log_N_Debug4("carryover loop done, buffer.size()=" << buffer.size());
         workingSet = buffer;
         affectedCoords.merge(buffer);
         buffer.clear();
         if (!workingSet.size()) {
             Log_N_Debug4("achievedGreatness");
             achievedGreatness = true;
+        } else {
+            Log_N_Debug4("Not yet achievedGreatness, but we hold out hope");
         }
     }
     if (!achievedGreatness) {

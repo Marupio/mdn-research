@@ -8,8 +8,8 @@
 #include <mutex>
 #include <unordered_map>
 
-#include "GlobalConfig.hpp"
-#include "Tools.hpp"
+#include <mdn/GlobalConfig.hpp>
+#include <mdn/Tools.hpp>
 
 namespace mdn {
 

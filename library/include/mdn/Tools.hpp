@@ -10,9 +10,9 @@
 #include <utility>
 #include <vector>
 
-#include "Constants.hpp"
-#include "Digit.hpp"
-#include "GlobalConfig.hpp"
+#include <mdn/Constants.hpp>
+#include <mdn/Digit.hpp>
+#include <mdn/GlobalConfig.hpp>
 
 namespace mdn {
 

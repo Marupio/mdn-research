@@ -1,9 +1,9 @@
-#include "Mdn2dConfig.hpp"
+#include <mdn/Mdn2dConfig.hpp>
 
 #include <cmath>
 
-#include "Logger.hpp"
-#include "MdnException.hpp"
+#include <mdn/Logger.hpp>
+#include <mdn/MdnException.hpp>
 
 
 // mdn::Mdn2dFramework* mdn::Mdn2dConfig::m_parentPtr = nullptr;

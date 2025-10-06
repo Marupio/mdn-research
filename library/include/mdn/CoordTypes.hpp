@@ -3,7 +3,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "Coord.hpp"
+#include <mdn/Coord.hpp>
 
 namespace mdn {
 

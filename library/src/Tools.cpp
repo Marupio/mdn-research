@@ -4,8 +4,8 @@
 #include <filesystem>
 #include <limits>
 
-#include "Tools.hpp"
-#include "Logger.hpp"
+#include <mdn/Tools.hpp>
+#include <mdn/Logger.hpp>
 
 const std::vector<char> mdn::Tools::m_digToAlphaUpper(
     {

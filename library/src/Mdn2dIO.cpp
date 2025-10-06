@@ -1,4 +1,4 @@
-#include "Mdn2dIO.hpp"
+#include <mdn/Mdn2dIO.hpp>
 
 #include <algorithm>
 #include <cctype>
@@ -6,10 +6,10 @@
 #include <limits>
 #include <sstream>
 
-#include "Coord.hpp"
-#include "Logger.hpp"
-#include "Mdn2dConfig.hpp"
-#include "Tools.hpp"
+#include <mdn/Coord.hpp>
+#include <mdn/Logger.hpp>
+#include <mdn/Mdn2dConfig.hpp>
+#include <mdn/Tools.hpp>
 
 namespace {
 

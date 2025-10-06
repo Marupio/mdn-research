@@ -111,6 +111,7 @@
     "resumable": "cpp",
     "qjsondocument": "cpp",
     "qmenu": "cpp",
-    "qkeyevent": "cpp"
+    "qkeyevent": "cpp",
+    "qformlayout": "cpp"
   }
 }

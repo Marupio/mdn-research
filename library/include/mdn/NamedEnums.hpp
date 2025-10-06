@@ -1,6 +1,6 @@
 #pragma once
 
-#include "NamedEnum.hpp"
+#include <mdn/NamedEnum.hpp>
 
 namespace mdn {
 #define CARRY_OVER_ENUM(C) \

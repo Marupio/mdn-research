@@ -6,7 +6,7 @@
 #include <vector>
 #include <string>
 
-#include "Logger.hpp"
+#include <mdn/Logger.hpp>
 
 // Fraxis - fraction axis
 //  The digit axis along which the fractional part of a real number expands in an MDN

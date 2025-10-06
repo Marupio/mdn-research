@@ -6,7 +6,7 @@
 #include <functional>
 #include <tuple>
 
-#include "GlobalConfig.hpp"
+#include <mdn/GlobalConfig.hpp>
 
 namespace mdn {
 

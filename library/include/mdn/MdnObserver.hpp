@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Logger.hpp"
+#include <mdn/Logger.hpp>
 
 namespace mdn {
 

@@ -26,7 +26,7 @@ target_include_directories(mdn
     $<INSTALL_INTERFACE:include>
   PRIVATE
     ${PROJECT_SOURCE_DIR}/library # for any private headers near sources
-    ${PROJECT_BINARY_DIR}         # generated config headers here
+    ${PROJECT_BINARY_DIR} # generated config headers here
 )
 
 if(UNIX AND NOT APPLE)

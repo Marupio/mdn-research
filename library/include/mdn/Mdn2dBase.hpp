@@ -7,15 +7,15 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "CoordTypes.hpp"
-#include "GlobalConfig.hpp"
-#include "LockTracker.hpp"
-#include "Mdn2dConfig.hpp"
-#include "Mdn2dConfigImpact.hpp"
-#include "MdnObserver.hpp"
-#include "PrecisionStatus.hpp"
-#include "Rect.hpp"
-#include "TextOptions.hpp"
+#include <mdn/CoordTypes.hpp>
+#include <mdn/GlobalConfig.hpp>
+#include <mdn/LockTracker.hpp>
+#include <mdn/Mdn2dConfig.hpp>
+#include <mdn/Mdn2dConfigImpact.hpp>
+#include <mdn/MdnObserver.hpp>
+#include <mdn/PrecisionStatus.hpp>
+#include <mdn/Rect.hpp>
+#include <mdn/TextOptions.hpp>
 
 namespace mdn {
 

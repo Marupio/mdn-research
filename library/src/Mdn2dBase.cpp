@@ -1,4 +1,4 @@
-#include "Mdn2dBase.hpp"
+#include <mdn/Mdn2dBase.hpp>
 
 #include <cassert>
 #include <cctype>
@@ -9,13 +9,13 @@
 #include <sstream>
 #include <filesystem>
 
-#include "Constants.hpp"
-#include "GlobalConfig.hpp"
-#include "Logger.hpp"
-#include "Mdn2d.hpp"
-#include "Mdn2dIO.hpp"
-#include "MdnException.hpp"
-#include "Tools.hpp"
+#include <mdn/Constants.hpp>
+#include <mdn/GlobalConfig.hpp>
+#include <mdn/Logger.hpp>
+#include <mdn/Mdn2d.hpp>
+#include <mdn/Mdn2dIO.hpp>
+#include <mdn/MdnException.hpp>
+#include <mdn/Tools.hpp>
 
 
 mdn::Mdn2d mdn::Mdn2dBase::NewInstance(Mdn2dConfig config, std::string nameIn) {

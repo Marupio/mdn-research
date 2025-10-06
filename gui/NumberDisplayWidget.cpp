@@ -8,8 +8,8 @@
 #include "CellLineEdit.hpp"
 #include "GuiTools.hpp"
 #include "Project.hpp"
-#include "Selection.hpp"
-#include "Tools.hpp"
+#include <mdn/Selection.hpp>
+#include <mdn/Tools.hpp>
 
 constexpr double mdn::gui::NumberDisplayWidget::kEdgeGuardFrac;
 

@@ -3,8 +3,8 @@
 #include <regex>
 #include <filesystem>
 
-#include "GlobalConfig.hpp"
-#include "Logger.hpp"
+#include <mdn/GlobalConfig.hpp>
+#include <mdn/Logger.hpp>
 
 // Interface class for Mdn2d number framework class, for Mdn2d to talk upwards to the framework
 // within which they exist

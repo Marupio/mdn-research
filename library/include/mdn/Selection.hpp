@@ -2,8 +2,8 @@
 
 #include <vector>
 
-#include "Rect.hpp"
-#include "Mdn2d.hpp"
+#include <mdn/Rect.hpp>
+#include <mdn/Mdn2d.hpp>
 
 namespace mdn {
 

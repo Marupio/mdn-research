@@ -1,8 +1,8 @@
 #pragma once
 
-#include "GlobalConfig.hpp"
-#include "Mdn2dRules.hpp"
-#include "Mdn2dIO.hpp"
+#include <mdn/GlobalConfig.hpp>
+#include <mdn/Mdn2dRules.hpp>
+#include <mdn/Mdn2dIO.hpp>
 
 namespace mdn {
 

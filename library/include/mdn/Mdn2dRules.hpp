@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Carryover.hpp"
-#include "GlobalConfig.hpp"
-#include "Mdn2dBase.hpp"
+#include <mdn/Carryover.hpp>
+#include <mdn/GlobalConfig.hpp>
+#include <mdn/Mdn2dBase.hpp>
 
 namespace mdn {
 

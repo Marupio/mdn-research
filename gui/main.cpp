@@ -1,7 +1,7 @@
 #include <QApplication>
 
-#include "../library/Logger.hpp"
-#include "../library/Mdn2dConfig.hpp"
+#include <mdn/Logger.hpp>
+#include <mdn/Mdn2dConfig.hpp>
 
 #include "mdn_config.h"
 #include "QtLoggingBridge.hpp"

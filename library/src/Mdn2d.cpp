@@ -1,15 +1,15 @@
-#include "Mdn2d.hpp"
+#include <mdn/Mdn2d.hpp>
 
 #include <cassert>
 #include <cmath>
 #include <stdexcept>
 #include <sstream>
 
-#include "Constants.hpp"
-#include "Logger.hpp"
-#include "MdnException.hpp"
-#include "Selection.hpp"
-#include "Tools.hpp"
+#include <mdn/Constants.hpp>
+#include <mdn/Logger.hpp>
+#include <mdn/MdnException.hpp>
+#include <mdn/Selection.hpp>
+#include <mdn/Tools.hpp>
 
 
 mdn::Mdn2d::Mdn2d(std::string nameIn) :

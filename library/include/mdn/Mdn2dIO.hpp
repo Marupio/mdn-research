@@ -5,12 +5,12 @@
 #include <string>
 #include <vector>
 
-#include "GlobalConfig.hpp"
-#include "Mdn2dBase.hpp"
-#include "MdnException.hpp"
-#include "Rect.hpp"
-#include "TextOptions.hpp"
-#include "Tools.hpp"
+#include <mdn/GlobalConfig.hpp>
+#include <mdn/Mdn2dBase.hpp>
+#include <mdn/MdnException.hpp>
+#include <mdn/Rect.hpp>
+#include <mdn/TextOptions.hpp>
+#include <mdn/Tools.hpp>
 
 namespace mdn {
 

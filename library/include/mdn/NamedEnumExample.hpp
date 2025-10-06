@@ -4,8 +4,8 @@
 
 // example_basic.cpp
 #define MDN_LOGS 1                // so WarnWithLogger actually logs
-#include "Logger.hpp"               // your logger (as provided)
-#include "named_enum.hpp"         // the header we finalized
+#include <mdn/Logger.hpp>               // your logger (as provided)
+#include <mdn/named_enum.hpp>         // the header we finalized
 
 using namespace mdn;
 

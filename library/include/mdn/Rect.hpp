@@ -1,17 +1,16 @@
 #pragma once
 
-#include <vector>
 #include <algorithm>
-#include <limits>
-
-#include "Coord.hpp"
-#include "GlobalConfig.hpp"
-#include "Logger.hpp"
-
-// NEW: needed for iterators & sets
 #include <iterator>
+#include <limits>
+#include <vector>
 #include <unordered_set>
-#include "CoordTypes.hpp" // CoordSet, VecCoord, VecVecCoord
+
+#include <mdn/Coord.hpp>
+#include <mdn/GlobalConfig.hpp>
+#include <mdn/Logger.hpp>
+#include <mdn/CoordTypes.hpp>
+
 
 namespace mdn {
 
