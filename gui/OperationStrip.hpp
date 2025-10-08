@@ -4,6 +4,8 @@
 
 #include <QButtonGroup>
 #include <QHBoxLayout>
+#include <QLabel>
+#include <QSpinBox>
 #include <QToolButton>
 #include <QPushButton>
 #include <QWidget>
@@ -32,6 +34,10 @@ public:
 
     void enterActiveDivisionVisual();
     void leaveActiveDivisionVisual();
+
+    // Get the value from division iterations spin box
+    int divisionIterations() const;
+
     void setOpsEnabled(bool enabled);
 
 signals:
@@ -44,7 +50,7 @@ signals:
     void propertiesClicked();
 
     // user clicked Divide while in ActiveDivision mode
-    void divisionIterateClicked();
+    void divisionIterateClicked(int nIters);
 
     // user requested to stop active division (Cancel/Escape)
     void divisionStopRequested();
@@ -59,16 +65,20 @@ private:
     // Private data
     QPushButton* m_btnCancel = nullptr;
 
-    QToolButton* m_btnAdd    = nullptr;
-    QToolButton* m_btnSub    = nullptr;
-    QToolButton* m_btnMul    = nullptr;
-    QToolButton* m_btnDiv    = nullptr;
+    QToolButton* m_btnAdd = nullptr;
+    QToolButton* m_btnSub = nullptr;
+    QToolButton* m_btnMul = nullptr;
+    QToolButton* m_btnDiv = nullptr;
     std::array<QToolButton*, 4> m_allOpButtons;
+
+    QLabel* m_divIterLabel = nullptr;
+    QSpinBox*  m_divIter = nullptr;
+    // QLabel* m_divAlgoLabel = nullptr;
 
     QToolButton* m_btnTranspose = nullptr;
     QToolButton* m_btnCarryOver = nullptr;
-    QToolButton* m_btnCarryPos  = nullptr;
-    QToolButton* m_btnCarryNeg  = nullptr;
+    QToolButton* m_btnCarryPos = nullptr;
+    QToolButton* m_btnCarryNeg = nullptr;
 
     bool m_activeDivision{false};
 

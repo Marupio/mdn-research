@@ -374,22 +374,29 @@ void mdn::gui::OpsController::rebuildBottomContainer() {
                 );
             }
         );
-        connect(m_strip, &OperationStrip::divisionIterateClicked, this, [this]{
-            if (m_phase == OperationPhase::ActiveDivision) {
-                Log_Debug2_H("emit divisionIterateRequested()");
-                emit divisionIterateRequested();
-                Log_Debug2_T("");
+        connect(m_strip, &OperationStrip::divisionIterateClicked,
+            this,
+            [this](int iters) {
+                if (m_phase == OperationPhase::ActiveDivision) {
+                    Log_Debug2_H("emit divisionIterateRequested(" << iters << ")");
+                    emit divisionIterateRequested(iters);
+                    Log_Debug2_T("");
+                }
             }
-        });
+        );
         connect(m_strip, &OperationStrip::divisionStopRequested, this, [this]{
             if (m_phase == OperationPhase::ActiveDivision) {
                 Log_Debug2_H("emit divisionStopRequested()");
                 emit divisionStopRequested();
+                requestClearStatus();
+                requestStatus(tr("Cancelled"), 2000, false);
                 leaveActiveDivision(false);
                 Log_Debug2_T("");
             } else {
                 onCancel();
             }
+            requestClearStatus();
+            requestStatus(tr("Cancelled"), 2000, false);
         });
     }
     lay->addWidget(m_strip, 0);
@@ -509,6 +516,7 @@ void mdn::gui::OpsController::endBattle() {
         return;
     }
 
+    int divideIters = 10;
     QString defaultRemName = "";
     if (m_op == Operation::Divide) {
         QString rqs(
@@ -530,6 +538,9 @@ void mdn::gui::OpsController::endBattle() {
                     .arg(nameFor(m_b)
                 )
             );
+        }
+        if (m_strip) {
+            divideIters = m_strip->divisionIterations();
         }
     } else {
         QString rqs(
@@ -562,6 +573,7 @@ void mdn::gui::OpsController::endBattle() {
     p.newName = defaultDestName;
     p.indexRem = m_rem;
     p.newRemName = defaultRemName;
+    p.divisionIters = divideIters;
 
     cancel(false);
 

@@ -1,6 +1,10 @@
 #include "OperationStrip.hpp"
 
+#include <algorithm>
+
 #include <QToolButton>
+#include <QGroupBox>
+#include <QFormLayout>
 
 #include "MdnQtInterface.hpp"
 
@@ -42,6 +46,26 @@ mdn::gui::OperationStrip::OperationStrip(QWidget* parent)
 
     // Convenience
     m_allOpButtons = { m_btnAdd, m_btnSub, m_btnMul, m_btnDiv };
+
+    // Global settings
+    // auto* gDiv = new QGroupBox("", this);
+    // auto* layDiv = new QHBoxLayout(gDiv);
+
+    m_divIterLabel = new QLabel(this);
+    m_divIterLabel->setText("10^");
+    m_divIterLabel->setToolTip("10ⁿ = number of ÷ iterations");
+
+    m_divIter = new QSpinBox(this);
+    m_divIter->setRange(0, 7);
+    m_divIter->setAccelerated(false);
+    m_divIter->setToolTip("10ⁿ = number of ÷ iterations");
+
+    // layDiv->addWidget(m_btnDiv);
+    // layDiv->addWidget(m_divIterLabel);
+    // layDiv->addWidget(m_divIter);
+
+    // m_divAlgoLabel = new QLabel(gDiv);
+    // m_divAlgoLabel->setText("÷ algorithm");
 
     // Wire user intent -> OpsController (OpsController will call activate/reset)
     connect(m_btnAdd, &QToolButton::clicked, this, &OperationStrip::onAdd);
@@ -108,6 +132,11 @@ mdn::gui::OperationStrip::OperationStrip(QWidget* parent)
     lay->addWidget(m_btnSub);
     lay->addWidget(m_btnMul);
     lay->addWidget(m_btnDiv);
+    lay->addWidget(m_divIterLabel);
+    lay->addWidget(m_divIter);
+
+    // lay->addItem(layDiv);
+
     lay->addWidget(m_btnTranspose);
     lay->addWidget(m_btnCarryOver);
     lay->addWidget(m_btnCarryPos);
@@ -246,6 +275,14 @@ void mdn::gui::OperationStrip::leaveActiveDivisionVisual() {
 }
 
 
+int mdn::gui::OperationStrip::divisionIterations() const {
+    int itersPow = std::clamp(m_divIter->value(), 0, 7);
+    int iters = 1;
+    while (itersPow--) { iters *= 10; }
+    return iters;
+}
+
+
 void mdn::gui::OperationStrip::setOpsEnabled(bool enabled) {
     Log_Debug2_H("enabled=" << enabled);
     for (QToolButton* b : { m_btnAdd, m_btnSub, m_btnMul, m_btnDiv }) {
@@ -309,8 +346,10 @@ void mdn::gui::OperationStrip::buttonEnableAndHighlight(QAbstractButton* btn, bo
 void mdn::gui::OperationStrip::onDiv() {
     Log_Debug3_H("m_activeDivision=" << m_activeDivision);
     if (m_activeDivision) {
-        Log_Debug3("emit divisionIterateClicked()");
-        emit divisionIterateClicked();
+        // m_divIter
+        int iters = divisionIterations();
+        Log_Debug3("emit divisionIterateClicked(" << iters << ")");
+        emit divisionIterateClicked(iters);
     } else {
         Log_Debug3("emit operationClicked(Divide)");
         emit operationClicked(Operation::Divide);

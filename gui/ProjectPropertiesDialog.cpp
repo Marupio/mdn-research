@@ -106,11 +106,11 @@ void ProjectPropertiesDialog::buildUi() {
     signLay->addWidget(m_signNeg);
 
     // Add rows
-    formN->addRow(tr("Base:"),      m_base);
+    formN->addRow(tr("Base:"), m_base);
     formN->addRow(tr("Precision:"), precisionRow);
     formN->addRow(tr("Cascade:"), m_fraxisCascadeDepth);
-    formN->addRow(tr("Fraxis:"),    fraxisRow);
-    formN->addRow(tr("Sign:"),      signRow);
+    formN->addRow(tr("Fraxis:"), fraxisRow);
+    formN->addRow(tr("Sign:"), signRow);
     outer->addWidget(gNum);
 
     // Impact preview

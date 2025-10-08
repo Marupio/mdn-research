@@ -23,6 +23,8 @@ struct OperationPlan {
     // newName: when writing to a new tab, this is the name to try
     QString newName;
 
+    int divisionIters=10;
+
 
 
     friend std::ostream& operator<<(std::ostream& os, const OperationPlan& p) {
@@ -41,7 +43,7 @@ struct OperationPlan {
             } else {
                 remStr = "Overwrite(" + std::to_string(p.indexRem) + ")";
             }
-            os << ", rem(" <<  remStr << ")]";
+            os << ", rem(" <<  remStr << ")," << p.divisionIters << "]";
         } else {
             os << "]";
         }

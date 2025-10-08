@@ -67,7 +67,7 @@ signals:
     void requestFitBottomToContents();
 
     // user clicked Divide while ActiveDivision
-    void divisionIterateRequested();
+    void divisionIterateRequested(int iters);
 
     // user stopped ActiveDivision (Cancel/Escape)
     void divisionStopRequested();

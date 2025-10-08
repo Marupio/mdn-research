@@ -103,7 +103,7 @@ private slots:
     void onSplitterMoved(int pos, int index);
     void onCommandSubmitted(const QString& text);
     void onOpsPlan(const OperationPlan& p);
-    void onDivisionIterateRequested();
+    void onDivisionIterateRequested(int iters);
     void onDivisionStopRequested();
 
     void onTransposeClicked();
@@ -241,7 +241,7 @@ private:
     void applySplitRatio();
     void ensureTabCorner();
 
-    void divide(const OperationPlan& p, Mdn2d& a, Mdn2d& b);
+    void divide(const OperationPlan& p, Mdn2d& a, Mdn2d& b, int iters);
 
     // When true, no splitter movement allowed
     bool m_welded = false;

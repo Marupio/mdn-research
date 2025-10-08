@@ -112,6 +112,7 @@
     "qjsondocument": "cpp",
     "qmenu": "cpp",
     "qkeyevent": "cpp",
-    "qformlayout": "cpp"
+    "qformlayout": "cpp",
+    "qmessagebox": "cpp"
   }
 }

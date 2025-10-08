@@ -864,7 +864,7 @@ void mdn::gui::MainWindow::onOpsPlan(const OperationPlan& p) {
     Mdn2d& a = *aPtr;
     Mdn2d& b = *bPtr;
     if (p.op == Operation::Divide) {
-        divide(p, a, b);
+        divide(p, a, b, p.divisionIters);
         Log_Debug_T("");
         return;
     }
@@ -1007,16 +1007,17 @@ void mdn::gui::MainWindow::onOpsPlan(const OperationPlan& p) {
 }
 
 
-void mdn::gui::MainWindow::onDivisionIterateRequested() {
+void mdn::gui::MainWindow::onDivisionIterateRequested(int iters) {
     Log_Debug3_H("");
     if (!m_ad_operandA) {
         Log_Warn("Out-of-sequence division iteration request");
         Log_Debug3_T("");
         return;
     }
+    showStatus(tr("Calculating %1 iterations...").arg(iters), 0, true);
     static_cast<void>(
         m_ad_operandA->divideIterate(
-            10,
+            iters,
             *m_ad_operandB,
             *m_ad_destination,
             *m_ad_remainder,
@@ -1026,7 +1027,19 @@ void mdn::gui::MainWindow::onDivisionIterateRequested() {
     );
     Log_Debug3("m_ad_remMag=" << m_ad_remMag);
     if (m_ad_remMag == 0) {
+        Log_Debug4("remMag is zero");
         onDivisionStopRequested();
+        clearStatus();
+        showStatus(tr("Calculation complete"), 2000);
+        if (m_ops) {
+            m_ops->leaveActiveDivision(false);
+        }
+    } else {
+        Log_Debug4("remMag is non-zero");
+        clearStatus();
+        showStatus(
+            tr("Division results - press [÷] for more iterations, or [Cancel] stops here"), 0
+        );
     }
     if (m_project) {
         int activeIndex = m_project->activeIndex();
@@ -3159,9 +3172,9 @@ void mdn::gui::MainWindow::ensureTabCorner() {
 }
 
 
-void mdn::gui::MainWindow::divide(const OperationPlan& p, Mdn2d& a, Mdn2d& b) {
+void mdn::gui::MainWindow::divide(const OperationPlan& p, Mdn2d& a, Mdn2d& b, int iters) {
     // First - acquire references to destination and remainder
-    Log_Debug2_H("p=" << p << ", a=[" << a.name() << "],b=[" << b.name() << "]");
+    Log_Debug2_H("p=" << p << ", a=[" << a.name() << "],b=[" << b.name() << "], iters=" << iters);
     Mdn2d* destPtr(nullptr);
     Mdn2d* remPtr(nullptr);
     int answerIndex;
@@ -3205,7 +3218,8 @@ void mdn::gui::MainWindow::divide(const OperationPlan& p, Mdn2d& a, Mdn2d& b) {
 
     long double remMag = constants::ldoubleGreat;
     Log_Debug3_H("divideIterate dispatch");
-    a.divideIterate(10, b, dest, rem, remMag, m_globalConfig.fraxis());
+    showStatus(tr("Calculating %1 iterations...").arg(iters), 0, true);
+    a.divideIterate(iters, b, dest, rem, remMag, m_globalConfig.fraxis());
     Log_Debug3_T("divideIterate return");
     if (remMag > 0.0) {
         Log_Debug4("remMag non-zero:" << remMag);
@@ -3215,7 +3229,9 @@ void mdn::gui::MainWindow::divide(const OperationPlan& p, Mdn2d& a, Mdn2d& b) {
         m_ad_remainder = &rem;
         m_ad_destination = &dest;
         m_ad_remMag = remMag;
-        showStatus(tr("Division underway - press [÷] to continue, or [Cancel]"), 0);
+        showStatus(
+            tr("Division results - press [÷] for more iterations, or [Cancel] stops here"), 0
+        );
     } else {
         Log_Debug4("remMag is zero");
         clearStatus();
