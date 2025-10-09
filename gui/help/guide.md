@@ -2,7 +2,38 @@
 
 ### What is this app?
 
-This app is a calculator for **Multi-Dimenional Numbers (MDN)**.  The speadsheet shows all the digits of a single MDN.  You can switch between MDNs using the **tabs** at the bottom.
+This app is a calculator for **Multi-Dimenional Numbers (MDN)**.
+
+### Running the app
+
+Find the executable:
+
+* **Windows** the executable is in the unzipped folder, **mdn_gui.exe**
+* **Linux** the executable is **mdn_gui**, by default it installs in **/usr/bin**
+
+#### Command Line Options
+
+Command line options include:
+
+* *-h, --help* - Displays help on commandline options.
+* *-v, --version* - Displays version information.
+* *-l, --log-level <level>* - Set log verbosity. One of:
+    * Debug4
+    * Debug3
+    * Debug2
+    * Debug
+    * Info
+    * Warning
+    * Error
+* *-f, --log-file <path>* - Write logs to the given file path (creates/overwrites).
+* *--no-log-file* - Do not write logs to a file (overrides any defaults).
+* *--check-indents* - Monitor debug logging for missing indentation calls
+* *-i, --input <path>* - Path to JSON settings file.
+* *--info* - Display application information
+
+### Layout
+
+The speadsheet shows all the digits of a single MDN.  You can switch between MDNs using the **tabs** at the bottom.
 
 ### What are the Tabs?
 
