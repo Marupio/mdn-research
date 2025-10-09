@@ -753,11 +753,13 @@ void mdn::gui::NumberDisplayWidget::mousePressEvent(QMouseEvent* e) {
                 m_dragAnchorY = m_cursorY;
             }
             setCursor1(mx, my);
+            emit statusSelectionChanged(*m_selection);
         } else {
             m_dragging = true;
             m_dragAnchorX = mx;
             m_dragAnchorY = my;
             setBothCursors(mx, my);
+            emit statusSelectionChanged(*m_selection);
         }
         e->accept();
         return;
@@ -775,6 +777,7 @@ void mdn::gui::NumberDisplayWidget::mouseMoveEvent(QMouseEvent* e) {
             m_selection->setCursor0({m_dragAnchorX, m_dragAnchorY});
             m_selection->setCursor1({mx, my});
             m_selection->syncRectToCursors();
+            emit statusSelectionChanged(*m_selection);
         }
         m_cursorX = mx;
         m_cursorY = my;

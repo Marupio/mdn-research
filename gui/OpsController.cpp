@@ -517,6 +517,7 @@ void mdn::gui::OpsController::endBattle() {
     }
 
     int divideIters = 10;
+    Fraxis divideFraxis = Fraxis::Invalid;
     QString defaultRemName = "";
     if (m_op == Operation::Divide) {
         QString rqs(
@@ -541,6 +542,7 @@ void mdn::gui::OpsController::endBattle() {
         }
         if (m_strip) {
             divideIters = m_strip->divisionIterations();
+            divideFraxis = m_strip->divisionFraxis();
         }
     } else {
         QString rqs(
@@ -574,6 +576,7 @@ void mdn::gui::OpsController::endBattle() {
     p.indexRem = m_rem;
     p.newRemName = defaultRemName;
     p.divisionIters = divideIters;
+    p.divisionFraxis = divideFraxis;
 
     cancel(false);
 

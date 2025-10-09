@@ -60,6 +60,30 @@ mdn::gui::OperationStrip::OperationStrip(QWidget* parent)
     m_divIter->setAccelerated(false);
     m_divIter->setToolTip("10ⁿ = number of ÷ iterations");
 
+    // ~~~ Fraxis button
+    m_divFraxisBtn = new QToolButton(this);
+    m_divFraxisBtn->setAutoRaise(true);
+    m_divFraxisBtn->setToolTip(
+        tr("Divide ÷ algorithm 'Fraxis' (click to toggle; right-click to choose)")
+    );
+    m_divFraxisBtn->setToolButtonStyle(Qt::ToolButtonTextOnly);
+
+    m_divFraxisMenu = new QMenu(this);
+    m_divFraxisMenu->addAction("X", this, &OperationStrip::divChooseFraxisX);
+    m_divFraxisMenu->addAction("Y", this, &OperationStrip::divChooseFraxisY);
+    m_divFraxisMenu->addAction("X/Y", this, &OperationStrip::divChooseFraxisAlternating);
+    m_divFraxisBtn->setMenu(m_divFraxisMenu);
+    // right side arrow; right-click opens menu
+    m_divFraxisBtn->setPopupMode(QToolButton::MenuButtonPopup);
+
+    // Left-click: toggle X ↔ Y
+    connect(
+        m_divFraxisBtn,
+        &QToolButton::clicked,
+        this,
+        &OperationStrip::divCycleFraxis
+    );
+
     // layDiv->addWidget(m_btnDiv);
     // layDiv->addWidget(m_divIterLabel);
     // layDiv->addWidget(m_divIter);
@@ -131,9 +155,11 @@ mdn::gui::OperationStrip::OperationStrip(QWidget* parent)
     lay->addWidget(m_btnAdd);
     lay->addWidget(m_btnSub);
     lay->addWidget(m_btnMul);
+    lay->addSpacing(8);
     lay->addWidget(m_btnDiv);
     lay->addWidget(m_divIterLabel);
     lay->addWidget(m_divIter);
+    lay->addWidget(m_divFraxisBtn);
 
     // lay->addItem(layDiv);
 
@@ -206,6 +232,9 @@ mdn::gui::OperationStrip::OperationStrip(QWidget* parent)
 
     // Idle state by default
     reset();
+    m_divFraxisBtn->setText("X <<<");
+    m_divFraxis = Fraxis::X;
+    // divChooseFraxisAlternating();
     Log_Debug2_T("");
 }
 
@@ -283,12 +312,66 @@ int mdn::gui::OperationStrip::divisionIterations() const {
 }
 
 
+mdn::Fraxis mdn::gui::OperationStrip::divisionFraxis() const {
+    return m_divFraxis;
+}
+
+
 void mdn::gui::OperationStrip::setOpsEnabled(bool enabled) {
     Log_Debug2_H("enabled=" << enabled);
     for (QToolButton* b : { m_btnAdd, m_btnSub, m_btnMul, m_btnDiv }) {
         b->setEnabled(enabled);
     }
     Log_Debug2_T("");
+}
+
+
+void mdn::gui::OperationStrip::divCycleFraxis() {
+    switch (m_divFraxis) {
+        default:
+        case Fraxis::X: {
+            m_divFraxis = Fraxis::Y;
+            m_divFraxisBtn->setText(">>> Y");
+            break;
+        }
+        case Fraxis::Y: {
+            m_divFraxis = Fraxis::Default;
+            m_divFraxisBtn->setText("X←→Y");
+            break;
+        }
+        case Fraxis::Default: {
+            m_divFraxis = Fraxis::X;
+            m_divFraxisBtn->setText("X <<<");
+            break;
+        }
+    }
+}
+
+
+void mdn::gui::OperationStrip::divChooseFraxisX() {
+    if (m_divFraxis == Fraxis::X) {
+        return;
+    }
+    m_divFraxis = Fraxis::X;
+    m_divFraxisBtn->setText("X <<<");
+}
+
+
+void mdn::gui::OperationStrip::divChooseFraxisY() {
+    if (m_divFraxis == Fraxis::Y) {
+        return;
+    }
+    m_divFraxis = Fraxis::Y;
+    m_divFraxisBtn->setText(">>> Y");
+}
+
+
+void mdn::gui::OperationStrip::divChooseFraxisAlternating() {
+    if (m_divFraxis == Fraxis::Default) {
+        return;
+    }
+    m_divFraxis = Fraxis::Default;
+    m_divFraxisBtn->setText("X←→Y");
 }
 
 

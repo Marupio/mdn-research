@@ -5,10 +5,13 @@
 #include <QButtonGroup>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QMenu>
 #include <QSpinBox>
 #include <QToolButton>
 #include <QPushButton>
 #include <QWidget>
+
+#include <mdn/Fraxis.hpp>
 
 #include "EnumDestinationMode.hpp"
 #include "EnumOperation.hpp"
@@ -37,6 +40,7 @@ public:
 
     // Get the value from division iterations spin box
     int divisionIterations() const;
+    Fraxis divisionFraxis() const;
 
     void setOpsEnabled(bool enabled);
 
@@ -54,6 +58,12 @@ signals:
 
     // user requested to stop active division (Cancel/Escape)
     void divisionStopRequested();
+
+private slots:
+    void divCycleFraxis();
+    void divChooseFraxisX();
+    void divChooseFraxisY();
+    void divChooseFraxisAlternating();
 
 private:
 
@@ -74,6 +84,10 @@ private:
     QLabel* m_divIterLabel = nullptr;
     QSpinBox*  m_divIter = nullptr;
     // QLabel* m_divAlgoLabel = nullptr;
+
+    Fraxis m_divFraxis{Fraxis::Default};
+    QToolButton* m_divFraxisBtn{nullptr};
+    QMenu* m_divFraxisMenu{nullptr};
 
     QToolButton* m_btnTranspose = nullptr;
     QToolButton* m_btnCarryOver = nullptr;

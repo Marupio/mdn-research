@@ -864,7 +864,8 @@ void mdn::gui::MainWindow::onOpsPlan(const OperationPlan& p) {
     Mdn2d& a = *aPtr;
     Mdn2d& b = *bPtr;
     if (p.op == Operation::Divide) {
-        divide(p, a, b, p.divisionIters);
+        Log_Debug4("divide dispatch with direction=" << FraxisToName(p.divisionFraxis));
+        divide(p, a, b, p.divisionIters, p.divisionFraxis);
         Log_Debug_T("");
         return;
     }
@@ -1015,6 +1016,14 @@ void mdn::gui::MainWindow::onDivisionIterateRequested(int iters) {
         return;
     }
     showStatus(tr("Calculating %1 iterations...").arg(iters), 0, true);
+    Fraxis direction = Fraxis::Invalid;
+    if (m_strip) {
+        direction = m_strip->divisionFraxis();
+        Log_Debug4("Got direction=" << FraxisToName(direction) << " from strip");
+    } else {
+        direction = m_globalConfig.fraxis();
+        Log_Debug4("Got direction=" << FraxisToName(direction) << " from config");
+    }
     static_cast<void>(
         m_ad_operandA->divideIterate(
             iters,
@@ -1022,7 +1031,7 @@ void mdn::gui::MainWindow::onDivisionIterateRequested(int iters) {
             *m_ad_destination,
             *m_ad_remainder,
             m_ad_remMag,
-            m_globalConfig.fraxis()
+            direction
         )
     );
     Log_Debug3("m_ad_remMag=" << m_ad_remMag);
@@ -1041,9 +1050,9 @@ void mdn::gui::MainWindow::onDivisionIterateRequested(int iters) {
             tr("Division results - press [÷] for more iterations, or [Cancel] stops here"), 0
         );
     }
-    if (m_project) {
-        int activeIndex = m_project->activeIndex();
-        if (auto* ndw = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(activeIndex))) {
+    std::array<int, 2> indices{m_ad_plan.indexDest, m_ad_plan.indexRem};
+    for (int& idx : indices) {
+        if (auto* ndw = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(idx))) {
             ndw->update();
         }
     }
@@ -1052,6 +1061,7 @@ void mdn::gui::MainWindow::onDivisionIterateRequested(int iters) {
 
 
 void mdn::gui::MainWindow::onDivisionStopRequested() {
+    m_ad_planSet = false;
     m_ad_operandA = nullptr;
     m_ad_operandB = nullptr;
     m_ad_remainder = nullptr;
@@ -1273,15 +1283,15 @@ void mdn::gui::MainWindow::setGlobalConfig(Mdn2dConfig c, bool force) {
         m_globalConfig.setParent(*m_project);
         m_project->setConfig(m_globalConfig, true);
     }
-    updateStatusFraxisText(c.fraxis());
-    updateStatusSignConventionText(c.signConvention());
+    updateStatusFraxisText(c.fraxis(), false);
+    updateStatusSignConventionText(c.signConvention(), false);
     Log_Debug2_T("");
 }
 
 
-void mdn::gui::MainWindow::updateGlobalConfig(Mdn2dConfig c, bool force) {
+void mdn::gui::MainWindow::updateGlobalConfig(Mdn2dConfig c, UpdateGlobalConfigEnum behaviour) {
     Log_Debug2_H("newConfig=" << c << ", currentConfig=" << m_globalConfig);
-    if (!force && m_globalConfig == c) {
+    if (!(behaviour == UpdateGlobalConfigEnum::ForceUpdate) && m_globalConfig == c) {
         Log_Debug2_T("no changes");
         return;
     }
@@ -1290,8 +1300,14 @@ void mdn::gui::MainWindow::updateGlobalConfig(Mdn2dConfig c, bool force) {
         m_globalConfig.setParent(*m_project);
         m_project->setConfig(m_globalConfig, true);
     }
-    updateStatusFraxisText(c.fraxis());
-    updateStatusSignConventionText(c.signConvention());
+    updateStatusFraxisText(
+        c.fraxis(),
+        behaviour == UpdateGlobalConfigEnum::ShowFraxis
+    );
+    updateStatusSignConventionText(
+        c.signConvention(),
+        behaviour == UpdateGlobalConfigEnum::ShowSignConvention
+    );
     Log_Debug2_T("");
 }
 
@@ -1307,7 +1323,8 @@ void mdn::gui::MainWindow::cycleFraxis() {
 
     // Route through Project::setConfig so impact prompts/updates propagate to all tabs
     // shows impact dialogs if needed
-    updateGlobalConfig(cfg);
+    updateGlobalConfig(cfg, UpdateGlobalConfigEnum::ShowFraxis);
+    // TODO Show Fraxis change
 }
 
 
@@ -1317,7 +1334,7 @@ void mdn::gui::MainWindow::chooseFraxisX() {
     if (cfg.fraxis() == Fraxis::X) return;
     showStatus(tr("Fraxis >> X"), 2000);
     cfg.setFraxis(Fraxis::X);
-    updateGlobalConfig(cfg);
+    updateGlobalConfig(cfg, UpdateGlobalConfigEnum::ShowFraxis);
 }
 
 
@@ -1327,7 +1344,7 @@ void mdn::gui::MainWindow::chooseFraxisY() {
     if (cfg.fraxis() == Fraxis::Y) return;
     showStatus(tr("Fraxis >> Y"), 2000);
     cfg.setFraxis(Fraxis::Y);
-    updateGlobalConfig(cfg);
+    updateGlobalConfig(cfg, UpdateGlobalConfigEnum::ShowFraxis);
 }
 
 
@@ -1352,7 +1369,8 @@ void mdn::gui::MainWindow::cycleSignConvention() {
 
     // Route through Project::setConfig so impact prompts/updates propagate to all tabs
     // shows impact dialogs if needed
-    updateGlobalConfig(cfg);
+    updateGlobalConfig(cfg, UpdateGlobalConfigEnum::ShowSignConvention);
+    // TODO show signConvention
 }
 
 
@@ -1362,7 +1380,7 @@ void mdn::gui::MainWindow::chooseSignConventionPositive() {
     if (cfg.signConvention() == SignConvention::Positive) return;
     showStatus(tr("SignConvention >> Positive"), 2000);
     cfg.setSignConvention(SignConvention::Positive);
-    updateGlobalConfig(cfg);
+    updateGlobalConfig(cfg, UpdateGlobalConfigEnum::ShowSignConvention);
 }
 
 
@@ -1372,7 +1390,7 @@ void mdn::gui::MainWindow::chooseSignConventionNeutral() {
     if (cfg.signConvention() == SignConvention::Neutral) return;
     showStatus(tr("SignConvention >> Neutral"), 2000);
     cfg.setSignConvention(SignConvention::Neutral);
-    updateGlobalConfig(cfg);
+    updateGlobalConfig(cfg, UpdateGlobalConfigEnum::ShowSignConvention);
 }
 
 
@@ -1382,7 +1400,7 @@ void mdn::gui::MainWindow::chooseSignConventionNegative() {
     if (cfg.signConvention() == SignConvention::Negative) return;
     showStatus(tr("SignConvention >> Negative"), 2000);
     cfg.setSignConvention(SignConvention::Negative);
-    updateGlobalConfig(cfg);
+    updateGlobalConfig(cfg, UpdateGlobalConfigEnum::ShowSignConvention);
 }
 
 
@@ -2238,11 +2256,11 @@ void mdn::gui::MainWindow::createStatusBar()
 
     // Seed initial label from project config
     if (m_project) {
-        updateStatusFraxisText(m_globalConfig.fraxis());
-        updateStatusSignConventionText(m_globalConfig.signConvention());
+        updateStatusFraxisText(m_globalConfig.fraxis(), false);
+        updateStatusSignConventionText(m_globalConfig.signConvention(), false);
     } else {
-        updateStatusFraxisText(Fraxis::X);
-        updateStatusSignConventionText(SignConvention::Positive);
+        updateStatusFraxisText(Fraxis::X, false);
+        updateStatusSignConventionText(SignConvention::Positive, false);
     }
 
     // Context menu to pick X or Y / Positive, Neutral or Negative
@@ -2270,7 +2288,7 @@ void mdn::gui::MainWindow::createStatusBar()
 
     // ~~~ Cursor and selection text
     m_statusCursor = new QLabel(this);
-    m_statusSel    = new QLabel(this);
+    m_statusSel = new QLabel(this);
 
     m_statusCursor->setText("(0,0)");
     m_statusSel->setText("(empty)");
@@ -2598,33 +2616,39 @@ void mdn::gui::MainWindow::buildSignConventionMenu() {
 }
 
 
-void mdn::gui::MainWindow::updateStatusFraxisText(Fraxis f) {
+void mdn::gui::MainWindow::updateStatusFraxisText(Fraxis f, bool echoToStatusBar) {
     Log_Debug2_H("f=" << f);
     if (!m_statusFraxisBtn) {
         Log_Debug2_T("button missing");
         return;
     }
-    const QString text = (f == Fraxis::Y) ? QStringLiteral("FY") : QStringLiteral("FX");
-    m_statusFraxisBtn->setText(text);
+    // const QString text = (f == Fraxis::Y) ? QStringLiteral("FY") : QStringLiteral("FX");
+    // m_statusFraxisBtn->setText(text);
 
     // reflect state in the popup menu (if present)
     switch (f) {
         case Fraxis::X: {
             Log_Debug4("Setting fraxis status to 'X'");
             m_statusFraxisBtn->setText("X");
-            showStatus(tr("Fraxis >> X"), 2000);
+            if (echoToStatusBar) {
+                showStatus(tr("Fraxis >> X"), 2000);
+            }
             break;
         }
         case Fraxis::Y: {
             Log_Debug4("Setting fraxis status to 'Y'");
             m_statusFraxisBtn->setText("Y");
-            showStatus(tr("Fraxis >> Y"), 2000);
+            if (echoToStatusBar) {
+                showStatus(tr("Fraxis >> Y"), 2000);
+            }
             break;
         }
         default: {
             Log_Warn("Setting fraxis status to '?'");
             m_statusFraxisBtn->setText("?");
-            showStatus(tr("Fraxis >> ?"), 2000);
+            if (echoToStatusBar) {
+                showStatus(tr("Fraxis >> ?"), 2000);
+            }
             break;
         }
     }
@@ -2632,7 +2656,7 @@ void mdn::gui::MainWindow::updateStatusFraxisText(Fraxis f) {
 }
 
 
-void mdn::gui::MainWindow::updateStatusSignConventionText(SignConvention sc) {
+void mdn::gui::MainWindow::updateStatusSignConventionText(SignConvention sc, bool echoToStatusBar) {
     Log_Debug2_H("sc=" << sc);
     if (!m_statusSignConventionBtn) {
         Log_Debug2_T("button missing");
@@ -2652,9 +2676,11 @@ void mdn::gui::MainWindow::updateStatusSignConventionText(SignConvention sc) {
             break;
     }
     m_statusSignConventionBtn->setText(text);
-    std::string st("SignConvention >> " + SignConventionToName(sc));
-    QString qst(QString::fromStdString(st));
-    showStatus(qst, 2000);
+    if (echoToStatusBar) {
+        std::string st("SignConvention >> " + SignConventionToName(sc));
+        QString qst(QString::fromStdString(st));
+        showStatus(qst, 2000);
+    }
 
     Log_Debug2_T("");
 }
@@ -3172,11 +3198,18 @@ void mdn::gui::MainWindow::ensureTabCorner() {
 }
 
 
-void mdn::gui::MainWindow::divide(const OperationPlan& p, Mdn2d& a, Mdn2d& b, int iters) {
+void mdn::gui::MainWindow::divide(
+    const OperationPlan& p, Mdn2d& a, Mdn2d& b, int iters, Fraxis direction
+) {
     // First - acquire references to destination and remainder
-    Log_Debug2_H("p=" << p << ", a=[" << a.name() << "],b=[" << b.name() << "], iters=" << iters);
+    Log_Debug2_H(""
+        << "p=" << p << ", a=[" << a.name() << "],b=[" << b.name() << "], iters=" << iters
+        << ",direction=" << FraxisToName(direction)
+    );
     Mdn2d* destPtr(nullptr);
     Mdn2d* remPtr(nullptr);
+    m_ad_plan = p;
+    m_ad_planSet = true;
     int answerIndex;
     if (p.indexDest >= 0) {
         Log_Debug3("Getting destination " << p.indexDest);
@@ -3190,6 +3223,7 @@ void mdn::gui::MainWindow::divide(const OperationPlan& p, Mdn2d& a, Mdn2d& b, in
         m_project->insertMdn(std::move(newDest), destIndex);
         destPtr = m_project->getMdn(destIndex);
         answerIndex = destIndex;
+        m_ad_plan.indexDest = destIndex;
     }
     if (p.indexRem >= 0) {
         Log_Debug3("Getting remainder " << p.indexRem);
@@ -3202,6 +3236,7 @@ void mdn::gui::MainWindow::divide(const OperationPlan& p, Mdn2d& a, Mdn2d& b, in
         int remIndex = m_project->activeIndex() + 1;
         m_project->insertMdn(std::move(newRem), remIndex);
         remPtr = m_project->getMdn(remIndex);
+        m_ad_plan.indexRem = remIndex;
     }
     // Set activeIndex to answer
     if (m_project && m_tabWidget) {
@@ -3219,7 +3254,7 @@ void mdn::gui::MainWindow::divide(const OperationPlan& p, Mdn2d& a, Mdn2d& b, in
     long double remMag = constants::ldoubleGreat;
     Log_Debug3_H("divideIterate dispatch");
     showStatus(tr("Calculating %1 iterations...").arg(iters), 0, true);
-    a.divideIterate(iters, b, dest, rem, remMag, m_globalConfig.fraxis());
+    a.divideIterate(iters, b, dest, rem, remMag, direction);
     Log_Debug3_T("divideIterate return");
     if (remMag > 0.0) {
         Log_Debug4("remMag non-zero:" << remMag);
@@ -3236,12 +3271,13 @@ void mdn::gui::MainWindow::divide(const OperationPlan& p, Mdn2d& a, Mdn2d& b, in
         Log_Debug4("remMag is zero");
         clearStatus();
         showStatus(tr("Calculation complete"), 2000);
+        m_ad_planSet = false;
     }
     syncTabsToProject();
     setActiveTab(p.indexA);
-    if (m_project) {
-        int activeIndex = m_project->activeIndex();
-        if (auto* ndw = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(activeIndex))) {
+    std::array<int, 2> indices{m_ad_plan.indexDest, m_ad_plan.indexRem};
+    for (int& idx : indices) {
+        if (auto* ndw = qobject_cast<NumberDisplayWidget*>(m_tabWidget->widget(idx))) {
             ndw->update();
         }
     }

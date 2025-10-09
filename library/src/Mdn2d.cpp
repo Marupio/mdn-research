@@ -209,7 +209,7 @@ void mdn::Mdn2d::locked_divideIterate(
     //  *this = p values (pVal, pOffset, pSign, etc)
     //  rhs   = q values (qVal, qOffset, qSign, etc)
     //  ans   = t values (tVal, tOffset, tSign, etc)
-    internal_checkFraxis(fraxis);
+    // internal_checkFraxis(fraxis);
     if (rhs.m_index.empty()) {
         Log_N_Debug_T("Divisor is zero, answer is undefined");
         remMag = -1.0;
@@ -221,9 +221,9 @@ void mdn::Mdn2d::locked_divideIterate(
     // Find principal row for division - row with largest absolute magnitude
     Coord pOffset;
     long double pVal;
-    if (fraxis != Fraxis::X && fraxis != Fraxis::Y) {
-        Log_Warn("Fraxis set to invalid value, changing to Fraxis::X");
-        fraxis = Fraxis::X;
+    if (fraxis == Fraxis::Invalid) {
+        Log_Warn("Fraxis set to invalid value, changing to Fraxis::Default");
+        fraxis = Fraxis::Default;
     }
 
     Log_N_Debug3_H("rhs row/col magMax dispatch");
@@ -237,10 +237,19 @@ void mdn::Mdn2d::locked_divideIterate(
         Log_N_Debug_T("Failed magMax")
         return;
     }
+    Fraxis lastFraxis = fraxis;
+    if (lastFraxis == Fraxis::Default) {
+        // Alternating fraxis directions, start with X
+        static Fraxis altStart = Fraxis::X;
+        fraxis = altStart;
+        altStart = altStart == Fraxis::X ? Fraxis::Y : Fraxis::X;
+    }
     Log_N_Debug3_T("rhs row/col magMax return, pOffset=" << pOffset << ", pVal=" << pVal);
     int iter = 0;
     for (; iter < nIters; ++iter) {
-        Log_N_Debug3("iter " << iter << " of " << nIters);
+        Log_N_Debug3(
+            "iter " << iter << " of " << nIters << ", fraxis=" << FraxisToName(fraxis)
+        );
         Coord qOffset;
         long double qVal;
         Log_N_Debug2_H("rem row/col magMax dispatch");
@@ -286,6 +295,10 @@ void mdn::Mdn2d::locked_divideIterate(
         remChanged.clear();
         ans.locked_carryoverCleanup(ansChanged);
         ansChanged.clear();
+        if (lastFraxis != fraxis) {
+            lastFraxis = fraxis;
+            fraxis = fraxis == Fraxis::X ? Fraxis::Y : Fraxis::X;
+        }
     }
     // Done all iterations
 

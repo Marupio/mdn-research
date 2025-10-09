@@ -82,6 +82,7 @@ public:
             //          before first iteration
             //      * rem - the remainder - caller should initilise this to *this before first
             //          iteration
+            //      * remMag - the getTotalMagnitude value of rem
             //  Returns the absolute magnitude of rem (abs(rem.getTotalValue), goal is to reach zero
             //  A negative value means division failed
             void divideIterate(

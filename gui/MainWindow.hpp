@@ -35,6 +35,8 @@ class MainWindow : public QMainWindow {
 
 public:
 
+    enum class UpdateGlobalConfigEnum { None, ForceUpdate, ShowFraxis, ShowSignConvention };
+
     // Default number of Mdn tabs on start
     static int nStartMdnDefault;
 
@@ -129,7 +131,7 @@ private slots:
     void setGlobalConfig(Mdn2dConfig c, bool force=false);
 
     // 'Update' modifies the settings but leaves parent, name and path
-    void updateGlobalConfig(Mdn2dConfig c, bool force=false);
+    void updateGlobalConfig(Mdn2dConfig c, UpdateGlobalConfigEnum behaviour);
 
     // Fraxis control
     void cycleFraxis();
@@ -205,11 +207,11 @@ private:
     bool saveProjectToPath(const QString& path);
 
     // Fraxis helpers
-    void updateStatusFraxisText(mdn::Fraxis f);
+    void updateStatusFraxisText(mdn::Fraxis f, bool echoToStatusBar);
     void buildFraxisMenu();
 
     // SignConvention helpers
-    void updateStatusSignConventionText(mdn::SignConvention sc);
+    void updateStatusSignConventionText(mdn::SignConvention sc, bool echoToStatusBar);
     void buildSignConventionMenu();
 
     // Tab operations
@@ -241,7 +243,7 @@ private:
     void applySplitRatio();
     void ensureTabCorner();
 
-    void divide(const OperationPlan& p, Mdn2d& a, Mdn2d& b, int iters);
+    void divide(const OperationPlan& p, Mdn2d& a, Mdn2d& b, int iters, Fraxis direction);
 
     // When true, no splitter movement allowed
     bool m_welded = false;
@@ -304,6 +306,8 @@ private:
     QToolButton* m_tabCloseBtn{nullptr};
 
     // Active division data
+    OperationPlan m_ad_plan;
+    bool m_ad_planSet{false};
     Mdn2d* m_ad_operandA{nullptr};
     Mdn2d* m_ad_operandB{nullptr};
     Mdn2d* m_ad_remainder{nullptr};

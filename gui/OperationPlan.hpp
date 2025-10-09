@@ -2,6 +2,8 @@
 
 #include <QString>
 
+#include <mdn/Fraxis.hpp>
+
 #include "EnumOperation.hpp"
 #include "MdnQtInterface.hpp"
 
@@ -23,9 +25,11 @@ struct OperationPlan {
     // newName: when writing to a new tab, this is the name to try
     QString newName;
 
+    // Number of iterations to employ for the next 'division' dispatch
     int divisionIters=10;
 
-
+    // Direction of division algorithm (X, Y, Default=X/Y alternating)
+    Fraxis divisionFraxis=Fraxis::Invalid;
 
     friend std::ostream& operator<<(std::ostream& os, const OperationPlan& p) {
         std::string destStr;
@@ -43,7 +47,8 @@ struct OperationPlan {
             } else {
                 remStr = "Overwrite(" + std::to_string(p.indexRem) + ")";
             }
-            os << ", rem(" <<  remStr << ")," << p.divisionIters << "]";
+            os << ", rem(" <<  remStr << ")," << p.divisionIters << ","
+                << FraxisToName(p.divisionFraxis) << "]";
         } else {
             os << "]";
         }
