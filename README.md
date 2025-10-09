@@ -17,7 +17,7 @@ A research project into **Multi-Dimensional Numbers**.  Includes three main comp
 
 ## Release notes
 
-### Version 1.1.1
+### Version 1.1.0
 
 #### Division algorithm
 
@@ -27,12 +27,7 @@ A research project into **Multi-Dimensional Numbers**.  Includes three main comp
 * Added user-facing control: *division direction*
     * Can be: X, Y, or X←→Y, latter is alternating
 
-#### Build system
-
-* Added Linux .deb packaging (tested okay)
-* Fixed Windows packaging
-
-### Version 1.1.0
+#### Carry over buttons
 
 * Fixed carryover buttons
 * Changed behaviour of [-] and [+] buttons - now they start cell editing, was shortcut to fraxis setting.
@@ -42,6 +37,11 @@ A research project into **Multi-Dimensional Numbers**.  Includes three main comp
 * Added sign convention to status bar
 * Clicking sign convention button on status bar cycles its setting
 * Added [F5] shortcut key for sign convention cycling
+
+#### Build system
+
+* Added Linux .deb packaging (tested okay)
+* Fixed Windows packaging
 
 ### Version 1.0.1
 
