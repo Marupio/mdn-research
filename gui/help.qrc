@@ -5,7 +5,6 @@
     <file alias="license.md">help/license.md</file>
     <file alias="overview.md">help/overview.md</file>
     <file alias="projectProperties.md">help/projectProperties.md</file>
-    <file alias="selection.md">help/selection.md</file>
   </qresource>
 </RCC>
 

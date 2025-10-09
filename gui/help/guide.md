@@ -37,6 +37,21 @@ When entering a _fractional amount_, the app will perform a **fraxis cascade**. 
 
 Press **[F4]** to change **fraxis mode**, or click on the indicator in the _status bar_.
 
+#### Sign convention
+
+Sign convention is for polymorphic numbers.  The sign is the desired state of the root digit, or pivot digit.
+
+```text
+ 0 │-3 0 0      0 │-4 0 0
+ 0 │-2 6 0   =  0 │ 8 5 0
+ ──┼───────     ──┼───────
+```
+**Polymorphic number**
+
+In this example, the left side shows a *negative* polymorphic state, where the *-2* is the pivot digit.  The right side shows a *positive* polymorphic state, where the *8* is the pivot digit.  Both are different forms of the same number.
+
+Press **[F5]** to change **sign convention**, or click on the indicator in the _status bar_.
+
 ### What are unary operations?
 
 _Operations that act on a single MDN alone._  There are three unary operations:
@@ -46,7 +61,7 @@ _Operations that act on a single MDN alone._  There are three unary operations:
 * **Carry-negative** - perform carry-over operations on all _positive polymorphic digits_, turning them negative.  Click on the **[c/-]** button to perform this.
 > **What the heck are polymorphic digits?**
 >
-> Digits with a mixture of positive and negative have two valid states of carry-over.  They are named for the sign of their root digit.
+> Digits with a mixture of positive and negative have two valid states of carry-over.  They are named for the sign of their root digit, or pivot digit.
 
 ### How do I perform normal math operations (or 'what are binary operations) ?
 
@@ -84,14 +99,25 @@ Next choose _operand B_ by clicking on the next tab.  It can be the same as _ope
 
 Finally, click where you want the answer to go.  If you click the **[+]** tab, the app will create a new Mdn named something like **Mdn0+Mdn2**.
 
-### Division doesn't work the best ###
+### Division is different from the other operations
 
-The division algorithm is not fully reliable:
+The division algorithm requires a little more user input:
 
 * The user has to choose a **Remainder** in addition to the **Operand B** and **Answer** tabs.
-* Division will run for 10 iterations, and the user can click the **[÷] Division** button to run another 10 iterations each time.
+* Beside the **[÷] Division** button is **10^[0]** division iterations spin box.  Choose between [0..7] for the number of iterations:
+    * 0 = 1 iteration
+    * 1 = 10 iterations
+    * 2 = 100 iterations
+    * and so on, until 7 = 10,000,000 iterations
+* Division will run for this many iterations, and halt, allowing the user to inspect the working answer and remainder.
+* The user can click the **[÷] Division** button to continue refining the answer.
+* The user can click **[Cancel]** to accept the current state of the answer.
+* The user can also select the **Direction** of the division:
+    * **X direction** means the algorithm works with rows of numbers,
+    * **Y direction** means the algorithm works with columns of numbers, and
+    * **X/Y direction** means it will alternate each iteration.
 
-It's a sort of implementation of *long division*, but in two dimensions.
+This division algorithm is a sort of implementation of *long division*, but in two dimensions.
 
 #### Iterative ####
 

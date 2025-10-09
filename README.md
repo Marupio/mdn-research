@@ -17,6 +17,21 @@ A research project into **Multi-Dimensional Numbers**.  Includes three main comp
 
 ## Release notes
 
+### Version 1.1.1
+
+#### Division algorithm
+
+* Added user-facing control: *division iterations*
+    * User chooses exponent: nIters = 10ⁿ
+    * Can be any integer [0 .. 7]
+* Added user-facing control: *division direction*
+    * Can be: X, Y, or X←→Y, latter is alternating
+
+#### Build system
+
+* Added Linux .deb packaging (tested okay)
+* Fixed Windows packaging
+
 ### Version 1.1.0
 
 * Fixed carryover buttons

@@ -1324,7 +1324,6 @@ void mdn::gui::MainWindow::cycleFraxis() {
     // Route through Project::setConfig so impact prompts/updates propagate to all tabs
     // shows impact dialogs if needed
     updateGlobalConfig(cfg, UpdateGlobalConfigEnum::ShowFraxis);
-    // TODO Show Fraxis change
 }
 
 
@@ -1370,7 +1369,6 @@ void mdn::gui::MainWindow::cycleSignConvention() {
     // Route through Project::setConfig so impact prompts/updates propagate to all tabs
     // shows impact dialogs if needed
     updateGlobalConfig(cfg, UpdateGlobalConfigEnum::ShowSignConvention);
-    // TODO show signConvention
 }
 
 
