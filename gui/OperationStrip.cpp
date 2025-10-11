@@ -155,14 +155,15 @@ mdn::gui::OperationStrip::OperationStrip(QWidget* parent)
     lay->addWidget(m_btnAdd);
     lay->addWidget(m_btnSub);
     lay->addWidget(m_btnMul);
+
     lay->addSpacing(8);
+    // Division interface group
     lay->addWidget(m_btnDiv);
     lay->addWidget(m_divIterLabel);
     lay->addWidget(m_divIter);
     lay->addWidget(m_divFraxisBtn);
 
-    // lay->addItem(layDiv);
-
+    lay->addSpacing(8);
     lay->addWidget(m_btnTranspose);
     lay->addWidget(m_btnCarryOver);
     lay->addWidget(m_btnCarryPos);

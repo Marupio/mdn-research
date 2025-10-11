@@ -226,6 +226,13 @@ void mdn::Mdn2d::locked_divideIterate(
         fraxis = Fraxis::Default;
     }
 
+    Fraxis lastFraxis = fraxis;
+    if (lastFraxis == Fraxis::Default) {
+        // Alternating fraxis directions, start with X
+        static Fraxis altStart = Fraxis::X;
+        fraxis = altStart;
+        altStart = altStart == Fraxis::X ? Fraxis::Y : Fraxis::X;
+    }
     Log_N_Debug3_H("rhs row/col magMax dispatch");
     if (
         (fraxis == Fraxis::X && !rhs.locked_getRowMagMax(pOffset, pVal))
@@ -236,13 +243,6 @@ void mdn::Mdn2d::locked_divideIterate(
         remMag = -1.0;
         Log_N_Debug_T("Failed magMax")
         return;
-    }
-    Fraxis lastFraxis = fraxis;
-    if (lastFraxis == Fraxis::Default) {
-        // Alternating fraxis directions, start with X
-        static Fraxis altStart = Fraxis::X;
-        fraxis = altStart;
-        altStart = altStart == Fraxis::X ? Fraxis::Y : Fraxis::X;
     }
     Log_N_Debug3_T("rhs row/col magMax return, pOffset=" << pOffset << ", pVal=" << pVal);
     int iter = 0;
