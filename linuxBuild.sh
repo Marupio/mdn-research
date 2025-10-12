@@ -2,8 +2,8 @@ cmake -DCMAKE_BUILD_TYPE=Debug ..
 make -j 3
 
 # Build on linux
-cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-cmake --build build --config Release
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DLogs=OFF ..
+cmake --build build --config Release -j 4
 cpack --config build/CPackConfig.cmake -G DEB
 
 # Getting hash

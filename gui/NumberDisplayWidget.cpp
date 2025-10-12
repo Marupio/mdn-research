@@ -269,7 +269,16 @@ void mdn::gui::NumberDisplayWidget::paintEvent(QPaintEvent* event) {
             const int modelY = m_viewOriginY + rowI;
 
             const Coord xy(modelX, modelY);
-            const int digit = static_cast<int>(currentRow[vx]);
+            std::string digitStr(
+                Tools::digitToAlpha(
+                    currentRow[vx], // value
+                    true,           // alphaNumerics
+                    " ",            // pos
+                    "-",            // neg
+                    0               // padSpacesToWidth
+                )
+            );
+            // const int digit = static_cast<int>(currentRow[vx]);
 
             const QRect cell(vx * m_cellSize, vy * m_cellSize, m_cellSize, m_cellSize);
 
@@ -294,7 +303,7 @@ void mdn::gui::NumberDisplayWidget::paintEvent(QPaintEvent* event) {
 
                 // Non-zero digit
                 painter.setPen(nzTextPen);
-                painter.drawText(cell, Qt::AlignCenter, QString::number(digit));
+                painter.drawText(cell, Qt::AlignCenter, QString::fromStdString(digitStr));
                 restorePen = nzGridPen;
             } else {
                 // Zero grid stroke
@@ -303,7 +312,7 @@ void mdn::gui::NumberDisplayWidget::paintEvent(QPaintEvent* event) {
 
                 // Zero digit
                 painter.setPen(textPen);
-                painter.drawText(cell, Qt::AlignCenter, QString::number(digit));
+                painter.drawText(cell, Qt::AlignCenter, QString::fromStdString(digitStr));
                 restorePen = gridPen;
             }
 
