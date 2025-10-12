@@ -17,6 +17,11 @@ A research project into **Multi-Dimensional Numbers**.  Includes three main comp
 
 ## Release notes
 
+### Version 1.1.1
+
+* Fixed display for higher base digits - now uses alphanumeric characters 0-9, a-v
+* Fixed linux build to disable logging, increasing performance
+
 ### Version 1.1.0
 
 #### Division algorithm

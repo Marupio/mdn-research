@@ -1,6 +1,6 @@
 # Root CMakeLists.txt
 cmake_minimum_required(VERSION 3.16)
-project(MDN_Tools VERSION 1.1.0)
+project(MDN_Tools VERSION 1.1.1)
 
 execute_process(
     COMMAND git describe --tags --always
@@ -82,7 +82,7 @@ else(CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif()
 
 # Logging option
-option(Logs "Logging (ON by default)" ON)
+option(Logs "Logging (OFF by default)" OFF)
 
 if(Logs)
     add_compile_definitions(MDN_LOGS)

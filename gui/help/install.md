@@ -9,13 +9,17 @@ but it _should_ be possible to install it on others.
 
 ## Installation Packages
 
-### Windows
-
 **➜ [Download the latest build (ZIP)](https://github.com/Marupio/mdn-research/releases/latest)**
 * Use the **.zip** file for **Windows**
 * Use the **.deb** file for **Linux**
 
 If you prefer a specific version, grab it from the Releases page. For example:
+
+- **[v1.1.1 (Windows ZIP)](https://github.com/Marupio/mdn-research/releases/download/v1.1.1/MDN-v1.1.1-win64-Release.zip):** *The latest version (Windows build).*
+    https://github.com/Marupio/mdn-research/releases/download/v1.1.1/MDN-v1.1.1-win64-Release.zip
+
+- **[v1.1.1 (Linux .deb)](https://github.com/Marupio/mdn-research/releases/download/v1.1.1/mdn_1.1.1-1_amd64.deb):** *The latest version (Linux build).*
+    https://github.com/Marupio/mdn-research/releases/download/v1.1.1/mdn_1.1.1-1_amd64.deb
 
 - **[v1.1.0 (Windows ZIP)](https://github.com/Marupio/mdn-research/releases/download/v1.1.0/MDN-v1.1.0-win64-Release.zip):** *The latest version (Windows build).*
     https://github.com/Marupio/mdn-research/releases/download/v1.1.0/MDN-v1.1.0-win64-Release.zip
@@ -28,10 +32,14 @@ If you prefer a specific version, grab it from the Releases page. For example:
 - **[v1.0.0 (Windows ZIP)](https://github.com/Marupio/mdn-research/releases/download/v1.0.0/MDN-v1.0.0-win64-Release.zip):** _This version requires [VCC redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170) to be installed on your system.
     https://github.com/Marupio/mdn-research/releases/download/v1.0.0/MDN-v1.0.0-win64-Release.zip
 
+### Windows
+
 **How to run: Windows**
 1. Optional: verify the SHA-256 checksum listed on the Release page.
 2. Unzip the file anywhere (e.g., `C:\Apps\MDN`).
 3. Double-click `mdn_gui.exe`. (Windows may warn about an unknown publisher—expected for an unsigned build.)
+
+### Linux
 
 **How to run: Linux**
 1. Download the latest .deb file
