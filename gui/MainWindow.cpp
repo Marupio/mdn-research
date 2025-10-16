@@ -2401,6 +2401,9 @@ bool mdn::gui::MainWindow::openProject(bool requireConfirm) {
         return false;
     }
     m_project = ptr.release();
+    m_globalConfig = m_project->config();
+    m_globalConfig.setParent(*m_project);
+    setGlobalConfig(m_globalConfig);
 
     connect(m_project, &mdn::gui::Project::tabsAboutToChange,
             this, &mdn::gui::MainWindow::onProjectTabsAboutToChange);

@@ -1427,10 +1427,15 @@ std::unique_ptr<mdn::gui::Project> mdn::gui::Project::loadBinary(
     int32_t sign=0;
     int32_t cascadeDepth=Mdn2dConfig::defaultFraxisCascadeDepth();
     int32_t fraxis=0;
-    GuiTools::binaryRead(in, base); GuiTools::binaryRead(in, precision); GuiTools::binaryRead(in, sign); GuiTools::binaryRead(in, cascadeDepth); GuiTools::binaryRead(in, fraxis);
+    GuiTools::binaryRead(in, base);
+    GuiTools::binaryRead(in, precision);
+    GuiTools::binaryRead(in, sign);
+    GuiTools::binaryRead(in, cascadeDepth);
+    GuiTools::binaryRead(in, fraxis);
 
     // Active index
-    int32_t activeIdx = 0; GuiTools::binaryRead(in, activeIdx);
+    int32_t activeIdx = 0;
+    GuiTools::binaryRead(in, activeIdx);
 
     // Create an empty project (0 start tabs so we fully control content)
     Log_Debug3("Creating new project");
@@ -1448,12 +1453,14 @@ std::unique_ptr<mdn::gui::Project> mdn::gui::Project::loadBinary(
     }
 
     // Count
-    uint32_t count = 0; GuiTools::binaryRead(in, count);
+    uint32_t count = 0;
+    GuiTools::binaryRead(in, count);
 
     // Read each tab, preserving indices; let each Mdn2d load itself.
     // (Matches how the constructor seeds new tabs and appendMdn wires maps.)
     for (uint32_t k = 0; k < count; ++k) {
-        int32_t idx = 0; GuiTools::binaryRead(in, idx);
+        int32_t idx = 0;
+        GuiTools::binaryRead(in, idx);
         std::string tabName = GuiTools::binaryReadString(in);
 
         Log_Debug4("Creating {'" << tabName << "'," << idx << "}");

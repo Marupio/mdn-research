@@ -129,4 +129,5 @@ Pressing '-' switches to Neg edit mode - should go straight into text line entry
 Closing all tabs leads to many crashable interactions
     Close tab button
 
-Divios underway ... Done, click [div] to continue, [Cancel] to accept
+LOAD bug
+    Load binary project when currently in base 10 --> loaded with base 10 set

@@ -70,7 +70,7 @@ The first surprising result is that we cannot always apply 'negative' or 'positi
 Due to sign ambiguities, there are situations where an MDN has more than one valid form.  These are said to be different expressions of the same number, or at least have some form of _polymorphic_ equivalence.
 
 ```text
- 0 │-3 0 0        0 │-2 0 0
+ 0 │-3 0 0        0 │-4 0 0
  0 │-2 3 0    =   0 │ 8 2 0
  ──┼───────       ──┼───────
 ```
