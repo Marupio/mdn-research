@@ -1,10 +1,10 @@
 <RCC>
   <qresource prefix="/help">
-    <file alias="about.md">help/about.md</file>
-    <file alias="guide.md">help/guide.md</file>
-    <file alias="license.md">help/license.md</file>
-    <file alias="overview.md">help/overview.md</file>
-    <file alias="projectProperties.md">help/projectProperties.md</file>
+    <file alias="about.md" compress="0">help/about.md</file>
+    <file alias="guide.md" compress="0">help/guide.md</file>
+    <file alias="license.md" compress="0">help/license.md</file>
+    <file alias="overview.md" compress="0">help/overview.md</file>
+    <file alias="projectProperties.md" compress="0">help/projectProperties.md</file>
   </qresource>
 </RCC>
 

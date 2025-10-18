@@ -17,7 +17,7 @@ Command line options include:
 
 * *-h, --help* - Displays help on commandline options.
 * *-v, --version* - Displays version information.
-* *-l, --log-level <level>* - Set log verbosity. One of:
+* *-l, --log-level Debug4* - Set log verbosity. One of:
     * Debug4
     * Debug3
     * Debug2
@@ -25,10 +25,10 @@ Command line options include:
     * Info
     * Warning
     * Error
-* *-f, --log-file <path>* - Write logs to the given file path (creates/overwrites).
+* *-f, --log-file "path"* - Write logs to the given file path (creates/overwrites).
 * *--no-log-file* - Do not write logs to a file (overrides any defaults).
 * *--check-indents* - Monitor debug logging for missing indentation calls
-* *-i, --input <path>* - Path to JSON settings file.
+* *-i, --input "path"* - Path to JSON settings file.
 * *--info* - Display application information
 
 ### Layout
