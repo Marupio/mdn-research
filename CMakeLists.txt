@@ -1,6 +1,6 @@
 # Root CMakeLists.txt
 cmake_minimum_required(VERSION 3.16)
-project(MDN_Tools VERSION 1.1.1)
+project(MDN_Tools VERSION 1.1.2)
 
 execute_process(
     COMMAND git describe --tags --always

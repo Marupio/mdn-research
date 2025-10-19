@@ -15,16 +15,22 @@ but it _should_ be possible to install it on others.
 
 If you prefer a specific version, grab it from the Releases page. For example:
 
-- **[v1.1.1 (Windows ZIP)](https://github.com/Marupio/mdn-research/releases/download/v1.1.1/MDN-v1.1.1-win64-Release.zip):** *The latest version (Windows build).*
+- **[v1.1.2 (Windows ZIP)](https://github.com/Marupio/mdn-research/releases/download/v1.1.2/MDN-v1.1.2-win64-Release.zip):** *Correction to guide help text*
+    https://github.com/Marupio/mdn-research/releases/download/v1.1.2/MDN-v1.1.2-win64-Release.zip
+
+- **[v1.1.2 (Linux .deb)](https://github.com/Marupio/mdn-research/releases/download/v1.1.2/mdn_1.1.2-1_amd64.deb):** *Correction to guide help text*
+    https://github.com/Marupio/mdn-research/releases/download/v1.1.2/mdn_1.1.2-1_amd64.deb
+
+- **[v1.1.1 (Windows ZIP)](https://github.com/Marupio/mdn-research/releases/download/v1.1.1/MDN-v1.1.1-win64-Release.zip):** *Minor updates to main window and help text*
     https://github.com/Marupio/mdn-research/releases/download/v1.1.1/MDN-v1.1.1-win64-Release.zip
 
-- **[v1.1.1 (Linux .deb)](https://github.com/Marupio/mdn-research/releases/download/v1.1.1/mdn_1.1.1-1_amd64.deb):** *The latest version (Linux build).*
+- **[v1.1.1 (Linux .deb)](https://github.com/Marupio/mdn-research/releases/download/v1.1.1/mdn_1.1.1-1_amd64.deb):** *Minor updates to main window and help text*
     https://github.com/Marupio/mdn-research/releases/download/v1.1.1/mdn_1.1.1-1_amd64.deb
 
-- **[v1.1.0 (Windows ZIP)](https://github.com/Marupio/mdn-research/releases/download/v1.1.0/MDN-v1.1.0-win64-Release.zip):** *The latest version (Windows build).*
+- **[v1.1.0 (Windows ZIP)](https://github.com/Marupio/mdn-research/releases/download/v1.1.0/MDN-v1.1.0-win64-Release.zip):** *Improved division algorithm*
     https://github.com/Marupio/mdn-research/releases/download/v1.1.0/MDN-v1.1.0-win64-Release.zip
 
-- **[v1.1.0 (Linux .deb)](https://github.com/Marupio/mdn-research/releases/download/v1.1.0/mdn_1.1.0-1_amd64.deb):** *The latest version (Linux build).*
+- **[v1.1.0 (Linux .deb)](https://github.com/Marupio/mdn-research/releases/download/v1.1.0/mdn_1.1.0-1_amd64.deb):** *Improved division algorithm*
     https://github.com/Marupio/mdn-research/releases/download/v1.1.0/mdn_1.1.0-1_amd64.deb
 
 - **[v1.0.1 (Windows ZIP)](https://github.com/Marupio/mdn-research/releases/download/v1.0.1/MDN-v1.0.1-win64-Release.zip):** *No dependencies.*
