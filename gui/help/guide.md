@@ -152,7 +152,7 @@ This division algorithm is a sort of implementation of *long division*, but in t
 
 #### Iterative ####
 
-The algorithm is _iterative_.  The app will try **10 iterations** first.  If it ever gets the exact answer (**Remainder** = 0), it will stop.  Otherwise it offers the user a chance to inspect the **Remainder** and **Answer**.  The user can click the **[÷] Division** button to run another 10 iterations.
+The algorithm is _iterative_.  As discussed above, the user selects the number of iterations to try.  The app will perform the division algorithm for that many iterations.  If it ever gets the exact answer (**Remainder** = 0), it will stop.  Otherwise it offers the user a chance to inspect the **Remainder** and **Answer**.  The user can click the **[÷] Division** button to run another 10 iterations.
 
 #### Choose Remainder ####
 

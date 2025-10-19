@@ -2443,7 +2443,8 @@ bool mdn::gui::MainWindow::confirmedCloseProject(bool requireConfirm) {
 
     // Now seek confirmation from user
     std::ostringstream oss;
-    oss << "Unsaved changes may be lost.\n\n";
+    oss << "Unsaved changes may be lost.\n";
+    oss << "(This app does not track changes - there may be none.\n\n";
     oss << "Do you want to save changes to project '" << m_project->name();
     oss << "' before proceeding?";
     QMessageBox::StandardButton reply = QMessageBox::question(
@@ -2732,8 +2733,9 @@ void mdn::gui::MainWindow::closeTab(int index) {
     Mdn2d* tgt = m_project->getMdn(index);
     if (!tgt->bounds().empty()) {
         std::ostringstream oss;
-        oss << "Unsaved data on tab '" << tgt->name() << "' will be lost.\n\n"
-            << "Are you sure?";
+        oss << "Any unsaved data on tab '" << tgt->name() << "' will be lost.\n";
+        oss << "(This app does not track changes - there may be none.\n\n";
+        oss << "Are you sure?";
         QMessageBox::StandardButton reply = QMessageBox::question(
             this,
             tr("Overwrite Number?"),
