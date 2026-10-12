@@ -1,117 +1,86 @@
 ## What are Multi-Dimensional Numbers?
 
-### One Dimensional Numbers
-**1D Numbers** (normal numbers) are expressed by a sequence of digits, written along a line:
+Multi-Dimensional Numbers (MDNs) extend the familiar string of digits into a grid of digits. **The entire grid represents one number.** It is not a spreadsheet of independent numbers, and its multiplication is not matrix multiplication.
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;… a<sub>4</sub> a<sub>3</sub> a<sub>2</sub> a<sub>1</sub> a<sub>0</sub> . a<sub>-1</sub> a<sub>-2</sub> a<sub>-3</sub> a<sub>-4</sub> …
+David Gaden developed the idea and a first C++ numerical test application around 2000. The present application provides a way to enter, display and calculate with these numbers.
 
-such as:
+### Positions and carrying
 
-```     3.1415926536```
+In an ordinary decimal numeral, higher places are written to the left. In the MDN display, the forward positional directions are **rightward → and upward ↑**. The origin `(0,0)` is the unity position.
 
-and since a _line_ is a **1 dimensional** entity, what happens if we extend this?
-
-### Two Dimensional Numbers
-
- **2D Numbers** extend this by stating that numbers are expressed by a 2-dimensional grid of digits, kind of like a matrix:
-
+The meaning of those directions comes from the carry rule. In base ten, remove ten units from a cell and add one unit to **each** of its two forward neighbours. Thus `9 + 1` gives:
 
 ```text
-      3  0  0  0  0  0  0  0  0  0 │  0
-      8  5 ─2  0  0  0  0  0  0  0 │  0
-      4  0  3  0  0  0  0  0  0  0 │  0
-      1  4  8  5 ─2  0  0  0  0  0 │  0
-      1  8  4  0  3  0  0  0  0  0 │  0
-      3  7  0  4  8  5 ─2  0  0  0 │  0
-      4  5  1  8  4  0  3  0  0  0 │  0
-      6  4  3  7  1  4  8  5 ─2  0 │  0
-      6  3  5  6  2  9  5  1  4  1 │  3
-     ──────────────────────────────┼────
-      0  0  0  0  0  0  0  0  0  0 │  0
+                     y
+                     ↑
+                     1  0
+                     0  1  → x
+                     ↑
+                 unity cell
 ```
 
-This shows π, expressed in 2-dimensional numbers.
+Here the lower-left cell is `(0,0)`, the cell to its right is `(1,0)`, and the cell above it is `(0,1)`. This whole two-digit grid is the integer ten.
 
-#### They're Backwards!
+More generally, a carry of an integer amount `k` changes three digits:
 
-Notice how π above is backwards?  That's how we do it for higher dimension numbers.  The digits increase in order of magnitude rightwards → and upwards ↑, because now they seem to be forming a space of some sort.
+| Cell | Change |
+|---|---:|
+| `(i,j)` | `−b × k` |
+| `(i+1,j)` | `+k` |
+| `(i,j+1)` | `+k` |
 
-### Rules
+Here `b` is the base. Negative carry amounts reverse the operation. Grids connected by a finite sequence of these carries represent the same finite MDN.
 
-#### Carry-overs
+The symbols `X` and `Y` can mean a one-cell shift right and up. In that notation, **`X + Y = b` expresses the carry rule**. It does not say that each forward cell separately has ordinary value `b`, or that the two cells must each be worth `b/2`. No separate ordinary scalar magnitude is assigned to either axis.
 
-Everything else is the same, except for one thing: carry-overs.  When counting up in 2-dimensions, the carry-over spreads both towards *x*+ and *y*+:
+### Arithmetic and different displays
+
+Addition and subtraction combine corresponding digits. Multiplication pairs every digit of one grid with every digit of the other: multiply their coefficients, add their position coordinates, and combine contributions at the same position. Carries can then change the display. These finite operations preserve ordinary associativity, commutativity and distributivity.
+
+A number can have different valid displays. For example, in base ten:
 
 ```text
- 0 │ 0 0 0        0 │ 0 0 0        0 │ 1 0 0
- 0 │ 9 0 0    +   0 │ 1 0 0    =   0 │ 0 1 0
- ──┼───────       ──┼───────       ──┼───────
-
-     9        +       1        =       10
+         0  0                    1  0
+         1  0        =          -9  1
 ```
 
-#### Extending 1D rules
+The lower-left cell is unity in each grid. The right grid is obtained by one carry at that cell: `1 = −9 + X + Y`. The application calls this freedom **polymorphism**. Its positive and negative carry conventions select displays of the same number; equality need not mean identical visible digits.
 
-All the rest of the _rules_ with multi-dimensional numbers (MDN) follow from basic rules in 1-dimensional numbers.  In other words: MDN's must follow the rules of 1-dimensional numbers.
+Digit coefficients can be positive or negative, and negating every digit gives the additive negative of the whole MDN. The carry rule does not, by itself, put all MDNs into a single positive-to-negative order. In particular, mixed digit signs do not supply such an ordering.
 
-There are some surprising results.
+### Integers and fractional directions
 
-#### Positive / negative
+An integer is entered by adding its whole amount to unity and carrying. Starting this way treats the two axes symmetrically. A grid's symmetry alone does not imply that it is an integer: there are other symmetric MDNs.
 
-The first surprising result is that we cannot always apply 'negative' or 'positive' to the entire number.  Now it must be a property of the digit.
-```text
- 0 │-3 0 0
- 0 │-2 3 0
- ──┼───────
-```
+For fractional input, the application selects a direction called the **fraxis**. An X-fraxis tenth produces a diagonal cascade up and left. A Y-fraxis tenth is its transpose, down and right.
 
-#### Polymorphic carry-overs
+For example, the first four raw terms of an X-fraxis tenth are:
 
-Due to sign ambiguities, there are situations where an MDN has more than one valid form.  These are said to be different expressions of the same number, or at least have some form of _polymorphic_ equivalence.
+| Position | Digit |
+|---|---:|
+| `(-1,0)` | `1` |
+| `(-2,1)` | `−1` |
+| `(-3,2)` | `1` |
+| `(-4,3)` | `−1` |
 
-```text
- 0 │-3 0 0        0 │-4 0 0
- 0 │-2 3 0    =   0 │ 8 2 0
- ──┼───────       ──┼───────
-```
+Every listed digit belongs to the same number. Extending the cascade adds further alternating terms. With exactly these four terms retained, multiplying by ten gives a unity digit `+1` at `(0,0)` **and a boundary digit `−1` at `(-4,4)`**. The boundary is part of the finite result.
 
-#### Conversion between bases
+Deeper decimal places have different coefficients. For example, the first four raw terms of `0.01X` are `1, −2, 3, −4` at `(-2,0), (-3,1), (-4,2), (-5,3)`. They are not just a shifted copy of the alternating tenth. The Y version exchanges the two coordinates.
 
-It is not always possible to convert an MDN from one base to another, due to information loss.  Therefore, changing the working base will result in all digits being zeroed.
+The GUI sets a finite cascade depth. A fractional label such as `0.1X` therefore specifies a finite directional construction, not an exact ordinary reciprocal of ten. On the appropriate axis, a directional input has its familiar base-ten reading, while the complete grid also retains its off-axis digits and boundary.
 
-#### Integers versus fractional amounts
+Infinite decimal encodings and infinite cascade limits require additional definitions. In particular, retaining distinct X and Y constructions does not make both exact inverses of ten in one ordinary ring: such inverses would have to coincide.
 
-MDN's behave very differently for the integer part and fractional part of a Real number.  The integer part is symmetric across _x_ and _y_, expanding predictably along the positive diagonal.
+### Mixing the two directions
 
-```text
- 0 │  1  0  0  0  0  0  0  0  0
- 0 │  2  9  3  0  0  0  0  0  0
- 0 │  3  6  3  9  1  0  0  0  0
- 0 │  4  0  9  8  4  2  0  0  0
- 0 │  5  2  1  1  6  4  1  0  0
- 0 │  6  1  5  8  1  8  9  0  0
- 0 │  7  9  2  5  1  9  3  3  0
- 0 │  8  4  9  1  2  0  6  9  0
- 0 │  9  8  7  6  5  4  3  2  1
-───┼────────────────────────────
- 0 │  0  0  0  0  0  0  0  0  0
-```
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Integer part**
+Adding an X-fraction and a Y-fraction combines their grids. It does not generally combine their input labels as ordinary real numbers: `0.4X + 0.6Y` is not unity.
 
-**However** the fractional amount experiences a form of _symmetry breaking_, and can be expressed _either_ as an _x_ form or _y_ form.  The application calls this its **Fraxis**.
+Multiplication can produce a different kind of pattern. As the cutoffs of `0.1X × 0.1Y` are extended together, central digits can cycle instead of settling. These deterministic changing digits are called **fuzzy digits** in this project. They are not random quantities or fuzzy-set membership values.
 
-```text
- 0  0  0  0  0  0  0  0  0 │  0        0 │  3  0  0  0  0  0  0  0  0
- 5 ─2  0  0  0  0  0  0  0 │  0       ───┼────────────────────────────
- 0  3  0  0  0  0  0  0  0 │  0        0 │  1  0  0  0  0  0  0  0  0
- 4  8  5 ─2  0  0  0  0  0 │  0        0 │  4 ─2  0  0  0  0  0  0  0
- 8  4  0  3  0  0  0  0  0 │  0        0 │  1  5  0  0  0  0  0  0  0
- 7  0  4  8  5 ─2  0  0  0 │  0        0 │  5  8  3 ─2  0  0  0  0  0
- 5  1  8  4  0  3  0  0  0 │  0        0 │  9  4  0  5  0  0  0  0  0
- 4  3  7  1  4  8  5 ─2  0 │  0        0 │  2  0  4  8  3 ─2  0  0  0
- 3  5  6  2  9  5  1  4  1 │  3        0 │  6  7  8  4  0  5  0  0  0
-───────────────────────────┼────       0 │  5  3  1  0  4  8  3 ─2  0
- 0  0  0  0  0  0  0  0  0 │  0        0 │  4  4  5  7  8  4  0  5  0
-```
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Pi, x fraxis**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Pi, y fraxis**
+A fixed display window can miss distant terms that affect a later product. Keeping the boundary information is therefore essential when studying these mixed constructions and their infinite extensions.
 
+### Division and changing base
+
+The application also implements iterative division, with controls for iteration count and direction, and a transpose operation. Division can be continued to refine a result; its convergence and directional behaviour remain subjects for investigation. The presence of an algorithm is separate from a proof that it converges for every input.
+
+Changing the base changes the carry rule. The present GUI clears the grid on a base change; it does not implement a general conversion between bases. Whether a conversion preserves information depends on the map and the representations allowed, rather than following from the carry rule alone.

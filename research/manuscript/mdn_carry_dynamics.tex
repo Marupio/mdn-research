@@ -1,0 +1,463 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=26mm]{geometry}
+\usepackage{amsmath,amssymb,amsthm,booktabs,hyperref}
+\hypersetup{pdftitle={Boundary-sensitive products and periodic carry patterns in a two-dimensional radix system},pdfauthor={David Gaden}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\Z}{\mathbb Z}
+\newcommand{\Q}{\mathbb Q}
+\newcommand{\A}{\mathcal A}
+\newcommand{\D}{\mathcal D}
+\title{Boundary-sensitive products and periodic carry patterns\\in a two-dimensional radix system}
+\author{David Gaden}
+\date{12 October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We study finite integer arrays on a two-dimensional lattice under the
+carry move that removes ten units at one site and adds one at each of its
+two forward neighbours. A fixed signed digit convention gives a finite
+canonical representative. Oppositely directed truncated fractional
+cascades retain exact endpoint identities. For a product of $a\ge1$ cascades
+in one direction and $c\ge1$ in the other, at a common cutoff, we give a finite
+necessary-and-sufficient test for its eventual canonical display period.
+The least period divides $10^{a+c-1}$ and is computable without enumerating
+a full cycle. Limiting displays alone do not support multiplication.
+As a geometric application, an injective two-channel encoding admits exact
+dot-product and determinant tests with fixed nonzero array-valued factors.
+Literal integer endpoint encoding loses directional information, whereas
+retained directional units preserve it.
+\end{abstract}
+
+\noindent\textbf{Draft status.} This manuscript assembles current proofs and
+reproducible experiments for specialist review. Priority and novelty have
+not been established by a complete literature review. No physical model,
+performance advantage, or complete arithmetic of arbitrary infinite real
+inputs is claimed. The large phase-collision example remains in a separate
+companion certificate and is not needed for the main theorem here.
+
+\section{Context and elementary arithmetic}
+
+The author developed the underlying idea around 2000 and explored it with
+a C++ numerical application at that time. A new implementation followed
+in 2025. The present work formalizes patterns observed in these experiments,
+particularly the interaction of oppositely directed fractional cascades.
+
+Multi-dimensional numbers (MDNs), called 2DNs in two dimensions, arrange
+integer digits on a lattice. The entire spreadsheet-like grid represents
+one number; its cells are the digits of that number. Positional order
+increases rightward and upward, with degree $i+j$ at site $(i,j)$.
+The horizontal convention is reversed from an ordinary written numeral.
+This positional order does not assign an ordinary scalar weight to either
+axis. Arithmetic is specified by the carry rule.
+
+A finite grid has finitely many nonzero cells. Two finite grids represent
+the same MDN when a finite sequence of carries connects them, allowing
+negative as well as positive carry amounts. A carry of $k\in\Z$ at
+$(i,j)$ makes the three changes
+\[
+ d_{i,j}\mapsto d_{i,j}-10k,\qquad
+ d_{i+1,j}\mapsto d_{i+1,j}+k,\qquad
+ d_{i,j+1}\mapsto d_{i,j+1}+k.
+\]
+Addition is coefficientwise, and multiplication is finite convolution.
+They are associative, commutative and distributive modulo carries.
+
+Laurent polynomials record positions, with $X$ and $Y$ denoting shifts.
+For general integer base $b\ge3$, the finite carry algebra is
+\[
+ \A_b=\Z[X^{\pm1},Y^{\pm1}]/(X+Y-b).
+\]
+Here $X+Y=b$ is exactly the local carry, not an assignment of ordinary
+scalar magnitudes to either axis. Eliminating the formal symbol $Y$ gives
+\[
+ \A_b\cong\Z[X,X^{-1},(b-X)^{-1}]\subset\Q(X).
+\]
+This algebraic embedding proves that the finite algebra has no zero
+divisors and that $1\ne0$.
+
+Digit systems in quotient rings have an established literature
+\cite{digits}. The polynomial $10-X-Y$ is a sandpile polynomial under
+Strasser's definition, and his local toppling move is the positive carry
+above \cite{sandpile}. Signed digits, full finite boundaries, and
+multiplication of directional cascade products require the specific
+treatment given here. The finite-difference methods used below also belong
+to the established study of modular binomial sequences \cite{binomials}.
+These connections locate the problem; they do not establish priority for
+the results of this draft.
+
+\subsection{Polymorphism, signs, symmetry, and changing base}
+Different grids can represent one carry class, a phenomenon termed
+\emph{polymorphism} in the MDN interface. For example,
+$1=-9+X+Y$ in base ten. Consequently the sign of an individual digit is
+representation-dependent. Additive negation of a complete number is
+well-defined, but the carry rule does not specify a total order.
+
+In fact no total additive order on $\A_{10}$ can be invariant under
+axis exchange $\sigma(X)=Y$, $\sigma(Y)=X$. The nonzero element $X-Y$
+would have to have the same sign as its negative $Y-X$. Total orders
+obtained by additional choices are not excluded by this argument.
+
+Integer input at the origin is invariant under $\sigma$, and so is its
+canonical display defined below. The converse is false: $XY$ is symmetric
+but is not an ordinary integer. The unity line $i+j=0$ is different from
+the reflection axis $i=j$. Selecting one fractional direction can break
+axis-exchange symmetry; multiplying opposite directions can restore it.
+Thus being below the unity line does not itself imply asymmetry.
+
+Base is part of the carry relation. Keeping the same two shift labels
+while changing $b$ cannot preserve both carries and the embedded integers:
+the same $X+Y$ would equal two different integers. This does not imply
+that every encoding between bases loses information. For example, after
+extending coefficients to $\Q$, the substitution
+$X_b\mapsto(b/c)X_c$, $Y_b\mapsto(b/c)Y_c$ gives an isomorphism between
+the base-$b$ and base-$c$ algebras. It need not preserve the subset of finite
+integer-coefficient grids. A claim about base conversion therefore needs
+an explicit conversion map and coefficient domain.
+
+\section{A canonical finite display}
+Fix $\D=\{-4,-3,\ldots,5\}$ and define
+\[
+ h(v)=\left\lfloor\frac{v+4}{10}\right\rfloor,
+ \qquad r(v)=v-10h(v)\in\D.
+\]
+Sweep through diagonals of increasing $i+j$, leaving $r(v)$ and forwarding
+$h(v)$ to both neighbours.
+
+\begin{proposition}
+Every finite grid has exactly one finite representative with digits in
+$\D$, and the sweep produces it.
+\end{proposition}
+\begin{proof}
+Above the highest original input diagonal, if incoming coefficients have
+absolute value at most $M$, the next layer has bound
+$2\lfloor(M+5)/10\rfloor$. This is strictly smaller than $M$ for $M\ge2$;
+for $M\le1$ no carry occurs. Each layer has finite support, so the sweep
+terminates. For uniqueness, a finite zero-equivalent grid is
+$(X+Y-10)H$ with finite $H$. Its lowest nonzero diagonal has all
+coefficients divisible by ten. The difference of two $\D$-grids has every
+coefficient between $-9$ and $9$, so a nonzero such difference cannot be
+zero-equivalent.
+\end{proof}
+
+This normalization is a comparison convention. It is not an assertion
+that the GUI's Positive sign convention is canonical.
+
+\section{Directional cascades and retained boundaries}
+Use positive term count $n$; the GUI's zero-based depth is $N=n-1$.
+Define finite grids
+\[
+ L_n=\sum_{i=0}^{n-1}(-1)^iX^{-i-1}Y^i,
+ \qquad R_n=\sum_{i=0}^{n-1}(-1)^iX^iY^{-i-1}.
+\]
+They are the finite directional entries labelled $0.1X$ and $0.1Y$.
+Set $q=-Y/X$ and $E_n=q^n$. Telescoping gives
+\begin{equation}\label{eq:boundary}
+ 10L_n=1-E_n,\qquad10R_n=1-E_n^{-1},\qquad
+ 10^{a+c}L_n^aR_n^c=(1-E_n)^a(1-E_n^{-1})^c.
+\end{equation}
+All endpoints are retained. In particular
+\begin{equation}\label{eq:fuzzy}
+ 100L_nR_n=2-E_n-E_n^{-1},\qquad 10L_nR_n=L_n+R_n.
+\end{equation}
+The second identity follows from the first and torsion-freeness.
+
+One possible rigorous infinite object is an eventual equivalence class of
+sequences of complete finite grids: two sequences agree when their full
+carry classes agree at every sufficiently late stage. Addition and
+multiplication are stagewise and well-defined. This records an infinite
+recipe; it does not assert that visible limiting arrays support those
+operations. In such a recipe $E_nE_n^{-1}=1$ at every stage, so identifying
+both endpoints with zero is incompatible with multiplication.
+
+For independent cutoffs the exact identity instead is
+\[
+ 10^{a+c}\prod_iL_{n_i}\prod_jR_{m_j}
+ =\prod_i(1-q^{n_i})\prod_j(1-q^{-m_j}).
+\]
+The period theorem below concerns common cutoffs only.
+
+\section{An exact algorithm for all matched-product periods}
+Let $a,c\ge1$, $d=a+c$, $r=d-1$, and $G_n=L_n^aR_n^c$.
+A shift $s>0$ is an \emph{eventual display period} if the canonical displays
+of $G_{n+s}$ and $G_n$ agree in each fixed finite window for all sufficiently
+large $n$. The threshold may depend on the window.
+
+Before carrying, the coefficient at $(k-a,-k-c)$ is $(-1)^k C_n(k)$, with
+\[
+ C_n(k)=[z^{k+a(n-1)}](1+z+\cdots+z^{n-1})^d.
+\]
+Expansion as $(1-z^n)^d/(1-z)^d$ gives, for fixed $k$ and sufficiently
+large $n$, $C_n(k)=P(n,k)+J(k)$, where
+\[
+ P(n,k)=\sum_{u=0}^{a-1}(-1)^u\binom du
+                 \binom{(a-u)n+k+c-1}{r}
+\]
+and $J(k)$ is independent of $n$. Specifically, $J(k)=0$ for $k<a$ and
+$J(k)=(-1)^a\binom da\binom{k+c-1}{r}$ otherwise. Binomials with arbitrary
+integer upper arguments are interpreted as falling-product polynomials.
+
+For $0\le j<r$, define
+\begin{equation}\label{eq:Q}
+ Q_{j,s}(n,k)=\sum_{u=0}^{a-1}(-1)^u\binom du
+ \left[\binom{(a-u)(n+s)+k+c-1}{r-j}
+       -\binom{(a-u)n+k+c-1}{r-j}\right].
+\end{equation}
+
+\begin{theorem}\label{thm:period}
+A positive integer $s$ is an eventual display period precisely when
+\begin{equation}\label{eq:finite-test}
+ 10^{j+1}\mid Q_{j,s}(n,k)
+ \quad(0\le j<r,\ n,k\ge0,\ n+k\le r-j-1).
+\end{equation}
+The minimal period $T_{a,c}$ divides $10^r$. Starting with $10^r$ and
+successively removing factors of 2 and 5 whenever \eqref{eq:finite-test}
+passes gives exactly $T_{a,c}$.
+\end{theorem}
+\begin{proof}
+Index layer $j$ by $(k-a,-k-c+j)$. Incoming coefficients obey
+$v_0(k)=(-1)^kC_n(k)$ and
+$v_{j+1}(k)=h(v_j(k))+h(v_j(k-1))$.
+Equal incoming residues modulo ten give equal digits. Conditional on
+agreement of previous layers, the incoming difference for a cutoff shift
+$s$ is
+\[
+ \frac{(-1)^k}{10^j}\nabla_k^j\{P(n+s,k)-P(n,k)\},
+ \qquad \nabla f(k)=f(k)-f(k-1).
+\]
+Forward differences equal backward differences after translating $k$,
+and the $j$th forward difference is \eqref{eq:Q}. The initial difference
+has degree at most $r-1$ in $k$, so its $r$th difference vanishes.
+Thus agreement of all digits is equivalent to divisibility by $10^{j+1}$
+for every integer $n,k$ and $0\le j<r$.
+
+For completeness this equivalence also holds with eventual agreement.
+Every fixed digit depends on only finitely many raw ancestors, putting
+them in the polynomial interior for sufficiently large $n$. Conversely,
+an integer-valued polynomial of degree at most $t$ is periodic modulo $M$
+in each argument: a shift by $M\operatorname{lcm}(1,\ldots,t)$ preserves
+its binomial-basis expansion. Eventual divisibility therefore implies
+divisibility at every integer argument. Constant polynomials are immediate.
+
+The total degree of $Q_{j,s}$ in $(n,k)$ is at most $t=r-j-1$.
+Its Newton expansion has the form
+\[
+ Q(n,k)=\sum_{i+h\le t}(\Delta_n^i\Delta_k^hQ)(0,0)
+                   \binom ni\binom kh.
+\]
+All coefficients are integer combinations of values in the finite triangle
+$n,k\ge0$, $n+k\le t$. Divisibility there is therefore necessary and
+sufficient everywhere, proving \eqref{eq:finite-test}.
+
+Set $U=10^r$. In the binomial translation formula for each summand of
+\eqref{eq:Q}, the coefficients include $\binom{vU}{h}$, where
+$v=a-u\ge1$ and $1\le h\le r-j$. For $p=2,5$,
+\[
+ v_p\binom{vU}{h}\ge r-v_p(h)\ge r-(h-1)\ge j+1.
+\]
+Every summand is divisible by $10^{j+1}$, so $U$ is a period. Integer
+periods form a subgroup of $\Z$ (negative shifts interpreted eventually),
+so the least positive period divides $U$. A failed prime division means
+its current prime exponent is minimal; removing the other prime cannot
+change this. The stated reduction algorithm is exact.
+\end{proof}
+
+The finite test has at most $r(r+1)(r+2)/6$ sample congruences per candidate.
+Its $n=0$ nodes evaluate the interior polynomial; they do not describe
+a physical zero-term cascade.
+If either factor count is zero, all fixed raw coefficients stabilize,
+and carry locality gives period 1.
+
+\begin{corollary}\label{cor:bound}
+Writing $d=a+c$, the integer
+\[
+ T_0=\frac{10^{d-1}}{\gcd(10^{d-1},\binom{d-2}{a-1})}
+\]
+divides $T_{a,c}$. In particular $T_{1,c}=10^c$ and $T_{a,1}=10^a$.
+\end{corollary}
+\begin{proof}
+The highest comparison difference is
+$Q_{r-1,s}=(-1)^{a-1}\binom{d-2}{a-1}s$ by the alternating binomial sum.
+Its required divisibility gives the lower bound. For $a=1$ or $c=1$
+it coincides with the upper bound.
+\end{proof}
+
+The short lower bound need not be the period. For $(a,c)=(2,8)$ it gives
+$125{,}000{,}000$, but at $j=6,n=1,k=0$ the remainder in
+\eqref{eq:finite-test} is $5{,}000{,}000$ modulo $10^7$. The exact
+algorithm gives $250{,}000{,}000$.
+
+\begin{center}
+\begin{tabular}{rrrrrrrr}
+\toprule
+$(a,c)$ &(1,1)&(2,1)&(2,2)&(3,1)&(3,2)&(4,2)&(3,3)\\
+$T_{a,c}$ &10&100&500&1,000&10,000&25,000&50,000\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Phases, hidden information, and a 10-adic coordinate}
+The theorem produces a limiting array along any sequence of growing term
+counts in a fixed period residue. These deterministic arrays are the
+``fuzzy phases'': unrestricted growth need not select one of them.
+Cycle length does not automatically count distinct arrays.
+
+At a fixed residue label $n$, equality of phases at $n$ and $n+s$ is
+equivalent to
+\[
+ 10^{j+1}\mid Q_{j,s}(n,k),\qquad
+ 0\le j<r,\quad0\le k\le r-j-1.
+\]
+This is the same proof with a one-variable Newton test in $k$.
+
+\begin{proposition}
+Equality of limiting canonical arrays is not sufficient to define
+multiplication consistently with these finite products.
+\end{proposition}
+\begin{proof}
+Take term counts $n_t=100t+1$ and $m_t=n_t+10$. The $L_nR_n$ arrays
+have the same limits, by period 10. The $L_n$ arrays also have the same
+limit, by one-direction stabilization. Their products $L_n^2R_n$ have
+different limits: the highest comparison difference in Corollary
+\ref{cor:bound} requires a phase-label difference divisible by 100,
+whereas $m_t-n_t=10$. Thus equal limiting inputs give unequal limiting
+products.
+\end{proof}
+
+Compatible residues modulo $10,10^2,\ldots$ define a 10-adic integer
+$\alpha\in\Z_{10}=\varprojlim\Z/10^k\Z$. Theorem \ref{thm:period}
+shows that $\alpha$ determines the joint phase data for every matched
+product: a product of degree $d$ needs at most its residue modulo
+$10^{d-1}$. Conversely the probes $L_nR_n^c$ distinguish every residue
+modulo $10^c$, since their highest comparison difference is simply $s$.
+Thus the joint phase family distinguishes every such $\alpha$.
+This is a coordinate on the joint observations, not an identification of
+the complete boundary-retaining algebra with $\Z_{10}$.
+
+\section{Vector encoding and a boundary-valued circle identity}
+Fix $n\ge1$ and abbreviate $L=L_n$, $R=R_n$, $F=LR$, $E=q^n$.
+The coefficient identities below may be read in $\A_{10}\otimes\Q$;
+integer coefficient inputs use only the original finite-grid algebra.
+The three elements $1,L,R$ are linearly independent over $\Q$: multiplying
+$A+BL+CR=0$ by ten gives
+$(10A+B+C)-BE-CE^{-1}=0$, forcing all coefficients to vanish.
+Here $q$ and hence $E$ are transcendental formal elements.
+
+Consequently $C(a,b)=aL+bR$ is an injective additive encoding of integer
+vectors. It extends to rational vectors in the rational coefficient
+extension. It is not a ring embedding of coordinatewise vector arithmetic.
+The integer input parser gives the same element $1$ for literal $1X$ and
+$1Y$, losing the distinction between $(1,0)$ and $(0,1)$.
+Unlike the polar origin, these are different nonzero vectors.
+
+Direction-preserving units instead are
+\[
+ U=10L=1-E,\qquad V=10R=1-E^{-1}.
+\]
+They are distinct and satisfy $UV=U+V$. No unital homomorphism to a
+nonzero ring can send both to 1, since it would imply $1=2$.
+
+For an exact unit-circle point $(s,t)=(3/5,4/5)$ the native decimal
+inputs are $6L$ and $8R$. The two proposed circle expressions are
+\[
+ (6L)(6R)+(8L)(8R)=100F=2-E-E^{-1}\ne1,
+\]
+\[
+ 100\bigl((6L)^2+(8R)^2\bigr)
+ =36(1-E)^2+64(1-E^{-1})^2\ne100.
+\]
+For any rational $s,t$ with $s^2+t^2=1$, the consistent linear
+directional encoding gives the useful constant identity
+\[
+ (sU)(sV)+(tU)(tV)=UV.
+\]
+The constant retains both endpoints. This extends to formal scalars with
+$s^2+t^2=1$; using arbitrary real trigonometric scalars is an additional
+coefficient extension, not a proved property of arbitrary decimal parsing.
+
+\begin{proposition}[Dot product and oriented area]
+Let $C(a,b)=aL+bR$, let $S C(a,b)=aL-bR$ on this encoded vector space,
+and let $\sigma$ exchange axes. Then
+\begin{align*}
+ C(a,b)\sigma C(c,d)+S C(a,b)\sigma S C(c,d)
+   &=2(ac+bd)F,\\
+ C(a,b)\sigma C(c,d)-\sigma C(a,b)C(c,d)
+   &=(ad-bc)(L^2-R^2).
+\end{align*}
+The first expression vanishes exactly for orthogonal vectors; the second
+vanishes exactly for linearly dependent vectors.
+\end{proposition}
+\begin{proof}
+Expand by ordinary distributivity. In the first sum the $L^2$ and $R^2$
+terms cancel; in the second difference the $LR$ terms cancel. The factors
+$F$ and $L^2-R^2$ are nonzero in the domain, so the zero tests are exact.
+\end{proof}
+
+Thus selected combinations of products implement geometric tests while
+retaining every boundary. The full product always has all four
+distributive terms. The operation $S$ is defined on the vector subspace;
+it is not asserted to be a ring automorphism. Similarly a quarter-turn
+$J C(a,b)=C(-b,a)$ satisfies $J^2=-I$ on that subspace. This does not
+identify an MDN axis with an imaginary unit or turn native multiplication
+into complex multiplication.
+
+For $(a,b)=(6,8)$ and $(c,d)=(-8,6)$, the determinant expression is
+\[
+100(L^2-R^2)=-2E+E^2+2E^{-1}-E^{-2}.
+\]
+All of this nonzero area information is at the retained endpoints.
+A sufficiently small central window therefore misses it completely.
+
+\section{Computational evidence and remaining work}
+The repository's \texttt{research/general\_products} contains the exact
+finite-test implementation and 120 minimal-period certificates through
+total degree sixteen. A native probe linked the corrected MDN library and
+checked 989 finite cases with 14,832 exact checks and no failures.
+These compare full canonical grids and explicit carry certificates,
+including boundary identities. Separate exact local formula calculations
+check very large cutoff shifts; full native grids at those huge depths
+were not constructed.
+
+The new \texttt{research/vector\_circle} probe passed 45 cases and 4,045
+exact checks, with zero failures. It tests rational unit-circle
+inputs, literal axis endpoints, full distributivity, and paired geometric
+identities at finite depths. Its generated \texttt{backend\_results.json}
+is the authoritative record of the current test count and outcomes.
+Both studies use the corrected C++ library. The
+\href{https://github.com/Marupio/mdn-research}{repository} includes the
+backend corrections, regression tests, research scripts and compact result
+records. Reproduction commands are collected in
+\texttt{research/manuscript/README.md}; full generated carry certificates
+can be regenerated. A permanent archival release and identifier remain
+necessary before submission.
+
+The next mathematical problems are to characterize a minimal
+multiplication-compatible boundary state, extend period analysis to
+independent cutoff paths, and determine the relation of these results to
+existing radix and algebraic-dynamics theorems. Exact geometric identities
+alone establish neither a faster numerical method nor a physical model.
+Independent specialist review and an explicit novelty comparison are
+required before a submission claim is made.
+
+\paragraph{Development and assistance.}
+The original construction, C++ application and motivating observations
+predate modern large language models. Recent AI assistance helped translate
+the author's computational descriptions and conjectures into mathematical
+definitions, proof drafts and reproducible checks. This assistance does not
+constitute independent specialist review.
+
+\begin{thebibliography}{9}
+\bibitem{digits} K. Scheicher, P. Surer, J. M. Thuswaldner and
+C. E. van de Woestijne, \emph{Digit systems over commutative rings},
+\href{https://arxiv.org/abs/1004.3729}{arXiv:1004.3729}.
+\bibitem{sandpile} G. Strasser, \emph{Abelian sandpiles and algebraic
+models}, \href{https://arxiv.org/abs/1707.02281}{arXiv:1707.02281}.
+\bibitem{binomials} L. Fiorot, R. Gilblas and A. Tonolo,
+\emph{Periodic sequences, binomials modulo a prime power, and a math/music
+application}, Advances in Applied Mathematics 162 (2025), 102786,
+\href{https://doi.org/10.1016/j.aam.2024.102786}{doi:10.1016/j.aam.2024.102786}.
+\end{thebibliography}
+\end{document}

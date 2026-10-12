@@ -1,5 +1,12 @@
 ## Installation Guide
 
+**Corrected source after 1.1.2:** the current source fixes the cascades for
+`0.01` and smaller fractional places on both axes, plus an incoming-carry
+conservation bug. The 1.1.2 and older binary packages below predate these
+fixes. Build the current source when reproducing the research results.
+The root `tests/README.md` gives a Qt-free backend build and exact regression
+checks; the full application build instructions are below.
+
 _Version 1.0.0_ has been released.  I have finally produced a precompiled _install package_ for **Windows**.  You can also _build from source_.  This application should build on **all platforms**.  I have tested it on:
 
 * _Windows 11 Home Edition_, and

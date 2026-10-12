@@ -57,3 +57,16 @@ compile_commands.json
 **/build/
 **/build_*/
 **/out/
+
+# Generated research/build artifacts and local correspondence
+__pycache__/
+*.pyc
+/tmp/
+/debug-*
+/correctedChatWithAstra.md
+/pitfalls/chatWithAstra.md
+/pitfalls/VALUE.md
+/output/pdf/mathematician_shortlist.md
+/output/pdf/email_narad_rampersad.txt
+/output/pdf/final_review.md
+/output/pdf/file_changes.txt

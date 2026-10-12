@@ -1,0 +1,175 @@
+{
+  "project": "/home/d.gaden/GADEN/MDN/fuzzy-family-examples.mdnproj",
+  "project_sha256": "f932ecaed87fbd1f303478874b35746f4c83586ed360f1c3b31a95b3b4990588",
+  "bytes": 84406,
+  "config": {
+    "base": 10,
+    "precision": -1,
+    "sign": 2,
+    "depth": 20,
+    "fraxis": 2
+  },
+  "active_tab": 7,
+  "tab_count": 22,
+  "sources": [
+    {
+      "path": "/tmp/mdn-fuzzy-01a12881/case_10_2_20_20_20_20.json",
+      "sha256": "4702181d3c6b2283b70f1cff180f81fbc163bef1f309000ccebb4c19e01f9454"
+    },
+    {
+      "path": "/tmp/mdn-fuzzy-01a12881/case_10_2_20_21_20_21.json",
+      "sha256": "676f8975b173528b66129d3dd96debba13acf4b1132031ce85c2707920b98738"
+    }
+  ],
+  "python_roundtrip_all_cells_and_config_match": true,
+  "python_roundtrip_strict_eof": true,
+  "native_validation": {
+    "probe": "/tmp/mdn-mixed-01a12881/load_project_probe",
+    "all_cells_names_and_config_match": true
+  },
+  "tab_guide": {
+    "prefix": "20x20 and 20x21 are zero-based X and Y cascade depths.",
+    "L_R": "Finite 0.1X and 0.1Y cascades; all boundary cells are retained.",
+    "F": "L*R",
+    "FX": "F*L",
+    "FY": "F*R",
+    "F2": "F*F",
+    "F2-alt": "(L*L)*(R*R): carry-equivalent, potentially different displayed digits.",
+    "scaled": "100F, 1000FX, 1000FY and 10000F2 reveal the exact boundary expressions.",
+    "global_depth": "The file format saves depth only globally; names preserve each input cutoff."
+  },
+  "tabs": [
+    {
+      "index": 0,
+      "name": "20x20 L",
+      "source_key": "L_N",
+      "nonzero_cells": 21
+    },
+    {
+      "index": 1,
+      "name": "20x20 R",
+      "source_key": "R_M",
+      "nonzero_cells": 21
+    },
+    {
+      "index": 2,
+      "name": "20x20 F",
+      "source_key": "F",
+      "nonzero_cells": 41
+    },
+    {
+      "index": 3,
+      "name": "20x20 FX",
+      "source_key": "FX",
+      "nonzero_cells": 89
+    },
+    {
+      "index": 4,
+      "name": "20x20 FY",
+      "source_key": "FY",
+      "nonzero_cells": 89
+    },
+    {
+      "index": 5,
+      "name": "20x20 F2",
+      "source_key": "F2",
+      "nonzero_cells": 128
+    },
+    {
+      "index": 6,
+      "name": "20x20 F2-alt",
+      "source_key": "F2_alternate",
+      "nonzero_cells": 130
+    },
+    {
+      "index": 7,
+      "name": "20x20 100F",
+      "source_key": "b2F",
+      "nonzero_cells": 3
+    },
+    {
+      "index": 8,
+      "name": "20x20 1000FX",
+      "source_key": "b3FX",
+      "nonzero_cells": 4
+    },
+    {
+      "index": 9,
+      "name": "20x20 1000FY",
+      "source_key": "b3FY",
+      "nonzero_cells": 4
+    },
+    {
+      "index": 10,
+      "name": "20x20 10000F2",
+      "source_key": "b4F2",
+      "nonzero_cells": 5
+    },
+    {
+      "index": 11,
+      "name": "20x21 L",
+      "source_key": "L_N",
+      "nonzero_cells": 21
+    },
+    {
+      "index": 12,
+      "name": "20x21 R",
+      "source_key": "R_M",
+      "nonzero_cells": 22
+    },
+    {
+      "index": 13,
+      "name": "20x21 F",
+      "source_key": "F",
+      "nonzero_cells": 42
+    },
+    {
+      "index": 14,
+      "name": "20x21 FX",
+      "source_key": "FX",
+      "nonzero_cells": 94
+    },
+    {
+      "index": 15,
+      "name": "20x21 FY",
+      "source_key": "FY",
+      "nonzero_cells": 97
+    },
+    {
+      "index": 16,
+      "name": "20x21 F2",
+      "source_key": "F2",
+      "nonzero_cells": 135
+    },
+    {
+      "index": 17,
+      "name": "20x21 F2-alt",
+      "source_key": "F2_alternate",
+      "nonzero_cells": 136
+    },
+    {
+      "index": 18,
+      "name": "20x21 100F",
+      "source_key": "b2F",
+      "nonzero_cells": 4
+    },
+    {
+      "index": 19,
+      "name": "20x21 1000FX",
+      "source_key": "b3FX",
+      "nonzero_cells": 6
+    },
+    {
+      "index": 20,
+      "name": "20x21 1000FY",
+      "source_key": "b3FY",
+      "nonzero_cells": 6
+    },
+    {
+      "index": 21,
+      "name": "20x21 10000F2",
+      "source_key": "b4F2",
+      "nonzero_cells": 9
+    }
+  ]
+}

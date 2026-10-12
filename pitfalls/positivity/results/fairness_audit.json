@@ -1,0 +1,94 @@
+{
+  "saved_main_certificates_reverified": 1805,
+  "main_minimum_degrees_le32_reverified": 137,
+  "datasets": {
+    "development": {
+      "cases": 82,
+      "mdn_smaller": 36,
+      "ties": 20,
+      "conventional_lp25_smaller": 26,
+      "mdn_vs_recipes_smaller": 0,
+      "mdn_vs_recipes_ties": 0,
+      "recipes_smaller": 82,
+      "total_mdn_bits": 44226,
+      "total_conventional_lp25_bits": 49767,
+      "median_mdn_over_conventional_lp25_ratio": 1.0,
+      "json_byte_comparisons": {
+        "bernstein_explicit": {
+          "cases": 82,
+          "mdn_smaller": 28,
+          "ties": 1,
+          "conventional_smaller": 53,
+          "total_mdn": 30996,
+          "total_conventional": 27546,
+          "median_ratio": 1.095507433742728
+        },
+        "bernstein_plus_lp25": {
+          "cases": 82,
+          "mdn_smaller": 11,
+          "ties": 17,
+          "conventional_smaller": 54,
+          "total_mdn": 30996,
+          "total_conventional": 27053,
+          "median_ratio": 1.1132545537207053
+        },
+        "bernstein_recipes": {
+          "cases": 82,
+          "mdn_smaller": 0,
+          "ties": 1,
+          "conventional_smaller": 81,
+          "total_mdn": 30996,
+          "total_conventional": 6904,
+          "median_ratio": 2.974021592442645
+        }
+      }
+    },
+    "holdout": {
+      "cases": 100,
+      "mdn_smaller": 35,
+      "ties": 23,
+      "conventional_lp25_smaller": 42,
+      "mdn_vs_recipes_smaller": 0,
+      "mdn_vs_recipes_ties": 0,
+      "recipes_smaller": 100,
+      "total_mdn_bits": 25200,
+      "total_conventional_lp25_bits": 24449,
+      "median_mdn_over_conventional_lp25_ratio": 1.0,
+      "json_byte_comparisons": {
+        "bernstein_explicit": {
+          "cases": 100,
+          "mdn_smaller": 22,
+          "ties": 1,
+          "conventional_smaller": 77,
+          "total_mdn": 22151,
+          "total_conventional": 18748,
+          "median_ratio": 1.1845547239449994
+        },
+        "bernstein_plus_lp25": {
+          "cases": 100,
+          "mdn_smaller": 5,
+          "ties": 16,
+          "conventional_smaller": 79,
+          "total_mdn": 22151,
+          "total_conventional": 18020,
+          "median_ratio": 1.1845547239449994
+        },
+        "bernstein_recipes": {
+          "cases": 100,
+          "mdn_smaller": 0,
+          "ties": 0,
+          "conventional_smaller": 100,
+          "total_mdn": 22151,
+          "total_conventional": 6053,
+          "median_ratio": 3.0507330246913584
+        }
+      }
+    }
+  },
+  "additional_large_global_full_expansion_checks": 7,
+  "sensitivity_saved_certificates_reverified": 137,
+  "source_manifest_entries_reverified": 23,
+  "sensitivity_input_hashes_reverified": 2,
+  "source_manifest_scope": "Files present at each original run; later-added analysis files are not required in older manifests",
+  "json_byte_scope": "Best observed outputs; search and packing selected payload bits, not JSON bytes; no optimal-codec claim"
+}

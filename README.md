@@ -1,7 +1,13 @@
 # mdn-research
 
-A research project into **Multi-Dimensional Numbers**.  Includes three main components:
-* **library:** a _thread-safe_, _HPC-ready_ numerical library.
+A research project into **Multi-Dimensional Numbers**, developed by David Gaden
+around 2000 and first explored with a C++ numerical application in that era.
+The current implementation began in 2025. A whole spreadsheet-like grid is
+one number; its cells are digits. In base ten, a carry removes ten units from
+one cell and adds one to each of its right and upper neighbours.
+
+Includes three main components:
+* **library:** a C++ numerical library for experiments.
 * **gui:** a _QT-based_ graphical user interface for experimenting with **MDNs**.
 * **"sandbox"** an application library with various test apps, part of the dev process.
 
@@ -9,13 +15,39 @@ A research project into **Multi-Dimensional Numbers**.  Includes three main comp
 
 ## Documentation
 
+- [Current manuscript and reproduction guide](research/manuscript/README.md) — start here for the precise finite carry algebra, period theorem, retained boundaries, and checks
+- [Manuscript PDF](output/pdf/mdn_carry_dynamics.pdf) — draft for independent proof and novelty review
 - [Overview](gui/help/overview.md) — *What are Multi-Dimensional Numbers?*
 - [Installation Guide](gui/help/install.md) - *How to install the application*
 - [User’s Guide](gui/help/guide.md) — *How to use the application*
+- [Boundary-retaining fuzzy families](research/fuzzy/README.md) — finite definitions, product patterns, exact multiplication, proofs, and corrected-backend checks
+- [Infinite MDNs with retained boundaries](research/fuzzy/BOUNDARY.md) — plain-language carry explanation, exact refinement recipes, and additive mixing
+- [Infinite decimals and marching digits](research/decimal_infinite/README.md) — infinite input streams, ten mixed-product display phases, retained boundaries, proofs, and backend checks
+- [Multiplying fuzzy phases](research/phase_products/README.md) — quadrant review, exact 10/100/500 display periods, complete boundary formulas, and backend checks
+- [General products of X and Y tenths](research/general_products/README.md) — a proved algorithm for every matched mixture, growing phase cycles, retained boundaries, and backend checks
+- [Vectors, circles, and a first manuscript](research/vector_circle/README.md) — direction-preserving encodings, exact dot and area tests, boundary-sensitive circle identities, and a draft for specialist review
+- [Pitfalls](pitfalls/README.md) — superseded work that judged MDNs by ordinary (1DN) magnitudes, including the positivity and infinite-expansion studies
+- [Historical summary](STATE_OF_THE_ART.md) and [subsequent corrections](research/phase_products/REVIEW.md) — an earlier snapshot, not the current statement of every claim
 
 ---
 
 ## Release notes
+
+### Corrected source after 1.1.2
+
+The source now corrects the fractional cascades for `0.01` and deeper places
+on both fraxes, and preserves incoming increments during sign-cleanup carries.
+Deeper-place coefficients use exact binomial arithmetic; finite cascade
+endpoints remain part of the result. Existing 1.1.2 and older download packages
+predate these corrections. Use a source build for the research results here.
+
+The [backend regression guide](tests/README.md) builds and checks the numerical
+library without Qt. It compares complete finite carry classes, including
+deep decimal inputs, both axes, sign conventions, and boundary terms.
+
+Iterative division, transposition and manual/global carry controls are already
+implemented. Division convergence and the reported directional/alternating
+issues remain open; these corrections do not resolve them.
 
 ### MDN 1.1.2
 

@@ -1,0 +1,2482 @@
+{
+  "schema": "mdn.fuzzy.finite-experiments.v1",
+  "base": 10,
+  "scope": "Exact finite integer grids and their carry classes X+Y=b.",
+  "depth_convention": "Depth N includes N+1 cascade terms.",
+  "q_convention": "q=-Y/X is a signed formal diagonal shift.",
+  "raw_coefficient_warning": "Unsigned counts describe grids before carrying, not scalar magnitudes.",
+  "window_warning": "Stationary terms are observations of boundary ledgers, not equality or a value limit.",
+  "gcd_warning": "An empty obstruction-prime list makes no claim about integer finiteness.",
+  "cases": [
+    {
+      "cutoffs_N_M_P_Q": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "products": {
+        "F": {
+          "x_depths": [
+            0
+          ],
+          "y_depths": [
+            0
+          ],
+          "order": 2,
+          "raw_line_total_degree": -2,
+          "k_bounds_inclusive": [
+            0,
+            0
+          ],
+          "raw_cell_count": 1,
+          "raw_k0_coordinate": [
+            -1,
+            -1
+          ],
+          "raw_k0_coefficient": 1,
+          "unsigned_coefficient_sum": 1,
+          "unsigned_peak": 1,
+          "boundary_ledger": [
+            {
+              "q_exponent": -1,
+              "coefficient": -1
+            },
+            {
+              "q_exponent": 0,
+              "coefficient": 2
+            },
+            {
+              "q_exponent": 1,
+              "coefficient": -1
+            }
+          ],
+          "boundary_grid_for_b_power_times_product": [
+            {
+              "x": -1,
+              "y": 1,
+              "coefficient": 1
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "coefficient": 2
+            },
+            {
+              "x": 1,
+              "y": -1,
+              "coefficient": 1
+            }
+          ]
+        },
+        "FL": {
+          "x_depths": [
+            0,
+            0
+          ],
+          "y_depths": [
+            0
+          ],
+          "order": 3,
+          "raw_line_total_degree": -3,
+          "k_bounds_inclusive": [
+            0,
+            0
+          ],
+          "raw_cell_count": 1,
+          "raw_k0_coordinate": [
+            -2,
+            -1
+          ],
+          "raw_k0_coefficient": 1,
+          "unsigned_coefficient_sum": 1,
+          "unsigned_peak": 1,
+          "boundary_ledger": [
+            {
+              "q_exponent": -1,
+              "coefficient": -1
+            },
+            {
+              "q_exponent": 0,
+              "coefficient": 3
+            },
+            {
+              "q_exponent": 1,
+              "coefficient": -3
+            },
+            {
+              "q_exponent": 2,
+              "coefficient": 1
+            }
+          ],
+          "boundary_grid_for_b_power_times_product": [
+            {
+              "x": -2,
+              "y": 2,
+              "coefficient": 1
+            },
+            {
+              "x": -1,
+              "y": 1,
+              "coefficient": 3
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "coefficient": 3
+            },
+            {
+              "x": 1,
+              "y": -1,
+              "coefficient": 1
+            }
+          ]
+        },
+        "FR": {
+          "x_depths": [
+            0
+          ],
+          "y_depths": [
+            0,
+            0
+          ],
+          "order": 3,
+          "raw_line_total_degree": -3,
+          "k_bounds_inclusive": [
+            0,
+            0
+          ],
+          "raw_cell_count": 1,
+          "raw_k0_coordinate": [
+            -1,
+            -2
+          ],
+          "raw_k0_coefficient": 1,
+          "unsigned_coefficient_sum": 1,
+          "unsigned_peak": 1,
+          "boundary_ledger": [
+            {
+              "q_exponent": -2,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": -1,
+              "coefficient": -3
+            },
+            {
+              "q_exponent": 0,
+              "coefficient": 3
+            },
+            {
+              "q_exponent": 1,
+              "coefficient": -1
+            }
+          ],
+          "boundary_grid_for_b_power_times_product": [
+            {
+              "x": -1,
+              "y": 1,
+              "coefficient": 1
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "coefficient": 3
+            },
+            {
+              "x": 1,
+              "y": -1,
+              "coefficient": 3
+            },
+            {
+              "x": 2,
+              "y": -2,
+              "coefficient": 1
+            }
+          ]
+        },
+        "F2": {
+          "x_depths": [
+            0,
+            0
+          ],
+          "y_depths": [
+            0,
+            0
+          ],
+          "order": 4,
+          "raw_line_total_degree": -4,
+          "k_bounds_inclusive": [
+            0,
+            0
+          ],
+          "raw_cell_count": 1,
+          "raw_k0_coordinate": [
+            -2,
+            -2
+          ],
+          "raw_k0_coefficient": 1,
+          "unsigned_coefficient_sum": 1,
+          "unsigned_peak": 1,
+          "boundary_ledger": [
+            {
+              "q_exponent": -2,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": -1,
+              "coefficient": -4
+            },
+            {
+              "q_exponent": 0,
+              "coefficient": 6
+            },
+            {
+              "q_exponent": 1,
+              "coefficient": -4
+            },
+            {
+              "q_exponent": 2,
+              "coefficient": 1
+            }
+          ],
+          "boundary_grid_for_b_power_times_product": [
+            {
+              "x": -2,
+              "y": 2,
+              "coefficient": 1
+            },
+            {
+              "x": -1,
+              "y": 1,
+              "coefficient": 4
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "coefficient": 6
+            },
+            {
+              "x": 1,
+              "y": -1,
+              "coefficient": 4
+            },
+            {
+              "x": 2,
+              "y": -2,
+              "coefficient": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "cutoffs_N_M_P_Q": [
+        2,
+        3,
+        1,
+        4
+      ],
+      "products": {
+        "F": {
+          "x_depths": [
+            2
+          ],
+          "y_depths": [
+            3
+          ],
+          "order": 2,
+          "raw_line_total_degree": -2,
+          "k_bounds_inclusive": [
+            -2,
+            3
+          ],
+          "raw_cell_count": 6,
+          "raw_k0_coordinate": [
+            -1,
+            -1
+          ],
+          "raw_k0_coefficient": 3,
+          "unsigned_coefficient_sum": 12,
+          "unsigned_peak": 3,
+          "boundary_ledger": [
+            {
+              "q_exponent": -4,
+              "coefficient": -1
+            },
+            {
+              "q_exponent": -1,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": 0,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": 3,
+              "coefficient": -1
+            }
+          ],
+          "boundary_grid_for_b_power_times_product": [
+            {
+              "x": -3,
+              "y": 3,
+              "coefficient": 1
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "coefficient": 1
+            },
+            {
+              "x": 1,
+              "y": -1,
+              "coefficient": -1
+            },
+            {
+              "x": 4,
+              "y": -4,
+              "coefficient": -1
+            }
+          ]
+        },
+        "FL": {
+          "x_depths": [
+            1,
+            2
+          ],
+          "y_depths": [
+            3
+          ],
+          "order": 3,
+          "raw_line_total_degree": -3,
+          "k_bounds_inclusive": [
+            -3,
+            3
+          ],
+          "raw_cell_count": 7,
+          "raw_k0_coordinate": [
+            -2,
+            -1
+          ],
+          "raw_k0_coefficient": 6,
+          "unsigned_coefficient_sum": 24,
+          "unsigned_peak": 6,
+          "boundary_ledger": [
+            {
+              "q_exponent": -4,
+              "coefficient": -1
+            },
+            {
+              "q_exponent": -2,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": -1,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": 0,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": 1,
+              "coefficient": -1
+            },
+            {
+              "q_exponent": 2,
+              "coefficient": -1
+            },
+            {
+              "q_exponent": 3,
+              "coefficient": -1
+            },
+            {
+              "q_exponent": 5,
+              "coefficient": 1
+            }
+          ],
+          "boundary_grid_for_b_power_times_product": [
+            {
+              "x": -5,
+              "y": 5,
+              "coefficient": -1
+            },
+            {
+              "x": -3,
+              "y": 3,
+              "coefficient": 1
+            },
+            {
+              "x": -2,
+              "y": 2,
+              "coefficient": -1
+            },
+            {
+              "x": -1,
+              "y": 1,
+              "coefficient": 1
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "coefficient": 1
+            },
+            {
+              "x": 1,
+              "y": -1,
+              "coefficient": -1
+            },
+            {
+              "x": 2,
+              "y": -2,
+              "coefficient": 1
+            },
+            {
+              "x": 4,
+              "y": -4,
+              "coefficient": -1
+            }
+          ]
+        },
+        "FR": {
+          "x_depths": [
+            2
+          ],
+          "y_depths": [
+            3,
+            4
+          ],
+          "order": 3,
+          "raw_line_total_degree": -3,
+          "k_bounds_inclusive": [
+            -2,
+            7
+          ],
+          "raw_cell_count": 10,
+          "raw_k0_coordinate": [
+            -1,
+            -2
+          ],
+          "raw_k0_coefficient": 6,
+          "unsigned_coefficient_sum": 60,
+          "unsigned_peak": 11,
+          "boundary_ledger": [
+            {
+              "q_exponent": -9,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": -6,
+              "coefficient": -1
+            },
+            {
+              "q_exponent": -5,
+              "coefficient": -1
+            },
+            {
+              "q_exponent": -4,
+              "coefficient": -1
+            },
+            {
+              "q_exponent": -2,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": -1,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": 0,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": 3,
+              "coefficient": -1
+            }
+          ],
+          "boundary_grid_for_b_power_times_product": [
+            {
+              "x": -3,
+              "y": 3,
+              "coefficient": 1
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "coefficient": 1
+            },
+            {
+              "x": 1,
+              "y": -1,
+              "coefficient": -1
+            },
+            {
+              "x": 2,
+              "y": -2,
+              "coefficient": 1
+            },
+            {
+              "x": 4,
+              "y": -4,
+              "coefficient": -1
+            },
+            {
+              "x": 5,
+              "y": -5,
+              "coefficient": 1
+            },
+            {
+              "x": 6,
+              "y": -6,
+              "coefficient": -1
+            },
+            {
+              "x": 9,
+              "y": -9,
+              "coefficient": -1
+            }
+          ]
+        },
+        "F2": {
+          "x_depths": [
+            2,
+            2
+          ],
+          "y_depths": [
+            3,
+            3
+          ],
+          "order": 4,
+          "raw_line_total_degree": -4,
+          "k_bounds_inclusive": [
+            -4,
+            6
+          ],
+          "raw_cell_count": 11,
+          "raw_k0_coordinate": [
+            -2,
+            -2
+          ],
+          "raw_k0_coefficient": 25,
+          "unsigned_coefficient_sum": 144,
+          "unsigned_peak": 28,
+          "boundary_ledger": [
+            {
+              "q_exponent": -8,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": -5,
+              "coefficient": -2
+            },
+            {
+              "q_exponent": -4,
+              "coefficient": -2
+            },
+            {
+              "q_exponent": -2,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": -1,
+              "coefficient": 4
+            },
+            {
+              "q_exponent": 0,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": 2,
+              "coefficient": -2
+            },
+            {
+              "q_exponent": 3,
+              "coefficient": -2
+            },
+            {
+              "q_exponent": 6,
+              "coefficient": 1
+            }
+          ],
+          "boundary_grid_for_b_power_times_product": [
+            {
+              "x": -6,
+              "y": 6,
+              "coefficient": 1
+            },
+            {
+              "x": -3,
+              "y": 3,
+              "coefficient": 2
+            },
+            {
+              "x": -2,
+              "y": 2,
+              "coefficient": -2
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "coefficient": 1
+            },
+            {
+              "x": 1,
+              "y": -1,
+              "coefficient": -4
+            },
+            {
+              "x": 2,
+              "y": -2,
+              "coefficient": 1
+            },
+            {
+              "x": 4,
+              "y": -4,
+              "coefficient": -2
+            },
+            {
+              "x": 5,
+              "y": -5,
+              "coefficient": 2
+            },
+            {
+              "x": 8,
+              "y": -8,
+              "coefficient": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "cutoffs_N_M_P_Q": [
+        20,
+        20,
+        20,
+        20
+      ],
+      "products": {
+        "F": {
+          "x_depths": [
+            20
+          ],
+          "y_depths": [
+            20
+          ],
+          "order": 2,
+          "raw_line_total_degree": -2,
+          "k_bounds_inclusive": [
+            -20,
+            20
+          ],
+          "raw_cell_count": 41,
+          "raw_k0_coordinate": [
+            -1,
+            -1
+          ],
+          "raw_k0_coefficient": 21,
+          "unsigned_coefficient_sum": 441,
+          "unsigned_peak": 21,
+          "boundary_ledger": [
+            {
+              "q_exponent": -21,
+              "coefficient": -1
+            },
+            {
+              "q_exponent": 0,
+              "coefficient": 2
+            },
+            {
+              "q_exponent": 21,
+              "coefficient": -1
+            }
+          ],
+          "boundary_grid_for_b_power_times_product": [
+            {
+              "x": -21,
+              "y": 21,
+              "coefficient": 1
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "coefficient": 2
+            },
+            {
+              "x": 21,
+              "y": -21,
+              "coefficient": 1
+            }
+          ]
+        },
+        "FL": {
+          "x_depths": [
+            20,
+            20
+          ],
+          "y_depths": [
+            20
+          ],
+          "order": 3,
+          "raw_line_total_degree": -3,
+          "k_bounds_inclusive": [
+            -40,
+            20
+          ],
+          "raw_cell_count": 61,
+          "raw_k0_coordinate": [
+            -2,
+            -1
+          ],
+          "raw_k0_coefficient": 231,
+          "unsigned_coefficient_sum": 9261,
+          "unsigned_peak": 331,
+          "boundary_ledger": [
+            {
+              "q_exponent": -21,
+              "coefficient": -1
+            },
+            {
+              "q_exponent": 0,
+              "coefficient": 3
+            },
+            {
+              "q_exponent": 21,
+              "coefficient": -3
+            },
+            {
+              "q_exponent": 42,
+              "coefficient": 1
+            }
+          ],
+          "boundary_grid_for_b_power_times_product": [
+            {
+              "x": -42,
+              "y": 42,
+              "coefficient": 1
+            },
+            {
+              "x": -21,
+              "y": 21,
+              "coefficient": 3
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "coefficient": 3
+            },
+            {
+              "x": 21,
+              "y": -21,
+              "coefficient": 1
+            }
+          ]
+        },
+        "FR": {
+          "x_depths": [
+            20
+          ],
+          "y_depths": [
+            20,
+            20
+          ],
+          "order": 3,
+          "raw_line_total_degree": -3,
+          "k_bounds_inclusive": [
+            -20,
+            40
+          ],
+          "raw_cell_count": 61,
+          "raw_k0_coordinate": [
+            -1,
+            -2
+          ],
+          "raw_k0_coefficient": 231,
+          "unsigned_coefficient_sum": 9261,
+          "unsigned_peak": 331,
+          "boundary_ledger": [
+            {
+              "q_exponent": -42,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": -21,
+              "coefficient": -3
+            },
+            {
+              "q_exponent": 0,
+              "coefficient": 3
+            },
+            {
+              "q_exponent": 21,
+              "coefficient": -1
+            }
+          ],
+          "boundary_grid_for_b_power_times_product": [
+            {
+              "x": -21,
+              "y": 21,
+              "coefficient": 1
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "coefficient": 3
+            },
+            {
+              "x": 21,
+              "y": -21,
+              "coefficient": 3
+            },
+            {
+              "x": 42,
+              "y": -42,
+              "coefficient": 1
+            }
+          ]
+        },
+        "F2": {
+          "x_depths": [
+            20,
+            20
+          ],
+          "y_depths": [
+            20,
+            20
+          ],
+          "order": 4,
+          "raw_line_total_degree": -4,
+          "k_bounds_inclusive": [
+            -40,
+            40
+          ],
+          "raw_cell_count": 81,
+          "raw_k0_coordinate": [
+            -2,
+            -2
+          ],
+          "raw_k0_coefficient": 6181,
+          "unsigned_coefficient_sum": 194481,
+          "unsigned_peak": 6181,
+          "boundary_ledger": [
+            {
+              "q_exponent": -42,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": -21,
+              "coefficient": -4
+            },
+            {
+              "q_exponent": 0,
+              "coefficient": 6
+            },
+            {
+              "q_exponent": 21,
+              "coefficient": -4
+            },
+            {
+              "q_exponent": 42,
+              "coefficient": 1
+            }
+          ],
+          "boundary_grid_for_b_power_times_product": [
+            {
+              "x": -42,
+              "y": 42,
+              "coefficient": 1
+            },
+            {
+              "x": -21,
+              "y": 21,
+              "coefficient": 4
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "coefficient": 6
+            },
+            {
+              "x": 21,
+              "y": -21,
+              "coefficient": 4
+            },
+            {
+              "x": 42,
+              "y": -42,
+              "coefficient": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "cutoffs_N_M_P_Q": [
+        20,
+        21,
+        20,
+        21
+      ],
+      "products": {
+        "F": {
+          "x_depths": [
+            20
+          ],
+          "y_depths": [
+            21
+          ],
+          "order": 2,
+          "raw_line_total_degree": -2,
+          "k_bounds_inclusive": [
+            -20,
+            21
+          ],
+          "raw_cell_count": 42,
+          "raw_k0_coordinate": [
+            -1,
+            -1
+          ],
+          "raw_k0_coefficient": 21,
+          "unsigned_coefficient_sum": 462,
+          "unsigned_peak": 21,
+          "boundary_ledger": [
+            {
+              "q_exponent": -22,
+              "coefficient": -1
+            },
+            {
+              "q_exponent": -1,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": 0,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": 21,
+              "coefficient": -1
+            }
+          ],
+          "boundary_grid_for_b_power_times_product": [
+            {
+              "x": -21,
+              "y": 21,
+              "coefficient": 1
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "coefficient": 1
+            },
+            {
+              "x": 1,
+              "y": -1,
+              "coefficient": -1
+            },
+            {
+              "x": 22,
+              "y": -22,
+              "coefficient": -1
+            }
+          ]
+        },
+        "FL": {
+          "x_depths": [
+            20,
+            20
+          ],
+          "y_depths": [
+            21
+          ],
+          "order": 3,
+          "raw_line_total_degree": -3,
+          "k_bounds_inclusive": [
+            -40,
+            21
+          ],
+          "raw_cell_count": 62,
+          "raw_k0_coordinate": [
+            -2,
+            -1
+          ],
+          "raw_k0_coefficient": 251,
+          "unsigned_coefficient_sum": 9702,
+          "unsigned_peak": 341,
+          "boundary_ledger": [
+            {
+              "q_exponent": -22,
+              "coefficient": -1
+            },
+            {
+              "q_exponent": -1,
+              "coefficient": 2
+            },
+            {
+              "q_exponent": 0,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": 20,
+              "coefficient": -1
+            },
+            {
+              "q_exponent": 21,
+              "coefficient": -2
+            },
+            {
+              "q_exponent": 42,
+              "coefficient": 1
+            }
+          ],
+          "boundary_grid_for_b_power_times_product": [
+            {
+              "x": -42,
+              "y": 42,
+              "coefficient": 1
+            },
+            {
+              "x": -21,
+              "y": 21,
+              "coefficient": 2
+            },
+            {
+              "x": -20,
+              "y": 20,
+              "coefficient": -1
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "coefficient": 1
+            },
+            {
+              "x": 1,
+              "y": -1,
+              "coefficient": -2
+            },
+            {
+              "x": 22,
+              "y": -22,
+              "coefficient": -1
+            }
+          ]
+        },
+        "FR": {
+          "x_depths": [
+            20
+          ],
+          "y_depths": [
+            21,
+            21
+          ],
+          "order": 3,
+          "raw_line_total_degree": -3,
+          "k_bounds_inclusive": [
+            -20,
+            42
+          ],
+          "raw_cell_count": 63,
+          "raw_k0_coordinate": [
+            -1,
+            -2
+          ],
+          "raw_k0_coefficient": 231,
+          "unsigned_coefficient_sum": 10164,
+          "unsigned_peak": 352,
+          "boundary_ledger": [
+            {
+              "q_exponent": -44,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": -23,
+              "coefficient": -1
+            },
+            {
+              "q_exponent": -22,
+              "coefficient": -2
+            },
+            {
+              "q_exponent": -1,
+              "coefficient": 2
+            },
+            {
+              "q_exponent": 0,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": 21,
+              "coefficient": -1
+            }
+          ],
+          "boundary_grid_for_b_power_times_product": [
+            {
+              "x": -21,
+              "y": 21,
+              "coefficient": 1
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "coefficient": 1
+            },
+            {
+              "x": 1,
+              "y": -1,
+              "coefficient": -2
+            },
+            {
+              "x": 22,
+              "y": -22,
+              "coefficient": -2
+            },
+            {
+              "x": 23,
+              "y": -23,
+              "coefficient": 1
+            },
+            {
+              "x": 44,
+              "y": -44,
+              "coefficient": 1
+            }
+          ]
+        },
+        "F2": {
+          "x_depths": [
+            20,
+            20
+          ],
+          "y_depths": [
+            21,
+            21
+          ],
+          "order": 4,
+          "raw_line_total_degree": -4,
+          "k_bounds_inclusive": [
+            -40,
+            42
+          ],
+          "raw_cell_count": 83,
+          "raw_k0_coordinate": [
+            -2,
+            -2
+          ],
+          "raw_k0_coefficient": 6601,
+          "unsigned_coefficient_sum": 213444,
+          "unsigned_peak": 6622,
+          "boundary_ledger": [
+            {
+              "q_exponent": -44,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": -23,
+              "coefficient": -2
+            },
+            {
+              "q_exponent": -22,
+              "coefficient": -2
+            },
+            {
+              "q_exponent": -2,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": -1,
+              "coefficient": 4
+            },
+            {
+              "q_exponent": 0,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": 20,
+              "coefficient": -2
+            },
+            {
+              "q_exponent": 21,
+              "coefficient": -2
+            },
+            {
+              "q_exponent": 42,
+              "coefficient": 1
+            }
+          ],
+          "boundary_grid_for_b_power_times_product": [
+            {
+              "x": -42,
+              "y": 42,
+              "coefficient": 1
+            },
+            {
+              "x": -21,
+              "y": 21,
+              "coefficient": 2
+            },
+            {
+              "x": -20,
+              "y": 20,
+              "coefficient": -2
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "coefficient": 1
+            },
+            {
+              "x": 1,
+              "y": -1,
+              "coefficient": -4
+            },
+            {
+              "x": 2,
+              "y": -2,
+              "coefficient": 1
+            },
+            {
+              "x": 22,
+              "y": -22,
+              "coefficient": -2
+            },
+            {
+              "x": 23,
+              "y": -23,
+              "coefficient": 2
+            },
+            {
+              "x": 44,
+              "y": -44,
+              "coefficient": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "cutoffs_N_M_P_Q": [
+        20,
+        40,
+        20,
+        40
+      ],
+      "products": {
+        "F": {
+          "x_depths": [
+            20
+          ],
+          "y_depths": [
+            40
+          ],
+          "order": 2,
+          "raw_line_total_degree": -2,
+          "k_bounds_inclusive": [
+            -20,
+            40
+          ],
+          "raw_cell_count": 61,
+          "raw_k0_coordinate": [
+            -1,
+            -1
+          ],
+          "raw_k0_coefficient": 21,
+          "unsigned_coefficient_sum": 861,
+          "unsigned_peak": 21,
+          "boundary_ledger": [
+            {
+              "q_exponent": -41,
+              "coefficient": -1
+            },
+            {
+              "q_exponent": -20,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": 0,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": 21,
+              "coefficient": -1
+            }
+          ],
+          "boundary_grid_for_b_power_times_product": [
+            {
+              "x": -21,
+              "y": 21,
+              "coefficient": 1
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "coefficient": 1
+            },
+            {
+              "x": 20,
+              "y": -20,
+              "coefficient": 1
+            },
+            {
+              "x": 41,
+              "y": -41,
+              "coefficient": 1
+            }
+          ]
+        },
+        "FL": {
+          "x_depths": [
+            20,
+            20
+          ],
+          "y_depths": [
+            40
+          ],
+          "order": 3,
+          "raw_line_total_degree": -3,
+          "k_bounds_inclusive": [
+            -40,
+            40
+          ],
+          "raw_cell_count": 81,
+          "raw_k0_coordinate": [
+            -2,
+            -1
+          ],
+          "raw_k0_coefficient": 441,
+          "unsigned_coefficient_sum": 18081,
+          "unsigned_peak": 441,
+          "boundary_ledger": [
+            {
+              "q_exponent": -41,
+              "coefficient": -1
+            },
+            {
+              "q_exponent": -20,
+              "coefficient": 2
+            },
+            {
+              "q_exponent": 0,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": 1,
+              "coefficient": -1
+            },
+            {
+              "q_exponent": 21,
+              "coefficient": -2
+            },
+            {
+              "q_exponent": 42,
+              "coefficient": 1
+            }
+          ],
+          "boundary_grid_for_b_power_times_product": [
+            {
+              "x": -42,
+              "y": 42,
+              "coefficient": 1
+            },
+            {
+              "x": -21,
+              "y": 21,
+              "coefficient": 2
+            },
+            {
+              "x": -1,
+              "y": 1,
+              "coefficient": 1
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "coefficient": 1
+            },
+            {
+              "x": 20,
+              "y": -20,
+              "coefficient": 2
+            },
+            {
+              "x": 41,
+              "y": -41,
+              "coefficient": 1
+            }
+          ]
+        },
+        "FR": {
+          "x_depths": [
+            20
+          ],
+          "y_depths": [
+            40,
+            40
+          ],
+          "order": 3,
+          "raw_line_total_degree": -3,
+          "k_bounds_inclusive": [
+            -20,
+            80
+          ],
+          "raw_cell_count": 101,
+          "raw_k0_coordinate": [
+            -1,
+            -2
+          ],
+          "raw_k0_coefficient": 231,
+          "unsigned_coefficient_sum": 35301,
+          "unsigned_peak": 751,
+          "boundary_ledger": [
+            {
+              "q_exponent": -82,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": -61,
+              "coefficient": -1
+            },
+            {
+              "q_exponent": -41,
+              "coefficient": -2
+            },
+            {
+              "q_exponent": -20,
+              "coefficient": 2
+            },
+            {
+              "q_exponent": 0,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": 21,
+              "coefficient": -1
+            }
+          ],
+          "boundary_grid_for_b_power_times_product": [
+            {
+              "x": -21,
+              "y": 21,
+              "coefficient": 1
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "coefficient": 1
+            },
+            {
+              "x": 20,
+              "y": -20,
+              "coefficient": 2
+            },
+            {
+              "x": 41,
+              "y": -41,
+              "coefficient": 2
+            },
+            {
+              "x": 61,
+              "y": -61,
+              "coefficient": 1
+            },
+            {
+              "x": 82,
+              "y": -82,
+              "coefficient": 1
+            }
+          ]
+        },
+        "F2": {
+          "x_depths": [
+            20,
+            20
+          ],
+          "y_depths": [
+            40,
+            40
+          ],
+          "order": 4,
+          "raw_line_total_degree": -4,
+          "k_bounds_inclusive": [
+            -40,
+            80
+          ],
+          "raw_cell_count": 121,
+          "raw_k0_coordinate": [
+            -2,
+            -2
+          ],
+          "raw_k0_coefficient": 9261,
+          "unsigned_coefficient_sum": 741321,
+          "unsigned_peak": 15001,
+          "boundary_ledger": [
+            {
+              "q_exponent": -82,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": -61,
+              "coefficient": -2
+            },
+            {
+              "q_exponent": -41,
+              "coefficient": -2
+            },
+            {
+              "q_exponent": -40,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": -20,
+              "coefficient": 4
+            },
+            {
+              "q_exponent": 0,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": 1,
+              "coefficient": -2
+            },
+            {
+              "q_exponent": 21,
+              "coefficient": -2
+            },
+            {
+              "q_exponent": 42,
+              "coefficient": 1
+            }
+          ],
+          "boundary_grid_for_b_power_times_product": [
+            {
+              "x": -42,
+              "y": 42,
+              "coefficient": 1
+            },
+            {
+              "x": -21,
+              "y": 21,
+              "coefficient": 2
+            },
+            {
+              "x": -1,
+              "y": 1,
+              "coefficient": 2
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "coefficient": 1
+            },
+            {
+              "x": 20,
+              "y": -20,
+              "coefficient": 4
+            },
+            {
+              "x": 40,
+              "y": -40,
+              "coefficient": 1
+            },
+            {
+              "x": 41,
+              "y": -41,
+              "coefficient": 2
+            },
+            {
+              "x": 61,
+              "y": -61,
+              "coefficient": 2
+            },
+            {
+              "x": 82,
+              "y": -82,
+              "coefficient": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "cutoffs_N_M_P_Q": [
+        40,
+        40,
+        40,
+        40
+      ],
+      "products": {
+        "F": {
+          "x_depths": [
+            40
+          ],
+          "y_depths": [
+            40
+          ],
+          "order": 2,
+          "raw_line_total_degree": -2,
+          "k_bounds_inclusive": [
+            -40,
+            40
+          ],
+          "raw_cell_count": 81,
+          "raw_k0_coordinate": [
+            -1,
+            -1
+          ],
+          "raw_k0_coefficient": 41,
+          "unsigned_coefficient_sum": 1681,
+          "unsigned_peak": 41,
+          "boundary_ledger": [
+            {
+              "q_exponent": -41,
+              "coefficient": -1
+            },
+            {
+              "q_exponent": 0,
+              "coefficient": 2
+            },
+            {
+              "q_exponent": 41,
+              "coefficient": -1
+            }
+          ],
+          "boundary_grid_for_b_power_times_product": [
+            {
+              "x": -41,
+              "y": 41,
+              "coefficient": 1
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "coefficient": 2
+            },
+            {
+              "x": 41,
+              "y": -41,
+              "coefficient": 1
+            }
+          ]
+        },
+        "FL": {
+          "x_depths": [
+            40,
+            40
+          ],
+          "y_depths": [
+            40
+          ],
+          "order": 3,
+          "raw_line_total_degree": -3,
+          "k_bounds_inclusive": [
+            -80,
+            40
+          ],
+          "raw_cell_count": 121,
+          "raw_k0_coordinate": [
+            -2,
+            -1
+          ],
+          "raw_k0_coefficient": 861,
+          "unsigned_coefficient_sum": 68921,
+          "unsigned_peak": 1261,
+          "boundary_ledger": [
+            {
+              "q_exponent": -41,
+              "coefficient": -1
+            },
+            {
+              "q_exponent": 0,
+              "coefficient": 3
+            },
+            {
+              "q_exponent": 41,
+              "coefficient": -3
+            },
+            {
+              "q_exponent": 82,
+              "coefficient": 1
+            }
+          ],
+          "boundary_grid_for_b_power_times_product": [
+            {
+              "x": -82,
+              "y": 82,
+              "coefficient": 1
+            },
+            {
+              "x": -41,
+              "y": 41,
+              "coefficient": 3
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "coefficient": 3
+            },
+            {
+              "x": 41,
+              "y": -41,
+              "coefficient": 1
+            }
+          ]
+        },
+        "FR": {
+          "x_depths": [
+            40
+          ],
+          "y_depths": [
+            40,
+            40
+          ],
+          "order": 3,
+          "raw_line_total_degree": -3,
+          "k_bounds_inclusive": [
+            -40,
+            80
+          ],
+          "raw_cell_count": 121,
+          "raw_k0_coordinate": [
+            -1,
+            -2
+          ],
+          "raw_k0_coefficient": 861,
+          "unsigned_coefficient_sum": 68921,
+          "unsigned_peak": 1261,
+          "boundary_ledger": [
+            {
+              "q_exponent": -82,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": -41,
+              "coefficient": -3
+            },
+            {
+              "q_exponent": 0,
+              "coefficient": 3
+            },
+            {
+              "q_exponent": 41,
+              "coefficient": -1
+            }
+          ],
+          "boundary_grid_for_b_power_times_product": [
+            {
+              "x": -41,
+              "y": 41,
+              "coefficient": 1
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "coefficient": 3
+            },
+            {
+              "x": 41,
+              "y": -41,
+              "coefficient": 3
+            },
+            {
+              "x": 82,
+              "y": -82,
+              "coefficient": 1
+            }
+          ]
+        },
+        "F2": {
+          "x_depths": [
+            40,
+            40
+          ],
+          "y_depths": [
+            40,
+            40
+          ],
+          "order": 4,
+          "raw_line_total_degree": -4,
+          "k_bounds_inclusive": [
+            -80,
+            80
+          ],
+          "raw_cell_count": 161,
+          "raw_k0_coordinate": [
+            -2,
+            -2
+          ],
+          "raw_k0_coefficient": 45961,
+          "unsigned_coefficient_sum": 2825761,
+          "unsigned_peak": 45961,
+          "boundary_ledger": [
+            {
+              "q_exponent": -82,
+              "coefficient": 1
+            },
+            {
+              "q_exponent": -41,
+              "coefficient": -4
+            },
+            {
+              "q_exponent": 0,
+              "coefficient": 6
+            },
+            {
+              "q_exponent": 41,
+              "coefficient": -4
+            },
+            {
+              "q_exponent": 82,
+              "coefficient": 1
+            }
+          ],
+          "boundary_grid_for_b_power_times_product": [
+            {
+              "x": -82,
+              "y": 82,
+              "coefficient": 1
+            },
+            {
+              "x": -41,
+              "y": 41,
+              "coefficient": 4
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "coefficient": 6
+            },
+            {
+              "x": 41,
+              "y": -41,
+              "coefficient": 4
+            },
+            {
+              "x": 82,
+              "y": -82,
+              "coefficient": 1
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "matched_normal_forms_A_F_plus_B_F_L": {
+    "F": {
+      "A_coefficients_ascending": [
+        0,
+        1
+      ],
+      "B_coefficients_ascending": []
+    },
+    "FL": {
+      "A_coefficients_ascending": [],
+      "B_coefficients_ascending": [
+        0,
+        1
+      ]
+    },
+    "FR": {
+      "A_coefficients_ascending": [
+        0,
+        0,
+        10
+      ],
+      "B_coefficients_ascending": [
+        0,
+        -1
+      ]
+    },
+    "F2": {
+      "A_coefficients_ascending": [
+        0,
+        0,
+        1
+      ],
+      "B_coefficients_ascending": []
+    }
+  },
+  "matched_raw_k0_growth": [
+    {
+      "depth": 0,
+      "F": 1,
+      "FL": 1,
+      "FR": 1,
+      "F2": 1
+    },
+    {
+      "depth": 1,
+      "F": 2,
+      "FL": 3,
+      "FR": 3,
+      "F2": 6
+    },
+    {
+      "depth": 2,
+      "F": 3,
+      "FL": 6,
+      "FR": 6,
+      "F2": 19
+    },
+    {
+      "depth": 5,
+      "F": 6,
+      "FL": 21,
+      "FR": 21,
+      "F2": 146
+    },
+    {
+      "depth": 10,
+      "F": 11,
+      "FL": 66,
+      "FR": 66,
+      "F2": 891
+    },
+    {
+      "depth": 20,
+      "F": 21,
+      "FL": 231,
+      "FR": 231,
+      "F2": 6181
+    },
+    {
+      "depth": 40,
+      "F": 41,
+      "FL": 861,
+      "FR": 861,
+      "F2": 45961
+    },
+    {
+      "depth": 80,
+      "F": 81,
+      "FL": 3321,
+      "FR": 3321,
+      "F2": 354321
+    },
+    {
+      "depth": 160,
+      "F": 161,
+      "FL": 13041,
+      "FR": 13041,
+      "F2": 2782241
+    },
+    {
+      "depth": 1000,
+      "F": 1001,
+      "FL": 501501,
+      "FR": 501501,
+      "F2": 668669001
+    }
+  ],
+  "cutoff_paths": [
+    {
+      "name": "F matched",
+      "x_term_counts_slope_offset": [
+        [
+          1,
+          0
+        ]
+      ],
+      "y_term_counts_slope_offset": [
+        [
+          1,
+          0
+        ]
+      ],
+      "full_boundary_ledger": [
+        {
+          "q_exponent_slope": -1,
+          "q_exponent_offset": 0,
+          "coefficient": -1
+        },
+        {
+          "q_exponent_slope": 0,
+          "q_exponent_offset": 0,
+          "coefficient": 2
+        },
+        {
+          "q_exponent_slope": 1,
+          "q_exponent_offset": 0,
+          "coefficient": -1
+        }
+      ],
+      "stationary_window_observation_only": [
+        {
+          "q_exponent": 0,
+          "coefficient": 2
+        }
+      ]
+    },
+    {
+      "name": "F Y one term longer",
+      "x_term_counts_slope_offset": [
+        [
+          1,
+          0
+        ]
+      ],
+      "y_term_counts_slope_offset": [
+        [
+          1,
+          1
+        ]
+      ],
+      "full_boundary_ledger": [
+        {
+          "q_exponent_slope": -1,
+          "q_exponent_offset": -1,
+          "coefficient": -1
+        },
+        {
+          "q_exponent_slope": 0,
+          "q_exponent_offset": -1,
+          "coefficient": 1
+        },
+        {
+          "q_exponent_slope": 0,
+          "q_exponent_offset": 0,
+          "coefficient": 1
+        },
+        {
+          "q_exponent_slope": 1,
+          "q_exponent_offset": 0,
+          "coefficient": -1
+        }
+      ],
+      "stationary_window_observation_only": [
+        {
+          "q_exponent": -1,
+          "coefficient": 1
+        },
+        {
+          "q_exponent": 0,
+          "coefficient": 1
+        }
+      ]
+    },
+    {
+      "name": "F Y twice as many terms",
+      "x_term_counts_slope_offset": [
+        [
+          1,
+          0
+        ]
+      ],
+      "y_term_counts_slope_offset": [
+        [
+          2,
+          0
+        ]
+      ],
+      "full_boundary_ledger": [
+        {
+          "q_exponent_slope": -2,
+          "q_exponent_offset": 0,
+          "coefficient": -1
+        },
+        {
+          "q_exponent_slope": -1,
+          "q_exponent_offset": 0,
+          "coefficient": 1
+        },
+        {
+          "q_exponent_slope": 0,
+          "q_exponent_offset": 0,
+          "coefficient": 1
+        },
+        {
+          "q_exponent_slope": 1,
+          "q_exponent_offset": 0,
+          "coefficient": -1
+        }
+      ],
+      "stationary_window_observation_only": [
+        {
+          "q_exponent": 0,
+          "coefficient": 1
+        }
+      ]
+    },
+    {
+      "name": "FL all matched",
+      "x_term_counts_slope_offset": [
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "y_term_counts_slope_offset": [
+        [
+          1,
+          0
+        ]
+      ],
+      "full_boundary_ledger": [
+        {
+          "q_exponent_slope": -1,
+          "q_exponent_offset": 0,
+          "coefficient": -1
+        },
+        {
+          "q_exponent_slope": 0,
+          "q_exponent_offset": 0,
+          "coefficient": 3
+        },
+        {
+          "q_exponent_slope": 1,
+          "q_exponent_offset": 0,
+          "coefficient": -3
+        },
+        {
+          "q_exponent_slope": 2,
+          "q_exponent_offset": 0,
+          "coefficient": 1
+        }
+      ],
+      "stationary_window_observation_only": [
+        {
+          "q_exponent": 0,
+          "coefficient": 3
+        }
+      ]
+    },
+    {
+      "name": "FR all matched",
+      "x_term_counts_slope_offset": [
+        [
+          1,
+          0
+        ]
+      ],
+      "y_term_counts_slope_offset": [
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "full_boundary_ledger": [
+        {
+          "q_exponent_slope": -2,
+          "q_exponent_offset": 0,
+          "coefficient": 1
+        },
+        {
+          "q_exponent_slope": -1,
+          "q_exponent_offset": 0,
+          "coefficient": -3
+        },
+        {
+          "q_exponent_slope": 0,
+          "q_exponent_offset": 0,
+          "coefficient": 3
+        },
+        {
+          "q_exponent_slope": 1,
+          "q_exponent_offset": 0,
+          "coefficient": -1
+        }
+      ],
+      "stationary_window_observation_only": [
+        {
+          "q_exponent": 0,
+          "coefficient": 3
+        }
+      ]
+    },
+    {
+      "name": "F2 all matched",
+      "x_term_counts_slope_offset": [
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "y_term_counts_slope_offset": [
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "full_boundary_ledger": [
+        {
+          "q_exponent_slope": -2,
+          "q_exponent_offset": 0,
+          "coefficient": 1
+        },
+        {
+          "q_exponent_slope": -1,
+          "q_exponent_offset": 0,
+          "coefficient": -4
+        },
+        {
+          "q_exponent_slope": 0,
+          "q_exponent_offset": 0,
+          "coefficient": 6
+        },
+        {
+          "q_exponent_slope": 1,
+          "q_exponent_offset": 0,
+          "coefficient": -4
+        },
+        {
+          "q_exponent_slope": 2,
+          "q_exponent_offset": 0,
+          "coefficient": 1
+        }
+      ],
+      "stationary_window_observation_only": [
+        {
+          "q_exponent": 0,
+          "coefficient": 6
+        }
+      ]
+    },
+    {
+      "name": "FL stationary cancellation",
+      "x_term_counts_slope_offset": [
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "y_term_counts_slope_offset": [
+        [
+          2,
+          0
+        ]
+      ],
+      "full_boundary_ledger": [
+        {
+          "q_exponent_slope": -2,
+          "q_exponent_offset": 0,
+          "coefficient": -1
+        },
+        {
+          "q_exponent_slope": -1,
+          "q_exponent_offset": 0,
+          "coefficient": 2
+        },
+        {
+          "q_exponent_slope": 1,
+          "q_exponent_offset": 0,
+          "coefficient": -2
+        },
+        {
+          "q_exponent_slope": 2,
+          "q_exponent_offset": 0,
+          "coefficient": 1
+        }
+      ],
+      "stationary_window_observation_only": []
+    },
+    {
+      "name": "four unequal offsets",
+      "x_term_counts_slope_offset": [
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "y_term_counts_slope_offset": [
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          4
+        ]
+      ],
+      "full_boundary_ledger": [
+        {
+          "q_exponent_slope": -2,
+          "q_exponent_offset": -5,
+          "coefficient": 1
+        },
+        {
+          "q_exponent_slope": -1,
+          "q_exponent_offset": -5,
+          "coefficient": -1
+        },
+        {
+          "q_exponent_slope": -1,
+          "q_exponent_offset": -4,
+          "coefficient": -1
+        },
+        {
+          "q_exponent_slope": -1,
+          "q_exponent_offset": -3,
+          "coefficient": -1
+        },
+        {
+          "q_exponent_slope": -1,
+          "q_exponent_offset": -1,
+          "coefficient": -1
+        },
+        {
+          "q_exponent_slope": 0,
+          "q_exponent_offset": -4,
+          "coefficient": 1
+        },
+        {
+          "q_exponent_slope": 0,
+          "q_exponent_offset": -3,
+          "coefficient": 1
+        },
+        {
+          "q_exponent_slope": 0,
+          "q_exponent_offset": -2,
+          "coefficient": 1
+        },
+        {
+          "q_exponent_slope": 0,
+          "q_exponent_offset": -1,
+          "coefficient": 1
+        },
+        {
+          "q_exponent_slope": 0,
+          "q_exponent_offset": 0,
+          "coefficient": 1
+        },
+        {
+          "q_exponent_slope": 0,
+          "q_exponent_offset": 1,
+          "coefficient": 1
+        },
+        {
+          "q_exponent_slope": 1,
+          "q_exponent_offset": -2,
+          "coefficient": -1
+        },
+        {
+          "q_exponent_slope": 1,
+          "q_exponent_offset": 0,
+          "coefficient": -1
+        },
+        {
+          "q_exponent_slope": 1,
+          "q_exponent_offset": 1,
+          "coefficient": -1
+        },
+        {
+          "q_exponent_slope": 1,
+          "q_exponent_offset": 2,
+          "coefficient": -1
+        },
+        {
+          "q_exponent_slope": 2,
+          "q_exponent_offset": 2,
+          "coefficient": 1
+        }
+      ],
+      "stationary_window_observation_only": [
+        {
+          "q_exponent": -4,
+          "coefficient": 1
+        },
+        {
+          "q_exponent": -3,
+          "coefficient": 1
+        },
+        {
+          "q_exponent": -2,
+          "coefficient": 1
+        },
+        {
+          "q_exponent": -1,
+          "coefficient": 1
+        },
+        {
+          "q_exponent": 0,
+          "coefficient": 1
+        },
+        {
+          "q_exponent": 1,
+          "coefficient": 1
+        }
+      ]
+    }
+  ],
+  "fixed_cutoff_gcd_examples": [
+    {
+      "N": 20,
+      "M": 20,
+      "term_counts": [
+        21,
+        21
+      ],
+      "gcd_term_counts": 21,
+      "matched_anchor_depth": 20,
+      "rank_over_rational_original_F_polynomial_ring": 2,
+      "rank_over_integer_gcd_anchor_polynomial_ring": 2,
+      "primes_proving_failure_of_integer_finiteness_over_original_F": []
+    },
+    {
+      "N": 20,
+      "M": 21,
+      "term_counts": [
+        21,
+        22
+      ],
+      "gcd_term_counts": 1,
+      "matched_anchor_depth": 0,
+      "rank_over_rational_original_F_polynomial_ring": 43,
+      "rank_over_integer_gcd_anchor_polynomial_ring": 2,
+      "primes_proving_failure_of_integer_finiteness_over_original_F": [
+        2
+      ]
+    },
+    {
+      "N": 20,
+      "M": 40,
+      "term_counts": [
+        21,
+        41
+      ],
+      "gcd_term_counts": 1,
+      "matched_anchor_depth": 0,
+      "rank_over_rational_original_F_polynomial_ring": 62,
+      "rank_over_integer_gcd_anchor_polynomial_ring": 2,
+      "primes_proving_failure_of_integer_finiteness_over_original_F": []
+    },
+    {
+      "N": 19,
+      "M": 29,
+      "term_counts": [
+        20,
+        30
+      ],
+      "gcd_term_counts": 10,
+      "matched_anchor_depth": 9,
+      "rank_over_rational_original_F_polynomial_ring": 5,
+      "rank_over_integer_gcd_anchor_polynomial_ring": 2,
+      "primes_proving_failure_of_integer_finiteness_over_original_F": [
+        2
+      ]
+    }
+  ],
+  "backend_verification": "backend_results.json contains a separate check against the corrected native library."
+}

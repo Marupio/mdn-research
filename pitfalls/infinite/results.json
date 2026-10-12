@@ -1,0 +1,605 @@
+{
+  "arithmetic": "Python standard-library Fraction; exact signed Laurent grids",
+  "source_sha256": "43b2d9ba7ca412285e9d49b692da8934773e990b7abaf4c6c803b1c362443102",
+  "base": 10,
+  "definitions": {
+    "left": "L_N = sum(k=0..N) (-1)^k X^(-k-1) Y^k",
+    "right": "R_N = sum(k=0..N) (-1)^k Y^(-k-1) X^k",
+    "tail_identity": "(X+Y)L_N = 1 - (-Y/X)^(N+1)",
+    "rational_carry": "P_N = (X+Y)^N / b^N; rational coefficients are allowed",
+    "integer_escape": "E_N = X^(-N)(b-Y)^N; signed integer coefficients are unbounded",
+    "inverse_relation": "Q_N = (1/b) sum(k=0..N) ((X+Y)/b)^k",
+    "inverse_identity": "(b-X-Y)Q_N = 1-P_(N+1)",
+    "weighted_norm": "sum |c_ij| X^i Y^j, with X,Y>0 and X+Y=b",
+    "abel_scope": "Only X=Y=b/2 and 0<=r<1: both series converge absolutely"
+  },
+  "checks_passed": {
+    "exact_laurent_identities": 21,
+    "exact_scalar_checks": 460
+  },
+  "directional_tails_and_product": [
+    {
+      "N": 0,
+      "terms_per_factor": 1,
+      "raw_central_product_coefficient": "1",
+      "evaluations": [
+        {
+          "X": 7,
+          "Y": 3,
+          "left": "1/7",
+          "right": "1/3",
+          "left_error": "3/70",
+          "right_error": "7/30",
+          "product": "1/21"
+        },
+        {
+          "X": 3,
+          "Y": 7,
+          "left": "1/3",
+          "right": "1/7",
+          "left_error": "7/30",
+          "right_error": "3/70",
+          "product": "1/21"
+        },
+        {
+          "X": 5,
+          "Y": 5,
+          "left": "1/5",
+          "right": "1/5",
+          "left_error": "1/10",
+          "right_error": "1/10",
+          "product": "1/25"
+        }
+      ]
+    },
+    {
+      "N": 1,
+      "terms_per_factor": 2,
+      "raw_central_product_coefficient": "2",
+      "evaluations": [
+        {
+          "X": 7,
+          "Y": 3,
+          "left": "4/49",
+          "right": "-4/9",
+          "left_error": "9/490",
+          "right_error": "49/90",
+          "product": "-16/441"
+        },
+        {
+          "X": 3,
+          "Y": 7,
+          "left": "-4/9",
+          "right": "4/49",
+          "left_error": "49/90",
+          "right_error": "9/490",
+          "product": "-16/441"
+        },
+        {
+          "X": 5,
+          "Y": 5,
+          "left": "0",
+          "right": "0",
+          "left_error": "1/10",
+          "right_error": "1/10",
+          "product": "0"
+        }
+      ]
+    },
+    {
+      "N": 2,
+      "terms_per_factor": 3,
+      "raw_central_product_coefficient": "3",
+      "evaluations": [
+        {
+          "X": 7,
+          "Y": 3,
+          "left": "37/343",
+          "right": "37/27",
+          "left_error": "27/3430",
+          "right_error": "343/270",
+          "product": "1369/9261"
+        },
+        {
+          "X": 3,
+          "Y": 7,
+          "left": "37/27",
+          "right": "37/343",
+          "left_error": "343/270",
+          "right_error": "27/3430",
+          "product": "1369/9261"
+        },
+        {
+          "X": 5,
+          "Y": 5,
+          "left": "1/5",
+          "right": "1/5",
+          "left_error": "1/10",
+          "right_error": "1/10",
+          "product": "1/25"
+        }
+      ]
+    },
+    {
+      "N": 4,
+      "terms_per_factor": 5,
+      "raw_central_product_coefficient": "5",
+      "evaluations": [
+        {
+          "X": 7,
+          "Y": 3,
+          "left": "1705/16807",
+          "right": "1705/243",
+          "left_error": "243/168070",
+          "right_error": "16807/2430",
+          "product": "2907025/4084101"
+        },
+        {
+          "X": 3,
+          "Y": 7,
+          "left": "1705/243",
+          "right": "1705/16807",
+          "left_error": "16807/2430",
+          "right_error": "243/168070",
+          "product": "2907025/4084101"
+        },
+        {
+          "X": 5,
+          "Y": 5,
+          "left": "1/5",
+          "right": "1/5",
+          "left_error": "1/10",
+          "right_error": "1/10",
+          "product": "1/25"
+        }
+      ]
+    },
+    {
+      "N": 8,
+      "terms_per_factor": 9,
+      "raw_central_product_coefficient": "9",
+      "evaluations": [
+        {
+          "X": 7,
+          "Y": 3,
+          "left": "4037329/40353607",
+          "right": "4037329/19683",
+          "left_error": "19683/403536070",
+          "right_error": "40353607/196830",
+          "product": "16300025454241/794280046581"
+        },
+        {
+          "X": 3,
+          "Y": 7,
+          "left": "4037329/19683",
+          "right": "4037329/40353607",
+          "left_error": "40353607/196830",
+          "right_error": "19683/403536070",
+          "product": "16300025454241/794280046581"
+        },
+        {
+          "X": 5,
+          "Y": 5,
+          "left": "1/5",
+          "right": "1/5",
+          "left_error": "1/10",
+          "right_error": "1/10",
+          "product": "1/25"
+        }
+      ]
+    },
+    {
+      "N": 16,
+      "terms_per_factor": 17,
+      "raw_central_product_coefficient": "17",
+      "evaluations": [
+        {
+          "X": 7,
+          "Y": 3,
+          "left": "23263064312737/232630513987207",
+          "right": "23263064312737/129140163",
+          "left_error": "129140163/2326305139872070",
+          "right_error": "232630513987207/1291401630",
+          "product": "541170161218537790140431169/30041942495081691894741"
+        },
+        {
+          "X": 3,
+          "Y": 7,
+          "left": "23263064312737/129140163",
+          "right": "23263064312737/232630513987207",
+          "left_error": "232630513987207/1291401630",
+          "right_error": "129140163/2326305139872070",
+          "product": "541170161218537790140431169/30041942495081691894741"
+        },
+        {
+          "X": 5,
+          "Y": 5,
+          "left": "1/5",
+          "right": "1/5",
+          "left_error": "1/10",
+          "right_error": "1/10",
+          "product": "1/25"
+        }
+      ]
+    },
+    {
+      "N": 32,
+      "terms_per_factor": 33,
+      "raw_central_product_coefficient": "33",
+      "evaluations": [
+        {
+          "X": 7,
+          "Y": 3,
+          "left": "773099371971300358470364993/7730993719707444524137094407",
+          "right": "773099371971300358470364993/5559060566555523",
+          "left_error": "5559060566555523/77309937197074445241370944070",
+          "right_error": "7730993719707444524137094407/55590605665555230",
+          "product": "597682638942419034314451782822098342404378214639890049/42977062327514056734916195400155065458259861"
+        },
+        {
+          "X": 3,
+          "Y": 7,
+          "left": "773099371971300358470364993/5559060566555523",
+          "right": "773099371971300358470364993/7730993719707444524137094407",
+          "left_error": "7730993719707444524137094407/55590605665555230",
+          "right_error": "5559060566555523/77309937197074445241370944070",
+          "product": "597682638942419034314451782822098342404378214639890049/42977062327514056734916195400155065458259861"
+        },
+        {
+          "X": 5,
+          "Y": 5,
+          "left": "1/5",
+          "right": "1/5",
+          "left_error": "1/10",
+          "right_error": "1/10",
+          "product": "1/25"
+        }
+      ]
+    }
+  ],
+  "collapse_and_noncollapsing_weights": [
+    {
+      "N": 0,
+      "rational_carry_raw_l1": "1",
+      "rational_carry_positive_weighted_l1": "1",
+      "represented_value": "1",
+      "integer_escape_raw_l1": "1",
+      "integer_escape_x_coordinate": 0,
+      "relation_inverse_residual_raw_l1": "1/5"
+    },
+    {
+      "N": 1,
+      "rational_carry_raw_l1": "1/5",
+      "rational_carry_positive_weighted_l1": "1",
+      "represented_value": "1",
+      "integer_escape_raw_l1": "11",
+      "integer_escape_x_coordinate": -1,
+      "relation_inverse_residual_raw_l1": "1/25"
+    },
+    {
+      "N": 2,
+      "rational_carry_raw_l1": "1/25",
+      "rational_carry_positive_weighted_l1": "1",
+      "represented_value": "1",
+      "integer_escape_raw_l1": "121",
+      "integer_escape_x_coordinate": -2,
+      "relation_inverse_residual_raw_l1": "1/125"
+    },
+    {
+      "N": 4,
+      "rational_carry_raw_l1": "1/625",
+      "rational_carry_positive_weighted_l1": "1",
+      "represented_value": "1",
+      "integer_escape_raw_l1": "14641",
+      "integer_escape_x_coordinate": -4,
+      "relation_inverse_residual_raw_l1": "1/3125"
+    },
+    {
+      "N": 8,
+      "rational_carry_raw_l1": "1/390625",
+      "rational_carry_positive_weighted_l1": "1",
+      "represented_value": "1",
+      "integer_escape_raw_l1": "214358881",
+      "integer_escape_x_coordinate": -8,
+      "relation_inverse_residual_raw_l1": "1/1953125"
+    },
+    {
+      "N": 16,
+      "rational_carry_raw_l1": "1/152587890625",
+      "rational_carry_positive_weighted_l1": "1",
+      "represented_value": "1",
+      "integer_escape_raw_l1": "45949729863572161",
+      "integer_escape_x_coordinate": -16,
+      "relation_inverse_residual_raw_l1": "1/762939453125"
+    },
+    {
+      "N": 32,
+      "rational_carry_raw_l1": "1/23283064365386962890625",
+      "rational_carry_positive_weighted_l1": "1",
+      "represented_value": "1",
+      "integer_escape_raw_l1": "2111377674535255285545615254209921",
+      "integer_escape_x_coordinate": -32,
+      "relation_inverse_residual_raw_l1": "1/116415321826934814453125"
+    }
+  ],
+  "boundary_abel_regularization": [
+    {
+      "r": "0",
+      "left_infinite_sum": "1/5",
+      "right_infinite_sum": "1/5",
+      "product_of_sums": "1/25",
+      "raw_central_product_coefficient": "1"
+    },
+    {
+      "r": "1/2",
+      "left_infinite_sum": "2/15",
+      "right_infinite_sum": "2/15",
+      "product_of_sums": "4/225",
+      "raw_central_product_coefficient": "4/3"
+    },
+    {
+      "r": "9/10",
+      "left_infinite_sum": "2/19",
+      "right_infinite_sum": "2/19",
+      "product_of_sums": "4/361",
+      "raw_central_product_coefficient": "100/19"
+    },
+    {
+      "r": "99/100",
+      "left_infinite_sum": "20/199",
+      "right_infinite_sum": "20/199",
+      "product_of_sums": "400/39601",
+      "raw_central_product_coefficient": "10000/199"
+    },
+    {
+      "r": "999/1000",
+      "left_infinite_sum": "200/1999",
+      "right_infinite_sum": "200/1999",
+      "product_of_sums": "40000/3996001",
+      "raw_central_product_coefficient": "1000000/1999"
+    }
+  ],
+  "boundary_averaging_not_multiplicative": [
+    {
+      "number_of_cutoffs": 2,
+      "mean_of_left": "1/10",
+      "product_of_means": "1/100",
+      "mean_of_same_cutoff_products": "1/50"
+    },
+    {
+      "number_of_cutoffs": 4,
+      "mean_of_left": "1/10",
+      "product_of_means": "1/100",
+      "mean_of_same_cutoff_products": "1/50"
+    },
+    {
+      "number_of_cutoffs": 10,
+      "mean_of_left": "1/10",
+      "product_of_means": "1/100",
+      "mean_of_same_cutoff_products": "1/50"
+    },
+    {
+      "number_of_cutoffs": 40,
+      "mean_of_left": "1/10",
+      "product_of_means": "1/100",
+      "mean_of_same_cutoff_products": "1/50"
+    }
+  ],
+  "alternating_polynomial_recurrences": [
+    {
+      "operator_order": 1,
+      "polynomial_degree": 0,
+      "indices": [
+        -7,
+        7
+      ],
+      "all_zero": true,
+      "residual_formula": "0"
+    },
+    {
+      "operator_order": 1,
+      "polynomial_degree": 1,
+      "indices": [
+        -7,
+        7
+      ],
+      "all_zero": false,
+      "residual_formula": "(-1)^k * 1"
+    },
+    {
+      "operator_order": 2,
+      "polynomial_degree": 0,
+      "indices": [
+        -7,
+        7
+      ],
+      "all_zero": true,
+      "residual_formula": "0"
+    },
+    {
+      "operator_order": 2,
+      "polynomial_degree": 1,
+      "indices": [
+        -7,
+        7
+      ],
+      "all_zero": true,
+      "residual_formula": "0"
+    },
+    {
+      "operator_order": 2,
+      "polynomial_degree": 2,
+      "indices": [
+        -7,
+        7
+      ],
+      "all_zero": false,
+      "residual_formula": "(-1)^k * 2"
+    },
+    {
+      "operator_order": 3,
+      "polynomial_degree": 0,
+      "indices": [
+        -7,
+        7
+      ],
+      "all_zero": true,
+      "residual_formula": "0"
+    },
+    {
+      "operator_order": 3,
+      "polynomial_degree": 1,
+      "indices": [
+        -7,
+        7
+      ],
+      "all_zero": true,
+      "residual_formula": "0"
+    },
+    {
+      "operator_order": 3,
+      "polynomial_degree": 2,
+      "indices": [
+        -7,
+        7
+      ],
+      "all_zero": true,
+      "residual_formula": "0"
+    },
+    {
+      "operator_order": 3,
+      "polynomial_degree": 3,
+      "indices": [
+        -7,
+        7
+      ],
+      "all_zero": false,
+      "residual_formula": "(-1)^k * 6"
+    },
+    {
+      "operator_order": 4,
+      "polynomial_degree": 0,
+      "indices": [
+        -7,
+        7
+      ],
+      "all_zero": true,
+      "residual_formula": "0"
+    },
+    {
+      "operator_order": 4,
+      "polynomial_degree": 1,
+      "indices": [
+        -7,
+        7
+      ],
+      "all_zero": true,
+      "residual_formula": "0"
+    },
+    {
+      "operator_order": 4,
+      "polynomial_degree": 2,
+      "indices": [
+        -7,
+        7
+      ],
+      "all_zero": true,
+      "residual_formula": "0"
+    },
+    {
+      "operator_order": 4,
+      "polynomial_degree": 3,
+      "indices": [
+        -7,
+        7
+      ],
+      "all_zero": true,
+      "residual_formula": "0"
+    },
+    {
+      "operator_order": 4,
+      "polynomial_degree": 4,
+      "indices": [
+        -7,
+        7
+      ],
+      "all_zero": false,
+      "residual_formula": "(-1)^k * 24"
+    },
+    {
+      "operator_order": 5,
+      "polynomial_degree": 0,
+      "indices": [
+        -7,
+        7
+      ],
+      "all_zero": true,
+      "residual_formula": "0"
+    },
+    {
+      "operator_order": 5,
+      "polynomial_degree": 1,
+      "indices": [
+        -7,
+        7
+      ],
+      "all_zero": true,
+      "residual_formula": "0"
+    },
+    {
+      "operator_order": 5,
+      "polynomial_degree": 2,
+      "indices": [
+        -7,
+        7
+      ],
+      "all_zero": true,
+      "residual_formula": "0"
+    },
+    {
+      "operator_order": 5,
+      "polynomial_degree": 3,
+      "indices": [
+        -7,
+        7
+      ],
+      "all_zero": true,
+      "residual_formula": "0"
+    },
+    {
+      "operator_order": 5,
+      "polynomial_degree": 4,
+      "indices": [
+        -7,
+        7
+      ],
+      "all_zero": true,
+      "residual_formula": "0"
+    },
+    {
+      "operator_order": 5,
+      "polynomial_degree": 5,
+      "indices": [
+        -7,
+        7
+      ],
+      "all_zero": false,
+      "residual_formula": "(-1)^k * 120"
+    }
+  ],
+  "conclusions_supported_by_formulas": [
+    "For b>2, unweighted l1 makes P_N tend to zero although its carry value is one.",
+    "In that l1 completion b-X-Y has a geometric-series inverse; quotienting by the carry relation forces 1=0.",
+    "Integer E_N also represents one and disappears at each fixed cell, so coordinatewise limits cannot descend continuously to carry values.",
+    "Positive-coordinate weighted norms keep P_N at norm one and do not have this collapse.",
+    "The left and right ordinary convergence regions are disjoint; at the symmetry line ordinary partial sums oscillate.",
+    "Abel damping gives the expected boundary scalar inverse and product, but no coefficientwise limit of the product grid.",
+    "Averaging same-cutoff products is different from multiplying separately averaged factors; no unrestricted multiplicative summation was established.",
+    "For orders 1..5, exact checks confirm that (1+S)^m annihilates (-1)^k P(k) for degree(P)<m, but not the tested degree-m monomial; S shifts k backwards."
+  ],
+  "limits": [
+    "Finite checks corroborate exact formulas; the accompanying mathematical argument establishes limits.",
+    "This file defines no unrestricted multiplication on bilateral infinite grids.",
+    "No normalized bounded-integer-digit convergence theorem is claimed."
+  ]
+}

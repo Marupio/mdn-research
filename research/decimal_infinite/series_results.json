@@ -1,0 +1,1577 @@
+{
+  "scope": "Exact finite formal coefficients; no assertion of equality beyond the checked order.",
+  "formal_variable": "z=X^-1 with Y=b-X; coefficients retain the cascade term count n.",
+  "order": 12,
+  "library_sha256": "5ef977e17730182221b7ad66dc4030f839fe892123f6f1dae4bf3133ab509b43",
+  "backend_cases": 241,
+  "coefficient_comparisons": 3133,
+  "negative_power_cancellation_checked": true,
+  "failures": [],
+  "rows": [
+    {
+      "kind": "mixed_tenths",
+      "N": 0,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 1,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 2,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 3,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 4,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 5,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 6,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 7,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 8,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 9,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 10,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 11,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 12,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 13,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 14,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 15,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 16,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 17,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 18,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 19,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 20,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 21,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 22,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 23,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 24,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 25,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 26,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 27,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 28,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 29,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 30,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 31,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 32,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 33,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 34,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 35,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 36,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 37,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 38,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 39,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 40,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 41,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 42,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 43,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 44,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 45,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 46,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 47,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 48,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 49,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 50,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 51,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 52,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 53,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 54,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 55,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 56,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 57,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 58,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 59,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 60,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 61,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 62,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 63,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 64,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 65,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 66,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 67,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 68,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 69,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 70,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 71,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 72,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 73,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 74,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 75,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 76,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 77,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 78,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 79,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 80,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 81,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 82,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 83,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 84,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 85,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 86,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 87,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 88,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 89,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 90,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 91,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 92,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 93,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 94,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 95,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 96,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 97,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 98,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 99,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 100,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 101,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 102,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 103,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 104,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 105,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 106,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 107,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 108,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 109,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 110,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 111,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 112,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 113,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 114,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 115,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 116,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 117,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 118,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 119,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "mixed_tenths",
+      "N": 120,
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 1,
+      "K": 4,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 1,
+      "K": 4,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 1,
+      "K": 8,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 1,
+      "K": 8,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 1,
+      "K": 16,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 1,
+      "K": 16,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 1,
+      "K": 32,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 1,
+      "K": 32,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 3,
+      "K": 4,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 3,
+      "K": 4,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 3,
+      "K": 8,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 3,
+      "K": 8,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 3,
+      "K": 16,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 3,
+      "K": 16,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 3,
+      "K": 32,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 3,
+      "K": 32,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 6,
+      "K": 4,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 6,
+      "K": 4,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 6,
+      "K": 8,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 6,
+      "K": 8,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 6,
+      "K": 16,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 6,
+      "K": 16,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 6,
+      "K": 32,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 6,
+      "K": 32,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 11,
+      "K": 4,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 11,
+      "K": 4,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 11,
+      "K": 8,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 11,
+      "K": 8,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 11,
+      "K": 16,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 11,
+      "K": 16,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 11,
+      "K": 32,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 11,
+      "K": 32,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 21,
+      "K": 4,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 21,
+      "K": 4,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 21,
+      "K": 8,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 21,
+      "K": 8,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 21,
+      "K": 16,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 21,
+      "K": 16,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 21,
+      "K": 32,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "third",
+      "n": 21,
+      "K": 32,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 1,
+      "K": 4,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 1,
+      "K": 4,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 1,
+      "K": 8,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 1,
+      "K": 8,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 1,
+      "K": 16,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 1,
+      "K": 16,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 1,
+      "K": 32,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 1,
+      "K": 32,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 3,
+      "K": 4,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 3,
+      "K": 4,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 3,
+      "K": 8,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 3,
+      "K": 8,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 3,
+      "K": 16,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 3,
+      "K": 16,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 3,
+      "K": 32,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 3,
+      "K": 32,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 6,
+      "K": 4,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 6,
+      "K": 4,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 6,
+      "K": 8,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 6,
+      "K": 8,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 6,
+      "K": 16,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 6,
+      "K": 16,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 6,
+      "K": 32,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 6,
+      "K": 32,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 11,
+      "K": 4,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 11,
+      "K": 4,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 11,
+      "K": 8,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 11,
+      "K": 8,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 11,
+      "K": 16,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 11,
+      "K": 16,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 11,
+      "K": 32,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 11,
+      "K": 32,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 21,
+      "K": 4,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 21,
+      "K": 4,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 21,
+      "K": 8,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 21,
+      "K": 8,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 21,
+      "K": 16,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 21,
+      "K": 16,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 21,
+      "K": 32,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "seventh",
+      "n": 21,
+      "K": 32,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 1,
+      "K": 4,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 1,
+      "K": 4,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 1,
+      "K": 8,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 1,
+      "K": 8,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 1,
+      "K": 16,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 1,
+      "K": 16,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 1,
+      "K": 32,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 1,
+      "K": 32,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 3,
+      "K": 4,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 3,
+      "K": 4,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 3,
+      "K": 8,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 3,
+      "K": 8,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 3,
+      "K": 16,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 3,
+      "K": 16,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 3,
+      "K": 32,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 3,
+      "K": 32,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 6,
+      "K": 4,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 6,
+      "K": 4,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 6,
+      "K": 8,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 6,
+      "K": 8,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 6,
+      "K": 16,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 6,
+      "K": 16,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 6,
+      "K": 32,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 6,
+      "K": 32,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 11,
+      "K": 4,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 11,
+      "K": 4,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 11,
+      "K": 8,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 11,
+      "K": 8,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 11,
+      "K": 16,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 11,
+      "K": 16,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 11,
+      "K": 32,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 11,
+      "K": 32,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 21,
+      "K": 4,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 21,
+      "K": 4,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 21,
+      "K": 8,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 21,
+      "K": 8,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 21,
+      "K": 16,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 21,
+      "K": 16,
+      "direction": "Y",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 21,
+      "K": 32,
+      "direction": "X",
+      "coefficients_equal": true
+    },
+    {
+      "kind": "decimal_prefix",
+      "stream": "sqrt2_minus_one",
+      "n": 21,
+      "K": 32,
+      "direction": "Y",
+      "coefficients_equal": true
+    }
+  ]
+}
