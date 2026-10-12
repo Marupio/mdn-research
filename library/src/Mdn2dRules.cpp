@@ -23,7 +23,7 @@ mdn::Carryover mdn::Mdn2dRules::static_checkCarryover(Digit p, Digit x, Digit y,
         );
     );
     Carryover result = Carryover::Invalid;
-    if (abs(p) > base) {
+    if (abs(p) >= base) {
         result = Carryover::Required;
     } else {
         auto pos = [](Digit t) { return t > 0; };
@@ -177,13 +177,18 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryover(const Coord& xy, int carry) {
     Digit p = locked_getValue(xy);
     Digit x = locked_getValue(xy_x);
     Digit y = locked_getValue(xy_y);
+    // Incorporate the incoming increment before deciding whether this cell
+    // needs a carry. Otherwise a neighbour at base-1 silently loses it.
+    int ip = static_cast<int>(p) + carry;
     Log_N_Debug4_H("dispatch "
         << "static_checkCarryover("
         << static_cast<int>(p) << ","
         << static_cast<int>(x) << ","
         << static_cast<int>(y) << ",base)"
     );
-    Carryover co = static_checkCarryover(p, x, y, m_config.baseDigit());
+    Carryover co = std::abs(ip) >= m_config.base()
+        ? Carryover::Required
+        : static_checkCarryover(static_cast<Digit>(ip), x, y, m_config.baseDigit());
     Log_N_Debug4_T("static_checkCarryover return=" << CarryoverToName(co));
     if (co == Carryover::Invalid) {
         std::ostringstream oss;
@@ -195,11 +200,10 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryover(const Coord& xy, int carry) {
         // throw err;
         return CoordSet({});
     }
-    int ip = static_cast<int>(p);
     int ix = static_cast<int>(x);
     int iy = static_cast<int>(y);
     int nCarry;
-    if (carry == 0) {
+    if (std::abs(ip) < m_config.base()) {
         // The first carryover, an optional carry
         if (ip < 0) {
             nCarry = -1;
@@ -207,7 +211,7 @@ mdn::CoordSet mdn::Mdn2dRules::locked_carryover(const Coord& xy, int carry) {
             nCarry = 1;
         }
     } else {
-        nCarry = (ip + carry)/m_config.base();
+        nCarry = ip/m_config.base();
     }
     #ifdef MDN_DEBUG
         if (nCarry > 1 || nCarry < -1) {

@@ -1,15 +1,97 @@
 #include <mdn/Mdn2d.hpp>
 
 #include <cassert>
+#include <cctype>
 #include <cmath>
+#include <cstdint>
 #include <stdexcept>
 #include <sstream>
+#include <unordered_map>
+#include <vector>
 
 #include <mdn/Constants.hpp>
 #include <mdn/Logger.hpp>
 #include <mdn/MdnException.hpp>
 #include <mdn/Selection.hpp>
 #include <mdn/Tools.hpp>
+
+namespace {
+
+// An exact nonnegative integer in the working base. Fractional binomial
+// coefficients can exceed machine integers long before the input is exhausted.
+// Keeping their radix digits also makes division by the base a carry operation.
+class FraxisMagnitude {
+    int m_base;
+    std::vector<int> m_digits; // least significant first; empty means zero
+
+    void trim() {
+        while (!m_digits.empty() && m_digits.back() == 0) m_digits.pop_back();
+    }
+
+public:
+    explicit FraxisMagnitude(int base, unsigned int value = 0) : m_base(base) {
+        while (value) {
+            m_digits.push_back(value % base);
+            value /= base;
+        }
+    }
+
+    bool zero() const { return m_digits.empty(); }
+
+    void add(const FraxisMagnitude& other) {
+        if (m_digits.size() < other.m_digits.size()) m_digits.resize(other.m_digits.size());
+        int carry = 0;
+        for (std::size_t i = 0; i < m_digits.size(); ++i) {
+            const int sum = m_digits[i] + carry
+                + (i < other.m_digits.size() ? other.m_digits[i] : 0);
+            m_digits[i] = sum % m_base;
+            carry = sum / m_base;
+        }
+        if (carry) m_digits.push_back(carry);
+    }
+
+    void decrement() {
+        assert(!zero());
+        std::size_t i = 0;
+        while (m_digits[i] == 0) m_digits[i++] = m_base - 1;
+        --m_digits[i];
+        trim();
+    }
+
+    void multiply(std::uint64_t factor) {
+        std::uint64_t carry = 0;
+        for (int& digit : m_digits) {
+            const std::uint64_t product = digit * factor + carry;
+            digit = product % m_base;
+            carry = product / m_base;
+        }
+        while (carry) {
+            m_digits.push_back(carry % m_base);
+            carry /= m_base;
+        }
+    }
+
+    void divideExactly(std::uint64_t divisor) {
+        std::uint64_t remainder = 0;
+        for (auto i = m_digits.rbegin(); i != m_digits.rend(); ++i) {
+            const std::uint64_t numerator = remainder * m_base + *i;
+            *i = numerator / divisor;
+            remainder = numerator % divisor;
+        }
+        assert(remainder == 0);
+        trim();
+    }
+
+    // Return the remainder and retain the quotient on division by the base.
+    int carryDigit() {
+        if (zero()) return 0;
+        const int digit = m_digits.front();
+        m_digits.erase(m_digits.begin());
+        return digit;
+    }
+};
+
+} // namespace
 
 
 mdn::Mdn2d::Mdn2d(std::string nameIn) :
@@ -452,7 +534,7 @@ mdn::CoordSet mdn::Mdn2d::locked_add(
     long lbase = m_config.base();
     for (int i = 0; i <= maxIndex; ++i) {
         int pos = maxIndex - i;
-        char c = intPart[pos];
+        char c = static_cast<char>(std::toupper(static_cast<unsigned char>(intPart[pos])));
         long long lDigit = Tools::unsafe_alphaToDigit(c);
         changed.merge(locked_add(xy, lSign * lDigit * baseFactor, overwrite));
         baseFactor *= lbase;
@@ -495,7 +577,7 @@ mdn::CoordSet mdn::Mdn2d::locked_add(
     int iSign = negative ? -1 : 1;
     for (int i = 0; i <= maxIndex; ++i) {
         // int pos = maxIndex - i;
-        char ch = fracPart[i];
+        char ch = static_cast<char>(std::toupper(static_cast<unsigned char>(fracPart[i])));
         int iDigit = Tools::unsafe_alphaToDigit(ch) * iSign;
 
         // Move
@@ -508,7 +590,9 @@ mdn::CoordSet mdn::Mdn2d::locked_add(
         Log_Debug4("dispatch cascade(" << xyRoot << "," << iDigit << ",c=" << c << ")");
         // Add fraxis cascade
         changed.merge(
-            internal_fraxisCascade(xyRoot, iDigit, overwrite, c, m_config.fraxisCascadeDepth())
+            internal_fraxisCascade(
+                xyRoot, iDigit, overwrite, c, m_config.fraxisCascadeDepth(), i + 1
+            )
         );
 
         Log_Debug4("cascade return");
@@ -762,6 +846,7 @@ mdn::CoordSet mdn::Mdn2d::locked_addFraxis(
         );
     );
 
+    internal_checkFraxis(fraxis);
     CoordSet changed;
     switch(fraxis) {
         case Fraxis::X:
@@ -1117,6 +1202,7 @@ mdn::CoordSet mdn::Mdn2d::internal_fraxis(
 
     // Calculate next digit
     Coord xyWorking(xy);
+    int fractionalPlace = 1;
     bool precisionOkay = locked_checkPrecisionWindow(xyWorking) != PrecisionStatus::Below;
     bool numericsOkay = fabs(f) > m_config.epsilon();
     If_Log_Showing_Debug4(
@@ -1131,10 +1217,13 @@ mdn::CoordSet mdn::Mdn2d::internal_fraxis(
         Digit d = nDigits ? static_cast<Digit>(f) : static_cast<Digit>(std::round(f));
         changed.merge(locked_add(xyWorking, d, overwrite));
         changed.merge(
-            internal_fraxisCascade(xyWorking, d, overwrite, c, m_config.fraxisCascadeDepth())
+            internal_fraxisCascade(
+                xyWorking, d, overwrite, c, m_config.fraxisCascadeDepth(), fractionalPlace
+            )
         );
         f -= d;
         xyWorking.translate(dX, dY);
+        ++fractionalPlace;
         precisionOkay = locked_checkPrecisionWindow(xyWorking) != PrecisionStatus::Below;
         numericsOkay = fabs(f) > m_config.epsilon();
         If_Log_Showing_Debug4(
@@ -1163,25 +1252,56 @@ mdn::CoordSet mdn::Mdn2d::internal_fraxis(
 
 
 mdn::CoordSet mdn::Mdn2d::internal_fraxisCascade(
-    const Coord& xy, Digit d, bool overwrite, int c, int cascade
+    const Coord& xy, Digit d, bool overwrite, int c, int cascade, int fractionalPlace
 ) {
     If_Log_Showing_Debug4(
         Log_N_Debug4_H("cascade: " << static_cast<int>(d) << " at " << xy);
     );
     CoordSet changed;
-    Coord xyNext = xy.translated(c, -c);
-    d *= -1;
-    if (locked_checkPrecisionWindow(xyNext) == PrecisionStatus::Below) {
-        // Cascade done
-        Log_N_Debug4_T(
-            "cascaded to edge of precision window, changed " << changed.size() << " digits"
-        );
-        return changed;
-    }
-    changed.merge(locked_add(xyNext, d, overwrite));
-    if (--cascade) {
-        Log_N_Debug4("cascade=" << cascade);
-        changed.merge(internal_fraxisCascade(xyNext, d, overwrite, c, cascade));
+    if (cascade <= 0 || (d == 0 && !overwrite)) return changed;
+
+    const int base = m_config.base();
+    FraxisMagnitude coefficient(base, std::abs(static_cast<int>(d)));
+    Coord xyNext(xy);
+    int sign = d < 0 ? -1 : 1;
+
+    // At fractional place k, 1/b^k = X^-k (1 + Y/X)^-k.
+    // Its n-th coefficient is (-1)^n binom(k+n-1,n), multiplied
+    // by the entered digit. The Y fraxis is the transposed expansion.
+    for (int n = 0; n < cascade; ++n) {
+        xyNext.translate(c, -c);
+        if (locked_checkPrecisionWindow(xyNext) == PrecisionStatus::Below) break;
+        sign = -sign;
+        coefficient.multiply(static_cast<std::uint64_t>(fractionalPlace) + n);
+        coefficient.divideExactly(static_cast<std::uint64_t>(n) + 1);
+
+        // Add a potentially large coefficient using exact carries. Combine
+        // incoming carries on each diagonal before visiting the next one;
+        // recursive branching would repeat exponentially many paths.
+        std::unordered_map<Coord, FraxisMagnitude> pending;
+        pending.emplace(xyNext, coefficient);
+        while (!pending.empty()) {
+            std::unordered_map<Coord, FraxisMagnitude> next;
+            for (auto& [coord, magnitude] : pending) {
+                int remainder = sign * magnitude.carryDigit()
+                    + internal_checkOverwrite<int>(coord, overwrite);
+                if (sign * remainder >= base) {
+                    magnitude.add(FraxisMagnitude(base, 1));
+                    remainder -= sign * base;
+                } else if (sign * remainder < 0 && !magnitude.zero()) {
+                    magnitude.decrement();
+                    remainder += sign * base;
+                }
+                if (locked_setValue(coord, remainder)) changed.insert(coord);
+                if (!magnitude.zero()) {
+                    for (const Coord& child : {coord.translatedX(1), coord.translatedY(1)}) {
+                        auto entry = next.try_emplace(child, base);
+                        entry.first->second.add(magnitude);
+                    }
+                }
+            }
+            pending = std::move(next);
+        }
     }
     Log_N_Debug4_T("finalising cascade, changed " << changed.size() << " digits");
     return changed;

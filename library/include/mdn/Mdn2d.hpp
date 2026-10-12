@@ -357,8 +357,11 @@ protected:
             CoordSet internal_fraxis(
                 const Coord& xy, double f, int nDigits, bool overwrite, int dX, int dY, int c
             );
+            // Cascade the digit at fractional place k with coefficients
+            // (-1)^n * binom(k+n-1,n); cascade excludes the already-added root.
             CoordSet internal_fraxisCascade(
-                const Coord& xy, Digit d, bool overwrite, int c, int cascade
+                const Coord& xy, Digit d, bool overwrite, int c, int cascade,
+                int fractionalPlace
             );
 
             // // plusEquals variant: *this += rhs x scalar, used in mdn x mdn algorithm
